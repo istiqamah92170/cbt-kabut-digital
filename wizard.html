@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Buat CBT Baru - CBT Kabut Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-arab:20px;
+  --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+  --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+  --green:#1B8A4C; --green-light:#E6F7EE;
+  --red:#C0392B; --red-light:#FDECEA;
+  --orange:#D4550A; --orange-light:#FFF3E8;
+  --yellow:#B8860B; --yellow-light:#FFFBEA;
+  --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+  --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --sh-sm:0 1px 4px rgba(10,53,102,.08);
+  --sh-md:0 4px 16px rgba(10,53,102,.10);
+  --sh-lg:0 8px 32px rgba(10,53,102,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:var(--gray-dark);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px;}
+
+.p-wrap{width:100%;max-width:440px;margin:0 auto;padding:16px 0 48px;}
+/* ── [Polish] Ikon SVG profesional pengganti emoji ── */
+.ico-badge{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:#ECFDF5;color:#059669;flex-shrink:0;transition:transform .2s;}
+.ico-badge svg{width:22px;height:22px;display:block;}
+.p-menu-item.primary .ico-badge{background:rgba(255,255,255,.18);color:#fff;width:50px;height:50px;}
+.p-menu-item.primary .ico-badge svg{width:26px;height:26px;}
+.p-menu-item:hover .ico-badge{transform:scale(1.08);}
+/* ── Card generic ── */
+.p-card{background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh-md);overflow:hidden;margin-bottom:12px;}
+.p-card-head{background:linear-gradient(135deg,#064E3B,#10B981);padding:18px 20px 14px;color:white;}
+.p-card-head h2{font-size:16px;font-weight:800;margin:0 0 2px;}
+.p-card-head p{font-size:11px;opacity:.75;margin:0;}
+.p-card-body{padding:20px;}
+
+/* ── Tombol portal ── */
+.p-btn{width:100%;padding:13px;border:none;border-radius:var(--r-md);font-size:14px;
+  font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:8px;}
+.p-btn:last-child{margin-bottom:0;}
+.p-btn.primary{background:linear-gradient(135deg,#064E3B,#059669);color:white;box-shadow:var(--sh-sm);}
+.p-btn.secondary{background:var(--gray-bg);color:var(--gray-dark);border:1.5px solid var(--gray-line);}
+.p-btn.danger{background:var(--red-light);color:var(--red);border:1.5px solid #F5B7B1;}
+.p-btn.warning{background:var(--orange-light);color:var(--orange);border:1.5px solid #F5C6A0;}
+.p-btn:disabled{opacity:.5;cursor:not-allowed;}
+.p-btn:active:not(:disabled){transform:scale(.98);}
+
+/* ── Form portal ── */
+.p-fg{margin-bottom:14px;}
+.p-fg label{display:block;font-size:12px;font-weight:700;color:var(--gray-mid);margin-bottom:6px;
+  text-transform:uppercase;letter-spacing:.4px;}
+.p-fg input,.p-fg select{width:100%;padding:11px 14px;border:1.5px solid var(--gray-line);
+  border-radius:var(--r-sm);font-size:14px;font-family:inherit;outline:none;
+  background:var(--white);transition:border-color .2s;}
+.p-fg input:focus,.p-fg select:focus{border-color:var(--blue-main);}
+
+/* ── Autocomplete dropdown ── */
+.p-autocomplete{position:relative;}
+.p-ac-list{position:absolute;top:100%;left:0;right:0;background:var(--white);
+  border:1.5px solid var(--blue-main);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);
+  z-index:100;max-height:160px;overflow-y:auto;box-shadow:var(--sh-md);}
+.p-ac-item{padding:10px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--gray-line);}
+.p-ac-item:last-child{border-bottom:none;}
+.p-ac-item:hover,.p-ac-item.aktif{background:var(--blue-pale);color:var(--blue-main);font-weight:600;}
+
+/* ── Back button ── */
+.p-back{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;
+  color:var(--blue-main);cursor:pointer;margin-bottom:14px;background:none;border:none;
+  padding:0;font-family:inherit;}
+.p-back:hover{opacity:.75;}
+
+/* ═══════════════════════════════════════════════════════════
+   CBT CREATOR WIZARD
+   ═══════════════════════════════════════════════════════════ */
+.wiz-steps{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:0 4px;}
+.wiz-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative;}
+.wiz-step-dot{width:26px;height:26px;border-radius:50%;background:var(--gray-line);color:var(--gray-mid);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;
+  transition:all .25s;flex-shrink:0;}
+.wiz-step.done .wiz-step-dot{background:#059669;color:#fff;}
+.wiz-step.aktif .wiz-step-dot{background:#064E3B;color:#fff;box-shadow:0 0 0 4px #D1FAE5;}
+.wiz-step-lbl{font-size:9px;color:var(--gray-soft);font-weight:700;text-align:center;
+  text-transform:uppercase;letter-spacing:.3px;}
+.wiz-step.aktif .wiz-step-lbl{color:#064E3B;}
+.wiz-step::after{content:'';position:absolute;top:13px;left:calc(50% + 20px);right:calc(-50% + 20px);
+  height:2px;background:var(--gray-line);z-index:0;}
+.wiz-step:last-child::after{display:none;}
+.wiz-step.done::after{background:#059669;}
+
+.wiz-panel{display:none;}
+.wiz-panel.aktif{display:block;animation:wizFade .25s;}
+@keyframes wizFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+.wiz-jenis-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+.wiz-jenis-card{border:1.5px solid var(--gray-line);border-radius:var(--r-md);padding:14px 10px;
+  text-align:center;cursor:pointer;transition:all .2s;background:var(--white);}
+.wiz-jenis-card:hover{border-color:#059669;}
+.wiz-jenis-card.aktif{border-color:#059669;background:#ECFDF5;box-shadow:0 0 0 2px rgba(5,150,105,.15);}
+.wiz-jenis-card .ico-badge{margin:0 auto 8px;}
+.wiz-jenis-card .nm{font-size:12px;font-weight:700;color:var(--gray-dark);}
+
+.wiz-hint{font-size:11px;color:var(--gray-soft);margin:-8px 0 14px;line-height:1.5;}
+.wiz-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.wiz-bobot-bar{height:10px;border-radius:6px;overflow:hidden;display:flex;margin:8px 0 4px;
+  border:1px solid var(--gray-line);}
+.wiz-bobot-pg{background:#059669;}
+.wiz-bobot-esai{background:#F59E0B;}
+.wiz-bobot-warn{font-size:11px;color:var(--red);font-weight:700;display:none;margin-top:4px;}
+.wiz-bobot-warn.on{display:block;}
+
+.wiz-summary{background:var(--gray-bg);border-radius:var(--r-md);padding:14px 16px;margin-bottom:14px;}
+.wiz-summary-grp{font-size:10px;font-weight:800;color:#059669;text-transform:uppercase;
+  letter-spacing:.4px;margin:12px 0 6px;}
+.wiz-summary-grp:first-child{margin-top:0;}
+.wiz-summary-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;
+  border-bottom:1px dashed var(--gray-line);font-size:12.5px;}
+.wiz-summary-row:last-child{border-bottom:none;}
+.wiz-summary-row .k{color:var(--gray-mid);}
+.wiz-summary-row .v{color:var(--gray-dark);font-weight:700;text-align:right;max-width:60%;
+  word-break:break-word;}
+
+.wiz-nav{display:flex;gap:10px;margin-top:18px;}
+.wiz-nav .p-btn{margin-bottom:0;}
+.p-btn.ghost{background:var(--white);color:var(--gray-mid);border:1.5px solid var(--gray-line);}
+
+.wiz-done-box{text-align:center;padding:8px 0 4px;}
+.wiz-done-box .ico-badge{width:64px;height:64px;margin:0 auto 14px;background:#ECFDF5;color:#059669;}
+.wiz-done-box .ico-badge svg{width:32px;height:32px;}
+.wiz-done-box h3{font-size:16px;color:#064E3B;margin-bottom:6px;}
+.wiz-done-box p{font-size:12.5px;color:var(--gray-mid);line-height:1.6;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div id="portal-wizard-screen">
+  <div class="p-wrap">
+    <button class="p-back" onclick="pWizKeluar()">← Kembali</button>
+    <div class="p-card">
+      <div class="p-card-head">
+        <h2>Buat CBT Baru</h2>
+        <p>Wizard 5 langkah — hasil akhir berupa file setup siap pakai</p>
+      </div>
+      <div class="p-card-body">
+
+        <div class="wiz-steps" id="wiz-steps">
+          <div class="wiz-step" data-step="1"><div class="wiz-step-dot">1</div><div class="wiz-step-lbl">Jenis</div></div>
+          <div class="wiz-step" data-step="2"><div class="wiz-step-dot">2</div><div class="wiz-step-lbl">Identitas</div></div>
+          <div class="wiz-step" data-step="3"><div class="wiz-step-dot">3</div><div class="wiz-step-lbl">Ujian</div></div>
+          <div class="wiz-step" data-step="4"><div class="wiz-step-dot">4</div><div class="wiz-step-lbl">Bobot</div></div>
+          <div class="wiz-step" data-step="5"><div class="wiz-step-dot">5</div><div class="wiz-step-lbl">Preview</div></div>
+        </div>
+
+        <!-- STEP 1: Jenis Institusi -->
+        <div class="wiz-panel" data-panel="1">
+          <div class="p-fg"><label>Pilih jenis institusi Anda</label></div>
+          <div class="wiz-jenis-grid" id="wiz-jenis-grid">
+            <div class="wiz-jenis-card" data-jenis="sekolah" onclick="pWizPilihJenis('sekolah')">
+              <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.1 2.7 3 6 3s6-1.9 6-3v-5.5"/></svg></div>
+              <div class="nm">Sekolah</div>
+            </div>
+            <div class="wiz-jenis-card" data-jenis="kampus" onclick="pWizPilihJenis('kampus')">
+              <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg></div>
+              <div class="nm">Kampus</div>
+            </div>
+            <div class="wiz-jenis-card" data-jenis="kursus" onclick="pWizPilihJenis('kursus')">
+              <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2Z"/><path d="M8 7h8M8 11h6"/></svg></div>
+              <div class="nm">Kursus</div>
+            </div>
+            <div class="wiz-jenis-card" data-jenis="perusahaan" onclick="pWizPilihJenis('perusahaan')">
+              <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1"/><path d="M9 21V9a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v12"/><path d="M9 5h6"/></svg></div>
+              <div class="nm">Perusahaan</div>
+            </div>
+            <div class="wiz-jenis-card" data-jenis="pemerintah" onclick="pWizPilihJenis('pemerintah')">
+              <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8h18Z"/><path d="M5 8v10M9 8v10M15 8v10M19 8v10"/><path d="M3 21h18"/></svg></div>
+              <div class="nm">Pemerintah</div>
+            </div>
+            <div class="wiz-jenis-card" data-jenis="umum" onclick="pWizPilihJenis('umum')">
+              <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z"/></svg></div>
+              <div class="nm">Umum</div>
+            </div>
+          </div>
+          <div class="wiz-hint">Pilihan ini menentukan label kolom (nama institusi &amp; peserta) secara otomatis pada langkah berikutnya — masih bisa diubah manual.</div>
+        </div>
+
+        <!-- STEP 2: Identitas -->
+        <div class="wiz-panel" data-panel="2">
+          <div class="p-fg">
+            <label>Nama Institusi *</label>
+            <input type="text" id="wiz-inst-name" placeholder="Contoh: MTs Darul Istiqamah Kanreapia">
+          </div>
+          <div class="p-fg">
+            <label>Nama Singkat</label>
+            <input type="text" id="wiz-inst-short" placeholder="Contoh: MTs DI Kanreapia">
+          </div>
+          <div class="p-fg">
+            <label>URL Logo (opsional)</label>
+            <input type="text" id="wiz-inst-logo" placeholder="https://... (link gambar langsung)">
+          </div>
+          <div class="wiz-row2">
+            <div class="p-fg">
+              <label>Label Kolom Institusi</label>
+              <input type="text" id="wiz-label-inst">
+            </div>
+            <div class="p-fg">
+              <label>Label Kolom Peserta</label>
+              <input type="text" id="wiz-label-peserta">
+            </div>
+          </div>
+          <div class="p-fg">
+            <label>Pesan Sambutan</label>
+            <input type="text" id="wiz-welcome" placeholder="Selamat Datang">
+          </div>
+        </div>
+
+        <!-- STEP 3: Konfigurasi Ujian -->
+        <div class="wiz-panel" data-panel="3">
+          <div class="wiz-row2">
+            <div class="p-fg">
+              <label>Token Ujian</label>
+              <input type="text" id="wiz-token" placeholder="TOKEN123">
+            </div>
+            <div class="p-fg">
+              <label>Durasi (menit)</label>
+              <input type="number" id="wiz-durasi" min="1" value="90">
+            </div>
+          </div>
+          <div class="p-fg">
+            <label>Judul Ujian</label>
+            <input type="text" id="wiz-judul" placeholder="Contoh: UAS Semester Genap 2026">
+          </div>
+          <div class="wiz-row2">
+            <div class="p-fg">
+              <label>Maks. Pelanggaran</label>
+              <input type="number" id="wiz-makspel" min="1" value="3">
+            </div>
+            <div class="p-fg">
+              <label>Warna Tema (opsional)</label>
+              <input type="text" id="wiz-theme" placeholder="#0F766E">
+            </div>
+          </div>
+          <div class="wiz-row2">
+            <div class="p-fg">
+              <label>Acak Urutan Soal</label>
+              <select id="wiz-acak"><option value="tidak">Tidak</option><option value="ya">Ya</option></select>
+            </div>
+            <div class="p-fg">
+              <label>Tampilkan Pembahasan</label>
+              <select id="wiz-pembahasan"><option value="tidak">Tidak</option><option value="ya">Ya</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Bobot Nilai -->
+        <div class="wiz-panel" data-panel="4">
+          <div class="p-fg">
+            <label>Nilai KKM</label>
+            <input type="number" id="wiz-kkm" min="0" max="100" value="70">
+          </div>
+          <div class="wiz-row2">
+            <div class="p-fg">
+              <label>Bobot Pilihan Ganda (%)</label>
+              <input type="number" id="wiz-bobot-pg" min="0" max="100" value="70" oninput="pWizBobotUbah('pg')">
+            </div>
+            <div class="p-fg">
+              <label>Bobot Esai (%)</label>
+              <input type="number" id="wiz-bobot-esai" min="0" max="100" value="30" oninput="pWizBobotUbah('esai')">
+            </div>
+          </div>
+          <div class="wiz-bobot-bar">
+            <div class="wiz-bobot-pg" id="wiz-bar-pg" style="width:70%"></div>
+            <div class="wiz-bobot-esai" id="wiz-bar-esai" style="width:30%"></div>
+          </div>
+          <div class="wiz-bobot-warn" id="wiz-bobot-warn">Total bobot PG + Esai harus tepat 100%.</div>
+        </div>
+
+        <!-- STEP 5: Preview & Download -->
+        <div class="wiz-panel" data-panel="5">
+          <div id="wiz-summary-box" class="wiz-summary"></div>
+          <div id="wiz-download-area">
+            <button class="p-btn primary" onclick="pWizDownload()">Unduh File Setup GAS (.js)</button>
+          </div>
+          <div id="wiz-done-area" style="display:none;">
+            <div class="wiz-done-box">
+              <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <h3>File Berhasil Dibuat</h3>
+              <p>Buka Google Sheet baru → Ekstensi → Apps Script → tambahkan Library CBT-KD (Script ID
+                 tercantum di komentar atas file) → tempel isi file yang diunduh → Deploy sebagai
+                 Web App → jalankan menu "Setup Sheet Awal". Detail langkah lengkap tercantum
+                 sebagai komentar di baris atas file.</p>
+              <button class="p-btn secondary" onclick="pWizUlangi()">Buat CBT Lain</button>
+              <button class="p-btn ghost" onclick="window.location.href=CBTKD_HOME_URL">Kembali ke Beranda</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="wiz-nav" id="wiz-nav">
+          <button class="p-btn ghost" id="wiz-btn-back" onclick="pWizNav(-1)">← Sebelumnya</button>
+          <button class="p-btn primary" id="wiz-btn-next" onclick="pWizNav(1)">Selanjutnya →</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// URL Beranda situs CBT Kabut Digital -- dipakai tombol "Kembali" dan "Kembali ke Beranda"
+// TODO(Ghani): isi dengan URL final setelah domain/struktur website ditentukan
+const CBTKD_HOME_URL = 'https://cbtkabutdigital.example/';
+
+// Helper escape HTML -- disalin dari bagian HELPER generik Portal (bukan bagian
+// wizard aslinya, tapi wizard.js butuh ini untuk pWizRow()/pWizRenderSummary())
+function _esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+//  CBT CREATOR WIZARD
+//  Menghasilkan file gas_pemanggil_[institusi].js siap pakai
+//  (script pemanggil tipis — logika utama ada di CBTKD_MasterLib)
+// ═══════════════════════════════════════════════
+const WIZ_JENIS_LABEL = {
+  sekolah:    'Sekolah',
+  kampus:     'Kampus',
+  kursus:     'Kursus',
+  perusahaan: 'Perusahaan',
+  pemerintah: 'Pemerintah',
+  umum:       'Umum'
+};
+const WIZ_JENIS_DEFAULTS = {
+  sekolah:    { instLabel: 'Sekolah / Madrasah',    pesertaLabel: 'Nama Lengkap Siswa',          hdrNama: 'Nama_Siswa',     hdrInst: 'Sekolah' },
+  kampus:     { instLabel: 'Perguruan Tinggi',       pesertaLabel: 'Nama Lengkap Mahasiswa',      hdrNama: 'Nama_Mahasiswa', hdrInst: 'Kampus' },
+  kursus:     { instLabel: 'Lembaga Kursus',         pesertaLabel: 'Nama Lengkap Peserta Kursus', hdrNama: 'Nama_Peserta',   hdrInst: 'Lembaga_Kursus' },
+  perusahaan: { instLabel: 'Perusahaan / Instansi',  pesertaLabel: 'Nama Lengkap Karyawan',       hdrNama: 'Nama_Karyawan',  hdrInst: 'Perusahaan' },
+  pemerintah: { instLabel: 'Instansi Pemerintah',    pesertaLabel: 'Nama Lengkap Peserta',        hdrNama: 'Nama_Peserta',   hdrInst: 'Instansi' },
+  umum:       { instLabel: 'Institusi / Lembaga',    pesertaLabel: 'Nama Lengkap Peserta',        hdrNama: 'Nama_Peserta',   hdrInst: 'Institusi' }
+};
+
+let _wizStep  = 1;
+let _wizJenis = null;
+
+function pWizInit() {
+  _wizStep  = 1;
+  _wizJenis = null;
+  document.querySelectorAll('.wiz-jenis-card').forEach(function(c){ c.classList.remove('aktif'); });
+  let dl = document.getElementById('wiz-download-area'); if (dl) dl.style.display = '';
+  let dn = document.getElementById('wiz-done-area');      if (dn) dn.style.display = 'none';
+  pWizRenderStep();
+}
+
+function pWizKeluar() {
+  // ADAPTASI: pModalTampil() adalah komponen modal generik milik Portal
+  // (butuh HTML #p-modal yang tidak ikut dipindah). Diganti confirm()
+  // bawaan browser untuk halaman wizard yang berdiri sendiri ini.
+  if (confirm('Isian yang belum diunduh akan hilang. Yakin ingin keluar dari wizard?')) {
+    window.location.href = CBTKD_HOME_URL;
+  }
+}
+
+function pWizPilihJenis(jenis) {
+  _wizJenis = jenis;
+  document.querySelectorAll('.wiz-jenis-card').forEach(function(c){
+    c.classList.toggle('aktif', c.dataset.jenis === jenis);
+  });
+  let d = WIZ_JENIS_DEFAULTS[jenis];
+  if (d) {
+    document.getElementById('wiz-label-inst').value    = d.instLabel;
+    document.getElementById('wiz-label-peserta').value = d.pesertaLabel;
+  }
+}
+
+function pWizRenderStep() {
+  document.querySelectorAll('.wiz-panel').forEach(function(p){
+    p.classList.toggle('aktif', Number(p.dataset.panel) === _wizStep);
+  });
+  document.querySelectorAll('.wiz-step').forEach(function(s){
+    let n = Number(s.dataset.step);
+    s.classList.toggle('aktif', n === _wizStep);
+    s.classList.toggle('done', n < _wizStep);
+  });
+  let btnBack = document.getElementById('wiz-btn-back');
+  if (btnBack) btnBack.style.visibility = (_wizStep === 1) ? 'hidden' : 'visible';
+  let nav = document.getElementById('wiz-nav');
+  if (_wizStep === 5) {
+    if (nav) nav.style.display = 'none';
+    pWizRenderSummary();
+  } else {
+    if (nav) nav.style.display = 'flex';
+  }
+  let body = document.querySelector('#portal-wizard-screen .p-card-body');
+  if (body) body.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function pWizNav(dir) {
+  if (dir > 0 && !pWizValidasi(_wizStep)) return;
+  let target = _wizStep + dir;
+  if (target < 1 || target > 5) return;
+  _wizStep = target;
+  pWizRenderStep();
+}
+
+function pWizValidasi(step) {
+  if (step === 1) {
+    if (!_wizJenis) { alert('Pilih jenis institusi terlebih dahulu.'); return false; }
+  }
+  if (step === 2) {
+    let nm = document.getElementById('wiz-inst-name').value.trim();
+    if (!nm) { alert('Nama institusi wajib diisi.'); return false; }
+  }
+  if (step === 4) {
+    let pg   = parseFloat(document.getElementById('wiz-bobot-pg').value)   || 0;
+    let esai = parseFloat(document.getElementById('wiz-bobot-esai').value) || 0;
+    if (Math.round(pg + esai) !== 100) {
+      alert('Total bobot PG + Esai harus tepat 100%.');
+      return false;
+    }
+  }
+  return true;
+}
+
+function pWizBobotUbah(sumber) {
+  let pgEl = document.getElementById('wiz-bobot-pg');
+  let esEl = document.getElementById('wiz-bobot-esai');
+  let pg = Math.max(0, Math.min(100, parseFloat(pgEl.value) || 0));
+  let es = Math.max(0, Math.min(100, parseFloat(esEl.value) || 0));
+  if (sumber === 'pg') { es = 100 - pg; esEl.value = es; }
+  else                 { pg = 100 - es; pgEl.value = pg; }
+  document.getElementById('wiz-bar-pg').style.width   = pg + '%';
+  document.getElementById('wiz-bar-esai').style.width = es + '%';
+  document.getElementById('wiz-bobot-warn').classList.toggle('on', Math.round(pg + es) !== 100);
+}
+
+function pWizAmbilData() {
+  let jd = WIZ_JENIS_DEFAULTS[_wizJenis] || WIZ_JENIS_DEFAULTS.umum;
+  return {
+    jenis        : _wizJenis || 'umum',
+    jenisLabel   : WIZ_JENIS_LABEL[_wizJenis] || 'Umum',
+    hdrNama      : jd.hdrNama,
+    hdrInst      : jd.hdrInst,
+    instName     : document.getElementById('wiz-inst-name').value.trim(),
+    instShort    : document.getElementById('wiz-inst-short').value.trim(),
+    instLogo     : document.getElementById('wiz-inst-logo').value.trim(),
+    labelInst    : document.getElementById('wiz-label-inst').value.trim()    || 'Institusi / Lembaga',
+    labelPeserta : document.getElementById('wiz-label-peserta').value.trim() || 'Nama Lengkap Peserta',
+    welcome      : document.getElementById('wiz-welcome').value.trim()       || 'Selamat Datang',
+    token        : document.getElementById('wiz-token').value.trim()        || 'TOKEN123',
+    durasi       : parseInt(document.getElementById('wiz-durasi').value)    || 90,
+    judul        : document.getElementById('wiz-judul').value.trim()        || 'CBT Kabut Digital',
+    maksPel      : parseInt(document.getElementById('wiz-makspel').value)   || 3,
+    theme        : document.getElementById('wiz-theme').value.trim(),
+    acak         : document.getElementById('wiz-acak').value,
+    pembahasan   : document.getElementById('wiz-pembahasan').value,
+    kkm          : parseInt(document.getElementById('wiz-kkm').value)          || 70,
+    bobotPg      : parseFloat(document.getElementById('wiz-bobot-pg').value)   || 70,
+    bobotEsai    : parseFloat(document.getElementById('wiz-bobot-esai').value) || 30
+  };
+}
+
+function pWizRow(k, v) {
+  return '<div class="wiz-summary-row"><span class="k">' + _esc(k) + '</span><span class="v">' + _esc(String(v)) + '</span></div>';
+}
+
+function pWizRenderSummary() {
+  let d = pWizAmbilData();
+  let html = '';
+  html += '<div class="wiz-summary-grp">Institusi</div>';
+  html += pWizRow('Jenis', d.jenisLabel);
+  html += pWizRow('Nama Institusi', d.instName || '(belum diisi)');
+  html += pWizRow('Nama Singkat', d.instShort || '-');
+  html += pWizRow('Label Institusi', d.labelInst);
+  html += pWizRow('Label Peserta', d.labelPeserta);
+  html += pWizRow('Kolom Sheet (Jawaban/Rekap)', d.hdrNama + ' & ' + d.hdrInst);
+  html += '<div class="wiz-summary-grp">Ujian</div>';
+  html += pWizRow('Token', d.token);
+  html += pWizRow('Judul', d.judul);
+  html += pWizRow('Durasi', d.durasi + ' menit');
+  html += pWizRow('Maks. Pelanggaran', d.maksPel + 'x');
+  html += pWizRow('Acak Soal', d.acak === 'ya' ? 'Ya' : 'Tidak');
+  html += pWizRow('Tampilkan Pembahasan', d.pembahasan === 'ya' ? 'Ya' : 'Tidak');
+  html += '<div class="wiz-summary-grp">Penilaian</div>';
+  html += pWizRow('KKM', d.kkm);
+  html += pWizRow('Bobot PG / Esai', d.bobotPg + '% / ' + d.bobotEsai + '%');
+  let box = document.getElementById('wiz-summary-box');
+  if (box) box.innerHTML = html;
+  let dl = document.getElementById('wiz-download-area'); if (dl) dl.style.display = '';
+  let dn = document.getElementById('wiz-done-area');      if (dn) dn.style.display = 'none';
+}
+
+// Escape nilai agar aman disisipkan ke dalam string ber-tanda-kutip-tunggal JS (GAS)
+function _wizEsc(v) {
+  return String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function pWizGenerateGAS() {
+  let d = pWizAmbilData();
+  let pelToken = 'RESET_PEL_' + Math.floor(1000 + Math.random() * 9000);
+  let tgl = new Date().toLocaleDateString('id-ID');
+  let map = {
+    '__CBTW_TOKEN__'        : _wizEsc(d.token),
+    '__CBTW_DURASI__'       : String(d.durasi),
+    '__CBTW_JUDUL__'        : _wizEsc(d.judul),
+    '__CBTW_MAKSPEL__'      : String(d.maksPel),
+    '__CBTW_ACAKSOAL__'     : _wizEsc(d.acak),
+    '__CBTW_BUKAPEMB__'     : _wizEsc(d.pembahasan),
+    '__CBTW_KKM__'          : String(d.kkm),
+    '__CBTW_BOBOTPG__'      : String(d.bobotPg),
+    '__CBTW_BOBOTESAI__'    : String(d.bobotEsai),
+    '__CBTW_THEME__'        : _wizEsc(d.theme),
+    '__CBTW_WELCOME__'      : _wizEsc(d.welcome),
+    '__CBTW_INSTNAME__'     : _wizEsc(d.instName),
+    '__CBTW_INSTSHORT__'    : _wizEsc(d.instShort),
+    '__CBTW_LOGO__'         : _wizEsc(d.instLogo),
+    '__CBTW_INSTLABEL__'    : _wizEsc(d.labelInst),
+    '__CBTW_PESERTALABEL__' : _wizEsc(d.labelPeserta),
+    '__CBTW_RESETPEL__'     : _wizEsc(pelToken),
+    '__CBTW_JENISLABEL__'   : d.jenisLabel,
+    '__CBTW_TANGGAL__'      : tgl,
+    '__CBTW_INSTNAME_RAW__' : d.instName || '-',
+    '__CBTW_HDRNAMA__'      : _wizEsc(d.hdrNama),
+    '__CBTW_HDRINST__'      : _wizEsc(d.hdrInst)
+  };
+  let out = WIZ_CALLER_TEMPLATE;
+  Object.keys(map).forEach(function(key) {
+    out = out.split(key).join(map[key]);
+  });
+  return { source: out, instName: d.instName || 'CBT' };
+}
+
+function pWizDownload() {
+  if (!pWizValidasi(4)) { _wizStep = 4; pWizRenderStep(); return; }
+  let gen  = pWizGenerateGAS();
+  let slug = gen.instName.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'institusi';
+  let blob = new Blob([gen.source], { type: 'text/plain' });
+  let url  = URL.createObjectURL(blob);
+  let a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'gas_pemanggil_' + slug + '.js';
+  a.click();
+  URL.revokeObjectURL(url);
+  let dl = document.getElementById('wiz-download-area'); if (dl) dl.style.display = 'none';
+  let dn = document.getElementById('wiz-done-area');      if (dn) dn.style.display = '';
+}
+
+function pWizUlangi() {
+  ['wiz-inst-name','wiz-inst-short','wiz-inst-logo','wiz-label-inst','wiz-label-peserta',
+   'wiz-welcome','wiz-token','wiz-judul','wiz-theme'].forEach(function(id){
+    let el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('wiz-durasi').value     = 90;
+  document.getElementById('wiz-makspel').value    = 3;
+  document.getElementById('wiz-acak').value       = 'tidak';
+  document.getElementById('wiz-pembahasan').value = 'tidak';
+  document.getElementById('wiz-kkm').value        = 70;
+  document.getElementById('wiz-bobot-pg').value   = 70;
+  document.getElementById('wiz-bobot-esai').value = 30;
+  document.getElementById('wiz-bar-pg').style.width   = '70%';
+  document.getElementById('wiz-bar-esai').style.width = '30%';
+  document.getElementById('wiz-bobot-warn').classList.remove('on');
+  pWizInit();
+}
+
+// Template lengkap backend GAS — placeholder __CBTW_...__ diisi oleh pWizGenerateGAS()
+const WIZ_CALLER_TEMPLATE = `// ===================================================================
+//  CBT Kabut Digital - Script Pemanggil
+//  Dibuat otomatis oleh CBT Creator Wizard (Portal CBT-KD)
+//  Jenis Institusi : __CBTW_JENISLABEL__
+//  Nama Institusi  : __CBTW_INSTNAME_RAW__
+//  Dibuat pada     : __CBTW_TANGGAL__
+// ===================================================================
+//
+// CARA PAKAI:
+//  1. Buat Google Spreadsheet baru
+//  2. Ekstensi -> Apps Script -> hapus isi default
+//  3. Tambahkan Library:
+//       - Klik ikon "+" di samping "Libraries" (menu kiri editor)
+//       - Tempel Script ID ini:
+//         1SNhmY9ciVfzRWyjhCuJViXFVzeTFjVCKd3byxv22KBFVRH6LuOVEu1xB
+//       - Pilih versi terbaru yang tersedia
+//       - Identifier: ketik persis  CBTKDLib
+//       - Klik "Tambahkan"
+//  4. Tempel SELURUH isi file ini ke editor (gantikan Code.gs)
+//  5. Simpan (Ctrl+S), lalu Deploy -> New deployment -> Web app
+//       Execute as    : Me
+//       Who has access: Anyone
+//  6. Kembali ke Spreadsheet -> menu "CBT Kabut Digital" -> "Setup Sheet Awal"
+//  7. Isi soal di sheet "Soal", sesuaikan sheet "Konfigurasi" bila perlu
+//  8. Salin URL deployment Web App -> tempel di Portal CBT-KD (Masuk Ujian)
+//
+// ===================================================================
+
+const CBT_CONFIG = {
+  token: '__CBTW_TOKEN__',
+  durasi_menit: __CBTW_DURASI__,
+  judul: '__CBTW_JUDUL__',
+  maks_pelanggaran: __CBTW_MAKSPEL__,
+  acak_soal: '__CBTW_ACAKSOAL__',
+  buka_pembahasan: '__CBTW_BUKAPEMB__',
+  kkm: __CBTW_KKM__,
+  bobot_pg: __CBTW_BOBOTPG__,
+  bobot_esai: __CBTW_BOBOTESAI__,
+  theme_color: '__CBTW_THEME__',
+  welcome_message: '__CBTW_WELCOME__',
+  institution_name: '__CBTW_INSTNAME__',
+  institution_short_name: '__CBTW_INSTSHORT__',
+  institution_logo: '__CBTW_LOGO__',
+  institution_field_label: '__CBTW_INSTLABEL__',
+  participant_field_label: '__CBTW_PESERTALABEL__',
+  participant_reset_msg: 'Peserta bisa mengerjakan ulang.',
+  reset_token_pel: '__CBTW_RESETPEL__',
+  hdr_nama: '__CBTW_HDRNAMA__',
+  hdr_inst: '__CBTW_HDRINST__'
+};
+
+// -- MENU - dibangun langsung di sini, tidak didelegasikan ke Library --
+function onOpen(){
+  SpreadsheetApp.getUi().createMenu('CBT Kabut Digital')
+    .addItem('Setup Sheet Awal (Pengguna Baru)', 'setupSheetAwal')
+    .addSeparator()
+    .addItem('Buka Panel Koreksi & Analisis', 'bukaPanel')
+    .addItem('Kunci Semua Sheet', 'kunciSheet')
+    .addItem('Buka Kunci Semua Sheet', 'bukaKunciSheet')
+    .addItem('Pasang Trigger (lakukan sekali)', 'pasangTrigger')
+    .addItem('Hapus Cache Soal', 'hapusCache')
+    .addToUi();
+}
+
+// -- SEMUA FUNGSI DI BAWAH INI MENERUSKAN KE LIBRARY --
+function setupSheetAwal(){
+  CBTKDLib.setupSheetAwal(SpreadsheetApp.getActiveSpreadsheet(), CBT_CONFIG);
+}
+
+function bukaPanel(){
+  CBTKDLib.bukaPanel();
+}
+
+function kunciSheet(){
+  CBTKDLib.kunciSheet(SpreadsheetApp.getActiveSpreadsheet());
+}
+
+function bukaKunciSheet(){
+  CBTKDLib.bukaKunciSheet(SpreadsheetApp.getActiveSpreadsheet());
+}
+
+function pasangTrigger(){
+  CBTKDLib.pasangTrigger(SpreadsheetApp.getActiveSpreadsheet());
+}
+
+function hapusCache(){
+  CBTKDLib.hapusCache();
+}
+
+function doGet(e){
+  return CBTKDLib.doGet(e, SpreadsheetApp.getActiveSpreadsheet());
+}
+
+function doPost(e){
+  return CBTKDLib.doPost(e, SpreadsheetApp.getActiveSpreadsheet(), CBT_CONFIG);
+}
+
+function sidebarAmbilEsai(idxSoal){
+  return CBTKDLib.sidebarAmbilEsai(idxSoal, SpreadsheetApp.getActiveSpreadsheet());
+}
+
+function sidebarSimpanSemua(payload, poinMax){
+  return CBTKDLib.sidebarSimpanSemua(payload, poinMax, SpreadsheetApp.getActiveSpreadsheet());
+}
+
+function sidebarMulaiAnalisis(){
+  return CBTKDLib.sidebarMulaiAnalisis(SpreadsheetApp.getActiveSpreadsheet(), CBT_CONFIG);
+}
+
+function sidebarArsipData(nm, fid){
+  return CBTKDLib.sidebarArsipData(nm, fid, SpreadsheetApp.getActiveSpreadsheet());
+}
+
+function sidebarDownloadExcel(){
+  return CBTKDLib.sidebarDownloadExcel(SpreadsheetApp.getActiveSpreadsheet());
+}
+`;
+
+document.addEventListener('DOMContentLoaded', pWizInit);
+</script>
+</body>
+</html>

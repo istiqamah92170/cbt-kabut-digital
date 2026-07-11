@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Aplikasi Pendukung — CBT Kabut Digital</title>
+<meta name="description" content="Perkakas tambahan dari ekosistem Kabut Digital yang bisa dipakai berdampingan dengan CBT Kabut Digital.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══ Token desain — SAMA PERSIS dengan index.html/wizard.html ═══ */
+:root {
+  --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+  --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+  --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+  --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --sh-sm:0 1px 4px rgba(10,53,102,.08);
+  --sh-md:0 4px 16px rgba(10,53,102,.10);
+  --sh-lg:0 8px 32px rgba(10,53,102,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:var(--gray-dark);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+a{color:inherit;}
+
+.wrap{width:100%;max-width:560px;padding:0 20px 64px;}
+
+/* ── Navbar situs (SAMA di semua halaman) ── */
+.site-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);
+  border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-sm);}
+.site-nav-inner{max-width:560px;margin:0 auto;padding:12px 20px;display:flex;
+  align-items:center;justify-content:space-between;gap:10px;}
+.site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
+  color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
+.site-nav-links{display:flex;gap:2px;}
+.nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
+  padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
+.nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
+.nav-link:hover{color:var(--blue-main);}
+
+/* ── Header halaman (non-hero, lebih ringkas dari Beranda) ── */
+.page-head{width:100%;background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-main) 100%);
+  color:white;padding:36px 20px 34px;}
+.page-head-inner{max-width:520px;margin:0 auto;}
+.page-head h1{font-size:24px;font-weight:800;margin-bottom:8px;}
+.page-head p{font-size:13.5px;opacity:.88;line-height:1.6;max-width:440px;}
+
+.section{width:100%;max-width:560px;padding:32px 20px;}
+.section-sub{font-size:13px;color:var(--gray-soft);margin-bottom:20px;line-height:1.55;}
+
+/* ── Grid Aplikasi Pendukung ── */
+.app-grid{display:flex;flex-direction:column;gap:12px;}
+.app-card{background:var(--white);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-sm);
+  border:1.5px solid var(--gray-line);}
+.app-card-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.app-card .ico-badge{width:40px;height:40px;border-radius:50%;background:var(--blue-pale);
+  color:var(--blue-main);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.app-card .ico-badge svg{width:20px;height:20px;}
+.app-card h3{font-size:14.5px;font-weight:800;color:var(--gray-dark);}
+.app-card .desc{font-size:12.5px;color:var(--gray-mid);line-height:1.55;margin-bottom:10px;}
+.app-card .fitur{list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.app-card .fitur li{font-size:12px;color:var(--gray-soft);line-height:1.5;padding-left:16px;position:relative;}
+.app-card .fitur li::before{content:'';position:absolute;left:2px;top:7px;width:5px;height:5px;
+  border-radius:50%;background:var(--blue-mid);}
+.app-card .app-link{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;
+  color:var(--blue-main);text-decoration:none;}
+.app-card .app-link:hover{text-decoration:underline;}
+.app-grid-empty{text-align:center;padding:30px 16px;color:var(--gray-soft);font-size:12.5px;
+  background:var(--white);border-radius:var(--r-lg);border:1.5px dashed var(--gray-line);}
+
+footer{width:100%;max-width:560px;padding:24px 20px 40px;text-align:center;}
+footer p{font-size:11px;color:var(--gray-soft);}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a href="./index.html" class="site-logo">CBT Kabut Digital</a>
+    <div class="site-nav-links">
+      <a href="./index.html" class="nav-link">Beranda</a>
+      <a href="./aplikasi.html" class="nav-link active">Aplikasi</a>
+      <a href="./tentang.html" class="nav-link">Tentang</a>
+      <a href="./kontak.html" class="nav-link">Kontak</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-head">
+  <div class="page-head-inner">
+    <h1>Aplikasi Pendukung</h1>
+    <p>Perkakas tambahan dari ekosistem Kabut Digital — dipakai berdampingan dengan CBT Kabut Digital, tidak wajib. CBT Kabut Digital sendiri ada di <a href="./index.html" style="color:white;text-decoration:underline;font-weight:700;">Beranda</a>.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="section" style="padding-top:28px;">
+    <div class="app-grid" id="app-grid"><!-- dirender oleh JS dari CBTKD_APLIKASI_PENDUKUNG --></div>
+  </section>
+</div>
+
+<footer>
+  <p>CBT Kabut Digital — bagian dari ekosistem Kabut Digital</p>
+</footer>
+
+<script>
+// ═══ APLIKASI PENDUKUNG (data-driven -- tambah/kurangi cukup edit array ini) ═══
+// TODO(Ghani): isi "url" dengan link GitHub Pages masing-masing aplikasi.
+// Untuk menambah aplikasi baru: tambahkan 1 object baru ke array ini.
+// Untuk menghapus: hapus 1 object dari array ini. Tidak perlu ubah HTML/CSS.
+const CBTKD_APLIKASI_PENDUKUNG = [
+  {
+    nama: 'OCR Multi Engine',
+    deskripsi: 'Ekstrak soal pilihan ganda dari foto ke Google Sheets secara otomatis, siap dipakai di CBT.',
+    fitur: [
+      'OCR offline pakai Tesseract.js v5 -- jalan di browser',
+      'Proxy GAS Web App sebagai jembatan ke Google Sheets',
+      'Koreksi otomatis berbasis Gemini dengan fallback multi-model',
+      'Fitur "Pisah Kolom" untuk memisahkan teks soal dan pilihan jawaban'
+    ],
+    url: 'https://ISI_URL_GITHUB_PAGES_OCR/',
+    icon: '<path d="M4 7V5a2 2 0 0 1 2-2h2"/><path d="M4 17v2a2 2 0 0 0 2 2h2"/><path d="M20 7V5a2 2 0 0 0-2-2h-2"/><path d="M20 17v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3"/>'
+  },
+  {
+    nama: 'HTML Protection Engine',
+    deskripsi: 'Lindungi file HTML aplikasi Anda dari penggandaan atau distribusi tanpa izin.',
+    fitur: [
+      'Enkripsi AES-256-GCM',
+      'Fingerprint browser terkirim ke webhook',
+      'Kunci domain & kunci waktu (time-lock)',
+      'Deteksi & pemblokiran DevTools',
+      'Blokir klik-kanan dengan deteksi konflik otomatis'
+    ],
+    url: 'https://ISI_URL_GITHUB_PAGES_PROTECTION/',
+    icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'
+  },
+  {
+    nama: 'HTML \u21c4 PWA Converter',
+    deskripsi: 'Ubah file HTML biasa menjadi aplikasi PWA siap instal, lewat 6 langkah linear.',
+    fitur: [
+      'Generate ikon otomatis lewat Canvas API',
+      'Ekspor ZIP langsung dari browser (JSZip)',
+      '4 strategi cache Service Worker',
+      'Skor kesiapan PWA (PWA Readiness Score)'
+    ],
+    url: 'https://ISI_URL_GITHUB_PAGES_CONVERTER/',
+    icon: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>'
+  }
+];
+
+function cbtkdRenderAplikasiPendukung() {
+  let wrap = document.getElementById('app-grid');
+  if (!wrap) return;
+  if (!CBTKD_APLIKASI_PENDUKUNG.length) {
+    wrap.innerHTML = '<div class="app-grid-empty">Belum ada aplikasi pendukung yang ditambahkan.</div>';
+    return;
+  }
+  let html = '';
+  CBTKD_APLIKASI_PENDUKUNG.forEach(function(app){
+    html += '<div class="app-card">'
+      + '<div class="app-card-head">'
+      + '<div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + app.icon + '</svg></div>'
+      + '<h3>' + _cbtkdEsc(app.nama) + '</h3>'
+      + '</div>'
+      + '<div class="desc">' + _cbtkdEsc(app.deskripsi) + '</div>'
+      + '<ul class="fitur">' + app.fitur.map(function(f){ return '<li>' + _cbtkdEsc(f) + '</li>'; }).join('') + '</ul>'
+      + '<a class="app-link" href="' + app.url + '" target="_blank" rel="noopener">Buka Aplikasi →</a>'
+      + '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+function _cbtkdEsc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.addEventListener('DOMContentLoaded', cbtkdRenderAplikasiPendukung);
+</script>
+</body>
+</html>

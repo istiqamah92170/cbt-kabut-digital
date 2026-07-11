@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>CBT Kabut Digital — Bikin CBT Sendiri Tanpa Ribet</title>
+<meta name="description" content="Buat sistem ujian online (CBT) untuk sekolah, kampus, kursus, perusahaan, atau instansi Anda dalam beberapa menit — tanpa server, tanpa biaya hosting, cukup Google Sheets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══ Token desain — SAMA PERSIS dengan yang dipakai Portal & wizard.html ═══ */
+:root {
+  --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+  --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+  --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+  --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --sh-sm:0 1px 4px rgba(10,53,102,.08);
+  --sh-md:0 4px 16px rgba(10,53,102,.10);
+  --sh-lg:0 8px 32px rgba(10,53,102,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:var(--gray-dark);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+a{color:inherit;}
+
+.wrap{width:100%;max-width:560px;padding:0 20px 64px;}
+
+/* ── Hero ── */
+.hero{width:100%;background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-main) 55%,var(--blue-mid) 100%);
+  color:white;padding:48px 20px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;
+  border-radius:50%;background:rgba(255,255,255,.07);}
+.hero::after{content:'';position:absolute;bottom:-40px;left:-30px;width:160px;height:160px;
+  border-radius:50%;background:rgba(255,255,255,.05);}
+.hero-inner{max-width:520px;margin:0 auto;position:relative;z-index:1;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 12px;
+  font-size:11.5px;font-weight:700;letter-spacing:.3px;margin-bottom:18px;}
+.hero h1{font-size:clamp(26px,6vw,34px);font-weight:800;line-height:1.25;margin-bottom:12px;}
+.hero p{font-size:14.5px;opacity:.88;line-height:1.6;margin-bottom:26px;max-width:440px;}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:var(--r-md);
+  font-size:14.5px;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:inherit;}
+.btn-primary{background:white;color:var(--blue-deep);box-shadow:var(--sh-md);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:var(--sh-lg);}
+.btn-ghost-hero{background:rgba(255,255,255,.14);color:white;border:1.5px solid rgba(255,255,255,.35);}
+
+/* ── Cara Kerja (teaser, non-interaktif) ── */
+.section{width:100%;max-width:560px;padding:40px 20px;}
+.section-title{font-size:19px;font-weight:800;color:var(--gray-dark);margin-bottom:4px;}
+.section-sub{font-size:13px;color:var(--gray-soft);margin-bottom:22px;}
+.cara-kerja-list{display:flex;flex-direction:column;gap:2px;}
+.ck-item{display:flex;align-items:flex-start;gap:14px;padding:14px 0;position:relative;}
+.ck-item:not(:last-child)::after{content:'';position:absolute;left:19px;top:44px;bottom:-8px;
+  width:2px;background:var(--gray-line);}
+.ck-dot{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:var(--blue-pale);
+  color:var(--blue-main);display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:15px;z-index:1;}
+.ck-txt .t{font-size:14.5px;font-weight:700;color:var(--gray-dark);margin-bottom:2px;}
+.ck-txt .d{font-size:12.5px;color:var(--gray-soft);line-height:1.5;}
+
+/* ── Navbar situs (SAMA di semua halaman: index/aplikasi/tentang/kontak) ── */
+.site-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);
+  border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-sm);}
+.site-nav-inner{max-width:560px;margin:0 auto;padding:12px 20px;display:flex;
+  align-items:center;justify-content:space-between;gap:10px;}
+.site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
+  color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
+.site-nav-links{display:flex;gap:2px;}
+.nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
+  padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
+.nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
+.nav-link:hover{color:var(--blue-main);}
+
+/* ── Carousel tutorial bergambar ── */
+.carousel{position:relative;}
+.carousel-viewport{overflow:hidden;border-radius:var(--r-lg);}
+.carousel-track{display:flex;transition:transform .35s ease;touch-action:pan-y;}
+.carousel-slide{flex:0 0 100%;}
+.carousel-img{aspect-ratio:16/10;border-radius:var(--r-lg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;color:white;font-size:13.5px;font-weight:700;text-align:center;}
+.carousel-img.ph{background:linear-gradient(135deg,var(--blue-deep),var(--blue-mid));}
+.carousel-img.ph span{font-size:34px;font-weight:800;opacity:.5;}
+.carousel-nav{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;
+  border:none;background:rgba(255,255,255,.92);box-shadow:var(--sh-md);color:var(--blue-deep);
+  font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.carousel-nav.prev{left:8px;} .carousel-nav.next{right:8px;}
+.carousel-dots{display:flex;justify-content:center;gap:6px;margin-top:12px;}
+.carousel-dots .dot{width:7px;height:7px;border-radius:50%;background:var(--gray-line);cursor:pointer;transition:all .2s;}
+.carousel-dots .dot.active{background:var(--blue-main);width:18px;border-radius:4px;}
+
+/* ── Video frame ── */
+.video-frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--r-lg);overflow:hidden;
+  background:var(--gray-dark);box-shadow:var(--sh-sm);}
+.video-frame iframe{width:100%;height:100%;border:none;display:block;}
+.video-placeholder-note{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:16px;font-size:11.5px;color:rgba(255,255,255,.65);line-height:1.5;pointer-events:none;}
+.video-placeholder-note code{background:rgba(255,255,255,.12);padding:1px 5px;border-radius:4px;}
+
+/* ── Keunggulan (pillars) ── */
+.pillars{display:grid;grid-template-columns:1fr;gap:12px;}
+.pillar{background:var(--white);border-radius:var(--r-lg);padding:18px 18px 20px;
+  box-shadow:var(--sh-sm);border:1.5px solid var(--gray-line);display:flex;gap:14px;align-items:flex-start;}
+.pillar .ico-badge{width:42px;height:42px;border-radius:50%;background:var(--blue-pale);
+  color:var(--blue-main);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pillar .ico-badge svg{width:21px;height:21px;}
+.pillar h3{font-size:14.5px;font-weight:700;color:var(--gray-dark);margin-bottom:4px;}
+.pillar p{font-size:12.5px;color:var(--gray-soft);line-height:1.55;}
+
+/* ── Form identitas pengunjung ── */
+.identity-card{background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh-md);
+  border:1.5px solid var(--gray-line);padding:24px 22px;scroll-margin-top:24px;}
+.identity-card h2{font-size:17px;font-weight:800;color:var(--gray-dark);margin-bottom:4px;}
+.identity-card .sub{font-size:12.5px;color:var(--gray-soft);margin-bottom:18px;line-height:1.55;}
+.p-fg{margin-bottom:14px;}
+.p-fg label{display:block;font-size:11.5px;font-weight:700;color:var(--gray-mid);
+  margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+.p-fg input{width:100%;padding:11px 14px;border:1.5px solid var(--gray-line);
+  border-radius:var(--r-sm);font-size:14px;font-family:inherit;outline:none;
+  background:var(--white);transition:border-color .2s;}
+.p-fg input:focus{border-color:var(--blue-main);}
+.identity-note{background:var(--blue-pale);border:1px solid var(--blue-light);border-radius:var(--r-sm);
+  padding:10px 12px;font-size:11.5px;color:var(--gray-mid);line-height:1.55;margin-bottom:18px;}
+.identity-note a{color:var(--blue-main);font-weight:700;text-decoration:underline;}
+.identity-actions{display:flex;gap:10px;}
+.identity-actions .btn{flex:1;justify-content:center;padding:12px;}
+.btn-skip{background:var(--gray-bg);color:var(--gray-mid);border:1.5px solid var(--gray-line);}
+.btn-lanjut{background:linear-gradient(135deg,var(--blue-deep),var(--blue-main));color:white;box-shadow:var(--sh-sm);}
+.btn-lanjut:hover{transform:translateY(-1px);}
+
+footer{width:100%;max-width:560px;padding:24px 20px 40px;text-align:center;}
+footer p{font-size:11px;color:var(--gray-soft);}
+
+@media(min-width:640px){ .pillars{grid-template-columns:1fr 1fr 1fr;} .pillar{flex-direction:column;} }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a href="./index.html" class="site-logo">CBT Kabut Digital</a>
+    <div class="site-nav-links">
+      <a href="./index.html" class="nav-link active">Beranda</a>
+      <a href="./aplikasi.html" class="nav-link">Aplikasi</a>
+      <a href="./tentang.html" class="nav-link">Tentang</a>
+      <a href="./kontak.html" class="nav-link">Kontak</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">CBT Kabut Digital</div>
+    <h1>Bikin CBT Sendiri, Tanpa Ribet Urus Server</h1>
+    <p>Sistem ujian online lengkap — token peserta, anti-kecurangan, koreksi esai, sampai analisis butir soal — jalan di atas Google Sheets milik Anda sendiri. Isi wizard 5 langkah, unduh file setup, selesai.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="cbtkdMulai()">Mulai Buat CBT →</button>
+      <button class="btn btn-ghost-hero" onclick="cbtkdScrollKe('cara-kerja')">Lihat Cara Kerja</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="section" id="cara-kerja" style="padding-top:36px;">
+    <div class="section-title">Cara Kerja</div>
+    <div class="section-sub">5 langkah, sekitar 5–10 menit</div>
+    <div class="cara-kerja-list">
+      <div class="ck-item">
+        <div class="ck-dot">1</div>
+        <div class="ck-txt"><div class="t">Jenis Institusi</div><div class="d">Sekolah, kampus, kursus, perusahaan, pemerintah, atau umum — menentukan label kolom otomatis.</div></div>
+      </div>
+      <div class="ck-item">
+        <div class="ck-dot">2</div>
+        <div class="ck-txt"><div class="t">Identitas</div><div class="d">Nama institusi, logo, dan pesan sambutan yang tampil di halaman login peserta.</div></div>
+      </div>
+      <div class="ck-item">
+        <div class="ck-dot">3</div>
+        <div class="ck-txt"><div class="t">Konfigurasi Ujian</div><div class="d">Token, durasi, judul, batas pelanggaran, acak soal, dan tema warna.</div></div>
+      </div>
+      <div class="ck-item">
+        <div class="ck-dot">4</div>
+        <div class="ck-txt"><div class="t">Bobot Nilai</div><div class="d">KKM dan proporsi nilai Pilihan Ganda vs Esai.</div></div>
+      </div>
+      <div class="ck-item">
+        <div class="ck-dot">5</div>
+        <div class="ck-txt"><div class="t">Preview &amp; Download</div><div class="d">Periksa ringkasan, unduh file setup, tempel ke Apps Script — CBT siap dipakai.</div></div>
+      </div>
+    </div>
+
+    <div class="section-title" style="font-size:15px;margin-top:28px;margin-bottom:2px;">Tutorial Bergambar</div>
+    <div class="section-sub" style="margin-bottom:14px;">Geser untuk melihat tiap langkah</div>
+    <!-- TODO(Ghani): ganti isi .carousel-img.ph (placeholder) dengan <img src="screenshot-asli.png" alt="..."> -->
+    <div class="carousel" id="carousel">
+      <div class="carousel-viewport">
+        <div class="carousel-track" id="carousel-track">
+          <div class="carousel-slide"><div class="carousel-img ph"><span>1</span>Pilih Jenis Institusi</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>2</span>Isi Identitas Institusi</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>3</span>Atur Konfigurasi Ujian</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>4</span>Atur Bobot Nilai</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>5</span>Preview &amp; Unduh File</div></div>
+        </div>
+      </div>
+      <button class="carousel-nav prev" onclick="cbtkdGeser(-1)" aria-label="Sebelumnya">‹</button>
+      <button class="carousel-nav next" onclick="cbtkdGeser(1)" aria-label="Berikutnya">›</button>
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </div>
+
+    <div class="section-title" style="font-size:15px;margin-top:26px;margin-bottom:12px;">Video Tutorial</div>
+    <!-- TODO(Ghani): ganti src dengan link embed video asli (YouTube/Drive) -->
+    <div class="video-frame">
+      <iframe src="about:blank" title="Video Tutorial CBT Kabut Digital" loading="lazy" allowfullscreen></iframe>
+      <div class="video-placeholder-note">Video belum dipasang — ganti atribut <code>src</code> iframe ini dengan link embed video Anda.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Kenapa CBT Kabut Digital</div>
+    <div class="section-sub">Dibangun untuk institusi yang tidak punya tim IT sendiri</div>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.1 2.7 3 6 3s6-1.9 6-3v-5.5"/></svg></div>
+        <div><h3>Tanpa Server Sendiri</h3><p>Jalan di atas Google Sheets &amp; Apps Script yang sudah dimiliki institusi — tidak perlu sewa hosting atau tim IT.</p></div>
+      </div>
+      <div class="pillar">
+        <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg></div>
+        <div><h3>Aman &amp; Terproteksi</h3><p>Deteksi pelanggaran, kunci sheet otomatis, token reset khusus untuk peserta bermasalah.</p></div>
+      </div>
+      <div class="pillar">
+        <div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg></div>
+        <div><h3>Analisis Otomatis</h3><p>Statistik nilai, tingkat kesukaran soal, deteksi anomali — langsung tersaji per ujian.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="identity-section" style="display:none;">
+    <div class="identity-card">
+      <h2>Sebelum mulai, boleh kenalan?</h2>
+      <div class="sub">Bantu kami mengenal siapa yang memakai CBT Kabut Digital, supaya info pembaruan yang kami kirim relevan buat Anda.</div>
+      <div class="p-fg"><label>Nama</label><input type="text" id="id-nama" placeholder="Nama Anda"></div>
+      <div class="p-fg"><label>Email</label><input type="email" id="id-email" placeholder="nama@email.com"></div>
+      <div class="p-fg"><label>Institusi</label><input type="text" id="id-institusi" placeholder="Nama sekolah/kampus/instansi"></div>
+      <div class="identity-note">Data ini hanya dipakai untuk menyesuaikan panduan dan info pembaruan — tidak wajib diisi. Lihat <a href="#">Kebijakan Privasi</a>.</div>
+      <div class="identity-actions">
+        <button class="btn btn-skip" onclick="cbtkdLanjut(false)">Lewati</button>
+        <button class="btn btn-lanjut" onclick="cbtkdLanjut(true)">Lanjut →</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>CBT Kabut Digital — bagian dari ekosistem Kabut Digital</p>
+</footer>
+
+<script>
+// ═══ Konfigurasi — TODO(Ghani): sesuaikan sebelum deploy ═══
+const CBTKD_WIZARD_URL      = './wizard.html';
+const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/ISI_DEPLOYMENT_ID_LOG/exec';
+
+function cbtkdScrollKe(id) {
+  let el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cbtkdMulai() {
+  let sec = document.getElementById('identity-section');
+  sec.style.display = 'block';
+  sec.querySelector('.identity-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ═══ CAROUSEL TUTORIAL BERGAMBAR ═══
+// Geser pakai tombol ‹ › ATAU swipe (touch/pointer) kiri-kanan.
+let _carIdx = 0;
+let _carTotal = 0;
+
+function cbtkdCarouselInit() {
+  let track = document.getElementById('carousel-track');
+  if (!track) return;
+  _carTotal = track.children.length;
+  let dotsWrap = document.getElementById('carousel-dots');
+  dotsWrap.innerHTML = '';
+  for (let i = 0; i < _carTotal; i++) {
+    let d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = (function(idx){ return function(){ cbtkdGeserKe(idx); }; })(i);
+    dotsWrap.appendChild(d);
+  }
+  cbtkdGeserKe(0);
+
+  // Swipe touch
+  let startX = null;
+  track.addEventListener('touchstart', function(e){ startX = e.touches[0].clientX; }, { passive: true });
+  track.addEventListener('touchend', function(e){
+    if (startX === null) return;
+    let dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) cbtkdGeser(dx < 0 ? 1 : -1);
+    startX = null;
+  });
+}
+
+function cbtkdGeser(dir) { cbtkdGeserKe(_carIdx + dir); }
+
+function cbtkdGeserKe(idx) {
+  if (idx < 0) idx = 0;
+  if (idx > _carTotal - 1) idx = _carTotal - 1;
+  _carIdx = idx;
+  let track = document.getElementById('carousel-track');
+  if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+  document.querySelectorAll('#carousel-dots .dot').forEach(function(d, i){
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+// Opsi A (non-blocking) sesuai Handover Doc: baik "Lewati" maupun "Lanjut"
+// SAMA-SAMA meneruskan ke wizard. Bedanya hanya apakah data dicatat.
+function cbtkdLanjut(catatData) {
+  if (catatData) {
+    let payload = {
+      action: 'catatPengunjungWizard',
+      nama: document.getElementById('id-nama').value.trim(),
+      email: document.getElementById('id-email').value.trim(),
+      institusi: document.getElementById('id-institusi').value.trim()
+    };
+    // Fire-and-forget: kegagalan log TIDAK BOLEH menghalangi akses ke wizard.
+    try {
+      fetch(CBTKD_LOG_ENDPOINT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      }).catch(function(){ /* diam-diam gagal, tidak mengganggu pengguna */ });
+    } catch (e) { /* diam-diam gagal */ }
+  }
+  window.location.href = CBTKD_WIZARD_URL;
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  cbtkdCarouselInit();
+});
+</script>
+</body>
+</html>
