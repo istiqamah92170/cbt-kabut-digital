@@ -308,9 +308,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
   </div>
 </div>
 <script>
-// URL Beranda situs CBT Kabut Digital -- dipakai tombol "Kembali" dan "Kembali ke Beranda"
-// TODO(Ghani): isi dengan URL final setelah domain/struktur website ditentukan
-const CBTKD_HOME_URL = 'https://cbtkabutdigital.example/';
+// URL Beranda situs CBT Kabut Digital -- dipakai tombol "Kembali" dan "Kembali ke Beranda".
+// Path relatif karena wizard.html & index.html terbukti satu folder saat live.
+const CBTKD_HOME_URL = './index.html';
 
 // Halaman Beranda + parameter yang memicu form identitas terbuka otomatis --
 // dipakai gate akses di bawah. Asumsi: wizard.html & index.html satu folder
