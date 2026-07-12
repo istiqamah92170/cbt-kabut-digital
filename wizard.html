@@ -312,6 +312,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 // TODO(Ghani): isi dengan URL final setelah domain/struktur website ditentukan
 const CBTKD_HOME_URL = 'https://cbtkabutdigital.example/';
 
+// Halaman Beranda + parameter yang memicu form identitas terbuka otomatis --
+// dipakai gate akses di bawah. Asumsi: wizard.html & index.html satu folder
+// (lihat panduan hosting). TODO(Ghani): sesuaikan kalau strukturnya beda.
+const CBTKD_GATE_REDIRECT_URL = './index.html?perluAkses=1#identity-section';
+
+// ═══ GATE AKSES ═══
+// Cek penanda yang ditinggalkan index.html setelah Nama+Email divalidasi.
+// CATATAN: ini penyaringan dasar di sisi klien, bukan mekanisme keamanan
+// tingkat lanjut -- sessionStorage dapat diisi manual lewat DevTools oleh
+// pengguna yang memahami cara kerjanya.
+function cbtkdCekGateAkses() {
+  let sudahIsi = false;
+  try { sudahIsi = sessionStorage.getItem('cbtkd_wizard_akses') === '1'; } catch (e) {}
+  if (!sudahIsi) {
+    window.location.href = CBTKD_GATE_REDIRECT_URL;
+    return false;
+  }
+  return true;
+}
+
 // Helper escape HTML -- disalin dari bagian HELPER generik Portal (bukan bagian
 // wizard aslinya, tapi wizard.js butuh ini untuk pWizRow()/pWizRenderSummary())
 function _esc(s) {
@@ -684,7 +704,9 @@ function sidebarDownloadExcel(){
 }
 `;
 
-document.addEventListener('DOMContentLoaded', pWizInit);
+document.addEventListener('DOMContentLoaded', function(){
+  if (cbtkdCekGateAkses()) pWizInit();
+});
 </script>
 </body>
 </html>
