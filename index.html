@@ -79,7 +79,8 @@ a{color:inherit;}
 .carousel-track{display:flex;transition:transform .35s ease;touch-action:pan-y;}
 .carousel-slide{flex:0 0 100%;}
 .carousel-img{aspect-ratio:16/10;border-radius:var(--r-lg);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:8px;color:white;font-size:13.5px;font-weight:700;text-align:center;}
+  align-items:center;justify-content:center;gap:8px;color:white;font-size:13.5px;font-weight:700;
+  text-align:center;padding:0 28px;line-height:1.4;}
 .carousel-img.ph{background:linear-gradient(135deg,var(--blue-deep),var(--blue-mid));}
 .carousel-img.ph span{font-size:34px;font-weight:800;opacity:.5;}
 .carousel-nav{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;
@@ -195,17 +196,18 @@ footer p{font-size:11px;color:var(--gray-soft);}
       </div>
     </div>
 
-    <div class="section-title" style="font-size:15px;margin-top:28px;margin-bottom:2px;">Tutorial Bergambar</div>
-    <div class="section-sub" style="margin-bottom:14px;">Geser untuk melihat tiap langkah</div>
+    <div class="section-title" style="font-size:15px;margin-top:28px;margin-bottom:2px;">Tutorial Bergambar: Setelah File Diunduh</div>
+    <div class="section-sub" style="margin-bottom:14px;">Geser untuk melihat cara memasang file hasil wizard ke Google Sheet Anda</div>
     <!-- TODO(Ghani): ganti isi .carousel-img.ph (placeholder) dengan <img src="screenshot-asli.png" alt="..."> -->
     <div class="carousel" id="carousel">
       <div class="carousel-viewport">
         <div class="carousel-track" id="carousel-track">
-          <div class="carousel-slide"><div class="carousel-img ph"><span>1</span>Pilih Jenis Institusi</div></div>
-          <div class="carousel-slide"><div class="carousel-img ph"><span>2</span>Isi Identitas Institusi</div></div>
-          <div class="carousel-slide"><div class="carousel-img ph"><span>3</span>Atur Konfigurasi Ujian</div></div>
-          <div class="carousel-slide"><div class="carousel-img ph"><span>4</span>Atur Bobot Nilai</div></div>
-          <div class="carousel-slide"><div class="carousel-img ph"><span>5</span>Preview &amp; Unduh File</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>1</span>Buat Google Sheet Baru</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>2</span>Buka Ekstensi &rarr; Apps Script</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>3</span>Tambahkan Library CBT-KD (Script ID di komentar file)</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>4</span>Tempel Isi File yang Diunduh</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>5</span>Deploy sebagai Web App</div></div>
+          <div class="carousel-slide"><div class="carousel-img ph"><span>6</span>Jalankan Menu "Setup Sheet Awal"</div></div>
         </div>
       </div>
       <button class="carousel-nav prev" onclick="cbtkdGeser(-1)" aria-label="Sebelumnya">‹</button>
