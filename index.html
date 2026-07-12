@@ -120,6 +120,12 @@ a{color:inherit;}
   border-radius:var(--r-sm);font-size:14px;font-family:inherit;outline:none;
   background:var(--white);transition:border-color .2s;}
 .p-fg input:focus{border-color:var(--blue-main);}
+.p-fg input.invalid{border-color:var(--red, #C0392B);}
+.req{color:var(--red, #C0392B);}
+.field-error{font-size:11px;color:var(--red, #C0392B);margin-top:5px;display:none;}
+.field-error.show{display:block;}
+.gate-notice{background:var(--red-light, #FDECEA);border:1px solid var(--red, #C0392B);border-radius:var(--r-sm);
+  padding:10px 12px;font-size:12px;color:var(--red, #C0392B);font-weight:700;margin-bottom:16px;line-height:1.5;}
 .identity-note{background:var(--blue-pale);border:1px solid var(--blue-light);border-radius:var(--r-sm);
   padding:10px 12px;font-size:11.5px;color:var(--gray-mid);line-height:1.55;margin-bottom:18px;}
 .identity-note a{color:var(--blue-main);font-weight:700;text-decoration:underline;}
@@ -236,15 +242,26 @@ footer p{font-size:11px;color:var(--gray-soft);}
 
   <section class="section" id="identity-section" style="display:none;">
     <div class="identity-card">
-      <h2>Sebelum mulai, boleh kenalan?</h2>
-      <div class="sub">Bantu kami mengenal siapa yang memakai CBT Kabut Digital, supaya info pembaruan yang kami kirim relevan buat Anda.</div>
-      <div class="p-fg"><label>Nama</label><input type="text" id="id-nama" placeholder="Nama Anda"></div>
-      <div class="p-fg"><label>Email</label><input type="email" id="id-email" placeholder="nama@email.com"></div>
-      <div class="p-fg"><label>Institusi</label><input type="text" id="id-institusi" placeholder="Nama sekolah/kampus/instansi"></div>
-      <div class="identity-note">Data ini hanya dipakai untuk menyesuaikan panduan dan info pembaruan — tidak wajib diisi. Lihat <a href="#">Kebijakan Privasi</a>.</div>
+      <h2>Sebelum mulai, kenalan dulu ya</h2>
+      <div class="sub">Wizard ini kami sediakan untuk institusi yang benar-benar membutuhkan CBT — isi data berikut untuk melanjutkan.</div>
+      <div class="gate-notice" id="gate-notice" style="display:none;">Isi Nama dan Email terlebih dahulu untuk mengakses wizard.</div>
+      <div class="p-fg">
+        <label>Nama <span class="req">*</span></label>
+        <input type="text" id="id-nama" placeholder="Nama Anda">
+        <div class="field-error" id="err-nama"></div>
+      </div>
+      <div class="p-fg">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="id-email" placeholder="nama@email.com">
+        <div class="field-error" id="err-email"></div>
+      </div>
+      <div class="p-fg">
+        <label>Institusi</label>
+        <input type="text" id="id-institusi" placeholder="Nama sekolah/kampus/instansi (opsional)">
+      </div>
+      <div class="identity-note">Nama dan Email wajib diisi agar tim kami dapat menyesuaikan panduan dan menyampaikan informasi pembaruan yang relevan. Lihat <a href="#">Kebijakan Privasi</a>.</div>
       <div class="identity-actions">
-        <button class="btn btn-skip" onclick="cbtkdLanjut(false)">Lewati</button>
-        <button class="btn btn-lanjut" onclick="cbtkdLanjut(true)">Lanjut →</button>
+        <button class="btn btn-lanjut" style="flex:1;" onclick="cbtkdLanjut()">Lanjut ke Wizard →</button>
       </div>
     </div>
   </section>
@@ -258,7 +275,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
 <script>
 // ═══ Konfigurasi — TODO(Ghani): sesuaikan sebelum deploy ═══
 const CBTKD_WIZARD_URL      = './wizard.html';
-const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo9aLVvvulLeH9qce3Qtz_5PZ1GFWXk5qiTNNj4_T-6vf7lZOt-K0tkMSdKkR/exec';
+const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/ISI_DEPLOYMENT_ID_LOG/exec';
 
 function cbtkdScrollKe(id) {
   let el = document.getElementById(id);
@@ -269,6 +286,15 @@ function cbtkdMulai() {
   let sec = document.getElementById('identity-section');
   sec.style.display = 'block';
   sec.querySelector('.identity-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Kalau pengguna diarahkan balik ke sini dari wizard.html (belum pernah isi form),
+// buka form otomatis + tampilkan notice, supaya jelas kenapa mereka "dilempar" kembali.
+function cbtkdCekGateRedirect() {
+  if (location.search.indexOf('perluAkses=1') === -1) return;
+  cbtkdMulai();
+  let notice = document.getElementById('gate-notice');
+  if (notice) notice.style.display = 'block';
 }
 
 // ═══ CAROUSEL TUTORIAL BERGAMBAR ═══
@@ -314,30 +340,67 @@ function cbtkdGeserKe(idx) {
   });
 }
 
-// Opsi A (non-blocking) sesuai Handover Doc: baik "Lewati" maupun "Lanjut"
-// SAMA-SAMA meneruskan ke wizard. Bedanya hanya apakah data dicatat.
-function cbtkdLanjut(catatData) {
-  if (catatData) {
-    let payload = {
-      action: 'catatPengunjungWizard',
-      nama: document.getElementById('id-nama').value.trim(),
-      email: document.getElementById('id-email').value.trim(),
-      institusi: document.getElementById('id-institusi').value.trim()
-    };
-    // Fire-and-forget: kegagalan log TIDAK BOLEH menghalangi akses ke wizard.
-    try {
-      fetch(CBTKD_LOG_ENDPOINT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      }).catch(function(){ /* diam-diam gagal, tidak mengganggu pengguna */ });
-    } catch (e) { /* diam-diam gagal */ }
+// Nama & Email wajib diisi sebelum melanjutkan ke wizard.
+// Validasi ini berjalan di sisi klien (dapat dilewati lewat DevTools oleh
+// pengguna yang memahami cara kerjanya); fungsinya sebagai penyaringan dasar,
+// bukan mekanisme keamanan tingkat lanjut.
+function _cbtkdValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+function cbtkdLanjut() {
+  let nama = document.getElementById('id-nama').value.trim();
+  let email = document.getElementById('id-email').value.trim();
+  let institusi = document.getElementById('id-institusi').value.trim();
+  let inputNama = document.getElementById('id-nama');
+  let inputEmail = document.getElementById('id-email');
+  let errNama = document.getElementById('err-nama');
+  let errEmail = document.getElementById('err-email');
+
+  let valid = true;
+  if (!nama) {
+    errNama.textContent = 'Nama wajib diisi.'; errNama.classList.add('show');
+    inputNama.classList.add('invalid'); valid = false;
+  } else {
+    errNama.classList.remove('show'); inputNama.classList.remove('invalid');
   }
+  if (!email) {
+    errEmail.textContent = 'Email wajib diisi.'; errEmail.classList.add('show');
+    inputEmail.classList.add('invalid'); valid = false;
+  } else if (!_cbtkdValidEmail(email)) {
+    errEmail.textContent = 'Format email tidak valid.'; errEmail.classList.add('show');
+    inputEmail.classList.add('invalid'); valid = false;
+  } else {
+    errEmail.classList.remove('show'); inputEmail.classList.remove('invalid');
+  }
+  if (!valid) return;
+
+  let payload = { action: 'catatPengunjungWizard', nama: nama, email: email, institusi: institusi };
+  // Fire-and-forget: kegagalan log TIDAK BOLEH menghalangi akses ke wizard
+  // (asal validasi di atas sudah lolos).
+  try {
+    // mode: 'no-cors' -- GAS Web App tidak mengirim header CORS, jadi tanpa ini
+    // browser akan menganggap fetch "gagal" walau requestnya sebenarnya sukses
+    // diproses di server dan tercatat di sheet.
+    fetch(CBTKD_LOG_ENDPOINT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(function(){ /* diam-diam gagal, tidak mengganggu pengguna */ });
+  } catch (e) { /* diam-diam gagal */ }
+
+  // Tandai "sudah isi form" untuk sesi browser ini -- dicek ulang oleh wizard.html.
+  // Ini PENGHALANG RINGAN (deterrent), bukan gerbang keamanan sungguhan -- lihat
+  // catatan di wizard.html soal batasannya.
+  try { sessionStorage.setItem('cbtkd_wizard_akses', '1'); } catch (e) {}
+
   window.location.href = CBTKD_WIZARD_URL;
 }
 
 document.addEventListener('DOMContentLoaded', function(){
   cbtkdCarouselInit();
+  cbtkdCekGateRedirect();
 });
 </script>
 </body>
