@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Aplikasi Pendukung — CBT Kabut Digital</title>
-<meta name="description" content="Perkakas tambahan dari ekosistem Kabut Digital yang bisa dipakai berdampingan dengan CBT Kabut Digital.">
+<title>Aplikasi — CBT Kabut Digital</title>
+<meta name="description" content="CBT Kabut Digital dan perkakas pendukung dari ekosistem Kabut Digital.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -39,25 +39,30 @@ a{color:inherit;}
 .nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
 .nav-link:hover{color:var(--blue-main);}
 
-/* ── Header halaman (non-hero, lebih ringkas dari Beranda) ── */
+/* ── Header halaman ── */
 .page-head{width:100%;background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-main) 100%);
   color:white;padding:36px 20px 34px;}
 .page-head-inner{max-width:520px;margin:0 auto;}
 .page-head h1{font-size:24px;font-weight:800;margin-bottom:8px;}
 .page-head p{font-size:13.5px;opacity:.88;line-height:1.6;max-width:440px;}
 
-.section{width:100%;max-width:560px;padding:32px 20px;}
-.section-sub{font-size:13px;color:var(--gray-soft);margin-bottom:20px;line-height:1.55;}
+.section{width:100%;max-width:560px;padding:32px 20px 8px;}
+.section-title{font-size:15px;font-weight:800;color:var(--gray-dark);margin-bottom:4px;}
+.section-sub{font-size:12.5px;color:var(--gray-soft);margin-bottom:16px;line-height:1.55;}
 
-/* ── Grid Aplikasi Pendukung ── */
+/* ── Grid Aplikasi ── */
 .app-grid{display:flex;flex-direction:column;gap:12px;}
 .app-card{background:var(--white);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-sm);
   border:1.5px solid var(--gray-line);}
+.app-card.utama{border:1.5px solid var(--blue-mid);box-shadow:var(--sh-md);}
 .app-card-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
 .app-card .ico-badge{width:40px;height:40px;border-radius:50%;background:var(--blue-pale);
   color:var(--blue-main);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.app-card.utama .ico-badge{background:var(--blue-deep);color:white;}
 .app-card .ico-badge svg{width:20px;height:20px;}
-.app-card h3{font-size:14.5px;font-weight:800;color:var(--gray-dark);}
+.app-card h3{font-size:14.5px;font-weight:800;color:var(--gray-dark);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.badge-pwa{display:inline-block;background:var(--blue-pale);color:var(--blue-main);font-size:10px;
+  font-weight:800;letter-spacing:.3px;padding:2px 8px;border-radius:20px;text-transform:uppercase;}
 .app-card .desc{font-size:12.5px;color:var(--gray-mid);line-height:1.55;margin-bottom:10px;}
 .app-card .fitur{list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .app-card .fitur li{font-size:12px;color:var(--gray-soft);line-height:1.5;padding-left:16px;position:relative;}
@@ -68,6 +73,8 @@ a{color:inherit;}
 .app-card .app-link:hover{text-decoration:underline;}
 .app-grid-empty{text-align:center;padding:30px 16px;color:var(--gray-soft);font-size:12.5px;
   background:var(--white);border-radius:var(--r-lg);border:1.5px dashed var(--gray-line);}
+.draft-note{background:var(--blue-pale);border:1px dashed var(--blue-light);border-radius:var(--r-sm);
+  padding:10px 12px;font-size:11.5px;color:var(--gray-mid);margin:0 20px 16px;line-height:1.55;}
 
 footer{width:100%;max-width:560px;padding:24px 20px 40px;text-align:center;}
 footer p{font-size:11px;color:var(--gray-soft);}
@@ -82,21 +89,31 @@ footer p{font-size:11px;color:var(--gray-soft);}
       <a href="./index.html" class="nav-link">Beranda</a>
       <a href="./aplikasi.html" class="nav-link active">Aplikasi</a>
       <a href="./tentang.html" class="nav-link">Tentang</a>
-      <a href="./kontak.html" class="nav-link">Kontak</a>
     </div>
   </div>
 </nav>
 
 <div class="page-head">
   <div class="page-head-inner">
-    <h1>Aplikasi Pendukung</h1>
-    <p>Perkakas tambahan dari ekosistem Kabut Digital — dipakai berdampingan dengan CBT Kabut Digital, tidak wajib. CBT Kabut Digital sendiri ada di <a href="./index.html" style="color:white;text-decoration:underline;font-weight:700;">Beranda</a>.</p>
+    <h1>Aplikasi</h1>
+    <p>CBT Kabut Digital sebagai aplikasi utama, plus perkakas pendukung dari ekosistem Kabut Digital.</p>
   </div>
 </div>
 
 <div class="wrap">
-  <section class="section" style="padding-top:28px;">
-    <div class="app-grid" id="app-grid"><!-- dirender oleh JS dari CBTKD_APLIKASI_PENDUKUNG --></div>
+  <section class="section">
+    <div class="section-title">Aplikasi Utama</div>
+    <div class="section-sub">Sistem ujian online CBT Kabut Digital — bisa dipakai langsung dari browser, atau diinstal seperti aplikasi biasa di HP Android.</div>
+    <div class="app-grid" id="app-grid-utama"><!-- dirender oleh JS dari CBTKD_APLIKASI_UTAMA --></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Aplikasi Pendukung</div>
+    <div class="section-sub">Perkakas tambahan yang dipakai berdampingan dengan CBT Kabut Digital, tidak wajib.</div>
+  </section>
+  <div class="draft-note">Dua aplikasi pendukung di bawah masih placeholder — menunggu link &amp; deskripsi resmi dari Ghani.</div>
+  <section class="section" style="padding-top:0;">
+    <div class="app-grid" id="app-grid-pendukung"><!-- dirender oleh JS dari CBTKD_APLIKASI_PENDUKUNG --></div>
   </section>
 </div>
 
@@ -105,63 +122,59 @@ footer p{font-size:11px;color:var(--gray-soft);}
 </footer>
 
 <script>
-// ═══ APLIKASI PENDUKUNG (data-driven -- tambah/kurangi cukup edit array ini) ═══
-// TODO(Ghani): isi "url" dengan link GitHub Pages masing-masing aplikasi.
-// Untuk menambah aplikasi baru: tambahkan 1 object baru ke array ini.
-// Untuk menghapus: hapus 1 object dari array ini. Tidak perlu ubah HTML/CSS.
-const CBTKD_APLIKASI_PENDUKUNG = [
+// ═══ APLIKASI UTAMA ═══
+// TODO(Ghani): isi "url" dengan alamat CBT KD yang sudah live (GitHub Pages
+// atau domain baru). Tetap file mandiri dengan manifest+service worker
+// sendiri -- tautan ini TIDAK mengubah cara instalnya di Android.
+const CBTKD_APLIKASI_UTAMA = [
   {
-    nama: 'OCR Multi Engine',
-    deskripsi: 'Ekstrak soal pilihan ganda dari foto ke Google Sheets secara otomatis, siap dipakai di CBT.',
+    nama: 'CBT Kabut Digital',
+    pwa: true,
+    deskripsi: 'Sistem ujian online lengkap -- token peserta, anti-kecurangan, koreksi esai, sampai analisis butir soal. Bisa diinstal ke layar utama HP seperti aplikasi biasa.',
     fitur: [
-      'OCR offline pakai Tesseract.js v5 -- jalan di browser',
-      'Proxy GAS Web App sebagai jembatan ke Google Sheets',
-      'Koreksi otomatis berbasis Gemini dengan fallback multi-model',
-      'Fitur "Pisah Kolom" untuk memisahkan teks soal dan pilihan jawaban'
+      'Berjalan di atas Google Sheets & Apps Script milik institusi sendiri',
+      'Bisa diinstal (PWA) di Android -- ikon muncul di layar utama, bisa dipakai offline',
+      'Belum punya CBT? Buat lewat wizard di Beranda'
     ],
-    url: 'https://ISI_URL_GITHUB_PAGES_OCR/',
-    icon: '<path d="M4 7V5a2 2 0 0 1 2-2h2"/><path d="M4 17v2a2 2 0 0 0 2 2h2"/><path d="M20 7V5a2 2 0 0 0-2-2h-2"/><path d="M20 17v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3"/>'
-  },
-  {
-    nama: 'HTML Protection Engine',
-    deskripsi: 'Lindungi file HTML aplikasi Anda dari penggandaan atau distribusi tanpa izin.',
-    fitur: [
-      'Enkripsi AES-256-GCM',
-      'Fingerprint browser terkirim ke webhook',
-      'Kunci domain & kunci waktu (time-lock)',
-      'Deteksi & pemblokiran DevTools',
-      'Blokir klik-kanan dengan deteksi konflik otomatis'
-    ],
-    url: 'https://ISI_URL_GITHUB_PAGES_PROTECTION/',
-    icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'
-  },
-  {
-    nama: 'HTML \u21c4 PWA Converter',
-    deskripsi: 'Ubah file HTML biasa menjadi aplikasi PWA siap instal, lewat 6 langkah linear.',
-    fitur: [
-      'Generate ikon otomatis lewat Canvas API',
-      'Ekspor ZIP langsung dari browser (JSZip)',
-      '4 strategi cache Service Worker',
-      'Skor kesiapan PWA (PWA Readiness Score)'
-    ],
-    url: 'https://ISI_URL_GITHUB_PAGES_CONVERTER/',
-    icon: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>'
+    url: 'https://ISI_URL_APLIKASI_CBT_KD/',
+    icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'
   }
 ];
 
-function cbtkdRenderAplikasiPendukung() {
-  let wrap = document.getElementById('app-grid');
+// ═══ APLIKASI PENDUKUNG (data-driven -- tambah/kurangi cukup edit array ini) ═══
+// TODO(Ghani): ganti "url", "deskripsi", dan "fitur" dengan detail asli
+// begitu link dan penjelasannya dikirim.
+const CBTKD_APLIKASI_PENDUKUNG = [
+  {
+    nama: 'Konverter Link Gambar',
+    deskripsi: 'Mengubah link Google Drive menjadi URL gambar yang bisa langsung dipakai di soal CBT.',
+    fitur: [ 'TODO: isi fitur asli dari Ghani' ],
+    url: 'https://ISI_URL_KONVERTER_GAMBAR/',
+    icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'
+  },
+  {
+    nama: 'Konverter Soal Google Form ke CBT',
+    deskripsi: 'Mengubah soal dari Google Form menjadi format siap pakai di sheet Soal CBT Kabut Digital.',
+    fitur: [ 'TODO: isi fitur asli dari Ghani' ],
+    url: 'https://ISI_URL_KONVERTER_GFORM/',
+    icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/>'
+  }
+];
+
+function _cbtkdRenderGrid(containerId, data, opts) {
+  opts = opts || {};
+  let wrap = document.getElementById(containerId);
   if (!wrap) return;
-  if (!CBTKD_APLIKASI_PENDUKUNG.length) {
-    wrap.innerHTML = '<div class="app-grid-empty">Belum ada aplikasi pendukung yang ditambahkan.</div>';
+  if (!data.length) {
+    wrap.innerHTML = '<div class="app-grid-empty">Belum ada aplikasi yang ditambahkan.</div>';
     return;
   }
   let html = '';
-  CBTKD_APLIKASI_PENDUKUNG.forEach(function(app){
-    html += '<div class="app-card">'
+  data.forEach(function(app){
+    html += '<div class="app-card' + (opts.utama ? ' utama' : '') + '">'
       + '<div class="app-card-head">'
       + '<div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + app.icon + '</svg></div>'
-      + '<h3>' + _cbtkdEsc(app.nama) + '</h3>'
+      + '<h3>' + _cbtkdEsc(app.nama) + (app.pwa ? '<span class="badge-pwa">Bisa Diinstal</span>' : '') + '</h3>'
       + '</div>'
       + '<div class="desc">' + _cbtkdEsc(app.deskripsi) + '</div>'
       + '<ul class="fitur">' + app.fitur.map(function(f){ return '<li>' + _cbtkdEsc(f) + '</li>'; }).join('') + '</ul>'
@@ -175,7 +188,10 @@ function _cbtkdEsc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-document.addEventListener('DOMContentLoaded', cbtkdRenderAplikasiPendukung);
+document.addEventListener('DOMContentLoaded', function(){
+  _cbtkdRenderGrid('app-grid-utama', CBTKD_APLIKASI_UTAMA, { utama: true });
+  _cbtkdRenderGrid('app-grid-pendukung', CBTKD_APLIKASI_PENDUKUNG, {});
+});
 </script>
 </body>
 </html>
