@@ -64,6 +64,17 @@ a{color:inherit;}
 .badge-pwa{display:inline-block;background:var(--blue-pale);color:var(--blue-main);font-size:10px;
   font-weight:800;letter-spacing:.3px;padding:2px 8px;border-radius:20px;text-transform:uppercase;}
 .app-card .desc{font-size:12.5px;color:var(--gray-mid);line-height:1.55;margin-bottom:10px;}
+
+/* ── Galeri screenshot bergaya Play Store: scroll native, snap, peek di tepi ── */
+.screenshot-gallery{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;margin:2px -18px 14px;padding:2px 18px 6px;scrollbar-width:none;}
+.screenshot-gallery::-webkit-scrollbar{display:none;}
+.screenshot-item{flex:0 0 auto;width:132px;aspect-ratio:9/19.5;border-radius:12px;scroll-snap-align:start;
+  overflow:hidden;box-shadow:var(--sh-sm);}
+.screenshot-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.screenshot-item.ph{background:linear-gradient(160deg,var(--blue-deep),var(--blue-mid));
+  display:flex;align-items:center;justify-content:center;padding:10px;}
+.screenshot-item.ph span{color:white;font-size:11px;font-weight:700;text-align:center;line-height:1.4;opacity:.9;}
 .app-card .fitur{list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .app-card .fitur li{font-size:12px;color:var(--gray-soft);line-height:1.5;padding-left:16px;position:relative;}
 .app-card .fitur li::before{content:'';position:absolute;left:2px;top:7px;width:5px;height:5px;
@@ -131,12 +142,21 @@ const CBTKD_APLIKASI_UTAMA = [
     nama: 'CBT Kabut Digital',
     pwa: true,
     deskripsi: 'Sistem ujian online lengkap -- token peserta, anti-kecurangan, koreksi esai, sampai analisis butir soal. Bisa diinstal ke layar utama HP seperti aplikasi biasa.',
+    // TODO(Ghani): isi "url" tiap screenshot dengan gambar asli (rasio potret
+    // seperti tangkapan layar HP, mis. 1080x2340px). Selama "url" kosong,
+    // kotak placeholder bergradasi akan tampil memakai "label"-nya.
+    screenshots: [
+      { url: '', label: 'Halaman Login' },
+      { url: '', label: 'Layar Ujian' },
+      { url: '', label: 'Hasil & Analisis' },
+      { url: '', label: 'Panel Koreksi Esai' }
+    ],
     fitur: [
       'Berjalan di atas Google Sheets & Apps Script milik institusi sendiri',
       'Bisa diinstal (PWA) di Android -- ikon muncul di layar utama, bisa dipakai offline',
       'Belum punya CBT? Buat lewat wizard di Beranda'
     ],
-    url: 'https://istiqamah92170.github.io/cbt-kabut-digital/app/index.html',
+    url: 'https://ISI_URL_APLIKASI_CBT_KD/',
     icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'
   }
 ];
@@ -149,7 +169,7 @@ const CBTKD_APLIKASI_PENDUKUNG = [
     nama: 'Konverter Link Gambar',
     deskripsi: 'Mengubah link Google Drive menjadi URL gambar yang bisa langsung dipakai di soal CBT.',
     fitur: [ 'TODO: isi fitur asli dari Ghani' ],
-    url: 'https://istiqamah92170.github.io/cbt_mts_DIK/Konverter_GDrive_CBT.html',
+    url: 'https://ISI_URL_KONVERTER_GAMBAR/',
     icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'
   },
   {
@@ -160,6 +180,20 @@ const CBTKD_APLIKASI_PENDUKUNG = [
     icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/>'
   }
 ];
+
+function _cbtkdRenderScreenshots(list) {
+  if (!list || !list.length) return '';
+  let html = '<div class="screenshot-gallery">';
+  list.forEach(function(s){
+    if (s.url) {
+      html += '<div class="screenshot-item"><img src="' + s.url + '" alt="' + _cbtkdEsc(s.label || '') + '" loading="lazy"></div>';
+    } else {
+      html += '<div class="screenshot-item ph"><span>' + _cbtkdEsc(s.label || 'Screenshot') + '</span></div>';
+    }
+  });
+  html += '</div>';
+  return html;
+}
 
 function _cbtkdRenderGrid(containerId, data, opts) {
   opts = opts || {};
@@ -176,6 +210,7 @@ function _cbtkdRenderGrid(containerId, data, opts) {
       + '<div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + app.icon + '</svg></div>'
       + '<h3>' + _cbtkdEsc(app.nama) + (app.pwa ? '<span class="badge-pwa">Bisa Diinstal</span>' : '') + '</h3>'
       + '</div>'
+      + _cbtkdRenderScreenshots(app.screenshots)
       + '<div class="desc">' + _cbtkdEsc(app.deskripsi) + '</div>'
       + '<ul class="fitur">' + app.fitur.map(function(f){ return '<li>' + _cbtkdEsc(f) + '</li>'; }).join('') + '</ul>'
       + '<a class="app-link" href="' + app.url + '" target="_blank" rel="noopener">Buka Aplikasi →</a>'
