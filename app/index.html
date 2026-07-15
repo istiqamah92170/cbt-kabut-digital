@@ -3,6 +3,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>CBT Kabut Digital</title>
+<script>
+// Terapkan preferensi tema secepat mungkin (sebelum CSS di-paint) supaya
+// tidak sempat "kedip" mode terang dulu baru pindah ke mode malam.
+(function(){
+  try {
+    var t = localStorage.getItem('cbt_tema');
+    if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  } catch(e) {}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
 <style>
@@ -483,9 +493,70 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 
 /* ── Version badge ── */
 .p-version{text-align:center;font-size:10px;color:var(--gray-soft);margin-top:8px;letter-spacing:.5px;}
+
+/* ═══════════════════════════════════════════════════════════
+   MODE MALAM (DARK MODE)
+   Ditambahkan 2026-07. Strategi: hampir semua elemen di file ini
+   sudah memakai CSS variable (--white, --gray-bg, --gray-dark,
+   --gray-mid, --gray-soft, --gray-line, --blue-pale, --blue-light,
+   --green-light, --red-light, --orange-light, --yellow-light),
+   jadi cukup override variable itu di bawah [data-theme="dark"]
+   supaya menjalar otomatis ke hampir semua kartu/panel/tombol
+   tanpa menyentuh ratusan selector satu-satu. Warna aksen jenuh
+   (--blue-main, --green, --red, --orange, --yellow, dst) SENGAJA
+   tidak diubah karena sudah cukup kontras di atas latar gelap.
+   ═══════════════════════════════════════════════════════════ */
+html[data-theme="dark"]{
+  --white:#1A2333; --gray-bg:#0F1620; --gray-dark:#E8ECF2;
+  --gray-mid:#AAB4C2; --gray-soft:#7C8798; --gray-line:#2C3648;
+  --blue-light:#123528; --blue-pale:#101E1B;
+  --green-light:#122A1D; --red-light:#2E1917;
+  --orange-light:#2E2013; --yellow-light:#2A2413;
+  --sh-sm:0 1px 4px rgba(0,0,0,.35);
+  --sh-md:0 4px 16px rgba(0,0,0,.4);
+  --sh-lg:0 8px 32px rgba(0,0,0,.5);
+}
+/* Beberapa surface pakai hex literal (bukan variable) -- ditambal manual di sini */
+html[data-theme="dark"] .esai-textarea{background:#1E2A2A;color:var(--gray-dark);}
+html[data-theme="dark"] .esai-textarea:focus{background:#22302F;}
+html[data-theme="dark"] .esai-ans{background:#221E14;}
+html[data-theme="dark"] .esai-ans .teks{background:#1A2333;border-color:#4A3B14;}
+html[data-theme="dark"] .rubrik-bar{background:#101E2E;}
+html[data-theme="dark"] .p-menu-item.wizard{background:#0E2119;}
+html[data-theme="dark"] .ico-badge{background:#123528;color:#34D399;}
+html[data-theme="dark"] .status-bar.loading{background:#2A2410;color:#F0C960;}
+html[data-theme="dark"] .status-bar.ok{background:#122A1D;color:#4ADE80;}
+html[data-theme="dark"] .status-bar.error{background:#2E1917;color:#F87171;}
+html[data-theme="dark"] .status-bar.retry{background:#2E2013;color:#FDBA74;}
+html[data-theme="dark"] .load-overlay{background:rgba(15,22,32,.9);}
+html[data-theme="dark"] .p-ad-slot{background:#161F2C;}
+html[data-theme="dark"] ::-webkit-scrollbar{width:10px;height:10px;}
+html[data-theme="dark"] ::-webkit-scrollbar-track{background:#0F1620;}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2C3648;border-radius:6px;}
+
+/* ── Tombol toggle mode malam — mengambang, tampil di semua layar ── */
+.theme-toggle-btn{
+  position:fixed;top:14px;right:14px;z-index:10000;
+  width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gray-line);
+  background:var(--white);color:var(--gray-dark);box-shadow:var(--sh-md);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .2s,background .2s;
+}
+.theme-toggle-btn:active{transform:scale(.9);}
+.theme-toggle-btn svg{width:19px;height:19px;}
+.theme-toggle-btn .ico-moon{display:none;}
+html[data-theme="dark"] .theme-toggle-btn .ico-sun{display:none;}
+html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
+@media(max-width:480px){ .theme-toggle-btn{top:10px;right:10px;width:36px;height:36px;} .theme-toggle-btn svg{width:17px;height:17px;} }
 </style>
-<meta name="description" content="Engine ujian CBT online — soal dari Google Sheet, hasil otomatis, anti-kecurangan."><meta name="theme-color" content="#0c7ff2"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"></head>
-<body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0c7ff2;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#0c7ff2;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
+<meta name="description" content="CBT Kabut Digital: buat ujian online untuk sekolah, kampus, atau perusahaan lewat wizard 5 langkah — tanpa server, pakai Google Sheets sendiri."><meta name="theme-color" content="#ffd700"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"></head>
+<body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ffd700;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#ffd700;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
+
+<!-- ── TOGGLE MODE MALAM — mengambang, tampil di semua layar ── -->
+<button class="theme-toggle-btn" id="btn-theme-toggle" onclick="toggleTema()" title="Ganti mode terang/malam" type="button">
+  <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+  <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+</button>
 
 <!-- ═══════════════════════════════════════════════════════════
      PORTAL SISWA — HTML
@@ -539,7 +610,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
         <div class="lbl">Backup &amp; Pemulihan</div>
         <div class="sub">Ekspor &amp; impor data</div>
       </div>
-      <a id="menu-wizard" class="p-menu-item wizard" href="https://istiqamah92170.github.io/cbt-kabut-digital/index.html" target="_blank" rel="noopener">
+      <a id="menu-wizard" class="p-menu-item wizard" href="__CBTKD_WIZARD_URL__" target="_blank" rel="noopener">
         <div class="ico-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z"></path></svg></div>
         <div class="txt">
           <div class="lbl">Buat CBT Baru</div>
@@ -1485,14 +1556,24 @@ function mulaiUjian() {
   loginCount = devData.count + 1;
   devData.count = loginCount;
   try { localStorage.setItem(LS_DEVICE, JSON.stringify(devData)); } catch(e) {}
-  // Jika login ke-2 atau lebih, reset hitungan pelanggaran ke nol
-  if (loginCount >= 2) { pelanggar = 0; }
   poinEsaiKoreksi = 0; // A-5: reset agar tidak bocor dari sesi browser sebelumnya
+  // BUG-FIX (2026-07): dulu ada baris "if (loginCount>=2) pelanggar=0" di sini.
+  // Itu mereset hitungan pelanggaran ke nol setiap kali peserta refresh/masuk
+  // ulang, padahal jawaban tetap dipertahankan lewat draft -- celah bagi peserta
+  // untuk menghapus jejak pelanggaran dengan sengaja keluar-masuk halaman.
+  // Sekarang: pelanggar TIDAK direset di sini. Nilai aslinya dipulihkan dari
+  // draft tersimpan (lihat muatDraft()) kalau ada sesi sebelumnya yang belum
+  // selesai; kalau tidak ada draft sama sekali, pelanggar tetap 0 (sesi baru).
   tMulai = new Date(); detik = DURASI * 60;
   // Muat draft jika ada (siswa yang tiba-tiba keluar bisa lanjut)
   let adaDraft = muatDraft();
   if (adaDraft) {
-    console.log('Draft jawaban ditemukan, melanjutkan sesi sebelumnya.');
+    console.log('Draft jawaban ditemukan, melanjutkan sesi sebelumnya (termasuk hitungan pelanggaran).');
+    // BUG-FIX (2026-07): sisa waktu TIDAK lagi dipulihkan dari angka statis
+    // detikSisa (itu "membekukan" waktu selama peserta di luar halaman, bisa
+    // dimanfaatkan untuk mencari jawaban dengan tenang). Sisa waktu dihitung
+    // ulang dari selisih waktu nyata sejak tMulai -- lihat hitungSisaWaktu().
+    detik = hitungSisaWaktu();
   }
   document.getElementById('exam-ttl').textContent = JUDUL;
   // Sembunyikan semua layar portal dan login
@@ -1634,12 +1715,41 @@ async function kirimBatch(payloads) {
   }
 }
 
+// ═══════════════════════════════════════════════
+//  MODE MALAM (DARK MODE)
+// ═══════════════════════════════════════════════
+function toggleTema() {
+  let dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (dark) {
+    document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('cbt_tema', 'light'); } catch(e) {}
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    try { localStorage.setItem('cbt_tema', 'dark'); } catch(e) {}
+  }
+}
+
+// BUG-FIX (2026-07): sisa waktu dihitung dari selisih waktu NYATA (wall-clock)
+// sejak tMulai, bukan dari angka detik yang cuma di-tick oleh setInterval.
+// setInterval berhenti total begitu tab ditutup/di-refresh (dan sering
+// di-throttle browser saat tab di-background di HP) -- kalau sisa waktu
+// dipulihkan apa adanya dari nilai terakhir yang sempat tersimpan, waktu ujian
+// "membeku" selama peserta di luar halaman. Dengan dihitung ulang dari
+// tMulai, waktu tetap berjalan terus walau peserta keluar/refresh berkali-kali.
+function hitungSisaWaktu() {
+  if (!tMulai) return DURASI * 60;
+  let lewat = Math.floor((Date.now() - tMulai.getTime()) / 1000);
+  let sisa  = (DURASI * 60) - lewat;
+  return sisa > 0 ? sisa : 0;
+}
+
 function simpanDraft() {
   try {
     localStorage.setItem(LS_DRAFT, JSON.stringify({
       nama: namaSiswa, sekolah: namaSekolah,
       jawPG: jawPG, jawEsai: jawEsai, raguMap: raguMap,
-      tMulai: tMulai?.toISOString(), detikSisa: detik
+      tMulai: tMulai?.toISOString(),
+      pelanggar: pelanggar // BUG-FIX (2026-07): ikut disimpan, lihat catatan di mulaiUjian()
     }));
   } catch(e) {}
 }
@@ -1654,7 +1764,7 @@ function muatDraft() {
     jawEsai  = d.jawEsai  || {};
     raguMap  = d.raguMap  || {};
     if (d.tMulai) tMulai = new Date(d.tMulai);
-    if (d.detikSisa && d.detikSisa > 0) detik = d.detikSisa;
+    pelanggar = Number.isFinite(d.pelanggar) ? d.pelanggar : pelanggar; // BUG-FIX (2026-07)
     return true;
   } catch(e) { return false; }
 }
@@ -1718,8 +1828,13 @@ function mulaiTimer() {
   ujianAktif = true;
   aktifkanWakeLock();
   timerID = setInterval(() => {
+    // BUG-FIX (2026-07): detik dihitung ulang dari selisih waktu nyata sejak
+    // tMulai setiap detak, bukan sekadar detik--. Ini membuat timer kebal
+    // terhadap throttling setInterval di browser HP saat tab di-background
+    // (waktu tetap berjalan sesuai jam asli begitu tab aktif lagi, tidak
+    // "mengejar" secara tiba-tiba atau malah berhenti diam-diam).
+    detik = hitungSisaWaktu();
     if (detik <= 0) { clearInterval(timerID); alert('Waktu habis! Jawaban dikunci.'); selesaiFinal(); return; }
-    detik--;
     let j=Math.floor(detik/3600), m=Math.floor((detik%3600)/60), d=detik%60;
     document.getElementById('timer-txt').textContent = `${String(j).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(d).padStart(2,'0')}`;
     document.getElementById('timer').classList.toggle('warn', detik <= 300);

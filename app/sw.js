@@ -2,8 +2,8 @@
 // Strategi Cache: Stale While Revalidate
 // Dibuat oleh PWA Converter Engine v2.0
 
-const CACHE_NAME = 'cbt-kabut-digital-v1';
-const STATIC_ASSETS = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './offline.html'];
+const CACHE_NAME = 'cbt-kabut-digital-v2';
+const STATIC_ASSETS = ['/', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './offline.html'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
