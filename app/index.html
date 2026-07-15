@@ -297,7 +297,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .reset-guru a:hover{color:var(--blue-mid);}
 
 @media(max-width:768px){
-  .exam-wrap{flex-direction:column;}
+  /* BUG-FIX (2026-07): .exam-wrap punya align-items:flex-start (sengaja,
+     supaya di layout desktop/landscape -- flex-direction:row -- right-panel
+     yang sticky tidak dipaksa setinggi left-panel). Tapi begitu di mode HP
+     potret exam-wrap berpindah ke flex-direction:column, align-items yang
+     SAMA itu jadi berlaku ke sumbu HORIZONTAL, bukan vertikal lagi -- akibatnya
+     kartu soal (.left-panel) dan panel navigasi (.right-panel) menyusut
+     mengikuti lebar teks/konten alih-alih melebar penuh, sehingga latar abu-abu
+     kelihatan di sisi kanan. Ditambal dengan menegaskan stretch penuh khusus
+     saat mode kolom (potret). */
+  .exam-wrap{flex-direction:column;align-items:stretch;}
+  .left-panel{width:100%;}
   .right-panel{width:100%;position:static;max-height:none;}
   .grid-nomor{grid-template-columns:repeat(6,1fr);}
 }
@@ -610,7 +620,7 @@ html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
         <div class="lbl">Backup &amp; Pemulihan</div>
         <div class="sub">Ekspor &amp; impor data</div>
       </div>
-      <a id="menu-wizard" class="p-menu-item wizard" href="https://istiqamah92170.github.io/cbt-kabut-digital/index.html" target="_blank" rel="noopener">
+      <a id="menu-wizard" class="p-menu-item wizard" href="__CBTKD_WIZARD_URL__" target="_blank" rel="noopener">
         <div class="ico-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z"></path></svg></div>
         <div class="txt">
           <div class="lbl">Buat CBT Baru</div>
@@ -2393,6 +2403,14 @@ function _pollingFokus() {
     // Kehilangan fokus yang baru → catat sebagai pelanggaran
     _fokusHilang = true;
     pelanggar++;
+    // BUG-FIX (2026-07, ronde 2): simpanDraft() sebelumnya hanya dipanggil
+    // saat peserta menjawab soal (oninput, di-debounce). Kalau peserta
+    // refresh TEPAT setelah kena pelanggaran tapi belum sempat menjawab apa
+    // pun lagi, draft di localStorage masih menyimpan angka pelanggar yang
+    // LAMA -- begitu dipulihkan di muatDraft(), pelanggaran yang baru saja
+    // terjadi seolah hilang. Makanya draft harus disimpan SAAT ITU JUGA,
+    // bukan menunggu aksi menjawab soal berikutnya.
+    simpanDraft();
     _kaburkanLayar(800);
     if (pelanggar >= MAKS_P) {
       alert(_pesanWarning(pelanggar, 0));
