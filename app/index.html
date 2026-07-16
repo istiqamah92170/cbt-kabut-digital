@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2693613981937449"
-     crossorigin="anonymous"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>CBT Kabut Digital</title>
@@ -534,12 +532,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
    tidak diubah karena sudah cukup kontras di atas latar gelap.
    ═══════════════════════════════════════════════════════════ */
 html[data-theme="dark"]{
-  /* REVISI (ronde 8): ditetapkan eksplisit sesuai instruksi -- latar halaman
-     (--gray-bg) LEBIH TERANG (#1C1D21), latar kartu/panel (--white, nama
-     variable historis) LEBIH GELAP (#080808). Kartu jadi terlihat "tenggelam"
-     ke dalam, bukan "naik" dari latar seperti konvensi mode terang -- ini
-     sengaja, sesuai gaya referensi yang diminta. */
-  --white:#080808; --gray-bg:#1C1D21; --gray-dark:#EDEDED;
+  /* REVISI (ronde 11): ditetapkan eksplisit -- latar halaman (--gray-bg)
+     #2E3338, latar kartu/panel (--white, nama variable historis) #121416. */
+  --white:#121416; --gray-bg:#2E3338; --gray-dark:#EDEDED;
   --gray-mid:#A2A2A8; --gray-soft:#78787F;
   --gray-line:#34353B;
   --title-accent:#5EEAD4; /* REVISI (ronde 4): judul/label supaya jelas tapi tidak neon -- lihat catatan di :root */
@@ -591,7 +586,7 @@ html[data-theme="dark"] .status-bar.retry{background:#2A1D10;color:#FDBA74;}
 html[data-theme="dark"] .load-overlay{background:rgba(28,29,33,.92);}
 html[data-theme="dark"] .p-ad-slot{background:#242529;}
 html[data-theme="dark"] ::-webkit-scrollbar{width:10px;height:10px;}
-html[data-theme="dark"] ::-webkit-scrollbar-track{background:#1C1D21;}
+html[data-theme="dark"] ::-webkit-scrollbar-track{background:#2E3338;}
 html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2A2A2A;border-radius:6px;}
 
 /* ── Tombol toggle mode malam — mengambang, tampil di semua layar ── */
@@ -609,7 +604,7 @@ html[data-theme="dark"] .theme-toggle-btn .ico-sun{display:none;}
 html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
 @media(max-width:480px){ .theme-toggle-btn{top:10px;right:10px;width:36px;height:36px;} .theme-toggle-btn svg{width:17px;height:17px;} }
 </style>
-<meta name="description" content="CBT Kabut Digital — Bikin Ujian Online Sendiri, Gratis"><meta name="theme-color" content="#a87c2d"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"></head>
+<meta name="description" content="&lt;meta name=&quot;description&quot; content=&quot;CBT Kabut Digital: buat ujian online untuk sekolah, kampus, atau perusahaan lewat wizard 5 langkah — tanpa server, pakai Google Sheets sendiri.&quot;&gt;"><meta name="theme-color" content="#a87c2d"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"></head>
 <body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#a87c2d;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#a87c2d;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
 
 <!-- ── TOGGLE MODE MALAM — mengambang, tampil di semua layar ── -->
@@ -670,7 +665,7 @@ html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
         <div class="lbl">Backup &amp; Pemulihan</div>
         <div class="sub">Ekspor &amp; impor data</div>
       </div>
-      <a id="menu-wizard" class="p-menu-item wizard" href="https://cbtkabutdigital.com/index.html" target="_blank" rel="noopener">
+      <a id="menu-wizard" class="p-menu-item wizard" href="__CBTKD_WIZARD_URL__" target="_blank" rel="noopener">
         <div class="ico-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z"></path></svg></div>
         <div class="txt">
           <div class="lbl">Buat CBT Baru</div>
@@ -2421,13 +2416,21 @@ function _sembunyikanSplitLock() {
 function _cekSplitScreen() {
   if (ujianSelesai) return;
   let w = window.innerWidth, h = window.innerHeight;
-  // Ukuran layar fisik (orientasi-agnostik): max dari kombinasi
-  let screenW = Math.max(screen.width, screen.height);
-  let screenH = Math.min(screen.width, screen.height);
-  // Threshold: kurang dari 55% lebar atau tinggi layar = split screen
-  let THRESH_W = screenW * 0.55;
-  let THRESH_H = screenH * 0.55;
-  let isSplit  = (w < THRESH_W) || (h < THRESH_H);
+  // Ukuran layar fisik (orientasi-agnostik): sisi panjang & sisi pendek
+  let sisiPanjang = Math.max(screen.width, screen.height);
+  let sisiPendek  = Math.min(screen.width, screen.height);
+  // BUG-FIX (2026-07): sebelumnya sisi panjang SELALU dipasangkan ke
+  // threshold lebar (w) dan sisi pendek SELALU ke threshold tinggi (h),
+  // tanpa peduli orientasi layar saat ini. Di mode potret, w (innerWidth)
+  // secara alami dekat dengan SISI PENDEK -- tapi dibandingkan ke 55% dari
+  // SISI PANJANG (yang hampir selalu lebih besar dari lebar potret itu
+  // sendiri) -- akibatnya terdeteksi "split screen" padahal cuma potret
+  // biasa. Sekarang sisi panjang/pendek dipasangkan ke sumbu w/h sesuai
+  // orientasi yang SEDANG aktif.
+  let potret = h >= w;
+  let threshW = (potret ? sisiPendek : sisiPanjang) * 0.55;
+  let threshH = (potret ? sisiPanjang : sisiPendek) * 0.55;
+  let isSplit  = (w < threshW) || (h < threshH);
   if (isSplit && !_splitLocked) {
     _tampilSplitLock();
   } else if (!isSplit && _splitLocked) {
@@ -2504,9 +2507,12 @@ function antiCheat() {
 // Helper inline cek split (dipanggil dari event focus)
 function _cekSplitInline() {
   let w = window.innerWidth, h = window.innerHeight;
-  let screenW = Math.max(screen.width, screen.height);
-  let screenH = Math.min(screen.width, screen.height);
-  return (w < screenW * 0.55) || (h < screenH * 0.55);
+  let sisiPanjang = Math.max(screen.width, screen.height);
+  let sisiPendek  = Math.min(screen.width, screen.height);
+  let potret = h >= w;
+  let threshW = (potret ? sisiPendek : sisiPanjang) * 0.55;
+  let threshH = (potret ? sisiPanjang : sisiPendek) * 0.55;
+  return (w < threshW) || (h < threshH);
 }
 
 // Hentikan semua interval anti-cheat saat ujian selesai
