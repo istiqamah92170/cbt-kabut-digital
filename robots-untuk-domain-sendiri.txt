@@ -1,0 +1,5 @@
+# robots.txt -- ditaruh di ROOT repo website, AKTIF setelah domain sendiri
+# (cbtkabutdigital.id) sudah live. Diakses di https://cbtkabutdigital.id/robots.txt
+
+User-agent: ClaudeBot
+Disallow: /
