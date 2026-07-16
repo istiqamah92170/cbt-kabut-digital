@@ -1,12 +1,12 @@
 {
   "name": "CBT Kabut Digital",
   "short_name": "CBT KD",
-  "description": "CBT Kabut Digital adalah sistem ujian online (Computer Based Test) yang bisa langsung dipakai sekolah, kampus, lembaga kursus, perusahaan, maupun instansi pemerintah — tanpa perlu sewa server, tanpa biaya hosting bulanan. Semua data ujian tersimpan di Google Sheets milik institusi Anda sendiri.",
+  "description": "CBT Kabut Digital: buat ujian online untuk sekolah, kampus, atau perusahaan lewat wizard 5 langkah — tanpa server, pakai Google Sheets sendiri.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffd700",
+  "theme_color": "#a87c2d",
   "orientation": "any",
   "lang": "id",
   "categories": [

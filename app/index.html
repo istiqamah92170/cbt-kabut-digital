@@ -20,12 +20,27 @@
   --font-arab:20px;
   --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
   --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+  /* BUG-FIX (2026-07, ronde 4): --blue-deep dipakai untuk 2 tujuan --
+     sebagai warna TEKS judul/label (butuh terang di mode malam) DAN sebagai
+     warna LATAR hover tombol zoom gambar (harus tetap gelap di kedua tema).
+     Dipisah: --title-accent khusus untuk teks judul, --blue-deep tetap apa
+     adanya untuk keperluan latar. */
+  --title-accent:#064E3B;
   --green:#1B8A4C; --green-light:#E6F7EE;
   --red:#C0392B; --red-light:#FDECEA;
   --orange:#D4550A; --orange-light:#FFF3E8;
   --yellow:#B8860B; --yellow-light:#FFFBEA;
   --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
   --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+  /* BUG-FIX (2026-07, mode malam): --gray-dark/--gray-soft dipakai untuk DUA
+     tujuan berbeda di file ini -- sebagai warna TEKS di kebanyakan tempat,
+     tapi juga sebagai warna LATAR tombol solid berteks putih (Kembali/Lanjut,
+     badge kosong, dst) di beberapa tempat. Saat mode malam meng-override
+     --gray-dark jadi warna terang (supaya teks body kebaca di latar gelap),
+     tombol solid itu ikut kebawa terang juga -- padahal dia butuh tetap gelap
+     karena teksnya putih. Makanya dipisah jadi variable sendiri yang SENGAJA
+     tidak ikut berubah di kedua tema. */
+  --chip-dark:#1E2B3A; --chip-muted:#55606E;
   --r-sm:6px; --r-md:10px; --r-lg:16px;
   --sh-sm:0 1px 4px rgba(10,53,102,.08);
   --sh-md:0 4px 16px rgba(10,53,102,.10);
@@ -98,13 +113,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 /* ── EXAM ────────────────────────────────────*/
 .left-panel{flex:1;min-width:0;background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:24px;}
 .exam-hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:2px solid var(--blue-light);margin-bottom:20px;}
-.exam-ttl{font-size:16px;font-weight:800;color:var(--blue-deep);}
+.exam-ttl{font-size:16px;font-weight:800;color:var(--title-accent);}
 .timer{display:flex;align-items:center;gap:6px;background:var(--red);color:white;padding:6px 14px;border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;transition:background .3s;}
 .timer.warn{background:var(--orange);animation:blink 1s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.6}}
 
 .soal-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-.no-lbl{font-size:18px;font-weight:800;color:var(--blue-deep);}
+.no-lbl{font-size:18px;font-weight:800;color:var(--title-accent);}
 .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
 .badge.pg_teks{background:var(--blue-light);color:var(--blue-main);border:1px solid #BDD4F5;}
 .badge.pg_gambar{background:#EEF0FF;color:#3730A3;border:1px solid #C7CAF7;}
@@ -129,7 +144,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .options-grid{display:grid;gap:10px;margin-bottom:24px;}
 .btn-opt{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1.5px solid var(--gray-line);background:var(--white);border-radius:var(--r-md);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;color:var(--gray-dark);transition:all .18s;line-height:1.5;text-align:left;}
 .btn-opt:hover{border-color:var(--blue-mid);background:var(--blue-pale);}
-.btn-opt.selected{border-color:var(--blue-main);background:var(--blue-light);color:var(--blue-deep);font-weight:700;box-shadow:0 0 0 3px rgba(26,115,232,.15);}
+.btn-opt.selected{border-color:var(--blue-main);background:var(--blue-light);color:var(--title-accent);font-weight:700;box-shadow:0 0 0 3px rgba(26,115,232,.15);}
 .opt-ltr{width:28px;height:28px;flex-shrink:0;border-radius:50%;background:var(--gray-bg);border:1.5px solid var(--gray-line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--gray-mid);transition:all .18s;}
 .btn-opt.selected .opt-ltr{background:var(--blue-main);border-color:var(--blue-main);color:white;}
 .opt-img{max-width:100%;max-height:120px;border-radius:var(--r-sm);border:1px solid var(--gray-line);display:block;}
@@ -139,7 +154,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .options-row{display:flex;gap:10px;margin-bottom:24px;flex-wrap:nowrap;}
 .btn-opt-row{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 8px;border:1.5px solid var(--gray-line);background:var(--white);border-radius:var(--r-md);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;color:var(--gray-dark);transition:all .18s;min-width:0;}
 .btn-opt-row:hover{border-color:var(--blue-mid);background:var(--blue-pale);}
-.btn-opt-row.selected{border-color:var(--blue-main);background:var(--blue-light);color:var(--blue-deep);box-shadow:0 0 0 3px rgba(26,115,232,.15);}
+.btn-opt-row.selected{border-color:var(--blue-main);background:var(--blue-light);color:var(--title-accent);box-shadow:0 0 0 3px rgba(26,115,232,.15);}
 .btn-opt-row .opt-ltr{width:28px;height:28px;flex-shrink:0;border-radius:50%;background:var(--gray-bg);border:1.5px solid var(--gray-line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--gray-mid);transition:all .18s;}
 .btn-opt-row.selected .opt-ltr{background:var(--blue-main);border-color:var(--blue-main);color:white;}
 
@@ -152,7 +167,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .kirim-ind.ok{color:var(--green);} .kirim-ind.sending{color:var(--yellow);} .kirim-ind.err{color:var(--red);}
 
 .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
-.btn-nav{padding:10px 22px;background:var(--gray-dark);color:white;border:none;border-radius:var(--r-sm);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+.btn-nav{padding:10px 22px;background:var(--chip-dark);color:white;border:none;border-radius:var(--r-sm);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;}
 .btn-nav:hover{opacity:.85;}
 .btn-ragu{background:var(--yellow-light);color:var(--yellow);border:1.5px solid #E8D48A;}
 .btn-ragu.aktif{background:#FFDE8A;border-color:var(--yellow);}
@@ -185,7 +200,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .skor-angka{font-size:68px;font-weight:800;line-height:1;letter-spacing:-2px;}
 .skor-sub{font-size:13px;opacity:.8;margin-top:4px;}
 .skor-pred{margin-top:10px;padding:5px 18px;background:rgba(255,255,255,.2);border-radius:20px;font-size:16px;font-weight:700;display:inline-block;}
-.poin-info{background:var(--blue-pale);border:1px solid var(--blue-light);border-radius:var(--r-md);padding:14px 18px;margin-bottom:18px;font-size:13px;color:var(--blue-deep);}
+.poin-info{background:var(--blue-pale);border:1px solid var(--blue-light);border-radius:var(--r-md);padding:14px 18px;margin-bottom:18px;font-size:13px;color:var(--title-accent);}
 .esai-note{background:var(--orange-light);border:1px solid #F5C6A0;border-radius:var(--r-md);padding:14px 18px;margin-bottom:18px;}
 .esai-note h4{font-size:13px;font-weight:700;color:var(--orange);margin-bottom:4px;}
 .esai-note p{font-size:12px;color:var(--gray-mid);line-height:1.5;}
@@ -200,7 +215,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .aksi-col{display:flex;flex-direction:column;gap:10px;}
 .btn-aksi{width:100%;padding:14px;border:none;border-radius:var(--r-md);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .1s;}
 .btn-aksi:hover{opacity:.9;transform:translateY(-1px);}
-.btn-aksi.analisis{background:var(--gray-soft);color:white;cursor:not-allowed;opacity:.7;}.btn-aksi.analisis.buka{background:var(--blue-main);color:white;cursor:pointer;opacity:1;}
+.btn-aksi.analisis{background:var(--chip-muted);color:white;cursor:not-allowed;opacity:.7;}.btn-aksi.analisis.buka{background:var(--blue-main);color:white;cursor:pointer;opacity:1;}
 
 /* ── SPLIT SCREEN LOCK OVERLAY ── */
 #split-lock-overlay{
@@ -262,7 +277,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .ana-no{font-size:14px;font-weight:800;}
 .ana-badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;}
 .ana-badge.benar{background:var(--green);color:white;} .ana-badge.salah{background:var(--red);color:white;}
-.ana-badge.kosong{background:var(--gray-soft);color:white;} .ana-badge.esai-p{background:var(--orange);color:white;}
+.ana-badge.kosong{background:var(--chip-muted);color:white;} .ana-badge.esai-p{background:var(--orange);color:white;}
 .ana-teks{padding:12px 14px;background:var(--blue-pale);font-size:13px;line-height:1.6;border-top:1px solid var(--blue-light);white-space:pre-wrap;word-break:break-word;}
 .ana-img{padding:10px 14px;background:var(--gray-bg);border-top:1px solid var(--gray-line);}
 .ana-img img{max-width:100%;border-radius:var(--r-sm);}
@@ -406,7 +421,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
   text-transform:uppercase;letter-spacing:.4px;}
 .p-fg input,.p-fg select{width:100%;padding:11px 14px;border:1.5px solid var(--gray-line);
   border-radius:var(--r-sm);font-size:14px;font-family:inherit;outline:none;
-  background:var(--white);transition:border-color .2s;}
+  color:var(--gray-dark);background:var(--white);transition:border-color .2s;}
 .p-fg input:focus,.p-fg select:focus{border-color:var(--blue-main);}
 
 /* ── Autocomplete dropdown ── */
@@ -459,7 +474,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
   background:var(--blue-pale);padding:1px 7px;border-radius:8px;margin-top:2px;display:inline-block;}
 .p-profil-aksi{display:flex;gap:6px;}
 .p-profil-aksi button{padding:5px 10px;font-size:11px;font-weight:700;border-radius:6px;
-  border:1px solid var(--gray-line);background:var(--gray-bg);cursor:pointer;font-family:inherit;}
+  border:1px solid var(--gray-line);background:var(--gray-bg);color:var(--gray-dark);cursor:pointer;font-family:inherit;}
 .p-profil-aksi .pilih{background:var(--blue-main);color:white;border-color:var(--blue-main);}
 .p-profil-aksi .hapus{background:var(--red-light);color:var(--red);border-color:#F5B7B1;}
 
@@ -517,32 +532,65 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
    tidak diubah karena sudah cukup kontras di atas latar gelap.
    ═══════════════════════════════════════════════════════════ */
 html[data-theme="dark"]{
-  --white:#1A2333; --gray-bg:#0F1620; --gray-dark:#E8ECF2;
-  --gray-mid:#AAB4C2; --gray-soft:#7C8798; --gray-line:#2C3648;
-  --blue-light:#123528; --blue-pale:#101E1B;
-  --green-light:#122A1D; --red-light:#2E1917;
-  --orange-light:#2E2013; --yellow-light:#2A2413;
-  --sh-sm:0 1px 4px rgba(0,0,0,.35);
-  --sh-md:0 4px 16px rgba(0,0,0,.4);
-  --sh-lg:0 8px 32px rgba(0,0,0,.5);
+  /* REVISI (ronde 8): ditetapkan eksplisit sesuai instruksi -- latar halaman
+     (--gray-bg) LEBIH TERANG (#1C1D21), latar kartu/panel (--white, nama
+     variable historis) LEBIH GELAP (#080808). Kartu jadi terlihat "tenggelam"
+     ke dalam, bukan "naik" dari latar seperti konvensi mode terang -- ini
+     sengaja, sesuai gaya referensi yang diminta. */
+  --white:#080808; --gray-bg:#1C1D21; --gray-dark:#EDEDED;
+  --gray-mid:#A2A2A8; --gray-soft:#78787F;
+  --gray-line:#34353B;
+  --title-accent:#5EEAD4; /* REVISI (ronde 4): judul/label supaya jelas tapi tidak neon -- lihat catatan di :root */
+  --blue-light:#0D2620; --blue-pale:#0A1A16;
+  --green-light:#0F2417; --red-light:#2A1512;
+  --orange-light:#2A1D10; --yellow-light:#251F0E;
+  --sh-sm:0 1px 4px rgba(0,0,0,.45);
+  --sh-md:0 4px 16px rgba(0,0,0,.55);
+  --sh-lg:0 8px 32px rgba(0,0,0,.65);
 }
 /* Beberapa surface pakai hex literal (bukan variable) -- ditambal manual di sini */
-html[data-theme="dark"] .esai-textarea{background:#1E2A2A;color:var(--gray-dark);}
-html[data-theme="dark"] .esai-textarea:focus{background:#22302F;}
-html[data-theme="dark"] .esai-ans{background:#221E14;}
-html[data-theme="dark"] .esai-ans .teks{background:#1A2333;border-color:#4A3B14;}
-html[data-theme="dark"] .rubrik-bar{background:#101E2E;}
-html[data-theme="dark"] .p-menu-item.wizard{background:#0E2119;}
-html[data-theme="dark"] .ico-badge{background:#123528;color:#34D399;}
-html[data-theme="dark"] .status-bar.loading{background:#2A2410;color:#F0C960;}
-html[data-theme="dark"] .status-bar.ok{background:#122A1D;color:#4ADE80;}
-html[data-theme="dark"] .status-bar.error{background:#2E1917;color:#F87171;}
-html[data-theme="dark"] .status-bar.retry{background:#2E2013;color:#FDBA74;}
-html[data-theme="dark"] .load-overlay{background:rgba(15,22,32,.9);}
-html[data-theme="dark"] .p-ad-slot{background:#161F2C;}
+html[data-theme="dark"] .esai-textarea{background:#161A18;color:var(--gray-dark);}
+html[data-theme="dark"] .esai-textarea:focus{background:#1B211E;}
+html[data-theme="dark"] .esai-ans{background:#1C1710;}
+html[data-theme="dark"] .esai-ans .teks{background:#161616;border-color:#3A2E10;}
+html[data-theme="dark"] .rubrik-bar{background:#0D1712;}
+html[data-theme="dark"] .p-menu-item.wizard{background:#0B1712;}
+html[data-theme="dark"] .ico-badge{background:#0D2620;color:#34D399;}
+html[data-theme="dark"] .status-bar.loading{background:#211C0A;color:#F0C960;}
+html[data-theme="dark"] .status-bar.ok{background:#0F2417;color:#4ADE80;}
+html[data-theme="dark"] .status-bar.error{background:#2A1512;color:#F87171;}
+/* BUG-FIX (2026-07, ronde 4): ".btn-no.ragu" (kotak nomor navigasi yang
+   ditandai ragu-ragu) dan ".btn-ragu.aktif" (tombol toggle ragu-ragu) pakai
+   latar kuning pucat #FFDE8A yang hardcode (tidak ikut tema) berpasangan
+   dengan teks --gray-dark yang di mode malam jadi putih -- putih di atas
+   kuning pucat nyaris tak terbaca, dan warnanya sendiri jadi terlalu
+   menyilaukan di tengah latar gelap. Diganti jadi ambar gelap + teks putih
+   bersih, senada dengan referensi yang diminta. */
+html[data-theme="dark"] .btn-no.ragu{background:#3A2A06;border-color:#D4A017;color:#FFFFFF;}
+html[data-theme="dark"] .btn-ragu.aktif{background:#3A2A06;border-color:#D4A017;color:#F0C960;}
+/* REVISI (2026-07, ronde 5): di mode terang, kotak pilihan jawaban & kotak
+   nomor navigasi sengaja memakai --white (sedikit beda dari --gray-bg) supaya
+   terlihat seperti "kartu" yang naik dari latar. Tapi di referensi mode malam
+   yang diminta (gaya Mi Browser), kotak-kotak yang BELUM dipilih/dijawab
+   seharusnya menyatu dengan latar -- cuma garis pembatas yang kelihatan,
+   bukan kotak terisi. State yang SUDAH berwarna (terpilih/terjawab/ragu-ragu)
+   tidak disentuh karena punya warna khasnya sendiri. */
+html[data-theme="dark"] .btn-opt:not(.selected){background:var(--white);}
+html[data-theme="dark"] .btn-opt-row:not(.selected){background:var(--white);}
+html[data-theme="dark"] .btn-no:not(.dijawab):not(.ragu){background:var(--white);}
+/* REVISI (2026-07, ronde 6): pola yang sama seperti kotak jawaban ujian --
+   ".p-menu-item" (Riwayat Ujian/Kelola Profil/Backup & Pemulihan di beranda
+   portal) juga pakai var(--white) sebagai isi, jadi lebih terang dari latar
+   di mode malam. Disamakan dengan latar supaya jadi kotak bergaris tepi saja,
+   sesuai referensi -- kecuali varian yang memang sengaja berwarna sendiri
+   (.primary = hijau solid, .wizard = sudah ditambal terpisah di atas). */
+html[data-theme="dark"] .p-menu-item:not(.primary):not(.wizard){background:var(--white);}
+html[data-theme="dark"] .status-bar.retry{background:#2A1D10;color:#FDBA74;}
+html[data-theme="dark"] .load-overlay{background:rgba(28,29,33,.92);}
+html[data-theme="dark"] .p-ad-slot{background:#242529;}
 html[data-theme="dark"] ::-webkit-scrollbar{width:10px;height:10px;}
-html[data-theme="dark"] ::-webkit-scrollbar-track{background:#0F1620;}
-html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2C3648;border-radius:6px;}
+html[data-theme="dark"] ::-webkit-scrollbar-track{background:#1C1D21;}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2A2A2A;border-radius:6px;}
 
 /* ── Tombol toggle mode malam — mengambang, tampil di semua layar ── */
 .theme-toggle-btn{
@@ -559,8 +607,8 @@ html[data-theme="dark"] .theme-toggle-btn .ico-sun{display:none;}
 html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
 @media(max-width:480px){ .theme-toggle-btn{top:10px;right:10px;width:36px;height:36px;} .theme-toggle-btn svg{width:17px;height:17px;} }
 </style>
-<meta name="description" content="CBT Kabut Digital: buat ujian online untuk sekolah, kampus, atau perusahaan lewat wizard 5 langkah — tanpa server, pakai Google Sheets sendiri."><meta name="theme-color" content="#ffd700"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"></head>
-<body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ffd700;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#ffd700;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
+<meta name="description" content="CBT Kabut Digital — Bikin Ujian Online Sendiri, Gratis"><meta name="theme-color" content="#a87c2d"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"></head>
+<body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#a87c2d;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#a87c2d;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
 
 <!-- ── TOGGLE MODE MALAM — mengambang, tampil di semua layar ── -->
 <button class="theme-toggle-btn" id="btn-theme-toggle" onclick="toggleTema()" title="Ganti mode terang/malam" type="button">
@@ -620,7 +668,7 @@ html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
         <div class="lbl">Backup &amp; Pemulihan</div>
         <div class="sub">Ekspor &amp; impor data</div>
       </div>
-      <a id="menu-wizard" class="p-menu-item wizard" href="https://istiqamah92170.github.io/cbt-kabut-digital/index.html" target="_blank" rel="noopener">
+      <a id="menu-wizard" class="p-menu-item wizard" href="__CBTKD_WIZARD_URL__" target="_blank" rel="noopener">
         <div class="ico-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z"></path></svg></div>
         <div class="txt">
           <div class="lbl">Buat CBT Baru</div>
@@ -978,7 +1026,7 @@ html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
         <button class="btn-aksi analisis" id="btn-analisis" onclick="cobaAnalisis()">📊 Analisis &amp; Pembahasan Soal</button>
         <button class="btn-aksi" style="background:var(--orange);color:white;" onclick="resetDevice()">🔄 Reset Perangkat Ujian</button>
         <!-- B.2 — Kembali ke Portal tanpa refresh -->
-        <button class="btn-aksi" style="background:var(--gray-soft);color:white;margin-top:6px;" onclick="pTampil('portal-screen')">← Kembali ke Portal</button>
+        <button class="btn-aksi" style="background:var(--chip-muted);color:white;margin-top:6px;" onclick="pTampil('portal-screen')">← Kembali ke Portal</button>
       </div>
 
     </div>
