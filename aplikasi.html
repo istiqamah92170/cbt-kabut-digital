@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2693613981937449"
-     crossorigin="anonymous"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Aplikasi — CBT Kabut Digital</title>
@@ -123,12 +121,16 @@ footer p{font-size:11px;color:var(--gray-soft);}
   <section class="section">
     <div class="section-title">Aplikasi Pendukung</div>
     <div class="section-sub">Perkakas tambahan yang dipakai berdampingan dengan CBT Kabut Digital, tidak wajib.</div>
+  </section>
+  <div class="draft-note">Dua aplikasi pendukung di bawah masih placeholder — menunggu link &amp; deskripsi resmi dari Ghani.</div>
+  <section class="section" style="padding-top:0;">
     <div class="app-grid" id="app-grid-pendukung"><!-- dirender oleh JS dari CBTKD_APLIKASI_PENDUKUNG --></div>
   </section>
 </div>
 
 <footer>
   <p>CBT Kabut Digital — bagian dari ekosistem Kabut Digital</p>
+  <p style="margin-top:6px;"><a href="./kebijakan-privasi.html" style="color:var(--gray-soft);text-decoration:underline;">Kebijakan Privasi</a></p>
 </footer>
 
 <script>
@@ -145,17 +147,17 @@ const CBTKD_APLIKASI_UTAMA = [
     // seperti tangkapan layar HP, mis. 1080x2340px). Selama "url" kosong,
     // kotak placeholder bergradasi akan tampil memakai "label"-nya.
     screenshots: [
-      { url: 'https://drive.google.com/thumbnail?id=1AaytIN1SF-BYTTZm1fzjVFrt-45g0wF1&sz=s4000', label: 'Halaman Login' },
-      { url: 'https://drive.google.com/thumbnail?id=1WIER_pKeoD3g9Ex1efi8473w7WBa10tQ&sz=s4000', label: 'Layar Ujian' },
-      { url: 'https://drive.google.com/thumbnail?id=1LmMGuIbyG9l9bDM0R4IU9E40VtJkEHRx&sz=s4000', label: 'Hasil & Analisis' },
-      { url: 'https://drive.google.com/thumbnail?id=1dS7eBTKArfkOtXEsXOsnHI3wVONDQkhb&sz=s4000', label: 'Panel Koreksi Esai' }
+      { url: '', label: 'Halaman Login' },
+      { url: '', label: 'Layar Ujian' },
+      { url: '', label: 'Hasil & Analisis' },
+      { url: '', label: 'Panel Koreksi Esai' }
     ],
     fitur: [
       'Berjalan di atas Google Sheets & Apps Script milik institusi sendiri',
       'Bisa diinstal (PWA) di Android -- ikon muncul di layar utama, bisa dipakai offline',
       'Belum punya CBT? Buat lewat wizard di Beranda'
     ],
-    url: 'https://cbtkabutdigital.com/app/index.html',
+    url: 'https://ISI_URL_APLIKASI_CBT_KD/',
     icon: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'
   }
 ];
@@ -167,32 +169,15 @@ const CBTKD_APLIKASI_PENDUKUNG = [
   {
     nama: 'Konverter Link Gambar',
     deskripsi: 'Mengubah link Google Drive menjadi URL gambar yang bisa langsung dipakai di soal CBT.',
-    fitur: [
-      'Konversi Manual Massal',
-      'Pilih Langsung dari Google Drive',
-      'Multi-Select & Urutkan Hasil',
-      'Preview Gambar Instan',
-      'Salin Cepat',
-      'Riwayat Konversi Otomatis',
-      'Mendukung Berbagai Format Link GDrive',
-      'Antarmuka Ringan & Cepat',
-      'Aman & Privat'
-    ],
-    url: 'https://istiqamah92170.github.io/cbt_mts_DIK/Konverter_GDrive_CBT.html',
+    fitur: [ 'TODO: isi fitur asli dari Ghani' ],
+    url: 'https://ISI_URL_KONVERTER_GAMBAR/',
     icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'
   },
   {
     nama: 'Konverter Soal Google Form ke CBT',
-    deskripsi: 'Mengubah soal dari Google Form (mode Kuis) menjadi sheet Soal siap pakai untuk CBT Kabut Digital — lengkap dengan kunci jawaban, poin, dan pembahasan.',
-    fitur: [
-      'Baca otomatis pertanyaan, pilihan jawaban, dan kunci dari Google Form mode Kuis',
-      'Dukung tipe Pilihan Ganda, Dropdown, dan Esai (jawaban singkat/panjang)',
-      'Gambar soal diekstrak dan disimpan ke folder Drive terpisah secara otomatis',
-      'Pembahasan terisi otomatis dari feedback jawaban benar di Form (jika diisi)',
-      'Bersihkan prefix bawaan seperti "A.", "a)", atau "1." dari teks pilihan jawaban',
-      'Soal yang belum sepenuhnya cocok dicatat di sheet Perlu_Ditinjau, bukan diabaikan diam-diam'
-    ],
-    url: 'https://script.google.com/macros/s/AKfycbz_oLsavHzWeYZpnsdjnQcrbBiIWLl51bv33st6d_TfIDk6u2ZOfyIkKzDZlPguObA4/exec',
+    deskripsi: 'Mengubah soal dari Google Form menjadi format siap pakai di sheet Soal CBT Kabut Digital.',
+    fitur: [ 'TODO: isi fitur asli dari Ghani' ],
+    url: 'https://ISI_URL_KONVERTER_GFORM/',
     icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/>'
   }
 ];
