@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Membuka Aplikasi — CBT Kabut Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══ Token desain — SAMA PERSIS dengan index.html/aplikasi.html/wizard.html ═══ */
+:root {
+  --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+  --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+  --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+  --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --sh-sm:0 1px 4px rgba(10,53,102,.08);
+  --sh-md:0 4px 16px rgba(10,53,102,.10);
+  --sh-lg:0 8px 32px rgba(10,53,102,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:var(--gray-dark);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem}
+
+.card{background:var(--white);border:1.5px solid var(--gray-line);border-radius:var(--r-lg);
+  padding:2rem 2.25rem;max-width:480px;width:100%;text-align:center;box-shadow:var(--sh-lg)}
+.logo{font-size:12px;color:var(--gray-soft);margin-bottom:1.5rem;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+.logo span{color:var(--blue-main);font-weight:800}
+.app-name{font-size:21px;font-weight:800;color:var(--gray-dark);margin-bottom:.4rem}
+.app-desc{font-size:13.5px;color:var(--gray-soft);margin-bottom:2rem;line-height:1.5}
+
+.ad-container{background:var(--gray-bg);border:1.5px solid var(--gray-line);border-radius:var(--r-md);
+  overflow:hidden;margin-bottom:1.5rem;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center}
+.ad-placeholder{color:var(--gray-soft);font-size:12.5px;text-align:center;padding:2rem;line-height:1.6}
+.ad-placeholder strong{display:block;font-size:14px;color:var(--gray-mid);margin-bottom:.5rem;font-weight:700}
+/* Ganti konten .ad-container dengan iklan kamu (gambar, iframe, kode AdSense, dll) */
+
+.countdown-wrap{margin-bottom:1.5rem}
+.countdown-label{font-size:12.5px;color:var(--gray-soft);margin-bottom:.6rem;font-weight:600}
+.progress-track{background:var(--gray-line);border-radius:20px;height:6px;overflow:hidden;margin-bottom:.6rem}
+.progress-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--blue-deep),var(--blue-mid));transition:width .5s linear;width:100%}
+.countdown-num{font-size:28px;font-weight:800;color:var(--blue-main);line-height:1}
+.countdown-sec{font-size:12.5px;color:var(--gray-soft)}
+
+.btn-open{display:block;width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-deep),var(--blue-main));
+  color:var(--white);border:none;border-radius:var(--r-md);font-size:15px;font-weight:700;font-family:inherit;
+  cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;box-shadow:var(--sh-sm)}
+.btn-open.ready{opacity:1;pointer-events:auto}
+.btn-open.ready:hover{transform:translateY(-1px);box-shadow:var(--sh-md)}
+.btn-open.loading{opacity:.7}
+
+.skip-wrap{margin-top:.8rem;min-height:20px}
+.skip-btn{background:none;border:none;color:var(--gray-soft);font-size:12px;cursor:pointer;
+  text-decoration:underline;display:none;font-family:inherit}
+.skip-btn:hover{color:var(--blue-main)}
+.note{font-size:11px;color:var(--gray-soft);margin-top:1.2rem;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo"><span>CBT Kabut Digital</span> — Portal Aplikasi</div>
+  <div class="app-name" id="app-name">Memuat...</div>
+  <div class="app-desc" id="app-desc">Aplikasi akan terbuka setelah iklan selesai</div>
+
+  <!-- ============================================================
+       AREA IKLAN — ganti konten di sini dengan iklan kamu
+       Bisa: <img>, <iframe>, kode AdSense, atau HTML iklan apapun
+       ============================================================ -->
+  <div class="ad-container" id="ad-container">
+    <div class="ad-placeholder">
+      <strong>Area Iklan</strong>
+      Ganti bagian ini dengan kode iklan kamu.<br>
+      Contoh: Google AdSense, gambar, atau video.
+    </div>
+  </div>
+  <!-- ============================================================ -->
+
+  <div class="countdown-wrap">
+    <div class="countdown-label">Aplikasi terbuka dalam</div>
+    <div class="progress-track"><div class="progress-bar" id="prog-bar"></div></div>
+    <div class="countdown-num" id="cnt-num">15</div>
+    <div class="countdown-sec">detik</div>
+  </div>
+
+  <button class="btn-open" id="btn-open" onclick="openApp()">
+    Menunggu iklan selesai...
+  </button>
+
+  <div class="skip-wrap">
+    <button class="skip-btn" id="skip-btn" onclick="skipAd()">Lewati iklan</button>
+  </div>
+
+  <div class="note">Aplikasi dibuka di tab baru. Jika terblokir popup, izinkan di browser kamu.</div>
+</div>
+
+<script>
+// ============================================================
+// KONFIGURASI — sesuaikan di sini
+//
+// CATATAN PENTING soal "secret" & token di bawah:
+// Karena file ini murni client-side (dikirim utuh ke browser),
+// "secret" ini BISA DIBACA siapa pun lewat View Source -- artinya
+// token yang dihasilkan BUKAN perlindungan sungguhan, siapa pun yang
+// tahu caranya bisa membuat token valid sendiri tanpa lewat gateway
+// ini sama sekali. Anggap ini pengingat/friction untuk pengunjung
+// biasa, bukan gerbang keamanan. Kalau perlindungan sungguhan
+// dibutuhkan, token harus dibuat di server (GAS Web App), bukan di
+// sini -- secret tidak boleh pernah dikirim ke browser.
+//
+// SECRET INI HARUS SAMA PERSIS dengan yang diisi di HTML Protection
+// Engine (fitur "Token gateway lock") pada file aplikasi yang dituju.
+// ============================================================
+var CONFIG = {
+  secret: 'GANTI_DENGAN_SECRET_KEY_KAMU_2024',
+  countdownSec: 15,
+  skipAfterSec: 0,
+  tokenValidSec: 60,
+};
+// ============================================================
+
+var params = new URLSearchParams(window.location.search);
+var appUrl = params.get('url') || '';
+var appName = params.get('name') || 'Aplikasi CBT';
+var appDesc = params.get('desc') || 'Sistem ujian online CBT Kabut Digital';
+
+document.getElementById('app-name').textContent = appName;
+document.getElementById('app-desc').textContent = appDesc;
+
+var remaining = CONFIG.countdownSec;
+var total = CONFIG.countdownSec;
+
+function updateCountdown() {
+  document.getElementById('cnt-num').textContent = remaining;
+  var pct = (remaining / total) * 100;
+  document.getElementById('prog-bar').style.width = pct + '%';
+
+  if (CONFIG.skipAfterSec > 0 && remaining <= CONFIG.skipAfterSec) {
+    document.getElementById('skip-btn').style.display = 'inline';
+  }
+
+  if (remaining <= 0) {
+    clearInterval(timer);
+    var btn = document.getElementById('btn-open');
+    btn.textContent = 'Buka Aplikasi Sekarang';
+    btn.classList.add('ready');
+  } else {
+    remaining--;
+  }
+}
+
+var timer = setInterval(updateCountdown, 1000);
+updateCountdown();
+
+async function generateToken() {
+  var now = Math.floor(Date.now() / 1000);
+  var rounded = Math.floor(now / CONFIG.tokenValidSec) * CONFIG.tokenValidSec;
+  var raw = CONFIG.secret + ':' + rounded;
+
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+  var hex = Array.from(new Uint8Array(buf)).map(function(b) {
+    return b.toString(16).padStart(2, '0');
+  }).join('');
+
+  return { token: hex.slice(0, 32), expiry: rounded + CONFIG.tokenValidSec };
+}
+
+async function openApp() {
+  if (!appUrl) { alert('URL aplikasi tidak ditemukan.'); return; }
+  var btn = document.getElementById('btn-open');
+  btn.textContent = 'Membuka...';
+  btn.classList.remove('ready');
+  btn.classList.add('loading');
+
+  var newTab = window.open('', '_blank');
+
+  var result = await generateToken();
+  var finalUrl = appUrl + (appUrl.indexOf('?') > -1 ? '&' : '?') + '_t=' + result.token + '&_e=' + result.expiry;
+
+  if (newTab) {
+    newTab.location.href = finalUrl;
+  } else {
+    window.open(finalUrl, '_blank');
+  }
+
+  setTimeout(function() {
+    btn.textContent = 'Aplikasi sudah dibuka';
+    btn.classList.remove('loading');
+  }, 1000);
+}
+
+async function skipAd() {
+  clearInterval(timer);
+  remaining = 0;
+  updateCountdown();
+}
+
+// Blokir klik kanan -- konsisten dengan fitur "Blokir klik kanan" di
+// HTML Protection Engine. Sama seperti proteksi lain di ekosistem ini,
+// ini penghalang untuk pengunjung biasa, bukan pencegahan mutlak.
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+});
+</script>
+</body>
+</html>
