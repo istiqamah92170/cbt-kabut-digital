@@ -212,6 +212,17 @@ function _cbtkdRenderScreenshots(list) {
   return html;
 }
 
+// Aplikasi Pendukung wajib lewat gateway iklan dulu; Aplikasi Utama (CBT KD)
+// tetap link langsung -- supaya instalasi PWA-nya tidak terganggu interstitial.
+function _cbtkdBuildLink(app, opts) {
+  if (opts.gateway) {
+    return './gateway.html?url=' + encodeURIComponent(app.url)
+      + '&name=' + encodeURIComponent(app.nama)
+      + '&desc=' + encodeURIComponent(app.deskripsi);
+  }
+  return app.url;
+}
+
 function _cbtkdRenderGrid(containerId, data, opts) {
   opts = opts || {};
   let wrap = document.getElementById(containerId);
@@ -230,7 +241,7 @@ function _cbtkdRenderGrid(containerId, data, opts) {
       + _cbtkdRenderScreenshots(app.screenshots)
       + '<div class="desc">' + _cbtkdEsc(app.deskripsi) + '</div>'
       + '<ul class="fitur">' + app.fitur.map(function(f){ return '<li>' + _cbtkdEsc(f) + '</li>'; }).join('') + '</ul>'
-      + '<a class="app-link" href="' + app.url + '" target="_blank" rel="noopener">Buka Aplikasi →</a>'
+      + '<a class="app-link" href="' + _cbtkdBuildLink(app, opts) + '" target="_blank" rel="noopener">Buka Aplikasi →</a>'
       + '</div>';
   });
   wrap.innerHTML = html;
@@ -242,7 +253,7 @@ function _cbtkdEsc(s) {
 
 document.addEventListener('DOMContentLoaded', function(){
   _cbtkdRenderGrid('app-grid-utama', CBTKD_APLIKASI_UTAMA, { utama: true });
-  _cbtkdRenderGrid('app-grid-pendukung', CBTKD_APLIKASI_PENDUKUNG, {});
+  _cbtkdRenderGrid('app-grid-pendukung', CBTKD_APLIKASI_PENDUKUNG, { gateway: true });
 });
 </script>
 </body>
