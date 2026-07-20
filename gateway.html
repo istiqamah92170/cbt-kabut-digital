@@ -2,140 +2,218 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Membuka Aplikasi — CBT Kabut Digital</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ═══ Token desain — SAMA PERSIS dengan index.html/aplikasi.html/wizard.html ═══ */
-:root {
-  --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
-  --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
-  --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
-  --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
-  --r-sm:6px; --r-md:10px; --r-lg:16px;
-  --sh-sm:0 1px 4px rgba(10,53,102,.08);
-  --sh-md:0 4px 16px rgba(10,53,102,.10);
-  --sh-lg:0 8px 32px rgba(10,53,102,.14);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:var(--gray-dark);
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem}
+:root { --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981; }
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
+  position:relative;width:100vw;height:100dvh;}
 
-.card{background:var(--white);border:1.5px solid var(--gray-line);border-radius:var(--r-lg);
-  padding:2rem 2.25rem;max-width:480px;width:100%;text-align:center;box-shadow:var(--sh-lg)}
-.logo{font-size:12px;color:var(--gray-soft);margin-bottom:1.5rem;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
-.logo span{color:var(--blue-main);font-weight:800}
-.app-name{font-size:21px;font-weight:800;color:var(--gray-dark);margin-bottom:.4rem}
-.app-desc{font-size:13.5px;color:var(--gray-soft);margin-bottom:2rem;line-height:1.5}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;
+  justify-content:space-between;padding:16px 16px 40px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent);}
+.topbar-brand{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;opacity:.85;}
+.countdown-pill{min-width:36px;height:36px;padding:0 10px;border-radius:20px;
+  background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;
+  transition:all .2s;}
+.countdown-pill.ready{background:var(--blue-main);border-color:var(--blue-main);}
+.countdown-pill.hidden{display:none;}
 
-.ad-container{background:var(--gray-bg);border:1.5px solid var(--gray-line);border-radius:var(--r-md);
-  overflow:hidden;margin-bottom:1.5rem;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center}
-.ad-placeholder{color:var(--gray-soft);font-size:12.5px;text-align:center;padding:2rem;line-height:1.6}
-.ad-placeholder strong{display:block;font-size:14px;color:var(--gray-mid);margin-bottom:.5rem;font-weight:700}
-/* Ganti konten .ad-container dengan iklan kamu (gambar, iframe, kode AdSense, dll) */
+.ad-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-mid) 100%);}
+.ad-stage img, .ad-stage video, .ad-stage iframe{width:100%;height:100%;object-fit:cover;border:none;}
+.ad-placeholder{text-align:center;padding:32px;color:rgba(255,255,255,.9);}
+.ad-placeholder strong{display:block;font-size:16px;font-weight:800;margin-bottom:10px;}
+.ad-placeholder p{font-size:12.5px;opacity:.8;line-height:1.7;max-width:280px;margin:0 auto;}
 
-.countdown-wrap{margin-bottom:1.5rem}
-.countdown-label{font-size:12.5px;color:var(--gray-soft);margin-bottom:.6rem;font-weight:600}
-.progress-track{background:var(--gray-line);border-radius:20px;height:6px;overflow:hidden;margin-bottom:.6rem}
-.progress-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--blue-deep),var(--blue-mid));transition:width .5s linear;width:100%}
-.countdown-num{font-size:28px;font-weight:800;color:var(--blue-main);line-height:1}
-.countdown-sec{font-size:12.5px;color:var(--gray-soft)}
+.bottom-overlay{position:fixed;left:0;right:0;bottom:0;z-index:20;
+  padding:70px 20px 24px;
+  background:linear-gradient(to top,rgba(0,0,0,.88) 15%,rgba(0,0,0,.55) 55%,transparent);}
+.app-info{margin-bottom:14px;}
+.app-name{font-size:17px;font-weight:800;margin-bottom:3px;}
+.app-desc{font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.55;}
 
-.btn-open{display:block;width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-deep),var(--blue-main));
-  color:var(--white);border:none;border-radius:var(--r-md);font-size:15px;font-weight:700;font-family:inherit;
-  cursor:pointer;transition:all .2s;opacity:.4;pointer-events:none;box-shadow:var(--sh-sm)}
-.btn-open.ready{opacity:1;pointer-events:auto}
-.btn-open.ready:hover{transform:translateY(-1px);box-shadow:var(--sh-md)}
-.btn-open.loading{opacity:.7}
+.btn-open{display:block;width:100%;padding:16px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--blue-deep),var(--blue-main));color:#fff;
+  font-size:15.5px;font-weight:800;font-family:inherit;letter-spacing:.02em;
+  cursor:pointer;opacity:.4;pointer-events:none;transition:all .2s;}
+.btn-open.ready{opacity:1;pointer-events:auto;box-shadow:0 8px 24px rgba(5,150,105,.4);}
+.btn-open.ready:active{transform:scale(.98);}
+.btn-open.loading{opacity:.7;}
 
-.skip-wrap{margin-top:.8rem;min-height:20px}
-.skip-btn{background:none;border:none;color:var(--gray-soft);font-size:12px;cursor:pointer;
-  text-decoration:underline;display:none;font-family:inherit}
-.skip-btn:hover{color:var(--blue-main)}
-.note{font-size:11px;color:var(--gray-soft);margin-top:1.2rem;line-height:1.5}
+.meta-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;}
+.tag-iklan{font-size:10px;font-weight:700;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.35);
+  border-radius:4px;padding:3px 8px;letter-spacing:.03em;text-transform:uppercase;}
+.tag-iklan.hidden{display:none;}
+.skip-btn{background:none;border:none;color:rgba(255,255,255,.75);font-size:12px;
+  text-decoration:underline;cursor:pointer;display:none;font-family:inherit;}
+
+.error-box{position:fixed;inset:0;z-index:30;background:#0f172a;display:none;
+  align-items:center;justify-content:center;padding:24px;text-align:center;}
+.error-box.show{display:flex;}
+.error-box p{font-size:13px;color:#cbd5e1;line-height:1.6;max-width:320px;}
 </style>
 </head>
 <body>
 
-<div class="card">
-  <div class="logo"><span>CBT Kabut Digital</span> — Portal Aplikasi</div>
-  <div class="app-name" id="app-name">Memuat...</div>
-  <div class="app-desc" id="app-desc">Aplikasi akan terbuka setelah iklan selesai</div>
-
-  <!-- ============================================================
-       AREA IKLAN — ganti konten di sini dengan iklan kamu
-       Bisa: <img>, <iframe>, kode AdSense, atau HTML iklan apapun
-       ============================================================ -->
-  <div class="ad-container" id="ad-container">
-    <div class="ad-placeholder">
-      <strong>Area Iklan</strong>
-      Ganti bagian ini dengan kode iklan kamu.<br>
-      Contoh: Google AdSense, gambar, atau video.
-    </div>
-  </div>
-  <!-- ============================================================ -->
-
-  <div class="countdown-wrap">
-    <div class="countdown-label">Aplikasi terbuka dalam</div>
-    <div class="progress-track"><div class="progress-bar" id="prog-bar"></div></div>
-    <div class="countdown-num" id="cnt-num">15</div>
-    <div class="countdown-sec">detik</div>
-  </div>
-
-  <button class="btn-open" id="btn-open" onclick="openApp()">
-    Menunggu iklan selesai...
-  </button>
-
-  <div class="skip-wrap">
-    <button class="skip-btn" id="skip-btn" onclick="skipAd()">Lewati iklan</button>
-  </div>
-
-  <div class="note">Aplikasi dibuka di tab baru. Jika terblokir popup, izinkan di browser kamu.</div>
+<div class="topbar">
+  <div class="topbar-brand">CBT Kabut Digital</div>
+  <div class="countdown-pill" id="countdown-pill">15</div>
 </div>
 
-<script>
-// ============================================================
-// KONFIGURASI — sesuaikan di sini
-//
-// CATATAN PENTING soal "secret" & token di bawah:
-// Karena file ini murni client-side (dikirim utuh ke browser),
-// "secret" ini BISA DIBACA siapa pun lewat View Source -- artinya
-// token yang dihasilkan BUKAN perlindungan sungguhan, siapa pun yang
-// tahu caranya bisa membuat token valid sendiri tanpa lewat gateway
-// ini sama sekali. Anggap ini pengingat/friction untuk pengunjung
-// biasa, bukan gerbang keamanan. Kalau perlindungan sungguhan
-// dibutuhkan, token harus dibuat di server (GAS Web App), bukan di
-// sini -- secret tidak boleh pernah dikirim ke browser.
-//
-// SECRET INI HARUS SAMA PERSIS dengan yang diisi di HTML Protection
-// Engine (fitur "Token gateway lock") pada file aplikasi yang dituju.
-// ============================================================
-var CONFIG = {
-  secret: 'vZUvNtrf7wbDnokJMuoLFUX683mSePAsqh70jS4qeTg4JQFT',
-  countdownSec: 15,
-  skipAfterSec: 0,
-  tokenValidSec: 60,
-};
-// ============================================================
+<div class="ad-stage" id="ad-container"></div>
 
+<div class="bottom-overlay">
+  <div class="app-info">
+    <div class="app-name" id="app-name">Memuat...</div>
+    <div class="app-desc" id="app-desc">Aplikasi akan terbuka setelah iklan selesai</div>
+  </div>
+  <button class="btn-open" id="btn-open" onclick="openApp()">Menunggu iklan selesai...</button>
+  <div class="meta-row">
+    <span class="tag-iklan" id="tag-iklan">Iklan</span>
+    <button class="skip-btn" id="skip-btn" onclick="skipAd()">Lewati iklan</button>
+  </div>
+</div>
+
+<div class="error-box" id="error-box"><p id="error-text"></p></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DAFTAR APLIKASI -- IKLAN MENEMPEL PER APLIKASI, TIDAK DICAMPUR
+//
+// Tiap aplikasi punya:
+//   secret : key khusus app itu (harus sama persis dengan yang diisi
+//            di HTML Protection Engine / GATEWAY_CONFIG.secret app itu)
+//   iklan  : daftar iklan KHUSUS untuk app ini saja. Boleh 1, boleh
+//            lebih dari 1 (kalau lebih dari 1, salah satunya dipilih
+//            ACAK -- tapi acaknya cuma di antara iklan app ini sendiri,
+//            TIDAK tercampur dengan iklan app lain). Boleh dikosongkan
+//            "[]" kalau app itu tidak mau ada iklan sama sekali.
+//
+// Tiap objek iklan:
+//   tipe          : 'gambar' | 'video' | 'iframe' (iframe utk AdSense/embed)
+//   src           : link langsung ke file gambar/video/embed
+//   mode          : 'reward'    -> wajib tunggu penuh, tombol Lewati TIDAK PERNAH muncul
+//                    'skippable' -> tombol "Lewati" muncul setelah skipAfterSec
+//   durasiDetik   : lama tampil sebelum tombol "Buka Aplikasi" aktif
+//   skipAfterSec  : (khusus mode skippable) detik sebelum tombol Lewati muncul
+// ═══════════════════════════════════════════════════════════════
+var APPS = {
+  'konverter-gambar': {
+    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GAMBAR',
+    iklan: [
+      { tipe: 'gambar', src: 'https://ISI_URL_GAMBAR_IKLAN.jpg', mode: 'reward', durasiDetik: 15 }
+    ]
+  },
+  'konverter-gform': {
+    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GFORM',
+    iklan: [
+      { tipe: 'video', src: 'https://ISI_URL_VIDEO_IKLAN.mp4', mode: 'skippable', durasiDetik: 20, skipAfterSec: 5 }
+    ]
+  }
+  // Contoh aplikasi baru dengan 2 PILIHAN iklan (dipilih acak, cuma
+  // dari 2 ini -- video yang sama, satu wajib tonton, satu bisa dilewati):
+  // 'app-baru': {
+  //   secret: 'HASIL_GENERATOR_KEY',
+  //   iklan: [
+  //     { tipe: 'video', src: 'https://.../promo.mp4', mode: 'reward', durasiDetik: 15 },
+  //     { tipe: 'video', src: 'https://.../promo.mp4', mode: 'skippable', durasiDetik: 15, skipAfterSec: 5 }
+  //   ]
+  // },
+};
+
+// Peluang iklan muncul -- berlaku SAMA RATA untuk semua aplikasi.
+// 1 = selalu muncul, 0.5 = separuh pengunjung, 0 = mati total.
+var PELUANG_TAMPIL_IKLAN = 1;
+
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIC -- biasanya tidak perlu diubah, cukup ubah bagian di atas
+// ═══════════════════════════════════════════════════════════════
 var params = new URLSearchParams(window.location.search);
+var appId = params.get('app') || '';
 var appUrl = params.get('url') || '';
 var appName = params.get('name') || 'Aplikasi CBT';
 var appDesc = params.get('desc') || 'Sistem ujian online CBT Kabut Digital';
+var appEntry = APPS[appId];
+var appSecret = appEntry ? appEntry.secret : null;
 
 document.getElementById('app-name').textContent = appName;
 document.getElementById('app-desc').textContent = appDesc;
 
-var remaining = CONFIG.countdownSec;
-var total = CONFIG.countdownSec;
+var timer = null;
+var remaining = 0;
+var total = 0;
 
-function updateCountdown() {
-  document.getElementById('cnt-num').textContent = remaining;
-  var pct = (remaining / total) * 100;
-  document.getElementById('prog-bar').style.width = pct + '%';
+if (!appUrl || !appSecret) {
+  document.getElementById('error-text').textContent = !appUrl
+    ? 'URL aplikasi tidak ditemukan di link ini.'
+    : 'Aplikasi dengan id "' + appId + '" belum terdaftar di APPS (gateway.html).';
+  document.getElementById('error-box').classList.add('show');
+} else {
+  mulaiGerbang();
+}
 
-  if (CONFIG.skipAfterSec > 0 && remaining <= CONFIG.skipAfterSec) {
+function pilihIklan() {
+  var daftar = (appEntry && appEntry.iklan) || [];
+  if (!daftar.length) return null;
+  if (Math.random() >= PELUANG_TAMPIL_IKLAN) return null; // ronde ini: tanpa iklan
+  return daftar[Math.floor(Math.random() * daftar.length)];
+}
+
+function renderPanggungIklan(iklan) {
+  var stage = document.getElementById('ad-container');
+  if (!iklan) {
+    stage.innerHTML = '<div class="ad-placeholder"><strong>Menyiapkan aplikasi...</strong></div>';
+    return;
+  }
+  if (iklan.tipe === 'video') {
+    stage.innerHTML = '<video src="' + iklan.src + '" autoplay muted loop playsinline></video>';
+  } else if (iklan.tipe === 'iframe') {
+    stage.innerHTML = '<iframe src="' + iklan.src + '" allowfullscreen></iframe>';
+  } else {
+    stage.innerHTML = '<img src="' + iklan.src + '" alt="Iklan">';
+  }
+}
+
+function mulaiGerbang() {
+  var iklan = pilihIklan();
+  renderPanggungIklan(iklan);
+
+  var pill = document.getElementById('countdown-pill');
+  var tag = document.getElementById('tag-iklan');
+  var btn = document.getElementById('btn-open');
+
+  if (!iklan) {
+    // App ini tidak punya iklan terdaftar, atau ronde ini kena "tanpa iklan"
+    pill.classList.add('hidden');
+    tag.classList.add('hidden');
+    btn.textContent = 'Buka Aplikasi Sekarang';
+    btn.classList.add('ready');
+    return;
+  }
+
+  total = iklan.durasiDetik;
+  remaining = total;
+  var modeSkip = iklan.mode === 'skippable';
+  var skipAfter = iklan.skipAfterSec || 0;
+
+  btn.textContent = modeSkip ? 'Menunggu iklan selesai...' : 'Menunggu iklan selesai...';
+
+  timer = setInterval(function () { updateCountdown(modeSkip, skipAfter); }, 1000);
+  updateCountdown(modeSkip, skipAfter);
+}
+
+function updateCountdown(modeSkip, skipAfter) {
+  var pill = document.getElementById('countdown-pill');
+  pill.textContent = remaining > 0 ? remaining : '';
+
+  if (modeSkip && skipAfter > 0 && remaining <= (total - skipAfter) && remaining > 0) {
     document.getElementById('skip-btn').style.display = 'inline';
   }
 
@@ -144,63 +222,51 @@ function updateCountdown() {
     var btn = document.getElementById('btn-open');
     btn.textContent = 'Buka Aplikasi Sekarang';
     btn.classList.add('ready');
+    pill.classList.add('ready');
+    pill.textContent = '';
   } else {
     remaining--;
   }
 }
 
-var timer = setInterval(updateCountdown, 1000);
-updateCountdown();
-
-async function generateToken() {
+async function generateToken(secret) {
   var now = Math.floor(Date.now() / 1000);
-  var rounded = Math.floor(now / CONFIG.tokenValidSec) * CONFIG.tokenValidSec;
-  var raw = CONFIG.secret + ':' + rounded;
-
+  var rounded = Math.floor(now / 60) * 60;
+  var raw = secret + ':' + rounded;
   var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
-  var hex = Array.from(new Uint8Array(buf)).map(function(b) {
+  var hex = Array.from(new Uint8Array(buf)).map(function (b) {
     return b.toString(16).padStart(2, '0');
   }).join('');
-
-  return { token: hex.slice(0, 32), expiry: rounded + CONFIG.tokenValidSec };
+  return { token: hex.slice(0, 32), expiry: rounded + 60 };
 }
 
 async function openApp() {
-  if (!appUrl) { alert('URL aplikasi tidak ditemukan.'); return; }
+  if (!appUrl || !appSecret) return;
   var btn = document.getElementById('btn-open');
   btn.textContent = 'Membuka...';
   btn.classList.remove('ready');
   btn.classList.add('loading');
 
   var newTab = window.open('', '_blank');
-
-  var result = await generateToken();
+  var result = await generateToken(appSecret);
   var finalUrl = appUrl + (appUrl.indexOf('?') > -1 ? '&' : '?') + '_t=' + result.token + '&_e=' + result.expiry;
 
-  if (newTab) {
-    newTab.location.href = finalUrl;
-  } else {
-    window.open(finalUrl, '_blank');
-  }
+  if (newTab) { newTab.location.href = finalUrl; }
+  else { window.open(finalUrl, '_blank'); }
 
-  setTimeout(function() {
+  setTimeout(function () {
     btn.textContent = 'Aplikasi sudah dibuka';
     btn.classList.remove('loading');
   }, 1000);
 }
 
-async function skipAd() {
+function skipAd() {
   clearInterval(timer);
   remaining = 0;
-  updateCountdown();
+  updateCountdown(true, 0);
 }
 
-// Blokir klik kanan -- konsisten dengan fitur "Blokir klik kanan" di
-// HTML Protection Engine. Sama seperti proteksi lain di ekosistem ini,
-// ini penghalang untuk pengunjung biasa, bukan pencegahan mutlak.
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
+document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 </script>
 </body>
 </html>
