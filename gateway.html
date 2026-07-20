@@ -27,6 +27,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
 .ad-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-mid) 100%);}
 .ad-stage img, .ad-stage video, .ad-stage iframe{width:100%;height:100%;object-fit:cover;border:none;}
+.ad-stage.clickable{cursor:pointer;}
+.ad-link-badge{position:absolute;left:16px;bottom:150px;z-index:15;background:rgba(0,0,0,.55);
+  color:#fff;font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;
+  border:1px solid rgba(255,255,255,.4);pointer-events:none;}
 .ad-placeholder{text-align:center;padding:32px;color:rgba(255,255,255,.9);}
 .ad-placeholder strong{display:block;font-size:16px;font-weight:800;margin-bottom:10px;}
 .ad-placeholder p{font-size:12.5px;opacity:.8;line-height:1.7;max-width:280px;margin:0 auto;}
@@ -67,6 +71,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
 </div>
 
 <div class="ad-stage" id="ad-container"></div>
+<div class="ad-link-badge" id="ad-link-badge" style="display:none;">Pelajari Selengkapnya</div>
 
 <div class="bottom-overlay">
   <div class="app-info">
@@ -98,6 +103,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
 // Tiap objek iklan:
 //   tipe          : 'gambar' | 'video' | 'iframe' (iframe utk AdSense/embed)
 //   src           : link langsung ke file gambar/video/embed
+//   link          : (OPSIONAL) URL tujuan pengiklan -- kalau diisi, gambar/video
+//                    iklan jadi bisa DIKLIK, langsung membuka link ini di tab baru
+//                    TANPA konfirmasi apa pun (persis perilaku iklan pada umumnya).
+//                    Kosongkan/hapus baris ini kalau iklan tidak perlu bisa diklik.
+//   advertiserName: nama pengiklan yang tampil SELAMA iklan tayang (bukan nama
+//                    aplikasi tujuan Anda -- itu baru muncul setelah iklan selesai)
+//   advertiserDesc: tagline/keterangan singkat pengiklan, tampil di bawah nama
 //   mode          : 'reward'    -> wajib tunggu penuh, tombol Lewati TIDAK PERNAH muncul
 //                    'skippable' -> tombol "Lewati" muncul setelah skipAfterSec
 //   durasiDetik   : lama tampil sebelum tombol "Buka Aplikasi" aktif
@@ -105,15 +117,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
 // ═══════════════════════════════════════════════════════════════
 var APPS = {
   'konverter-gambar': {
-    secret: 'UNSB2dcvXh1TNCumNPZp7c9oNMTVRdy6tCdOuaUhP73WOFYU',
+    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GAMBAR',
     iklan: [
-      { tipe: 'gambar', src: 'https://ISI_URL_GAMBAR_IKLAN.jpg', mode: 'skippable', durasiDetik: 15, skipAfterSec: 5 }
+      { tipe: 'gambar', src: 'https://ISI_URL_GAMBAR_IKLAN.jpg', link: '',
+        advertiserName: 'Nama Pengiklan', advertiserDesc: 'Tagline singkat pengiklan',
+        mode: 'reward', durasiDetik: 15 }
     ]
   },
   'konverter-gform': {
-    secret: 'vZUvNtrf7wbDnokJMuoLFUX683mSePAsqh70jS4qeTg4JQFT',
+    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GFORM',
     iklan: [
-      { tipe: 'video', src: 'https://ISI_URL_VIDEO_IKLAN.mp4', mode: 'skippable', durasiDetik: 20, skipAfterSec: 5 }
+      { tipe: 'video', src: 'https://ISI_URL_VIDEO_IKLAN.mp4', link: '',
+        advertiserName: 'Nama Pengiklan', advertiserDesc: 'Tagline singkat pengiklan',
+        mode: 'skippable', durasiDetik: 20, skipAfterSec: 5 }
     ]
   }
   // Contoh aplikasi baru dengan 2 PILIHAN iklan (dipilih acak, cuma
@@ -130,7 +146,7 @@ var APPS = {
 // Saklar utama iklan -- "false" = iklan DIMATIKAN TOTAL, semua pengunjung
 // langsung lolos tanpa nunggu, TANPA perlu hapus data placeholder di APPS.
 // Ganti ke "true" begitu iklan asli sudah siap dipasang.
-var IKLAN_AKTIF = true;
+var IKLAN_AKTIF = false;
 
 // Peluang iklan muncul -- HANYA berlaku kalau IKLAN_AKTIF = true.
 // 1 = selalu muncul, 0.5 = separuh pengunjung, 0 = mati total.
@@ -148,8 +164,10 @@ var appDesc = params.get('desc') || 'Sistem ujian online CBT Kabut Digital';
 var appEntry = APPS[appId];
 var appSecret = appEntry ? appEntry.secret : null;
 
-document.getElementById('app-name').textContent = appName;
-document.getElementById('app-desc').textContent = appDesc;
+// CATATAN: app-name/app-desc TIDAK diisi di sini secara langsung --
+// itu ditentukan oleh mulaiGerbang()/updateCountdown() di bawah, supaya
+// yang tampil DULUAN adalah info pengiklan (kalau ada iklan aktif),
+// baru berganti ke info aplikasi tujuan setelah iklan selesai.
 
 var timer = null;
 var remaining = 0;
@@ -174,16 +192,36 @@ function pilihIklan() {
 
 function renderPanggungIklan(iklan) {
   var stage = document.getElementById('ad-container');
+  var badge = document.getElementById('ad-link-badge');
+
   if (!iklan) {
     stage.innerHTML = '<div class="ad-placeholder"><strong>Menyiapkan aplikasi...</strong></div>';
+    badge.style.display = 'none';
     return;
   }
+
   if (iklan.tipe === 'video') {
     stage.innerHTML = '<video src="' + iklan.src + '" autoplay muted loop playsinline></video>';
   } else if (iklan.tipe === 'iframe') {
     stage.innerHTML = '<iframe src="' + iklan.src + '" allowfullscreen></iframe>';
   } else {
     stage.innerHTML = '<img src="' + iklan.src + '" alt="Iklan">';
+  }
+
+  // Kalau iklan ini punya "link" tujuan pengiklan -- jadikan bisa diklik,
+  // seperti perilaku iklan pada umumnya. Klik di sini TIDAK menghentikan
+  // hitung mundur atau menggantikan tombol "Buka Aplikasi" -- cuma
+  // membuka link pengiklan di tab baru sebagai aksi terpisah.
+  if (iklan.link) {
+    stage.classList.add('clickable');
+    badge.style.display = 'block';
+    stage.onclick = function () {
+      window.open(iklan.link, '_blank', 'noopener');
+    };
+  } else {
+    stage.classList.remove('clickable');
+    badge.style.display = 'none';
+    stage.onclick = null;
   }
 }
 
@@ -194,22 +232,33 @@ function mulaiGerbang() {
   var pill = document.getElementById('countdown-pill');
   var tag = document.getElementById('tag-iklan');
   var btn = document.getElementById('btn-open');
+  var namaEl = document.getElementById('app-name');
+  var descEl = document.getElementById('app-desc');
 
   if (!iklan) {
-    // App ini tidak punya iklan terdaftar, atau ronde ini kena "tanpa iklan"
+    // Tidak ada iklan (mati/kosong/kena ronde tanpa iklan) -- langsung
+    // tampilkan info aplikasi tujuan, tombol langsung siap.
     pill.classList.add('hidden');
     tag.classList.add('hidden');
+    namaEl.textContent = appName;
+    descEl.textContent = appDesc;
     btn.textContent = 'Buka Aplikasi Sekarang';
     btn.classList.add('ready');
     return;
   }
+
+  // Selama iklan tayang: tampilkan info PENGIKLAN, bukan info aplikasi
+  // tujuan -- aplikasi tujuan baru ditampilkan setelah iklan selesai
+  // (lihat updateCountdown, saat remaining habis).
+  namaEl.textContent = iklan.advertiserName || 'Iklan';
+  descEl.textContent = iklan.advertiserDesc || '';
 
   total = iklan.durasiDetik;
   remaining = total;
   var modeSkip = iklan.mode === 'skippable';
   var skipAfter = iklan.skipAfterSec || 0;
 
-  btn.textContent = modeSkip ? 'Menunggu iklan selesai...' : 'Menunggu iklan selesai...';
+  btn.textContent = 'Menunggu iklan selesai...';
 
   timer = setInterval(function () { updateCountdown(modeSkip, skipAfter); }, 1000);
   updateCountdown(modeSkip, skipAfter);
@@ -226,6 +275,10 @@ function updateCountdown(modeSkip, skipAfter) {
   if (remaining <= 0) {
     clearInterval(timer);
     var btn = document.getElementById('btn-open');
+    // Iklan selesai -- beralih dari info pengiklan ke info aplikasi tujuan
+    document.getElementById('app-name').textContent = appName;
+    document.getElementById('app-desc').textContent = appDesc;
+    document.getElementById('tag-iklan').classList.add('hidden');
     btn.textContent = 'Buka Aplikasi Sekarang';
     btn.classList.add('ready');
     pill.classList.add('ready');
