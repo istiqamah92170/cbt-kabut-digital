@@ -167,6 +167,7 @@ const CBTKD_APLIKASI_UTAMA = [
 const CBTKD_APLIKASI_PENDUKUNG = [
   {
     nama: 'Konverter Link Gambar',
+    appId: 'konverter-gambar',
     deskripsi: 'Mengubah link Google Drive menjadi URL gambar yang bisa langsung dipakai di soal CBT.',
     fitur: [
       'Konversi Manual Massal',
@@ -184,6 +185,7 @@ const CBTKD_APLIKASI_PENDUKUNG = [
   },
   {
     nama: 'Konverter Soal Google Form ke CBT',
+    appId: 'konverter-gform',
     deskripsi: 'Mengubah soal dari Google Form (mode Kuis) menjadi sheet Soal siap pakai untuk CBT Kabut Digital — lengkap dengan kunci jawaban, poin, dan pembahasan.',
     fitur: [
       'Baca otomatis pertanyaan, pilihan jawaban, dan kunci dari Google Form mode Kuis',
@@ -216,7 +218,8 @@ function _cbtkdRenderScreenshots(list) {
 // tetap link langsung -- supaya instalasi PWA-nya tidak terganggu interstitial.
 function _cbtkdBuildLink(app, opts) {
   if (opts.gateway) {
-    return './gateway.html?url=' + encodeURIComponent(app.url)
+    return './gateway.html?app=' + encodeURIComponent(app.appId || '')
+      + '&url=' + encodeURIComponent(app.url)
       + '&name=' + encodeURIComponent(app.nama)
       + '&desc=' + encodeURIComponent(app.deskripsi);
   }
