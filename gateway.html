@@ -117,19 +117,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
 // ═══════════════════════════════════════════════════════════════
 var APPS = {
   'konverter-gambar': {
-    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GAMBAR',
+    secret: 'UNSB2dcvXh1TNCumNPZp7c9oNMTVRdy6tCdOuaUhP73WOFYU',
     iklan: [
-      { tipe: 'gambar', src: 'https://ISI_URL_GAMBAR_IKLAN.jpg', link: '',
-        advertiserName: 'Nama Pengiklan', advertiserDesc: 'Tagline singkat pengiklan',
-        mode: 'reward', durasiDetik: 15 }
+      { tipe: 'gambar', src: 'https://ISI_URL_GAMBAR_IKLAN.jpg', mode: 'skippable', durasiDetik: 15, skipAfterSec: 5 }
     ]
   },
   'konverter-gform': {
-    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GFORM',
+    secret: 'vZUvNtrf7wbDnokJMuoLFUX683mSePAsqh70jS4qeTg4JQFT',
     iklan: [
-      { tipe: 'video', src: 'https://ISI_URL_VIDEO_IKLAN.mp4', link: '',
-        advertiserName: 'Nama Pengiklan', advertiserDesc: 'Tagline singkat pengiklan',
-        mode: 'skippable', durasiDetik: 20, skipAfterSec: 5 }
+      { tipe: 'video', src: 'https://ISI_URL_VIDEO_IKLAN.mp4', mode: 'skippable', durasiDetik: 20, skipAfterSec: 5 }
     ]
   }
   // Contoh aplikasi baru dengan 2 PILIHAN iklan (dipilih acak, cuma
@@ -146,7 +142,7 @@ var APPS = {
 // Saklar utama iklan -- "false" = iklan DIMATIKAN TOTAL, semua pengunjung
 // langsung lolos tanpa nunggu, TANPA perlu hapus data placeholder di APPS.
 // Ganti ke "true" begitu iklan asli sudah siap dipasang.
-var IKLAN_AKTIF = false;
+var IKLAN_AKTIF = true;
 
 // Peluang iklan muncul -- HANYA berlaku kalau IKLAN_AKTIF = true.
 // 1 = selalu muncul, 0.5 = separuh pengunjung, 0 = mati total.
