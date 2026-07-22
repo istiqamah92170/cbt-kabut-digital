@@ -117,16 +117,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
 // ═══════════════════════════════════════════════════════════════
 var APPS = {
   'konverter-gambar': {
-    secret: 'UNSB2dcvXh1TNCumNPZp7c9oNMTVRdy6tCdOuaUhP73WOFYU',
-    iklan: [
-      { tipe: 'gambar', src: 'https://ISI_URL_GAMBAR_IKLAN.jpg', mode: 'skippable', durasiDetik: 15, skipAfterSec: 5 }
-    ]
+    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GAMBAR',
+    // Kosong dulu -- belum ada iklan asli. Selama kosong, otomatis
+    // tampil IKLAN_RUMAH (lihat di bawah). Isi array ini begitu punya
+    // iklan sungguhan, contoh format ada di komentar atas.
+    iklan: []
   },
   'konverter-gform': {
-    secret: 'vZUvNtrf7wbDnokJMuoLFUX683mSePAsqh70jS4qeTg4JQFT',
-    iklan: [
-      { tipe: 'video', src: 'https://ISI_URL_VIDEO_IKLAN.mp4', mode: 'skippable', durasiDetik: 20, skipAfterSec: 5 }
-    ]
+    secret: 'GANTI_SECRET_KHUSUS_KONVERTER_GFORM',
+    iklan: []
   }
   // Contoh aplikasi baru dengan 2 PILIHAN iklan (dipilih acak, cuma
   // dari 2 ini -- video yang sama, satu wajib tonton, satu bisa dilewati):
@@ -139,14 +138,22 @@ var APPS = {
   // },
 };
 
-// Saklar utama iklan -- "false" = iklan DIMATIKAN TOTAL, semua pengunjung
-// langsung lolos tanpa nunggu, TANPA perlu hapus data placeholder di APPS.
-// Ganti ke "true" begitu iklan asli sudah siap dipasang.
-var IKLAN_AKTIF = true;
-
-// Peluang iklan muncul -- HANYA berlaku kalau IKLAN_AKTIF = true.
-// 1 = selalu muncul, 0.5 = separuh pengunjung, 0 = mati total.
+// Peluang iklan ASLI muncul (hanya berlaku untuk app yang array "iklan"-nya
+// terisi). 1 = selalu muncul, 0.5 = separuh pengunjung, 0 = mati total.
 var PELUANG_TAMPIL_IKLAN = 1;
+
+// "Iklan rumah" -- tampil otomatis kapan pun sebuah aplikasi belum punya
+// iklan asli terpasang (array "iklan"-nya kosong), atau ronde ini kena
+// giliran "tanpa iklan" dari PELUANG_TAMPIL_IKLAN. SELALU bisa dilewati
+// (skipAfterSec: 0 = tombol Lewati langsung muncul).
+var IKLAN_RUMAH = {
+  isRumah: true,
+  advertiserName: 'Slot Iklan Tersedia',
+  advertiserDesc: 'Ingin iklan Anda tayang di sini? Hubungi admin cbtkabutdigital.com',
+  mode: 'skippable',
+  durasiDetik: 6,
+  skipAfterSec: 0
+};
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -179,11 +186,11 @@ if (!appUrl || !appSecret) {
 }
 
 function pilihIklan() {
-  if (!IKLAN_AKTIF) return null; // saklar utama mati -- abaikan semua data iklan apa pun isinya
   var daftar = (appEntry && appEntry.iklan) || [];
-  if (!daftar.length) return null;
-  if (Math.random() >= PELUANG_TAMPIL_IKLAN) return null; // ronde ini: tanpa iklan
-  return daftar[Math.floor(Math.random() * daftar.length)];
+  if (daftar.length && Math.random() < PELUANG_TAMPIL_IKLAN) {
+    return daftar[Math.floor(Math.random() * daftar.length)];
+  }
+  return IKLAN_RUMAH; // tidak ada iklan asli (atau kena ronde tanpa iklan) -- tampilkan iklan rumah
 }
 
 function renderPanggungIklan(iklan) {
@@ -193,6 +200,15 @@ function renderPanggungIklan(iklan) {
   if (!iklan) {
     stage.innerHTML = '<div class="ad-placeholder"><strong>Menyiapkan aplikasi...</strong></div>';
     badge.style.display = 'none';
+    return;
+  }
+
+  if (iklan.isRumah) {
+    stage.innerHTML = '<div class="ad-placeholder"><strong>Slot Iklan Tersedia</strong>'
+      + '<p>Ingin iklan Anda tayang di sini? Hubungi admin cbtkabutdigital.com</p></div>';
+    stage.classList.remove('clickable');
+    badge.style.display = 'none';
+    stage.onclick = null;
     return;
   }
 
@@ -230,10 +246,12 @@ function mulaiGerbang() {
   var btn = document.getElementById('btn-open');
   var namaEl = document.getElementById('app-name');
   var descEl = document.getElementById('app-desc');
+  var skipBtn = document.getElementById('skip-btn');
+  skipBtn.style.display = 'none'; // selalu mulai dari tersembunyi
 
   if (!iklan) {
-    // Tidak ada iklan (mati/kosong/kena ronde tanpa iklan) -- langsung
-    // tampilkan info aplikasi tujuan, tombol langsung siap.
+    // Jaga-jaga saja (harusnya tidak pernah terjadi -- pilihIklan() selalu
+    // kembalikan minimal IKLAN_RUMAH), tapi tetap ditangani supaya aman.
     pill.classList.add('hidden');
     tag.classList.add('hidden');
     namaEl.textContent = appName;
@@ -256,6 +274,12 @@ function mulaiGerbang() {
 
   btn.textContent = 'Menunggu iklan selesai...';
 
+  // Kalau skipAfter 0 (atau mode skippable tanpa jeda), tombol Lewati
+  // langsung muncul dari awal -- tidak perlu tunggu tick pertama.
+  if (modeSkip && skipAfter <= 0) {
+    skipBtn.style.display = 'inline';
+  }
+
   timer = setInterval(function () { updateCountdown(modeSkip, skipAfter); }, 1000);
   updateCountdown(modeSkip, skipAfter);
 }
@@ -271,7 +295,10 @@ function updateCountdown(modeSkip, skipAfter) {
   if (remaining <= 0) {
     clearInterval(timer);
     var btn = document.getElementById('btn-open');
-    // Iklan selesai -- beralih dari info pengiklan ke info aplikasi tujuan
+    // Iklan selesai (baik habis waktu maupun di-skip) -- sembunyikan
+    // tombol Lewati (INI YANG SEBELUMNYA BUG -- tidak pernah disembunyikan)
+    // dan beralih dari info pengiklan ke info aplikasi tujuan.
+    document.getElementById('skip-btn').style.display = 'none';
     document.getElementById('app-name').textContent = appName;
     document.getElementById('app-desc').textContent = appDesc;
     document.getElementById('tag-iklan').classList.add('hidden');
