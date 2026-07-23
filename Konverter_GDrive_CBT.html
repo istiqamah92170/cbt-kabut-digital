@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta name="_wm" content="WM-MRY4Y6698T5AB"><meta name="_bh" content="403b924a">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K​‌​onverter Link GDrive — CBT Kabut Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>/* __WM:WM-MRY4Y6698T5AB:7dcaff00 */
+:root {
+  --green-deep: #064E3B; --green-main: #059669; --green-mid: #10B981;
+  --green-light:#D1FAE5; --green-pale: #ECFDF5;
+  --gray-dark: #1E2B3A; --gray-mid: #4A5568; --gray-soft: #8896A5;
+  --gray-line: #DDE3EC; --gray-bg: #F3F6FA; --white: #FFFFFF;
+  --red: #C0392B; --red-light: #FDECEA;
+  --blue-light: #EEF2FF; --blue-main: #4F46E5;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --sh: 0 4px 20px rgba(10,53,102,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--gray-bg); color:var(--gray-dark); min-height:100vh; padding:24px 16px 48px; }
+.header { text-align:center; margin-bottom:28px; }
+.header .badge { display:inline-flex; align-items:center; gap:6px; background:var(--green-pale); border:1px solid var(--green-light); color:var(--green-main); font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.5px; margin-bottom:12px; }
+.header h1 { font-size:22px; font-weight:800; color:var(--green-deep); margin-bottom:6px; }
+.header p { font-size:13px; color:var(--gray-soft); }
+.tab-bar { display:flex; gap:8px; max-width:620px; margin:0 auto 16px; }
+.tab-btn { flex:1; padding:10px; border:1.5px solid var(--gray-line); border-radius:var(--r-md); background:var(--white); font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:700; color:var(--gray-soft); cursor:pointer; transition:.15s; }
+.tab-btn.active { background:var(--green-main); color:white; border-color:var(--green-main); }
+.card { background:var(--white); border-radius:var(--r-lg); box-shadow:var(--sh); padding:22px; margin-bottom:16px; max-width:620px; margin-left:auto; margin-right:auto; }
+.card-title { font-size:12px; font-weight:700; color:var(--gray-soft); text-transform:uppercase; letter-spacing:.6px; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.card-title .dot { width:8px;height:8px;border-radius:50%;background:var(--green-main);flex-shrink:0; }
+textarea { width:100%; padding:12px 14px; border:1.5px solid var(--gray-line); border-radius:var(--r-md); font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--gray-dark); background:var(--gray-bg); resize:vertical; min-height:100px; transition:border-color .2s; line-height:1.6; }
+textarea:focus { outline:none; border-color:var(--green-mid); box-shadow:0 0 0 3px rgba(16,185,129,.12); }
+textarea::placeholder { color:var(--gray-soft); }
+.btn-convert { width:100%; margin-top:12px; padding:13px; background:linear-gradient(135deg,var(--green-deep),var(--green-mid)); color:white; border:none; border-radius:var(--r-md); font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s,transform .1s; }
+.btn-convert:hover { opacity:.9; transform:translateY(-1px); }
+.btn-convert:disabled { opacity:.5; cursor:not-allowed; }
+.auth-card { background:var(--white); border-radius:var(--r-lg); box-shadow:var(--sh); padding:22px; margin-bottom:16px; max-width:620px; margin-left:auto; margin-right:auto; display:flex; align-items:center; gap:14px; }
+.auth-avatar { width:40px;height:40px;border-radius:50%;border:2px solid var(--green-light);object-fit:cover;flex-shrink:0;display:none; }
+.auth-info { flex:1; }
+.auth-name { font-size:14px; font-weight:700; color:var(--gray-dark); }
+.auth-email { font-size:11px; color:var(--gray-soft); margin-top:2px; }
+.btn-google { display:flex; align-items:center; gap:8px; padding:10px 16px; border:1.5px solid var(--gray-line); border-radius:var(--r-md); background:var(--white); font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:700; color:var(--gray-dark); cursor:pointer; transition:.15s; white-space:nowrap; }
+.btn-google:hover { background:var(--gray-bg); }
+.btn-logout { padding:8px 14px; border:1.5px solid #F5B7B1; border-radius:var(--r-sm); background:var(--red-light); color:var(--red); font-size:12px; font-weight:700; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; }
+.picker-zone { border:2px dashed var(--green-light); border-radius:var(--r-lg); background:var(--green-pale); padding:32px 20px; text-align:center; cursor:pointer; transition:.2s; margin-bottom:12px; }
+.picker-zone:hover { border-color:var(--green-main); background:#d1fae5; }
+.picker-zone svg { display:block; margin:0 auto 12px; color:var(--green-main); }
+.picker-zone .pz-title { font-size:15px; font-weight:800; color:var(--green-deep); margin-bottom:4px; }
+.picker-zone .pz-sub { font-size:12px; color:var(--gray-soft); }
+.selected-info { background:var(--blue-light); border:1px solid #C7D2FE; border-radius:var(--r-md); padding:10px 14px; font-size:13px; color:var(--blue-main); font-weight:600; margin-bottom:12px; display:none; }
+.sort-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.sort-chip { display:flex; align-items:center; gap:5px; padding:6px 12px; border:1.5px solid var(--gray-line); border-radius:20px; font-size:12px; font-weight:700; color:var(--gray-mid); cursor:pointer; background:var(--white); transition:.15s; user-select:none; }
+.sort-chip.active { background:var(--green-main); color:white; border-color:var(--green-main); }
+.result-box { background:var(--green-pale); border:1.5px solid var(--green-light); border-radius:var(--r-md); padding:12px 14px; margin-bottom:12px; }
+.result-label { font-size:10px; font-weight:700; color:var(--green-main); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.result-url { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gray-dark); word-break:break-all; line-height:1.6; }
+.id-pill { display:inline-block; margin-top:8px; background:var(--green-light); color:var(--green-deep); font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; padding:3px 10px; border-radius:20px; word-break:break-all; }
+.btn-row { display:flex; gap:8px; margin-top:12px; }
+.btn-sm { flex:1; padding:10px; border:1.5px solid var(--gray-line); border-radius:var(--r-sm); background:var(--white); font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700; color:var(--gray-dark); cursor:pointer; transition:.15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+.btn-sm:hover { background:var(--gray-bg); border-color:var(--gray-soft); }
+.btn-sm.green { background:var(--green-main); color:white; border-color:var(--green-main); }
+.btn-sm.green:hover { opacity:.88; }
+.preview-wrap { text-align:center; min-height:80px; display:flex; align-items:center; justify-content:center; }
+#preview-img { max-width:100%; max-height:320px; border-radius:var(--r-md); border:1.5px solid var(--gray-line); display:none; }
+.img-placeholder { color:var(--gray-soft); font-size:13px; text-align:center; padding:20px; }
+.img-placeholder svg { display:block; margin:0 auto 8px; opacity:.4; }
+.multi-item { background:var(--gray-bg); border:1px solid var(--gray-line); border-radius:var(--r-sm); padding:10px 12px; margin-bottom:8px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gray-dark); display:flex; align-items:flex-start; gap:10px; }
+.multi-item .num { background:var(--green-main); color:white; border-radius:50%; width:20px;height:20px; flex-shrink:0; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+.multi-item .url { word-break:break-all; line-height:1.6; flex:1; }
+.multi-item .fname { font-size:10px; color:var(--gray-soft); margin-bottom:3px; }
+.multi-copy { flex-shrink:0; background:none; border:1px solid var(--gray-line); border-radius:4px; padding:3px 8px; font-size:11px; font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; color:var(--gray-mid); margin-top:1px; }
+.multi-copy:hover { background:var(--gray-bg); }
+.error-box { background:var(--red-light); border:1.5px solid #F5B7B1; border-radius:var(--r-md); padding:12px 14px; color:var(--red); font-size:13px; font-weight:600; display:none; max-width:620px; margin:0 auto 16px; }
+.hist-item { display:flex; align-items:flex-start; gap:8px; padding:10px 0; border-bottom:1px solid var(--gray-line); }
+.hist-item:last-child { border-bottom:none; }
+.hist-url { font-family:'JetBrains Mono',monospace; font-size:11px; word-break:break-all; line-height:1.5; }
+.hist-btn { flex-shrink:0; padding:4px 10px; border:1px solid var(--gray-line); border-radius:4px; font-size:11px; background:var(--white); font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; color:var(--gray-mid); }
+.hist-btn:hover { background:var(--gray-bg); }
+.empty-hist { color:var(--gray-soft); font-size:13px; text-align:center; padding:16px 0; }
+.fmt-item { background:var(--gray-bg); border-radius:var(--r-sm); padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:11px; margin-bottom:6px; color:var(--gray-mid); border:1px solid var(--gray-line); }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--gray-dark); color:white; padding:10px 20px; border-radius:20px; font-size:13px; font-weight:600; opacity:0; transition:.25s; pointer-events:none; z-index:9999; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+/* _b:7dcaff */</style>
+<script data-wm-rt="1">(function(){var _id="WM-MRY4Y6698T5AB";var _bh="403b924a";var _on="Unknown Owner";var _id8="WM-MRY4Y";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Unknown Owner";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
+<body data-wm="WM-MRY4Y6698T5AB" data-owner="VW5rbm93biBPd25lcg==">
+<!-- OWNER:WM-MRY4Y6698T5AB:Unknown%20Owner:2026-07-23 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MRY4Y6698T5AB">WM-MRY4Y6698T5AB</span>
+
+
+<div class="header">
+  <div class="badge">&#127807; CBT KABUT DIGITAL</div>
+  <h1>Konverter Link GDrive</h1>
+  <p>Manual atau pilih file langsung dari Google Drive</p>
+</div>
+
+<!-- AUTH -->
+<div class="auth-card">
+  <div id="auth-loggedout" style="display:flex;align-items:center;gap:14px;width:100%">
+    <div class="auth-info">
+      <div class="auth-name">Belum login</div>
+      <div class="auth-email">Login untuk pilih file langsung dari GDrive</div>
+    </div>
+    <button class="btn-google" onclick="handleLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Login dengan Google
+    </button>
+  </div>
+  <div id="auth-loggedin" style="display:none;align-items:center;gap:14px;width:100%">
+    <img class="auth-avatar" id="auth-avatar" src="" alt="">
+    <div class="auth-info">
+      <div class="auth-name" id="auth-name">-</div>
+      <div class="auth-email" id="auth-email">-</div>
+    </div>
+    <button class="btn-logout" onclick="handleLogout()">Keluar</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-manual" onclick="switchTab('manual')">&#9999;&#65039; Manual</button>
+  <button class="tab-btn" id="tab-picker" onclick="switchTab('picker')">&#128194; Pilih dari GDrive</button>
+</div>
+
+<!-- TAB MANUAL -->
+<div id="pane-manual">
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Tempel link Google Drive</div>
+    <textarea id="inp" rows="4" placeholder="Tempel satu atau beberapa link Google Drive di sini...&#10;https://drive.google.com/file/d/FILE_ID/view"></textarea>
+    <button class="btn-convert" onclick="convert()">&#9889; Konversi Link</button>
+  </div>
+</div>
+
+<!-- TAB PICKER -->
+<div id="pane-picker" style="display:none">
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Urutan hasil konversi</div>
+    <div class="sort-row">
+      <span class="sort-chip active" data-sort="picker">Sesuai urutan pilih</span>
+      <span class="sort-chip" data-sort="name_asc">Nama A&#8594;Z</span>
+      <span class="sort-chip" data-sort="name_desc">Nama Z&#8594;A</span>
+    </div>
+
+    <div class="picker-zone" onclick="openPicker()">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 7a2 2 0 012-2h3.17a2 2 0 011.42.59L11 7h9a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+        <line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>
+      </svg>
+      <div class="pz-title">Buka Google Drive Picker</div>
+      <div class="pz-sub">Klik untuk membuka &mdash; pilih banyak file sekaligus (Ctrl/Shift+klik di desktop)</div>
+    </div>
+
+    <div class="selected-info" id="selected-info"></div>
+    <button class="btn-convert" id="btn-konversi-picker" onclick="konversiPicker()" style="display:none">&#9889; Konversi File Terpilih</button>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="error-box" id="err-box"></div>
+
+<!-- SINGLE RESULT -->
+<div class="card" id="result-single" style="display:none">
+  <div class="card-title"><div class="dot"></div>Link hasil</div>
+  <div class="result-box">
+    <div class="result-label">URL gambar siap pakai</div>
+    <div class="result-url" id="out-url"></div>
+    <div><span class="id-pill" id="out-id"></span></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-sm green" onclick="copyOne()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Salin Link
+    </button>
+    <button class="btn-sm" onclick="pasteToSheet()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Salin + Simpan Riwayat
+    </button>
+  </div>
+  <div class="card-title" style="margin-top:18px"><div class="dot"></div>Preview gambar</div>
+  <div class="preview-wrap">
+    <div class="img-placeholder" id="img-placeholder">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Memuat preview...
+    </div>
+    <img id="preview-img" src="" alt="Preview gambar">
+  </div>
+</div>
+
+<!-- MULTI RESULT -->
+<div class="card" id="result-multi" style="display:none">
+  <div class="card-title"><div class="dot"></div>Hasil konversi (<span id="multi-count">0</span> file)</div>
+  <div id="multi-list"></div>
+  <button class="btn-sm green" onclick="copyAll()" style="width:100%;margin-top:4px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    Salin Semua Link
+  </button>
+</div>
+
+<!-- HISTORY -->
+<div class="card">
+  <div class="card-title" style="justify-content:space-between">
+    <span style="display:flex;align-items:center;gap:6px"><div class="dot"></div>Riwayat konversi</span>
+    <button class="btn-sm" onclick="clearHist()" style="padding:4px 10px;font-size:11px">Hapus semua</button>
+  </div>
+  <div id="hist-list"><div class="empty-hist">Belum ada riwayat</div></div>
+</div>
+
+<!-- FORMAT GUIDE -->
+<div class="card">
+  <div class="card-title"><div class="dot"></div>Format link yang didukung (mode manual)</div>
+  <div class="fmt-item">drive.google.com/file/d/<b>FILE_ID</b>/view</div>
+  <div class="fmt-item">drive.google.com/open?id=<b>FILE_ID</b></div>
+  <div class="fmt-item">drive.google.com/thumbnail?id=<b>FILE_ID</b></div>
+  <div class="fmt-item">docs.google.com/uc?id=<b>FILE_ID</b></div>
+  <div class="fmt-item">lh3.googleusercontent.com/d/<b>FILE_ID</b></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js"></script>
+
+<script>eval(decodeURIComponent(escape(atob("CnZhciBDTElFTlRfSUQgICA9ICc4MjIyNzgyMjk0NjktMG5vMGRvYTNxZmdlNzExNm50bG9lOGhiN2duYTNuNzcuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20nOwp2YXIgQVBJX0tFWSAgICAgPSAnQUl6YVN5RFJEWEdyd0Y1dGZyWUM0US15R1o4THVjWjZ3UVBXOGo0JzsKdmFyIFNDT1BFUyAgICAgID0gJ2h0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL2F1dGgvZHJpdmUucmVhZG9ubHknOwoKdmFyIHRva2VuQ2xpZW50Owp2YXIgYWNjZXNzVG9rZW4gPSBudWxsOwp2YXIgaGlzdG9yeURhdGEgPSBbXTsKdmFyIHBpY2tlckZpbGVzID0gW107CnZhciBhY3RpdmVTb3J0ICA9ICdwaWNrZXInOwoKd2luZG93Lm9ubG9hZCA9IGZ1bmN0aW9uKCkgewogIGxvYWRIaXN0b3J5KCk7CiAgLy8gc29ydCBjaGlwcwogIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy5zb3J0LWNoaXAnKS5mb3JFYWNoKGZ1bmN0aW9uKGNoaXApIHsKICAgIGNoaXAuYWRkRXZlbnRMaXN0ZW5lcignY2xpY2snLCBmdW5jdGlvbigpIHsKICAgICAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLnNvcnQtY2hpcCcpLmZvckVhY2goZnVuY3Rpb24oYyl7IGMuY2xhc3NMaXN0LnJlbW92ZSgnYWN0aXZlJyk7IH0pOwogICAgICBjaGlwLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOwogICAgICBhY3RpdmVTb3J0ID0gY2hpcC5nZXRBdHRyaWJ1dGUoJ2RhdGEtc29ydCcpOwogICAgfSk7CiAgfSk7Cn07CgovKiA9PT09PSBBVVRIID09PT09ICovCmZ1bmN0aW9uIGhhbmRsZUxvZ2luKCkgewogIGlmICghdG9rZW5DbGllbnQpIHsKICAgIHRva2VuQ2xpZW50ID0gZ29vZ2xlLmFjY291bnRzLm9hdXRoMi5pbml0VG9rZW5DbGllbnQoewogICAgICBjbGllbnRfaWQ6IENMSUVOVF9JRCwKICAgICAgc2NvcGU6IFNDT1BFUywKICAgICAgY2FsbGJhY2s6IGZ1bmN0aW9uKHJlc3ApIHsKICAgICAgICBpZiAocmVzcC5lcnJvcikgeyBzaG93RXJyKCdMb2dpbiBnYWdhbDogJyArIHJlc3AuZXJyb3IpOyByZXR1cm47IH0KICAgICAgICBhY2Nlc3NUb2tlbiA9IHJlc3AuYWNjZXNzX3Rva2VuOwogICAgICAgIGZldGNoVXNlckluZm8oKTsKICAgICAgfQogICAgfSk7CiAgfQogIHRva2VuQ2xpZW50LnJlcXVlc3RBY2Nlc3NUb2tlbih7IHByb21wdDogJ2NvbnNlbnQnIH0pOwp9CgpmdW5jdGlvbiBoYW5kbGVMb2dvdXQoKSB7CiAgaWYgKGFjY2Vzc1Rva2VuKSBnb29nbGUuYWNjb3VudHMub2F1dGgyLnJldm9rZShhY2Nlc3NUb2tlbiwgZnVuY3Rpb24oKXt9KTsKICBhY2Nlc3NUb2tlbiA9IG51bGw7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2F1dGgtbG9nZ2VkaW4nKS5zdHlsZS5kaXNwbGF5ID0gJ25vbmUnOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdhdXRoLWxvZ2dlZG91dCcpLnN0eWxlLmRpc3BsYXkgPSAnZmxleCc7CiAgc2hvd1RvYXN0KCdCZXJoYXNpbCBrZWx1YXInKTsKfQoKZnVuY3Rpb24gZmV0Y2hVc2VySW5mbygpIHsKICBmZXRjaCgnaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vb2F1dGgyL3YzL3VzZXJpbmZvJywgewogICAgaGVhZGVyczogeyBBdXRob3JpemF0aW9uOiAnQmVhcmVyICcgKyBhY2Nlc3NUb2tlbiB9CiAgfSkudGhlbihmdW5jdGlvbihyKXsgcmV0dXJuIHIuanNvbigpOyB9KS50aGVuKGZ1bmN0aW9uKHUpIHsKICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdhdXRoLW5hbWUnKS50ZXh0Q29udGVudCAgPSB1Lm5hbWUgfHwgJ1BlbmdndW5hJzsKICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdhdXRoLWVtYWlsJykudGV4dENvbnRlbnQgPSB1LmVtYWlsIHx8ICcnOwogICAgdmFyIGF2ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2F1dGgtYXZhdGFyJyk7CiAgICBpZiAodS5waWN0dXJlKSB7IGF2LnNyYyA9IHUucGljdHVyZTsgYXYuc3R5bGUuZGlzcGxheSA9ICdibG9jayc7IH0KICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdhdXRoLWxvZ2dlZG91dCcpLnN0eWxlLmRpc3BsYXkgPSAnbm9uZSc7CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnYXV0aC1sb2dnZWRpbicpLnN0eWxlLmRpc3BsYXkgID0gJ2ZsZXgnOwogICAgc2hvd1RvYXN0KCdMb2dpbiBiZXJoYXNpbDogJyArICh1Lm5hbWUgfHwgdS5lbWFpbCkpOwogIH0pOwp9CgovKiA9PT09PSBUQUJTID09PT09ICovCmZ1bmN0aW9uIHN3aXRjaFRhYih0YWIpIHsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncGFuZS1tYW51YWwnKS5zdHlsZS5kaXNwbGF5ID0gdGFiID09PSAnbWFudWFsJyA/ICdibG9jaycgOiAnbm9uZSc7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3BhbmUtcGlja2VyJykuc3R5bGUuZGlzcGxheSA9IHRhYiA9PT0gJ3BpY2tlcicgPyAnYmxvY2snIDogJ25vbmUnOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd0YWItbWFudWFsJykuY2xhc3NOYW1lID0gJ3RhYi1idG4nICsgKHRhYiA9PT0gJ21hbnVhbCcgPyAnIGFjdGl2ZScgOiAnJyk7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3RhYi1waWNrZXInKS5jbGFzc05hbWUgPSAndGFiLWJ0bicgKyAodGFiID09PSAncGlja2VyJyA/ICcgYWN0aXZlJyA6ICcnKTsKICBoaWRlQWxsKCk7Cn0KCi8qID09PT09IE1BTlVBTCA9PT09PSAqLwpmdW5jdGlvbiBleHRyYWN0SWQodSkgewogIGlmICghdSkgcmV0dXJuIG51bGw7CiAgdSA9IHUudHJpbSgpOwogIHZhciBwdHMgPSBbL1s/Jl1pZD0oW2EtekEtWjAtOV8tXXsxMCx9KS8sIC9cL2RcLyhbYS16QS1aMC05Xy1dezEwLH0pLywgL2xoM1wuZ29vZ2xldXNlcmNvbnRlbnRcLmNvbVwvZFwvKFthLXpBLVowLTlfLV17MTAsfSkvLCAvdGh1bWJuYWlsXD9pZD0oW2EtekEtWjAtOV8tXXsxMCx9KS9dOwogIGZvciAodmFyIGk9MDtpPHB0cy5sZW5ndGg7aSsrKXt2YXIgbT11Lm1hdGNoKHB0c1tpXSk7aWYobSlyZXR1cm4gbVsxXTt9CiAgcmV0dXJuIG51bGw7Cn0KCmZ1bmN0aW9uIHRvTGluayhpZCkgeyByZXR1cm4gJ2h0dHBzOi8vZHJpdmUuZ29vZ2xlLmNvbS90aHVtYm5haWw/aWQ9JyArIGlkICsgJyZzej1zNDAwMCc7IH0KCmZ1bmN0aW9uIGNvbnZlcnQoKSB7CiAgdmFyIHJhdyA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdpbnAnKS52YWx1ZS50cmltKCk7CiAgaGlkZUFsbCgpOwogIGlmICghcmF3KSB7IHNob3dFcnIoJ1RlbXBlbCBsaW5rIEdvb2dsZSBEcml2ZSB0ZXJsZWJpaCBkYWh1bHUuJyk7IHJldHVybjsgfQogIHZhciBsaW5lcyA9IHJhdy5zcGxpdCgnXG4nKS5tYXAoZnVuY3Rpb24obCl7cmV0dXJuIGwudHJpbSgpO30pLmZpbHRlcihCb29sZWFuKTsKICB2YXIgcmVzdWx0cyA9IFtdOwogIGZvciAodmFyIGk9MDtpPGxpbmVzLmxlbmd0aDtpKyspe3ZhciBpZD1leHRyYWN0SWQobGluZXNbaV0pO2lmKGlkKXJlc3VsdHMucHVzaCh7aWQ6aWQsdXJsOnRvTGluayhpZCksbmFtZTonJ30pO30KICBpZiAoIXJlc3VsdHMubGVuZ3RoKSB7IHNob3dFcnIoJ0lEIGZpbGUgdGlkYWsgZGl0ZW11a2FuLicpOyByZXR1cm47IH0KICBpZiAocmVzdWx0cy5sZW5ndGg9PT0xKSBzaG93U2luZ2xlKHJlc3VsdHNbMF0pOyBlbHNlIHNob3dNdWx0aShyZXN1bHRzKTsKfQoKLyogPT09PT0gUElDS0VSID09PT09ICovCmZ1bmN0aW9uIG9wZW5QaWNrZXIoKSB7CiAgaWYgKCFhY2Nlc3NUb2tlbikgeyBzaG93RXJyKCdMb2dpbiBkZW5nYW4gR29vZ2xlIHRlcmxlYmloIGRhaHVsdS4nKTsgcmV0dXJuOyB9CiAgZ2FwaS5sb2FkKCdwaWNrZXInLCBmdW5jdGlvbigpIHsKICAgIHZhciB2aWV3ID0gbmV3IGdvb2dsZS5waWNrZXIuRG9jc1ZpZXcoKQogICAgICAuc2V0SW5jbHVkZUZvbGRlcnModHJ1ZSkKICAgICAgLnNldFNlbGVjdEZvbGRlckVuYWJsZWQoZmFsc2UpCiAgICAgIC5zZXRNb2RlKGdvb2dsZS5waWNrZXIuRG9jc1ZpZXdNb2RlLkxJU1QpOwogICAgdmFyIHBpY2tlciA9IG5ldyBnb29nbGUucGlja2VyLlBpY2tlckJ1aWxkZXIoKQogICAgICAuZW5hYmxlRmVhdHVyZShnb29nbGUucGlja2VyLkZlYXR1cmUuTVVMVElTRUxFQ1RfRU5BQkxFRCkKICAgICAgLnNldE9BdXRoVG9rZW4oYWNjZXNzVG9rZW4pCiAgICAgIC5zZXREZXZlbG9wZXJLZXkoQVBJX0tFWSkKICAgICAgLmFkZFZpZXcodmlldykKICAgICAgLnNldENhbGxiYWNrKHBpY2tlckNhbGxiYWNrKQogICAgICAuYnVpbGQoKTsKICAgIHBpY2tlci5zZXRWaXNpYmxlKHRydWUpOwogIH0pOwp9CgpmdW5jdGlvbiBwaWNrZXJDYWxsYmFjayhkYXRhKSB7CiAgaWYgKGRhdGEuYWN0aW9uID09PSBnb29nbGUucGlja2VyLkFjdGlvbi5QSUNLRUQpIHsKICAgIHBpY2tlckZpbGVzID0gZGF0YS5kb2NzLm1hcChmdW5jdGlvbihkKXsgcmV0dXJuIHtpZDpkLmlkLCBuYW1lOmQubmFtZX07IH0pOwogICAgdmFyIGluZm8gPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnc2VsZWN0ZWQtaW5mbycpOwogICAgaW5mby5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsKICAgIGluZm8uaW5uZXJIVE1MID0gJzxiPicgKyBwaWNrZXJGaWxlcy5sZW5ndGggKyAnIGZpbGUgZGlwaWxpaDo8L2I+ICcgKyBwaWNrZXJGaWxlcy5tYXAoZnVuY3Rpb24oZil7cmV0dXJuIGYubmFtZTt9KS5qb2luKCcsICcpOwogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2J0bi1rb252ZXJzaS1waWNrZXInKS5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsKICAgIGhpZGVBbGwoKTsKICB9Cn0KCmZ1bmN0aW9uIGtvbnZlcnNpUGlja2VyKCkgewogIGlmICghcGlja2VyRmlsZXMubGVuZ3RoKSB7IHNob3dFcnIoJ0JlbHVtIGFkYSBmaWxlIGRpcGlsaWguJyk7IHJldHVybjsgfQogIGhpZGVBbGwoKTsKICB2YXIgZmlsZXMgPSBwaWNrZXJGaWxlcy5zbGljZSgpOwogIGlmIChhY3RpdmVTb3J0ID09PSAnbmFtZV9hc2MnKSB7CiAgICBmaWxlcy5zb3J0KGZ1bmN0aW9uKGEsYil7IHJldHVybiBhLm5hbWUubG9jYWxlQ29tcGFyZShiLm5hbWUsJ2lkJyx7bnVtZXJpYzp0cnVlLHNlbnNpdGl2aXR5OidiYXNlJ30pOyB9KTsKICB9IGVsc2UgaWYgKGFjdGl2ZVNvcnQgPT09ICduYW1lX2Rlc2MnKSB7CiAgICBmaWxlcy5zb3J0KGZ1bmN0aW9uKGEsYil7IHJldHVybiBiLm5hbWUubG9jYWxlQ29tcGFyZShhLm5hbWUsJ2lkJyx7bnVtZXJpYzp0cnVlLHNlbnNpdGl2aXR5OidiYXNlJ30pOyB9KTsKICB9CiAgdmFyIHJlc3VsdHMgPSBmaWxlcy5tYXAoZnVuY3Rpb24oZil7IHJldHVybiB7aWQ6Zi5pZCwgdXJsOnRvTGluayhmLmlkKSwgbmFtZTpmLm5hbWV9OyB9KTsKICBpZiAocmVzdWx0cy5sZW5ndGg9PT0xKSBzaG93U2luZ2xlKHJlc3VsdHNbMF0pOyBlbHNlIHNob3dNdWx0aShyZXN1bHRzKTsKfQoKLyogPT09PT0gRElTUExBWSA9PT09PSAqLwpmdW5jdGlvbiBoaWRlQWxsKCkgewogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdlcnItYm94Jykuc3R5bGUuZGlzcGxheSA9ICdub25lJzsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncmVzdWx0LXNpbmdsZScpLnN0eWxlLmRpc3BsYXkgPSAnbm9uZSc7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Jlc3VsdC1tdWx0aScpLnN0eWxlLmRpc3BsYXkgPSAnbm9uZSc7Cn0KCmZ1bmN0aW9uIHNob3dFcnIobXNnKSB7CiAgdmFyIGVsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2Vyci1ib3gnKTsKICBlbC50ZXh0Q29udGVudCA9ICdcdTI2QTAgJyArIG1zZzsKICBlbC5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsKfQoKZnVuY3Rpb24gc2hvd1NpbmdsZShyKSB7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ291dC11cmwnKS50ZXh0Q29udGVudCA9IHIudXJsOwogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvdXQtaWQnKS50ZXh0Q29udGVudCAgPSAnRmlsZSBJRDogJyArIHIuaWQ7CiAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Jlc3VsdC1zaW5nbGUnKS5zdHlsZS5kaXNwbGF5ID0gJ2Jsb2NrJzsKICB2YXIgaW1nPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdwcmV2aWV3LWltZycpLCBwaD1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnaW1nLXBsYWNlaG9sZGVyJyk7CiAgaW1nLnN0eWxlLmRpc3BsYXk9J25vbmUnOyBwaC5zdHlsZS5kaXNwbGF5PSdmbGV4JzsKICBwaC5pbm5lckhUTUw9Jzxzdmcgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjEuNSI+PHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPjxicj5NZW11YXQgcHJldmlldy4uLic7CiAgaW1nLm9ubG9hZD1mdW5jdGlvbigpe2ltZy5zdHlsZS5kaXNwbGF5PSdibG9jayc7cGguc3R5bGUuZGlzcGxheT0nbm9uZSc7fTsKICBpbWcub25lcnJvcj1mdW5jdGlvbigpe3BoLmlubmVySFRNTD0nR2FtYmFyIHRpZGFrIGJpc2EgZGltdWF0Lic7fTsKICBpbWcuc3JjPXIudXJsOwp9CgpmdW5jdGlvbiBzaG93TXVsdGkocmVzdWx0cykgewogIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdtdWx0aS1jb3VudCcpLnRleHRDb250ZW50ID0gcmVzdWx0cy5sZW5ndGg7CiAgdmFyIGxpc3QgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbXVsdGktbGlzdCcpOwogIGxpc3QuaW5uZXJIVE1MID0gJyc7CiAgcmVzdWx0cy5mb3JFYWNoKGZ1bmN0aW9uKGl0ZW0sIGlkeCkgewogICAgdmFyIGRpdiA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2RpdicpOwogICAgZGl2LmNsYXNzTmFtZSA9ICdtdWx0aS1pdGVtJzsKICAgIGRpdi5pbm5lckhUTUwgPQogICAgICAnPGRpdiBjbGFzcz0ibnVtIj4nKyhpZHgrMSkrJzwvZGl2PicrCiAgICAgICc8ZGl2IGNsYXNzPSJ1cmwiPicrCiAgICAgICAgKGl0ZW0ubmFtZSA/ICc8ZGl2IGNsYXNzPSJmbmFtZSI+XHVEODNEXHVEQ0M0ICcraXRlbS5uYW1lKyc8L2Rpdj4nIDogJycpKwogICAgICAgIGl0ZW0udXJsKwogICAgICAnPC9kaXY+JysKICAgICAgJzxidXR0b24gY2xhc3M9Im11bHRpLWNvcHkiPlNhbGluPC9idXR0b24+JzsKICAgIGRpdi5xdWVyeVNlbGVjdG9yKCcubXVsdGktY29weScpLm9uY2xpY2sgPSAoZnVuY3Rpb24odSl7IHJldHVybiBmdW5jdGlvbigpeyBjb3B5U2luZ2xlKHRoaXMsdSk7IH07IH0pKGl0ZW0udXJsKTsKICAgIGxpc3QuYXBwZW5kQ2hpbGQoZGl2KTsKICB9KTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncmVzdWx0LW11bHRpJykuc3R5bGUuZGlzcGxheSA9ICdibG9jayc7CiAgd2luZG93Ll9hbGxSZXN1bHRzID0gcmVzdWx0czsKfQoKLyogPT09PT0gQ09QWSA9PT09PSAqLwpmdW5jdGlvbiBjb3B5U2luZ2xlKGJ0bix1cmwpe2NvcHlUZXh0KHVybCk7YnRuLnRleHRDb250ZW50PSdcdTI3MTMnO3NldFRpbWVvdXQoZnVuY3Rpb24oKXtidG4udGV4dENvbnRlbnQ9J1NhbGluJzt9LDE1MDApO30KZnVuY3Rpb24gY29weU9uZSgpe2NvcHlUZXh0KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvdXQtdXJsJykudGV4dENvbnRlbnQpO3Nob3dUb2FzdCgnTGluayBkaXNhbGluIScpO30KZnVuY3Rpb24gcGFzdGVUb1NoZWV0KCl7dmFyIHVybD1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnb3V0LXVybCcpLnRleHRDb250ZW50LGlkPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdvdXQtaWQnKS50ZXh0Q29udGVudC5yZXBsYWNlKCdGaWxlIElEOiAnLCcnKTtjb3B5VGV4dCh1cmwpO2FkZFRvSGlzdG9yeSh1cmwsaWQpO3Nob3dUb2FzdCgnRGlzYWxpbiAmIGRpc2ltcGFuIScpO30KZnVuY3Rpb24gY29weUFsbCgpe2lmKCF3aW5kb3cuX2FsbFJlc3VsdHMpcmV0dXJuO3ZhciB0PXdpbmRvdy5fYWxsUmVzdWx0cy5tYXAoZnVuY3Rpb24ocil7cmV0dXJuIHIudXJsO30pLmpvaW4oJ1xuJyk7Y29weVRleHQodCk7d2luZG93Ll9hbGxSZXN1bHRzLmZvckVhY2goZnVuY3Rpb24ocil7YWRkVG9IaXN0b3J5KHIudXJsLHIuaWQpO30pO3Nob3dUb2FzdCgnU2VtdWEgbGluayBkaXNhbGluICgnK3dpbmRvdy5fYWxsUmVzdWx0cy5sZW5ndGgrJykhJyk7fQpmdW5jdGlvbiBjb3B5VGV4dCh0KXtpZihuYXZpZ2F0b3IuY2xpcGJvYXJkKW5hdmlnYXRvci5jbGlwYm9hcmQud3JpdGVUZXh0KHQpLmNhdGNoKGZ1bmN0aW9uKCl7bGVnYWN5Q29weSh0KTt9KTtlbHNlIGxlZ2FjeUNvcHkodCk7fQpmdW5jdGlvbiBsZWdhY3lDb3B5KHQpe3ZhciB0YT1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCd0ZXh0YXJlYScpO3RhLnZhbHVlPXQ7dGEuc3R5bGUuY3NzVGV4dD0ncG9zaXRpb246Zml4ZWQ7b3BhY2l0eTowJztkb2N1bWVudC5ib2R5LmFwcGVuZENoaWxkKHRhKTt0YS5zZWxlY3QoKTtkb2N1bWVudC5leGVjQ29tbWFuZCgnY29weScpO2RvY3VtZW50LmJvZHkucmVtb3ZlQ2hpbGQodGEpO30KCi8qID09PT09IEhJU1RPUlkgPT09PT0gKi8KZnVuY3Rpb24gYWRkVG9IaXN0b3J5KHVybCxpZCl7Zm9yKHZhciBpPTA7aTxoaXN0b3J5RGF0YS5sZW5ndGg7aSsrKWlmKGhpc3RvcnlEYXRhW2ldLnVybD09PXVybClyZXR1cm47aGlzdG9yeURhdGEudW5zaGlmdCh7dXJsOnVybCxpZDppZCx0aW1lOm5ldyBEYXRlKCkudG9Mb2NhbGVUaW1lU3RyaW5nKCdpZC1JRCcpfSk7cmVuZGVySGlzdG9yeSgpO3NhdmVIaXN0b3J5KCk7fQpmdW5jdGlvbiByZW5kZXJIaXN0b3J5KCl7dmFyIGxpc3Q9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2hpc3QtbGlzdCcpO2lmKCFoaXN0b3J5RGF0YS5sZW5ndGgpe2xpc3QuaW5uZXJIVE1MPSc8ZGl2IGNsYXNzPSJlbXB0eS1oaXN0Ij5CZWx1bSBhZGEgcml3YXlhdDwvZGl2Pic7cmV0dXJuO31saXN0LmlubmVySFRNTD0nJztoaXN0b3J5RGF0YS5mb3JFYWNoKGZ1bmN0aW9uKGl0ZW0saSl7dmFyIGRpdj1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdkaXYnKTtkaXYuY2xhc3NOYW1lPSdoaXN0LWl0ZW0nO2Rpdi5pbm5lckhUTUw9JzxkaXYgc3R5bGU9ImZsZXg6MSI+PGRpdiBjbGFzcz0iaGlzdC11cmwiPicraXRlbS51cmwrJzwvZGl2PjxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxMHB4O2NvbG9yOnZhcigtLWdyYXktc29mdCk7bWFyZ2luLXRvcDoycHgiPicraXRlbS50aW1lKyc8L2Rpdj48L2Rpdj48YnV0dG9uIGNsYXNzPSJoaXN0LWJ0biIgb25jbGljaz0icmV1c2UoJytpKycpIj5QYWthaTwvYnV0dG9uPjxidXR0b24gY2xhc3M9Imhpc3QtYnRuIiBvbmNsaWNrPSJjb3B5VGV4dChcJycraXRlbS51cmwrJ1wnKTtzaG93VG9hc3QoXCdEaXNhbGluIVwnKSI+U2FsaW48L2J1dHRvbj4nO2xpc3QuYXBwZW5kQ2hpbGQoZGl2KTt9KTt9CmZ1bmN0aW9uIHJldXNlKGkpe2RvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdpbnAnKS52YWx1ZT1oaXN0b3J5RGF0YVtpXS51cmw7c3dpdGNoVGFiKCdtYW51YWwnKTtjb252ZXJ0KCk7d2luZG93LnNjcm9sbFRvKHt0b3A6MCxiZWhhdmlvcjonc21vb3RoJ30pO30KZnVuY3Rpb24gY2xlYXJIaXN0KCl7aGlzdG9yeURhdGE9W107bG9jYWxTdG9yYWdlLnJlbW92ZUl0ZW0oJ2dkcml2ZV9oaXN0Jyk7cmVuZGVySGlzdG9yeSgpO30KZnVuY3Rpb24gc2F2ZUhpc3RvcnkoKXt0cnl7bG9jYWxTdG9yYWdlLnNldEl0ZW0oJ2dkcml2ZV9oaXN0JyxKU09OLnN0cmluZ2lmeShoaXN0b3J5RGF0YSkpO31jYXRjaChlKXt9fQpmdW5jdGlvbiBsb2FkSGlzdG9yeSgpe3RyeXt2YXIgcj1sb2NhbFN0b3JhZ2UuZ2V0SXRlbSgnZ2RyaXZlX2hpc3QnKTtpZihyKWhpc3RvcnlEYXRhPUpTT04ucGFyc2Uocik7cmVuZGVySGlzdG9yeSgpO31jYXRjaChlKXt9fQoKLyogPT09PT0gVE9BU1QgPT09PT0gKi8KdmFyIHRvYXN0VGltZXI7CmZ1bmN0aW9uIHNob3dUb2FzdChtc2cpe3ZhciB0PWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd0b2FzdCcpO3QudGV4dENvbnRlbnQ9bXNnO3QuY2xhc3NMaXN0LmFkZCgnc2hvdycpO2NsZWFyVGltZW91dCh0b2FzdFRpbWVyKTt0b2FzdFRpbWVyPXNldFRpbWVvdXQoZnVuY3Rpb24oKXt0LmNsYXNzTGlzdC5yZW1vdmUoJ3Nob3cnKTt9LDIwMDApO30KCmRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdpbnAnKS5hZGRFdmVudExpc3RlbmVyKCdrZXlkb3duJyxmdW5jdGlvbihlKXtpZihlLmtleT09PSdFbnRlcicmJmUuY3RybEtleSl7ZS5wcmV2ZW50RGVmYXVsdCgpO2NvbnZlcnQoKTt9fSk7Cg=="))))</script>
+
+<!-- PROTECTED:WM-MRY4Y6698T5AB -->
+<script data-pid="WM-MRY4Y6698T5AB">
+(function(){
+var _a=64120,_b=45219,_c=18005,_d=2946,_e=58120;
+document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C'].includes(e.key))||(e.ctrlKey&&e.key==='U')){e.preventDefault();}});
+(function(){var _dt=false;setInterval(function(){if(window.outerWidth-window.innerWidth>160||window.outerHeight-window.innerHeight>160){if(!_dt){_dt=true;document.body.innerHTML='<div style="font:16px sans-serif;text-align:center;padding:4rem"><h2>⚠ Sesi Tidak Valid</h2></div>';}}},1000);})();
+console.log('%c⚠ HAK CIPTA\n%c© 2026 Unknown Owner\nID: WM-MRY4Y6698T5AB','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
+(function(){var h=window.location.hostname;var ok=["cbtkabutdigital.com","www.cbtkabutdigital.com","localhost",""];if(ok.indexOf(h)===-1){document.body.innerHTML="<div style='font:16px sans-serif;text-align:center;padding:4rem'><h2>Akses Tidak Sah</h2><p style='color:#666;margin-top:8px'>Hubungi pemilik resmi.</p></div>";}})();
+(function(){var _s="UNSB2dcvXh1TNCumNPZp7c9oNMTVRdy6tCdOuaUhP73WOFYU";function _blk(){document.body.innerHTML="<div style='font-family:sans-serif;text-align:center;padding:5rem;max-width:400px;margin:auto'>"+"<div style='font-size:48px;margin-bottom:1rem'>🔒</div>"+"<h2 style='color:#1e293b;margin-bottom:.5rem'>Akses Terbatas</h2>"+"<p style='color:#64748b;font-size:14px;margin-bottom:1.5rem'>Buka aplikasi ini melalui portal resmi CBT Kabut Digital.</p>"+"<a href='https://cbtkabutdigital.com/aplikasi.html' style='display:inline-block;padding:10px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px'>Buka dari Portal</a>"+"</div>";}async function _vfy(){try{var p=new URLSearchParams(window.location.search);var t=p.get("_t"),e=parseInt(p.get("_e")||"0");if(!t||!e){_blk();return;}if(Math.floor(Date.now()/1000)>e+30){_blk();return;}var rounded=Math.floor((e-60)/60)*60;var buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(_s+":"+rounded));var hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,"0");}).join("");if(hex.slice(0,32)!==t){_blk();}}catch(e2){_blk();}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",_vfy);}else{_vfy();}})();
+})();
+</script>
+</body>
+</html>
