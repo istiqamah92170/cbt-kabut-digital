@@ -55,14 +55,23 @@ a{color:inherit;}
 .app-card{background:var(--white);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-sm);
   border:1.5px solid var(--gray-line);}
 .app-card.utama{border:1.5px solid var(--blue-mid);box-shadow:var(--sh-md);}
-.app-card-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-.app-card .ico-badge{width:40px;height:40px;border-radius:50%;background:var(--blue-pale);
+.app-card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.app-card .ico-badge{width:36px;height:36px;border-radius:50%;background:var(--blue-pale);
   color:var(--blue-main);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .app-card.utama .ico-badge{background:var(--blue-deep);color:white;}
-.app-card .ico-badge svg{width:20px;height:20px;}
-.app-card h3{font-size:14.5px;font-weight:800;color:var(--gray-dark);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.app-card .ico-badge svg{width:18px;height:18px;}
+.app-card-head .head-text{flex:1;min-width:0;padding-top:2px;}
+.app-card h3{font-size:14px;font-weight:800;color:var(--gray-dark);line-height:1.35;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .badge-pwa{display:inline-block;background:var(--blue-pale);color:var(--blue-main);font-size:10px;
   font-weight:800;letter-spacing:.3px;padding:2px 8px;border-radius:20px;text-transform:uppercase;}
+.app-open-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;background:var(--blue-pale);
+  color:var(--blue-main);font-size:12px;font-weight:800;padding:8px 14px;border-radius:20px;
+  text-decoration:none;white-space:nowrap;transition:all .2s;}
+.app-open-btn svg{width:13px;height:13px;}
+.app-open-btn:hover{background:var(--blue-main);color:white;transform:translateY(-1px);}
+.app-card.utama .app-open-btn{background:var(--blue-deep);color:white;}
+.app-card.utama .app-open-btn:hover{background:var(--blue-main);}
 .app-card .desc{font-size:12.5px;color:var(--gray-mid);line-height:1.55;margin-bottom:10px;}
 
 /* ── Galeri screenshot bergaya Play Store: scroll native, snap, peek di tepi ── */
@@ -75,13 +84,23 @@ a{color:inherit;}
 .screenshot-item.ph{background:linear-gradient(160deg,var(--blue-deep),var(--blue-mid));
   display:flex;align-items:center;justify-content:center;padding:10px;}
 .screenshot-item.ph span{color:white;font-size:11px;font-weight:700;text-align:center;line-height:1.4;opacity:.9;}
-.app-card .fitur{list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+
+/* ── Fitur: TINGGI TETAP (bukan jumlah item) supaya semua kartu seragam,
+   dipudarkan di ujung bawah, dengan tombol "Tampilkan Selengkapnya" ── */
+.fitur-wrap{position:relative;max-height:74px;overflow:hidden;transition:max-height .3s ease;}
+.fitur-wrap.expanded{max-height:600px;}
+.fitur-wrap:not(.expanded):not(.no-overflow)::after{content:'';position:absolute;left:0;right:0;
+  bottom:0;height:30px;background:linear-gradient(to bottom,rgba(255,255,255,0),var(--white));
+  pointer-events:none;}
+.app-card .fitur{list-style:none;display:flex;flex-direction:column;gap:5px;}
 .app-card .fitur li{font-size:12px;color:var(--gray-soft);line-height:1.5;padding-left:16px;position:relative;}
 .app-card .fitur li::before{content:'';position:absolute;left:2px;top:7px;width:5px;height:5px;
   border-radius:50%;background:var(--blue-mid);}
-.app-card .app-link{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;
-  color:var(--blue-main);text-decoration:none;}
-.app-card .app-link:hover{text-decoration:underline;}
+.fitur-toggle{display:flex;align-items:center;gap:5px;background:none;border:none;padding:0;
+  margin:8px 0 14px;font-size:12px;font-weight:700;color:var(--blue-main);cursor:pointer;font-family:inherit;}
+.fitur-toggle:hover{color:var(--blue-deep);}
+.fitur-toggle svg{width:13px;height:13px;transition:transform .2s;}
+.fitur-toggle.expanded svg{transform:rotate(180deg);}
 .app-grid-empty{text-align:center;padding:30px 16px;color:var(--gray-soft);font-size:12.5px;
   background:var(--white);border-radius:var(--r-lg);border:1.5px dashed var(--gray-line);}
 .draft-note{background:var(--blue-pale);border:1px dashed var(--blue-light);border-radius:var(--r-sm);
@@ -240,6 +259,24 @@ function _cbtkdBuildLink(app, opts) {
   return app.url;
 }
 
+function _cbtkdRenderFitur(app) {
+  var listHtml = app.fitur.map(function (f) {
+    return '<li>' + _cbtkdEsc(f) + '</li>';
+  }).join('');
+  return '<div class="fitur-wrap"><ul class="fitur">' + listHtml + '</ul></div>'
+    + '<button class="fitur-toggle" onclick="_cbtkdToggleFitur(this)">'
+    + '<span>Tampilkan Selengkapnya</span>'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'
+    + '</button>';
+}
+
+function _cbtkdToggleFitur(btn) {
+  var wrap = btn.previousElementSibling; // .fitur-wrap
+  var kini = wrap.classList.toggle('expanded');
+  btn.classList.toggle('expanded', kini);
+  btn.querySelector('span').textContent = kini ? 'Tampilkan Lebih Sedikit' : 'Tampilkan Selengkapnya';
+}
+
 function _cbtkdRenderGrid(containerId, data, opts) {
   opts = opts || {};
   let wrap = document.getElementById(containerId);
@@ -253,15 +290,30 @@ function _cbtkdRenderGrid(containerId, data, opts) {
     html += '<div class="app-card' + (opts.utama ? ' utama' : '') + '">'
       + '<div class="app-card-head">'
       + '<div class="ico-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + app.icon + '</svg></div>'
-      + '<h3>' + _cbtkdEsc(app.nama) + (app.pwa ? '<span class="badge-pwa">Bisa Diinstal</span>' : '') + '</h3>'
+      + '<div class="head-text"><h3>' + _cbtkdEsc(app.nama) + (app.pwa ? '<span class="badge-pwa">Bisa Diinstal</span>' : '') + '</h3></div>'
+      + '<a class="app-open-btn" href="' + _cbtkdBuildLink(app, opts) + '" target="_blank" rel="noopener">Buka'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></a>'
       + '</div>'
       + _cbtkdRenderScreenshots(app.screenshots)
       + '<div class="desc">' + _cbtkdEsc(app.deskripsi) + '</div>'
-      + '<ul class="fitur">' + app.fitur.map(function(f){ return '<li>' + _cbtkdEsc(f) + '</li>'; }).join('') + '</ul>'
-      + '<a class="app-link" href="' + _cbtkdBuildLink(app, opts) + '" target="_blank" rel="noopener">Buka Aplikasi →</a>'
+      + _cbtkdRenderFitur(app)
       + '</div>';
   });
   wrap.innerHTML = html;
+
+  // Deteksi otomatis: kalau fitur suatu app ternyata sudah pas tanpa
+  // terpotong (tidak melebihi tinggi kotak), sembunyikan tombol dan
+  // efek pudarnya -- tidak semua kartu butuh tombol "Selengkapnya".
+  wrap.querySelectorAll('.fitur-wrap').forEach(function (fw) {
+    var ul = fw.querySelector('.fitur');
+    if (ul.scrollHeight <= fw.clientHeight + 2) {
+      fw.classList.add('no-overflow');
+      var tombolTerkait = fw.nextElementSibling;
+      if (tombolTerkait && tombolTerkait.classList.contains('fitur-toggle')) {
+        tombolTerkait.style.display = 'none';
+      }
+    }
+  });
 }
 
 function _cbtkdEsc(s) {
