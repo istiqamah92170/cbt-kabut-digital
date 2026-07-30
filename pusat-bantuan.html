@@ -276,7 +276,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
       </button>
       <div class="acc-body"><div class="acc-body-inner">
         <p>Gunakan CBT Creator Wizard di halaman Beranda: isi jenis institusi, identitas ujian, konfigurasi (token, durasi, batas pelanggaran, dan sebagainya), lalu bobot nilai. Setelah selesai, unduh file setup hasil wizard dan tempel ke Google Apps Script sesuai panduan bergambar yang tersedia.</p>
-        <p>Langkah terakhir, jalankan menu "Setup Sheet Awal" dari sidebar Apps Script untuk menyiapkan seluruh struktur sheet yang dibutuhkan (Soal, Peserta, Jawaban, Konfigurasi, dan lainnya) secara otomatis.</p>
+        <p>Langkah terakhir, jalankan menu "Setup Sheet Awal (Pengguna Baru)" dari menu "CBT Kabut Digital" di spreadsheet untuk menyiapkan seluruh struktur sheet yang dibutuhkan (Soal, Jawaban, Rekap_Akhir, Konfigurasi) secara otomatis, lengkap dengan contoh soal dan nilai default. Menu ini aman dijalankan berulang kali — sheet dan data yang sudah ada tidak akan ditimpa.</p>
       </div></div>
     </div>
 
@@ -302,7 +302,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
       </button>
       <div class="acc-body"><div class="acc-body-inner">
         <p>Token akses ujian diatur lewat sheet Konfigurasi — hanya peserta yang memasukkan token yang sesuai yang bisa mulai mengerjakan. Setiap peserta juga mendapat pengacakan soal masing-masing, sehingga urutan tampilan soal antar peserta tidak sama walau bank soalnya sama.</p>
-        <p>Kalau ada peserta yang ujiannya terhenti otomatis karena melanggar batas yang ditentukan (misalnya keluar dari halaman ujian berkali-kali), Pengelola bisa membuka kembali sesi tersebut lewat token pengunci khusus yang tersedia di sidebar Apps Script.</p>
+        <p>Kalau ada peserta yang ujiannya terhenti otomatis karena melanggar batas yang ditentukan (misalnya keluar dari halaman ujian berkali-kali), Pengelola bisa membuka kembali sesi tersebut lewat token reset pelanggaran yang diatur di sheet <strong>Konfigurasi</strong> — semua token dan pengaturan akses peserta memang terpusat di sheet ini, bukan lewat menu terpisah.</p>
       </div></div>
     </div>
 
@@ -312,7 +312,8 @@ footer p{font-size:11px;color:var(--gray-soft);}
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       <div class="acc-body"><div class="acc-body-inner">
-        <p>Sidebar Apps Script menyediakan menu analisis otomatis, mencakup statistik nilai keseluruhan, tingkat kesukaran tiap butir soal, dan deteksi pola jawaban yang tidak wajar. Hasil ujian juga bisa diarsipkan ke Google Drive untuk penyimpanan jangka panjang, atau diekspor untuk keperluan pelaporan lebih lanjut.</p>
+        <p>Menu "Buka Panel Koreksi &amp; Analisis" di sidebar spreadsheet menyediakan fungsi "Buat Analisis di Sheet", yang menghasilkan sheet "Analisis_CBT" berisi statistik nilai keseluruhan, tingkat ketuntasan, peringkat, butir soal tersulit, dan catatan pelanggaran. Hasil ujian juga bisa diarsipkan ke Google Drive lewat fungsi "Arsip ke Google Drive" untuk penyimpanan jangka panjang, atau diunduh sebagai file Excel lewat "Download Excel" untuk keperluan pelaporan lebih lanjut.</p>
+        <p>Lihat rincian lengkap semua menu ini di jawaban "Apa saja menu 'CBT Kabut Digital' yang muncul di spreadsheet?" di bawah.</p>
       </div></div>
     </div>
 
@@ -324,6 +325,25 @@ footer p{font-size:11px;color:var(--gray-soft);}
       <div class="acc-body"><div class="acc-body-inner">
         <p>Sebagian besar pengaturan operasional — token ujian, batas pelanggaran, status buka/tutup pembahasan, durasi ujian — bisa diubah langsung di sheet Konfigurasi tanpa perlu mengulang wizard dari awal.</p>
         <p>Untuk perubahan yang lebih struktural, misalnya menambah jenis soal baru atau menyesuaikan alur penilaian, sebaiknya hubungi kami dulu lewat kontak di bagian bawah halaman ini supaya bisa dipandu dengan tepat.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Apa saja menu "CBT Kabut Digital" yang muncul di spreadsheet?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Setelah script pemanggil terpasang, menu <strong>CBT Kabut Digital</strong> akan muncul di toolbar Google Sheet Anda, berisi 7 item berikut:</p>
+        <ul>
+          <li><strong>Setup Sheet Awal (Pengguna Baru)</strong> — dijalankan sekali saja saat pertama kali spreadsheet dipakai. Membuat 4 sheet yang diperlukan (Soal, Jawaban, Rekap_Akhir, Konfigurasi) beserta contoh soal dan nilai default. Aman dijalankan berulang — data yang sudah ada tidak akan ditimpa, hanya menambahkan yang belum ada.</li>
+          <li><strong>Buka Panel Koreksi &amp; Analisis</strong> — dipakai setiap kali ada soal esai yang perlu dinilai manual, atau ingin membuat laporan hasil ujian. Membuka panel di sisi kanan layar dengan 4 fungsi: beri nilai esai (geser antar soal, isi poin, simpan sekaligus), buat sheet "Analisis_CBT" berisi statistik lengkap (rata-rata, ketuntasan, peringkat, butir soal tersulit, catatan pelanggaran), arsip seluruh data ujian ke spreadsheet baru di Google Drive sebagai backup, dan download semua sheet (Soal, Jawaban, Rekap_Akhir, Analisis) sebagai satu file Excel.</li>
+          <li><strong>Kunci Semua Sheet</strong> — dijalankan sebelum ujian dimulai, supaya soal/jawaban tidak sengaja berubah oleh siapa pun yang punya akses edit ke spreadsheet. Kolom nilai esai tetap bisa diisi guru/operator walau sheet lain terkunci, jadi koreksi esai tetap bisa jalan seperti biasa.</li>
+          <li><strong>Buka Kunci Semua Sheet</strong> — kebalikan dari menu di atas, dipakai setelah ujian selesai kalau perlu mengedit soal/jawaban lagi.</li>
+          <li><strong>Pasang Trigger (lakukan sekali)</strong> — dijalankan sekali saja, idealnya langsung setelah Setup Sheet Awal. Membuat menu ini otomatis muncul untuk semua orang yang membuka spreadsheet (misalnya rekan Pengelola lain), bukan cuma pembuat spreadsheet. Tanpa langkah ini, orang lain tidak akan melihat menu sampai mereka reload manual.</li>
+          <li><strong>Hapus Cache Soal</strong> — dipakai setelah mengubah soal atau Konfigurasi, tapi perubahannya belum terlihat di Portal peserta. Sistem menyimpan cache soal selama 5 menit demi kecepatan; menu ini memaksa perubahan aktif langsung tanpa menunggu.</li>
+        </ul>
+        <p>Semua menu di atas aman dijalankan berulang kali — tidak ada yang menghapus data secara permanen kecuali Anda memang mengedit/menghapus manual di sheet. Satu hal yang perlu diingat: kalau ada perubahan pada script (misalnya update dari versi Library terbaru), pastikan melakukan <strong>Deploy → Manage deployments → New version</strong> di Apps Script agar Portal peserta memakai kode terbaru — menyimpan script saja tidak cukup untuk fitur Web App.</p>
       </div></div>
     </div>
   </div>
@@ -371,8 +391,8 @@ footer p{font-size:11px;color:var(--gray-soft);}
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       <div class="acc-body"><div class="acc-body-inner">
-        <p>Untuk mereset jawaban peserta tertentu, atau membuka kembali sesi ujian yang terhenti otomatis karena pelanggaran, Pengelola bisa memakai menu/token pengunci khusus yang tersedia di sidebar Apps Script — tidak perlu mengulang seluruh proses wizard.</p>
-        <p>Untuk reset menyeluruh (menghapus seluruh data dan memulai dari nol), sebaiknya arsipkan dulu data lama lewat menu Arsip ke Google Drive, sebelum menjalankan ulang menu "Setup Sheet Awal".</p>
+        <p>Untuk mereset jawaban peserta tertentu, atau membuka kembali sesi ujian yang terhenti otomatis karena pelanggaran, Pengelola bisa memakai token reset yang diatur di sheet <strong>Konfigurasi</strong> — tidak perlu mengulang seluruh proses wizard. Lihat juga daftar lengkap menu "CBT Kabut Digital" di sidebar spreadsheet pada tab <strong>Untuk Pengelola</strong> di atas.</p>
+        <p>Untuk reset menyeluruh (menghapus seluruh data dan memulai dari nol), sebaiknya arsipkan dulu data lama lewat menu "Buka Panel Koreksi &amp; Analisis" → Arsip ke Google Drive, sebelum menjalankan ulang menu "Setup Sheet Awal (Pengguna Baru)".</p>
       </div></div>
     </div>
 
