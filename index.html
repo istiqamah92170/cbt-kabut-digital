@@ -69,7 +69,8 @@ a{color:inherit;}
   align-items:center;justify-content:space-between;gap:10px;}
 .site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
   color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
-.site-nav-links{display:flex;gap:2px;}
+.site-nav-links{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.site-nav-links::-webkit-scrollbar{display:none;}
 .nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
   padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
 .nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
@@ -158,6 +159,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
       <a href="./index.html" class="nav-link active">Beranda</a>
       <a href="./aplikasi.html" class="nav-link">Aplikasi</a>
       <a href="./tentang.html" class="nav-link">Tentang</a>
+      <a href="./pusat-bantuan.html" class="nav-link">Pusat Bantuan</a>
     </div>
   </div>
 </nav>
@@ -204,7 +206,6 @@ footer p{font-size:11px;color:var(--gray-soft);}
 
     <div class="section-title" style="font-size:15px;margin-top:28px;margin-bottom:2px;">Tutorial Bergambar: Setelah File Diunduh</div>
     <div class="section-sub" style="margin-bottom:14px;">Geser untuk melihat cara memasang file hasil wizard ke Google Sheet Anda</div>
-    <!-- TODO(Ghani): ganti isi .carousel-img.ph (placeholder) dengan <img src="screenshot-asli.png" alt="..."> -->
     <div class="carousel" id="carousel">
       <div class="carousel-viewport">
         <div class="carousel-track" id="carousel-track">
@@ -338,7 +339,6 @@ footer p{font-size:11px;color:var(--gray-soft);}
     </div>
 
     <div class="section-title" style="font-size:15px;margin-top:26px;margin-bottom:12px;">Video Tutorial</div>
-    <!-- TODO(Ghani): ganti src dengan link embed video asli (YouTube/Drive) -->
     <div class="video-frame">
   <iframe
       src="https://www.youtube.com/embed/PBIQeI3b6RU"
@@ -404,7 +404,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
 </footer>
 
 <script>
-// ═══ Konfigurasi — TODO(Ghani): sesuaikan sebelum deploy ═══
+// ═══ Konfigurasi ═══
 const CBTKD_WIZARD_URL      = './wizard.html';
 const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo9aLVvvulLeH9qce3Qtz_5PZ1GFWXk5qiTNNj4_T-6vf7lZOt-K0tkMSdKkR/exec';
 

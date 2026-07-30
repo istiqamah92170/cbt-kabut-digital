@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Pusat Bantuan — CBT Kabut Digital</title>
+<meta name="description" content="Pusat Bantuan CBT Kabut Digital: panduan memulai, panduan untuk Peserta, panduan untuk Pengelola, dan pertanyaan yang sering diajukan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+  --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+  --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+  --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --sh-sm:0 1px 4px rgba(10,53,102,.08);
+  --sh-md:0 4px 16px rgba(10,53,102,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:var(--gray-dark);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+a{color:var(--blue-main);}
+.wrap{width:100%;max-width:560px;padding:0 20px 64px;}
+
+.site-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);
+  border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-sm);}
+.site-nav-inner{max-width:560px;margin:0 auto;padding:12px 20px;display:flex;
+  align-items:center;justify-content:space-between;gap:10px;}
+.site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
+  color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
+.site-nav-links{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.site-nav-links::-webkit-scrollbar{display:none;}
+.nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
+  padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
+.nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
+.nav-link:hover{color:var(--blue-main);}
+
+.page-head{width:100%;background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-main) 100%);
+  color:white;padding:36px 20px 34px;}
+.page-head-inner{max-width:520px;margin:0 auto;}
+.page-head h1{font-size:22px;font-weight:800;margin-bottom:8px;}
+.page-head p{font-size:13px;opacity:.85;line-height:1.6;max-width:440px;}
+
+/* search */
+.help-search-wrap{width:100%;max-width:560px;padding:20px 20px 0;}
+.help-search{position:relative;}
+.help-search input{width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--gray-line);
+  border-radius:var(--r-md);font-family:inherit;font-size:13px;color:var(--gray-dark);
+  background:var(--white);outline:none;transition:border-color .15s;}
+.help-search input:focus{border-color:var(--blue-main);}
+.help-search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;
+  color:var(--gray-soft);pointer-events:none;}
+.help-search-empty{display:none;font-size:12.5px;color:var(--gray-soft);padding:14px 4px;text-align:center;}
+
+/* tabs */
+.help-tabs{width:100%;max-width:560px;padding:16px 20px 0;display:flex;gap:6px;overflow-x:auto;
+  scrollbar-width:none;}
+.help-tabs::-webkit-scrollbar{display:none;}
+.help-tab{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;
+  border:1.5px solid var(--gray-line);background:var(--white);font-family:inherit;font-size:12.5px;
+  font-weight:700;color:var(--gray-mid);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.help-tab svg{width:15px;height:15px;flex-shrink:0;}
+.help-tab.active{background:var(--blue-main);border-color:var(--blue-main);color:#fff;}
+.help-tab:hover:not(.active){border-color:var(--blue-mid);color:var(--blue-main);}
+
+/* panels */
+.help-panels{width:100%;max-width:560px;padding:18px 20px 8px;}
+.help-panel{display:none;}
+.help-panel.active{display:block;}
+.help-panel-intro{font-size:12.5px;color:var(--gray-soft);line-height:1.6;margin-bottom:14px;}
+
+/* accordion */
+.acc-item{background:var(--white);border:1.5px solid var(--gray-line);border-radius:var(--r-md);
+  margin-bottom:8px;overflow:hidden;box-shadow:var(--sh-sm);}
+.acc-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer;}
+.acc-head .q{font-size:13px;font-weight:700;color:var(--gray-dark);line-height:1.45;}
+.acc-head .chev{flex-shrink:0;width:18px;height:18px;color:var(--blue-main);transition:transform .2s;}
+.acc-item.open .acc-head .chev{transform:rotate(180deg);}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.acc-body-inner{padding:0 16px 16px;font-size:12.5px;color:var(--gray-mid);line-height:1.7;}
+.acc-body-inner p{margin-bottom:8px;}
+.acc-body-inner p:last-child{margin-bottom:0;}
+.acc-body-inner ul{padding-left:18px;margin:4px 0 8px;}
+.acc-body-inner li{margin-bottom:4px;}
+
+/* term note */
+.term-note{background:var(--blue-pale);border:1px dashed var(--blue-light);border-radius:var(--r-sm);
+  padding:10px 12px;font-size:11.5px;color:var(--gray-mid);margin-bottom:16px;line-height:1.55;}
+
+/* CTA bottom */
+.help-cta{width:100%;max-width:560px;padding:12px 20px 8px;}
+.help-cta-box{background:var(--white);border:1.5px solid var(--gray-line);border-radius:var(--r-lg);
+  padding:24px 20px;text-align:center;box-shadow:var(--sh-sm);}
+.help-cta-box h2{font-size:15.5px;font-weight:800;color:var(--gray-dark);margin-bottom:6px;}
+.help-cta-box p{font-size:12.5px;color:var(--gray-soft);line-height:1.6;margin-bottom:16px;}
+.help-cta-btns{display:flex;flex-direction:column;gap:10px;}
+.btn-support{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;
+  border-radius:var(--r-md);font-size:13px;font-weight:700;text-decoration:none;transition:transform .15s;}
+.btn-support svg{width:16px;height:16px;flex-shrink:0;}
+.btn-support:active{transform:scale(.98);}
+.btn-support.primary{background:var(--blue-main);color:#fff;}
+.btn-support.secondary{background:var(--blue-pale);color:var(--blue-deep);border:1.5px solid var(--blue-light);}
+
+footer{width:100%;max-width:560px;padding:24px 20px 40px;text-align:center;}
+footer p{font-size:11px;color:var(--gray-soft);}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a href="./index.html" class="site-logo">CBT Kabut Digital</a>
+    <div class="site-nav-links">
+      <a href="./index.html" class="nav-link">Beranda</a>
+      <a href="./aplikasi.html" class="nav-link">Aplikasi</a>
+      <a href="./tentang.html" class="nav-link">Tentang</a>
+      <a href="./pusat-bantuan.html" class="nav-link active">Pusat Bantuan</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-head">
+  <div class="page-head-inner">
+    <h1>Pusat Bantuan</h1>
+    <p>Panduan lengkap memakai CBT Kabut Digital — dari langkah pertama, panduan untuk Peserta dan Pengelola, sampai pertanyaan yang paling sering ditanyakan.</p>
+  </div>
+</div>
+
+<div class="help-search-wrap">
+  <div class="help-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="helpSearchInput" placeholder="Cari topik bantuan, misalnya &quot;token&quot; atau &quot;offline&quot;...">
+  </div>
+</div>
+
+<div class="help-tabs" id="helpTabs">
+  <button class="help-tab active" data-tab="mulai" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+    Memulai
+  </button>
+  <button class="help-tab" data-tab="peserta" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Untuk Peserta
+  </button>
+  <button class="help-tab" data-tab="pengelola" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+    Untuk Pengelola
+  </button>
+  <button class="help-tab" data-tab="faq" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+    FAQ
+  </button>
+</div>
+
+<div class="help-panels">
+  <p class="help-search-empty" id="helpSearchEmpty">Tidak ada topik bantuan yang cocok dengan pencarian tersebut. Coba kata kunci lain, atau hubungi kami lewat tombol di bawah.</p>
+
+  <!-- === MEMULAI === -->
+  <div class="help-panel active" data-panel="mulai">
+    <p class="help-panel-intro">Kenal dulu apa itu CBT Kabut Digital, cara memulainya, dan apa saja yang dibutuhkan sebelum mulai memakainya.</p>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Apa itu CBT Kabut Digital?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>CBT Kabut Digital adalah sistem ujian online (Computer Based Test) yang berjalan sepenuhnya di atas Google Sheets dan Google Apps Script milik institusi sendiri — sekolah, kampus, lembaga kursus, perusahaan, maupun instansi pemerintah. Karena berjalan di atas layanan Google yang sudah gratis dipakai hampir semua institusi, tidak perlu menyewa server berbayar atau mempekerjakan tim IT khusus.</p>
+        <p>Fitur intinya mencakup: soal pilihan ganda maupun esai (termasuk soal bergambar), token akses per sesi ujian, pengacakan soal per peserta, deteksi pelanggaran otomatis selama ujian, koreksi esai langsung dari sidebar Google Sheets, serta analisis hasil ujian.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara memulai memakai CBT Kabut Digital?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Langkah utamanya lewat CBT Creator Wizard di halaman Beranda, terdiri dari 5 langkah:</p>
+        <ul>
+          <li>Pilih jenis institusi (sekolah, kampus, kursus, perusahaan, atau lainnya)</li>
+          <li>Isi identitas ujian — nama institusi, logo, pesan sambutan</li>
+          <li>Atur konfigurasi ujian — token akses, durasi, batas pelanggaran, pengacakan soal</li>
+          <li>Atur bobot nilai — KKM dan proporsi nilai pilihan ganda vs esai</li>
+          <li>Tinjau ringkasan, lalu unduh file setup</li>
+        </ul>
+        <p>File hasil wizard tinggal ditempel ke Google Apps Script sesuai panduan bergambar langkah demi langkah yang tersedia di halaman Beranda, lalu jalankan menu "Setup Sheet Awal" untuk menyiapkan struktur sheet secara otomatis.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Apa persyaratan sistem yang dibutuhkan?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p><strong>Untuk Pengelola:</strong> akun Google aktif (Gmail biasa atau Google Workspace institusi), yang berarti otomatis punya akses ke Google Sheets dan Google Apps Script tanpa biaya tambahan, serta browser modern (Chrome, Edge, atau Firefox versi terbaru) untuk mengatur ujian.</p>
+        <p><strong>Untuk Peserta:</strong> perangkat (HP, laptop, atau komputer) dengan browser modern dan koneksi internet yang stabil saat login dan mengirim jawaban. Di Android, peserta juga bisa memasang Aplikasi Utama CBT Kabut Digital dalam bentuk PWA supaya tampilannya menyerupai aplikasi biasa tanpa harus membuka browser secara manual.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- === PESERTA === -->
+  <div class="help-panel" data-panel="peserta">
+    <div class="term-note">Di seluruh dokumentasi ini kami memakai istilah <strong>Peserta</strong> (bukan "Siswa") karena CBT Kabut Digital dipakai lintas jenis institusi — sekolah, kampus, kursus, perusahaan, maupun instansi pemerintah, bukan hanya lingkungan sekolah.</div>
+    <p class="help-panel-intro">Panduan bagi Peserta yang akan mengikuti ujian lewat CBT Kabut Digital.</p>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara masuk menggunakan kode/link ujian?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Buka link ujian yang dibagikan Pengelola (link Web App hasil deploy Apps Script), atau buka Aplikasi Utama CBT Kabut Digital kalau sudah dipasang di perangkat. Pilih atau buat profil peserta pada perangkat yang dipakai, lalu masukkan Token Ujian yang diberikan Pengelola untuk mulai mengerjakan.</p>
+        <p>Pastikan token diketik atau ditempel tepat sesuai yang diberikan — token bersifat sensitif terhadap huruf besar/kecil dan spasi.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara mengerjakan tes?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Soal ditampilkan satu per satu dengan navigasi bernomor, mendukung soal pilihan ganda (teks maupun gambar) dan soal esai. Jawaban tersimpan otomatis setiap kali berpindah soal, jadi tidak perlu tombol simpan manual di tiap soal.</p>
+        <p>Timer ujian berjalan sesuai durasi yang ditentukan Pengelola. Sistem juga memantau pelanggaran seperti keluar dari tampilan ujian (pindah tab/aplikasi) sesuai batas yang ditentukan Pengelola — kalau batas ini terlampaui, ujian bisa dihentikan otomatis dan hanya bisa dilanjutkan dengan token khusus dari Pengelola. Jadi sebaiknya tetap di halaman ujian sampai selesai mengerjakan.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara melihat hasil ujian?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Setelah mengirim jawaban, skor untuk soal pilihan ganda biasanya langsung tampil di layar, tergantung pengaturan yang dipilih Pengelola saat membuat ujian. Nilai untuk soal esai baru muncul setelah dikoreksi manual oleh Pengelola lewat panel koreksi di Google Sheets, karena esai membutuhkan penilaian yang tidak bisa dihitung otomatis.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara melihat pembahasan soal?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Kalau fitur pembahasan diaktifkan oleh Pengelola, tombol/menu pembahasan (berisi teks maupun gambar penjelasan) akan muncul setelah ujian selesai dikirim. Pengelola bisa mengunci fitur ini agar tidak tampil selama ujian masih berlangsung, supaya tidak disalahgunakan peserta lain yang belum selesai mengerjakan.</p>
+        <p>Kalau menu pembahasan tidak muncul sama sekali, kemungkinan Pengelola memang belum mengaktifkan fitur ini untuk ujian tersebut — silakan tanyakan langsung ke Pengelola ujian Anda.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara backup dan restore progres ujian?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Profil dan progres ujian tersimpan lokal di perangkat/browser yang dipakai saat itu. Karena itu, sebaiknya gunakan perangkat dan browser yang sama dari awal sampai akhir sesi ujian yang sama, dan hindari membersihkan cache/data browser selagi ujian masih berjalan.</p>
+        <p>Jawaban yang <em>sudah terkirim</em> tetap aman tersimpan di Google Sheets milik Pengelola, terlepas dari apa yang terjadi pada perangkat setelahnya. Yang berisiko hilang hanyalah progres lokal yang <em>belum</em> terkirim, misalnya kalau perangkat berganti atau sesi browser terhapus di tengah jalan. Kalau mengalami kendala kehilangan sesi, segera hubungi Pengelola ujian — biasanya bisa dibantu lewat token pembuka ulang.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- === PENGELOLA === -->
+  <div class="help-panel" data-panel="pengelola">
+    <div class="term-note">Kami memakai istilah <strong>Pengelola</strong> (bukan "Guru") untuk siapa pun yang membuat dan mengatur ujian — bisa guru, panitia, admin akademik, HR perusahaan, atau siapa pun yang berwenang di institusi masing-masing.</div>
+    <p class="help-panel-intro">Panduan bagi Pengelola yang membuat dan mengatur ujian lewat CBT Kabut Digital.</p>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara membuat ujian baru?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Gunakan CBT Creator Wizard di halaman Beranda: isi jenis institusi, identitas ujian, konfigurasi (token, durasi, batas pelanggaran, dan sebagainya), lalu bobot nilai. Setelah selesai, unduh file setup hasil wizard dan tempel ke Google Apps Script sesuai panduan bergambar yang tersedia.</p>
+        <p>Langkah terakhir, jalankan menu "Setup Sheet Awal" dari sidebar Apps Script untuk menyiapkan seluruh struktur sheet yang dibutuhkan (Soal, Peserta, Jawaban, Konfigurasi, dan lainnya) secara otomatis.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara menyiapkan bank soal?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Soal diisi langsung ke sheet Soal dengan format kolom yang sudah disiapkan wizard (tipe soal, teks atau gambar, kunci jawaban, poin, dan pembahasan opsional). Ada dua cara mempercepat pengisian soal dalam jumlah banyak:</p>
+        <ul>
+          <li><strong>Generator Prompt Soal PG</strong> — menyusun prompt siap pakai untuk AI (Gemini, ChatGPT, dan sejenisnya), hasilnya berupa format pipe-delimited yang tinggal ditempel langsung ke sheet Soal</li>
+          <li><strong>Konverter Google Form ke CBT</strong> — mengubah soal yang sudah ada di Google Form mode Kuis (lengkap dengan kunci jawaban dan gambar) langsung menjadi format sheet Soal CBT Kabut Digital</li>
+        </ul>
+        <p>Kedua alat ini tersedia sebagai Aplikasi Pendukung di halaman Aplikasi.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara mengelola peserta?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Token akses ujian diatur lewat sheet Konfigurasi — hanya peserta yang memasukkan token yang sesuai yang bisa mulai mengerjakan. Setiap peserta juga mendapat pengacakan soal masing-masing, sehingga urutan tampilan soal antar peserta tidak sama walau bank soalnya sama.</p>
+        <p>Kalau ada peserta yang ujiannya terhenti otomatis karena melanggar batas yang ditentukan (misalnya keluar dari halaman ujian berkali-kali), Pengelola bisa membuka kembali sesi tersebut lewat token pengunci khusus yang tersedia di sidebar Apps Script.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara melihat analisis hasil ujian?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Sidebar Apps Script menyediakan menu analisis otomatis, mencakup statistik nilai keseluruhan, tingkat kesukaran tiap butir soal, dan deteksi pola jawaban yang tidak wajar. Hasil ujian juga bisa diarsipkan ke Google Drive untuk penyimpanan jangka panjang, atau diekspor untuk keperluan pelaporan lebih lanjut.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Pengaturan apa saja yang bisa diubah di aplikasi?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Sebagian besar pengaturan operasional — token ujian, batas pelanggaran, status buka/tutup pembahasan, durasi ujian — bisa diubah langsung di sheet Konfigurasi tanpa perlu mengulang wizard dari awal.</p>
+        <p>Untuk perubahan yang lebih struktural, misalnya menambah jenis soal baru atau menyesuaikan alur penilaian, sebaiknya hubungi kami dulu lewat kontak di bagian bawah halaman ini supaya bisa dipandu dengan tepat.</p>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- === FAQ === -->
+  <div class="help-panel" data-panel="faq">
+    <p class="help-panel-intro">Pertanyaan yang paling sering ditanyakan seputar CBT Kabut Digital.</p>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana jika koneksi internet terputus saat ujian?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Karena CBT Kabut Digital berjalan berbasis Google Sheets dan Apps Script, ujian membutuhkan koneksi internet aktif untuk memuat soal dan mengirim jawaban. Kalau koneksi terputus di tengah ujian, segera sambungkan ulang secepatnya. Jawaban yang sudah tersimpan di soal-soal sebelumnya umumnya tidak hilang, tapi jawaban yang sedang dikerjakan saat koneksi putus berisiko tidak tersimpan.</p>
+        <p>Kalau mengalami kendala ini, segera hubungi Pengelola ujian Anda supaya bisa dibantu, misalnya dengan token pembuka ulang sesi.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Apakah aplikasi bisa digunakan sepenuhnya offline?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Belum sepenuhnya. Aplikasi Utama CBT Kabut Digital bisa dipasang sebagai aplikasi (PWA) di Android sehingga tampilan luarnya (shell aplikasi) bisa termuat lebih cepat berkat cache, dan terasa seperti aplikasi biasa tanpa harus membuka browser secara manual.</p>
+        <p>Namun karena soal dan jawaban tersimpan di Google Sheets milik institusi, tetap dibutuhkan koneksi internet aktif untuk memuat soal baru dan mengirim jawaban ujian. Jadi yang berjalan offline hanyalah tampilan awal aplikasinya, bukan proses ujiannya secara keseluruhan.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Apakah data ujian aman?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Data ujian (soal, jawaban peserta, dan nilai) tersimpan di Google Sheets milik institusi masing-masing — bukan di server pihak ketiga milik kami — sehingga kendali penuh atas data tetap berada di tangan institusi.</p>
+        <p>Sistem memakai token akses dan deteksi pelanggaran sebagai penghalang dasar terhadap penyalahgunaan. Namun sesuai yang dijelaskan di <a href="./kebijakan-privasi.html">Kebijakan Privasi</a> kami, proteksi berbasis client-side seperti ini sifatnya penghalang untuk pengguna kasual, bukan jaminan keamanan mutlak. Untuk keamanan tambahan, institusi disarankan mengatur izin akses spreadsheet dengan bijak dan tidak membagikan token ujian secara sembarangan.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara reset data ujian?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Untuk mereset jawaban peserta tertentu, atau membuka kembali sesi ujian yang terhenti otomatis karena pelanggaran, Pengelola bisa memakai menu/token pengunci khusus yang tersedia di sidebar Apps Script — tidak perlu mengulang seluruh proses wizard.</p>
+        <p>Untuk reset menyeluruh (menghapus seluruh data dan memulai dari nol), sebaiknya arsipkan dulu data lama lewat menu Arsip ke Google Drive, sebelum menjalankan ulang menu "Setup Sheet Awal".</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana cara menghubungi Pengelola ujian saya?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Kontak Pengelola ujian (guru, panitia, atau admin di institusi masing-masing) biasanya sudah dibagikan langsung oleh institusi bersamaan dengan link atau token ujian. Kami tidak memiliki akses ke data ujian institusi tertentu, sehingga pertanyaan seputar nilai atau jadwal ujian sebaiknya ditujukan langsung ke Pengelola di institusi Anda.</p>
+        <p>Kalau pertanyaannya soal aplikasi CBT Kabut Digital itu sendiri (bukan soal ujian tertentu), silakan hubungi kami lewat tombol di bagian bawah halaman ini.</p>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<div class="help-cta">
+  <div class="help-cta-box">
+    <h2>Masih membutuhkan bantuan?</h2>
+    <p>Tim kami siap membantu kalau pertanyaan Anda belum terjawab di atas.</p>
+    <div class="help-cta-btns">
+      <a class="btn-support primary" href="mailto:admin@cbtkabutdigital.com">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        Contact Support — Email
+      </a>
+      <a class="btn-support secondary" href="https://wa.me/6285215102589" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+        Contact Support — WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>CBT Kabut Digital — bagian dari ekosistem Kabut Digital</p>
+  <p style="margin-top:6px;"><a href="./kebijakan-privasi.html" style="color:var(--gray-soft);text-decoration:underline;">Kebijakan Privasi</a> &middot; <a href="./syarat-ketentuan.html" style="color:var(--gray-soft);text-decoration:underline;">Syarat dan Ketentuan</a></p>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  function qsa(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+
+  // ---- Tab switching ----
+  var tabs = qsa('.help-tab');
+  var panels = qsa('.help-panel');
+
+  function activateTab(tabId){
+    tabs.forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-tab') === tabId); });
+    panels.forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-panel') === tabId); });
+  }
+
+  tabs.forEach(function(tabBtn){
+    tabBtn.addEventListener('click', function(){
+      activateTab(tabBtn.getAttribute('data-tab'));
+      var input = document.getElementById('helpSearchInput');
+      if (input && input.value) { input.value = ''; applySearch(''); }
+    });
+  });
+
+  // ---- Accordion ----
+  qsa('.acc-item').forEach(function(item){
+    var head = item.querySelector('.acc-head');
+    var body = item.querySelector('.acc-body');
+    head.addEventListener('click', function(){
+      var willOpen = !item.classList.contains('open');
+      item.classList.toggle('open', willOpen);
+      body.style.maxHeight = willOpen ? (body.scrollHeight + 'px') : '0px';
+    });
+  });
+
+  // ---- Search filter (dalam tab aktif saja) ----
+  var searchInput = document.getElementById('helpSearchInput');
+  var emptyMsg = document.getElementById('helpSearchEmpty');
+  var tabsWrap = document.getElementById('helpTabs');
+
+  function applySearch(query){
+    var q = query.trim().toLowerCase();
+
+    if (!q){
+      tabsWrap.style.display = '';
+      emptyMsg.style.display = 'none';
+      panels.forEach(function(p){
+        qsa('.acc-item', p).forEach(function(item){ item.style.display = ''; });
+      });
+      return;
+    }
+
+    tabsWrap.style.display = 'none';
+    var totalVisible = 0;
+
+    panels.forEach(function(p){
+      p.classList.add('active');
+      qsa('.acc-item', p).forEach(function(item){
+        var text = item.textContent.toLowerCase();
+        var match = text.indexOf(q) !== -1;
+        item.style.display = match ? '' : 'none';
+        if (match) totalVisible++;
+      });
+    });
+
+    emptyMsg.style.display = totalVisible === 0 ? 'block' : 'none';
+  }
+
+  searchInput.addEventListener('input', function(){
+    applySearch(searchInput.value);
+  });
+})();
+</script>
+
+</body>
+</html>

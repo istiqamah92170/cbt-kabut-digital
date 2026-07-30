@@ -29,7 +29,8 @@ a{color:inherit;}
   align-items:center;justify-content:space-between;gap:10px;}
 .site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
   color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
-.site-nav-links{display:flex;gap:2px;}
+.site-nav-links{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.site-nav-links::-webkit-scrollbar{display:none;}
 .nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
   padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
 .nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
@@ -75,6 +76,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
       <a href="./index.html" class="nav-link">Beranda</a>
       <a href="./aplikasi.html" class="nav-link">Aplikasi</a>
       <a href="./tentang.html" class="nav-link active">Tentang</a>
+      <a href="./pusat-bantuan.html" class="nav-link">Pusat Bantuan</a>
     </div>
   </div>
 </nav>

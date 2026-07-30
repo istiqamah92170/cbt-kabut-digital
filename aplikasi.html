@@ -33,7 +33,8 @@ a{color:inherit;}
   align-items:center;justify-content:space-between;gap:10px;}
 .site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
   color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
-.site-nav-links{display:flex;gap:2px;}
+.site-nav-links{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.site-nav-links::-webkit-scrollbar{display:none;}
 .nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
   padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
 .nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
@@ -119,6 +120,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
       <a href="./index.html" class="nav-link">Beranda</a>
       <a href="./aplikasi.html" class="nav-link active">Aplikasi</a>
       <a href="./tentang.html" class="nav-link">Tentang</a>
+      <a href="./pusat-bantuan.html" class="nav-link">Pusat Bantuan</a>
     </div>
   </div>
 </nav>
@@ -153,17 +155,13 @@ footer p{font-size:11px;color:var(--gray-soft);}
   
 <script>
 // ═══ APLIKASI UTAMA ═══
-// TODO(Ghani): isi "url" dengan alamat CBT KD yang sudah live (GitHub Pages
-// atau domain baru). Tetap file mandiri dengan manifest+service worker
-// sendiri -- tautan ini TIDAK mengubah cara instalnya di Android.
 const CBTKD_APLIKASI_UTAMA = [
   {
     nama: 'CBT Kabut Digital',
     pwa: true,
     deskripsi: 'Sistem ujian online lengkap -- token peserta, anti-kecurangan, koreksi esai, sampai analisis butir soal. Bisa diinstal ke layar utama HP seperti aplikasi biasa.',
-    // TODO(Ghani): isi "url" tiap screenshot dengan gambar asli (rasio potret
-    // seperti tangkapan layar HP, mis. 1080x2340px). Selama "url" kosong,
-    // kotak placeholder bergradasi akan tampil memakai "label"-nya.
+    // Catatan: kalau "url" screenshot dikosongkan, otomatis fallback ke
+    // kotak placeholder bergradasi memakai "label"-nya (lihat _cbtkdRenderScreenshots).
     screenshots: [
       { url: 'https://drive.google.com/thumbnail?id=1-9YdVHQ-GZHcYQxLsJIa3niRRFES_SV0&sz=s4000', label: 'Multi Profil' },
       { url: 'https://drive.google.com/thumbnail?id=1AaytIN1SF-BYTTZm1fzjVFrt-45g0wF1&sz=s4000', label: 'Halaman Login' },
@@ -200,8 +198,6 @@ const CBTKD_APLIKASI_UTAMA = [
 ];
 
 // ═══ APLIKASI PENDUKUNG (data-driven -- tambah/kurangi cukup edit array ini) ═══
-// TODO(Ghani): ganti "url", "deskripsi", dan "fitur" dengan detail asli
-// begitu link dan penjelasannya dikirim.
 const CBTKD_APLIKASI_PENDUKUNG = [
   {
     nama: 'Konverter Link Gambar',
