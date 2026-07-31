@@ -501,6 +501,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
       var textNode = document.createTextNode(mark.textContent);
       mark.parentNode.replaceChild(textNode, mark);
     });
+    panelsRoot.normalize();
   }
 
   function highlightTextNode(node, q){
