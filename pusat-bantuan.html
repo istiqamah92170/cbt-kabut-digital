@@ -86,6 +86,8 @@ a{color:var(--blue-main);}
 .acc-body-inner p:last-child{margin-bottom:0;}
 .acc-body-inner ul{padding-left:18px;margin:4px 0 8px;}
 .acc-body-inner li{margin-bottom:4px;}
+.acc-body-inner code{background:var(--blue-pale);color:var(--blue-deep);padding:1px 5px;
+  border-radius:4px;font-size:11.5px;font-family:'Plus Jakarta Sans',sans-serif;}
 
 /* term note */
 .term-note{background:var(--blue-pale);border:1px dashed var(--blue-light);border-radius:var(--r-sm);
@@ -393,6 +395,28 @@ footer p{font-size:11px;color:var(--gray-soft);}
       <div class="acc-body"><div class="acc-body-inner">
         <p>Untuk mereset jawaban peserta tertentu, atau membuka kembali sesi ujian yang terhenti otomatis karena pelanggaran, Pengelola bisa memakai token reset yang diatur di sheet <strong>Konfigurasi</strong> — tidak perlu mengulang seluruh proses wizard. Lihat juga daftar lengkap menu "CBT Kabut Digital" di sidebar spreadsheet pada tab <strong>Untuk Pengelola</strong> di atas.</p>
         <p>Untuk reset menyeluruh (menghapus seluruh data dan memulai dari nol), sebaiknya arsipkan dulu data lama lewat menu "Buka Panel Koreksi &amp; Analisis" → Arsip ke Google Drive, sebelum menjalankan ulang menu "Setup Sheet Awal (Pengguna Baru)".</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Apakah setiap mau membuat soal baru harus lewat wizard?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Tidak. Untuk sekadar membuat ujian baru dengan soal yang berbeda, cara yang lebih praktis adalah menduplikasi spreadsheet yang sudah ada, bukan mengulang wizard dari awal:</p>
+        <ul>
+          <li><strong>Duplikasi file</strong> — salin spreadsheet lama, beri nama baru sesuai ujian yang akan dibuat</li>
+          <li><strong>Perbarui konten</strong> — ganti atau tempel daftar soal baru ke sheet Soal pada file hasil duplikasi</li>
+          <li><strong>Sesuaikan pengaturan</strong> — periksa kembali sheet Konfigurasi (token, judul ujian, durasi, dan lainnya) supaya sesuai ujian baru</li>
+          <li><strong>Bersihkan data lama</strong> — kosongkan isi sheet Jawaban dan Rekap_Akhir supaya tidak tercampur dengan data ujian sebelumnya</li>
+          <li><strong>Deploy ulang</strong> — lakukan <strong>Deploy → Manage deployments → New version</strong> di Apps Script pada file hasil duplikasi agar Portal peserta memakai versi yang aktif</li>
+        </ul>
+        <p>Wizard tetap dianjurkan dipakai untuk dua situasi tertentu:</p>
+        <ul>
+          <li><strong>Pembuatan awal</strong> — saat pertama kali membangun sistem CBT dari nol, bukan menduplikasi dari yang sudah ada</li>
+          <li><strong>Beda jenis institusi</strong> — kalau ingin membuat CBT untuk kategori pengguna yang berbeda dari file lama (misalnya dulu untuk sekolah, sekarang untuk kampus atau perusahaan), karena wizard menyelaraskan label kolom data secara otomatis sesuai jenis institusi yang dipilih — misalnya dari <code>Nama_Siswa/Sekolah</code> menjadi <code>Nama_Mahasiswa/Kampus</code> atau <code>Nama_Karyawan/Perusahaan</code>. Menduplikasi file lama tidak akan menyesuaikan label-label ini secara otomatis.</li>
+        </ul>
       </div></div>
     </div>
 
