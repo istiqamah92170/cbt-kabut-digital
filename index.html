@@ -148,6 +148,77 @@ footer{width:100%;max-width:560px;padding:24px 20px 40px;text-align:center;}
 footer p{font-size:11px;color:var(--gray-soft);}
 
 @media(min-width:640px){ .pillars{grid-template-columns:1fr 1fr 1fr;} .pillar{flex-direction:column;} }
+
+/* === Wawasan (Fitur Terbaru & Tips) === */
+.wsn-grid{display:flex;flex-direction:column;gap:12px;margin-top:6px;}
+.wsn-card{display:flex;gap:12px;background:var(--white);border:1.5px solid var(--gray-line);
+  border-radius:var(--r-lg);padding:12px;box-shadow:var(--sh-sm);cursor:pointer;
+  transition:border-color .2s, box-shadow .2s;}
+.wsn-card:hover{border-color:var(--blue-mid);}
+.wsn-card.wsn-highlight{border-color:var(--blue-main);box-shadow:0 0 0 3px var(--blue-light);
+  animation:wsnPulse 1.8s ease-out 2;}
+@keyframes wsnPulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.45);}100%{box-shadow:0 0 0 10px rgba(16,185,129,0);}}
+.wsn-thumb{flex-shrink:0;width:76px;height:76px;border-radius:var(--r-md);overflow:hidden;
+  background:var(--blue-pale);display:flex;align-items:center;justify-content:center;}
+.wsn-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.wsn-thumb svg{width:26px;height:26px;color:var(--blue-mid);}
+.wsn-card-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.wsn-card-title{font-size:13.5px;font-weight:700;color:var(--gray-dark);line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:3px;}
+.wsn-card-snippet{font-size:11.5px;color:var(--gray-soft);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px;}
+.wsn-card-date{font-size:10.5px;color:var(--blue-main);font-weight:700;}
+.wsn-more{width:100%;margin-top:4px;padding:11px;border-radius:var(--r-md);border:1.5px solid var(--gray-line);
+  background:var(--white);color:var(--blue-main);font-family:inherit;font-size:12.5px;font-weight:700;
+  cursor:pointer;}
+.wsn-empty{font-size:12.5px;color:var(--gray-soft);text-align:center;padding:20px 0;}
+
+/* Modal */
+.wsn-overlay{position:fixed;inset:0;background:rgba(6,20,15,.55);z-index:200;display:none;
+  align-items:flex-end;justify-content:center;}
+.wsn-overlay.open{display:flex;}
+.wsn-modal{width:100%;max-width:560px;max-height:88vh;background:var(--gray-bg);
+  border-radius:20px 20px 0 0;overflow-y:auto;position:relative;-webkit-overflow-scrolling:touch;}
+.wsn-modal-close{position:sticky;top:0;left:100%;transform:translateX(-100%);margin:10px 10px -34px auto;
+  width:32px;height:32px;border-radius:50%;background:rgba(30,43,58,.55);color:#fff;border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;}
+.wsn-modal-close svg{width:16px;height:16px;}
+.wsn-modal-inner{padding:20px;}
+
+/* Galeri foto ala IG di dalam modal */
+.wsn-gallery{position:relative;width:100%;aspect-ratio:1/1;border-radius:var(--r-lg);overflow:hidden;
+  background:var(--blue-pale);margin-bottom:14px;}
+.wsn-gallery-track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;}
+.wsn-gallery-track::-webkit-scrollbar{display:none;}
+.wsn-gallery-track img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;}
+.wsn-gallery-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:5px;}
+.wsn-gallery-dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.6);}
+.wsn-gallery-dots span.on{background:#fff;}
+
+.wsn-video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--r-lg);
+  margin-bottom:14px;background:#000;}
+.wsn-video iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
+
+.wsn-detail-title{font-size:19px;font-weight:800;color:var(--gray-dark);line-height:1.35;margin-bottom:6px;}
+.wsn-detail-date{font-size:11.5px;color:var(--blue-main);font-weight:700;margin-bottom:14px;}
+.wsn-detail-body p{font-size:13.5px;color:var(--gray-mid);line-height:1.75;margin-bottom:12px;}
+
+.wsn-share-row{display:flex;gap:10px;margin-top:18px;}
+.wsn-share-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;
+  border-radius:var(--r-md);border:1.5px solid var(--gray-line);background:var(--white);
+  color:var(--blue-deep);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;}
+.wsn-share-btn svg{width:15px;height:15px;}
+
+/* Mode "lihat semua" di dalam modal */
+.wsn-browse-search{position:relative;margin-bottom:14px;}
+.wsn-browse-search input{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--gray-line);
+  border-radius:var(--r-md);font-family:inherit;font-size:13px;color:var(--gray-dark);
+  background:var(--white);outline:none;}
+.wsn-browse-search input:focus{border-color:var(--blue-main);}
+.wsn-browse-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+  color:var(--gray-soft);}
+
 </style>
 </head>
 <body>
@@ -396,6 +467,24 @@ footer p{font-size:11px;color:var(--gray-soft);}
     </div>
   </section>
 
+  <section class="section" id="wawasan">
+    <div class="section-title">Fitur Terbaru &amp; Tips</div>
+    <div class="section-sub">Wawasan seputar CBT Kabut Digital</div>
+    <div class="wsn-grid" id="wsnGrid">
+      <div class="wsn-empty">Memuat postingan...</div>
+    </div>
+    <button class="wsn-more" id="wsnMoreBtn" style="display:none;" type="button">Lihat Postingan Lainnya</button>
+  </section>
+
+</div>
+
+<div class="wsn-overlay" id="wsnOverlay">
+  <div class="wsn-modal">
+    <button class="wsn-modal-close" id="wsnCloseBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <div class="wsn-modal-inner" id="wsnModalInner"></div>
+  </div>
 </div>
 
 <footer>
@@ -407,6 +496,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
 // ═══ Konfigurasi ═══
 const CBTKD_WIZARD_URL      = './wizard.html';
 const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo9aLVvvulLeH9qce3Qtz_5PZ1GFWXk5qiTNNj4_T-6vf7lZOt-K0tkMSdKkR/exec';
+const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbzPQA7tnBd_-yJ2U9QyjxEpv12l6Uk4QDbkWHmqC6Hs42l0FvKbMRZNEvpyI_ozqBgS/exec';
 
 function cbtkdScrollKe(id) {
   let el = document.getElementById(id);
@@ -529,9 +619,214 @@ function cbtkdLanjut() {
   window.location.href = CBTKD_WIZARD_URL;
 }
 
+// ============================================================
+// Wawasan (Fitur Terbaru & Tips)
+// ============================================================
+var _wsnPosts = [];
+var _wsnDeepLinkId = null;
+
+function cbtkdWawasanInit() {
+  var params = new URLSearchParams(window.location.search);
+  _wsnDeepLinkId = params.get('post');
+
+  if (!CBTKD_WAWASAN_API_URL || CBTKD_WAWASAN_API_URL.indexOf('GANTI_') === 0) {
+    document.getElementById('wsnGrid').innerHTML = '';
+    return; // belum dikonfigurasi, section disembunyikan diam-diam
+  }
+
+  var callbackName = 'cbtkdWawasanCallback_' + Date.now();
+  window[callbackName] = function (data) {
+    _wsnPosts = Array.isArray(data) ? data : [];
+    _wsnRenderGrid();
+    delete window[callbackName];
+    script.remove();
+  };
+
+  var script = document.createElement('script');
+  script.src = CBTKD_WAWASAN_API_URL + '?action=list&callback=' + callbackName;
+  script.onerror = function () {
+    document.getElementById('wsnGrid').innerHTML = '<div class="wsn-empty">Belum ada postingan.</div>';
+  };
+  document.body.appendChild(script);
+}
+
+function _wsnEscape(text) {
+  var d = document.createElement('div');
+  d.textContent = text || '';
+  return d.innerHTML;
+}
+
+function _wsnFormatDate(iso) {
+  try {
+    var d = new Date(iso);
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch (e) { return ''; }
+}
+
+function _wsnRenderGrid() {
+  var grid = document.getElementById('wsnGrid');
+  var moreBtn = document.getElementById('wsnMoreBtn');
+
+  if (!_wsnPosts.length) {
+    grid.innerHTML = '<div class="wsn-empty">Belum ada postingan.</div>';
+    moreBtn.style.display = 'none';
+    return;
+  }
+
+  var latest = _wsnPosts.slice(0, 3);
+  var deepLinkPost = _wsnDeepLinkId ? _wsnPosts.filter(function (p) { return p.id === _wsnDeepLinkId; })[0] : null;
+
+  // Kalau postingan dari link share tidak ada di 3 terbaru, sisipkan di paling atas
+  if (deepLinkPost && !latest.some(function (p) { return p.id === deepLinkPost.id; })) {
+    latest.unshift(deepLinkPost);
+  }
+
+  grid.innerHTML = latest.map(function (p) {
+    var thumb = p.foto && p.foto[0]
+      ? '<img src="' + p.foto[0] + '" alt="' + _wsnEscape(p.judul) + '">'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m4 15 4-4 4 4 4-6 4 4"/></svg>';
+    var highlightClass = (deepLinkPost && p.id === deepLinkPost.id) ? ' wsn-highlight' : '';
+    return '<div class="wsn-card' + highlightClass + '" data-id="' + _wsnEscape(p.id) + '">' +
+      '<div class="wsn-thumb">' + thumb + '</div>' +
+      '<div class="wsn-card-body">' +
+      '<div class="wsn-card-title">' + _wsnEscape(p.judul) + '</div>' +
+      '<div class="wsn-card-snippet">' + _wsnEscape(p.ringkasan) + '</div>' +
+      '<div class="wsn-card-date">' + _wsnFormatDate(p.tanggal) + '</div>' +
+      '</div></div>';
+  }).join('');
+
+  Array.prototype.forEach.call(grid.querySelectorAll('.wsn-card'), function (card) {
+    card.addEventListener('click', function () { _wsnOpenDetail(card.getAttribute('data-id')); });
+  });
+
+  moreBtn.style.display = _wsnPosts.length > latest.length || _wsnPosts.length > 3 ? '' : 'none';
+
+  // Kalau datang dari link share: scroll ke section + sorot kartunya,
+  // TIDAK langsung buka modal -- baru terbuka penuh saat pengguna klik sendiri.
+  if (deepLinkPost) {
+    setTimeout(function () {
+      document.getElementById('wawasan').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  }
+}
+
+function _wsnOpenModal() {
+  document.getElementById('wsnOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function _wsnCloseModal() {
+  document.getElementById('wsnOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function _wsnOpenDetail(id) {
+  var post = _wsnPosts.filter(function (p) { return p.id === id; })[0];
+  if (!post) return;
+
+  var galleryHtml = '';
+  if (post.foto && post.foto.length) {
+    var imgs = post.foto.map(function (url) { return '<img src="' + url + '" alt="">'; }).join('');
+    var dots = post.foto.length > 1
+      ? '<div class="wsn-gallery-dots">' + post.foto.map(function (_, i) { return '<span class="' + (i === 0 ? 'on' : '') + '"></span>'; }).join('') + '</div>'
+      : '';
+    galleryHtml = '<div class="wsn-gallery"><div class="wsn-gallery-track" id="wsnGalleryTrack">' + imgs + '</div>' + dots + '</div>';
+  }
+
+  var videoHtml = post.youtube
+    ? '<div class="wsn-video"><iframe src="https://www.youtube.com/embed/' + post.youtube + '" allowfullscreen></iframe></div>'
+    : '';
+
+  var shareUrl = post.urlStatis || ('https://cbtkabutdigital.com/wawasan/' + post.id + '.html');
+
+  document.getElementById('wsnModalInner').innerHTML =
+    galleryHtml + videoHtml +
+    '<div class="wsn-detail-title">' + _wsnEscape(post.judul) + '</div>' +
+    '<div class="wsn-detail-date">' + _wsnFormatDate(post.tanggal) + '</div>' +
+    '<div class="wsn-detail-body">' + post.isi + '</div>' +
+    '<div class="wsn-share-row">' +
+    '<button class="wsn-share-btn" id="wsnShareBtn" type="button">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>' +
+    'Bagikan</button>' +
+    '<button class="wsn-share-btn" id="wsnMoreFromDetailBtn" type="button">Lihat Lainnya</button>' +
+    '</div>';
+
+  document.getElementById('wsnShareBtn').addEventListener('click', function () {
+    if (navigator.share) {
+      navigator.share({ title: post.judul, text: post.ringkasan, url: shareUrl }).catch(function () {});
+    } else {
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(post.judul + ' - ' + shareUrl), '_blank');
+    }
+  });
+  document.getElementById('wsnMoreFromDetailBtn').addEventListener('click', _wsnOpenBrowse);
+
+  _wsnOpenModal();
+
+  var track = document.getElementById('wsnGalleryTrack');
+  if (track) {
+    track.addEventListener('scroll', function () {
+      var idx = Math.round(track.scrollLeft / track.clientWidth);
+      var dotEls = document.querySelectorAll('.wsn-gallery-dots span');
+      dotEls.forEach(function (d, i) { d.classList.toggle('on', i === idx); });
+    });
+  }
+}
+
+function _wsnOpenBrowse() {
+  var html = '<div class="wsn-detail-title" style="margin-bottom:14px;">Semua Postingan</div>' +
+    '<div class="wsn-browse-search">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
+    '<input type="text" id="wsnBrowseSearch" placeholder="Cari postingan...">' +
+    '</div>' +
+    '<div class="wsn-grid" id="wsnBrowseList"></div>';
+
+  document.getElementById('wsnModalInner').innerHTML = html;
+  _wsnRenderBrowseList('');
+  document.getElementById('wsnBrowseSearch').addEventListener('input', function (e) {
+    _wsnRenderBrowseList(e.target.value.trim().toLowerCase());
+  });
+  _wsnOpenModal();
+}
+
+function _wsnRenderBrowseList(query) {
+  var list = document.getElementById('wsnBrowseList');
+  var filtered = _wsnPosts.filter(function (p) {
+    return !query || (p.judul + ' ' + p.ringkasan).toLowerCase().indexOf(query) !== -1;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="wsn-empty">Tidak ada postingan yang cocok.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function (p) {
+    var thumb = p.foto && p.foto[0]
+      ? '<img src="' + p.foto[0] + '" alt="' + _wsnEscape(p.judul) + '">'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m4 15 4-4 4 4 4-6 4 4"/></svg>';
+    return '<div class="wsn-card" data-id="' + _wsnEscape(p.id) + '">' +
+      '<div class="wsn-thumb">' + thumb + '</div>' +
+      '<div class="wsn-card-body">' +
+      '<div class="wsn-card-title">' + _wsnEscape(p.judul) + '</div>' +
+      '<div class="wsn-card-snippet">' + _wsnEscape(p.ringkasan) + '</div>' +
+      '<div class="wsn-card-date">' + _wsnFormatDate(p.tanggal) + '</div>' +
+      '</div></div>';
+  }).join('');
+
+  Array.prototype.forEach.call(list.querySelectorAll('.wsn-card'), function (card) {
+    card.addEventListener('click', function () { _wsnOpenDetail(card.getAttribute('data-id')); });
+  });
+}
+
+document.getElementById('wsnMoreBtn').addEventListener('click', _wsnOpenBrowse);
+document.getElementById('wsnCloseBtn').addEventListener('click', _wsnCloseModal);
+document.getElementById('wsnOverlay').addEventListener('click', function (e) {
+  if (e.target.id === 'wsnOverlay') _wsnCloseModal();
+});
+
 document.addEventListener('DOMContentLoaded', function(){
   cbtkdCarouselInit();
   cbtkdCekGateRedirect();
+  cbtkdWawasanInit();
 });
 </script>
 </body>
