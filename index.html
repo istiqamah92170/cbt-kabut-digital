@@ -191,10 +191,28 @@ footer p{font-size:11px;color:var(--gray-soft);}
 .wsn-gallery-track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:none;}
 .wsn-gallery-track::-webkit-scrollbar{display:none;}
-.wsn-gallery-track img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;}
+.wsn-gallery-track img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;cursor:zoom-in;}
 .wsn-gallery-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:5px;}
 .wsn-gallery-dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.6);}
 .wsn-gallery-dots span.on{background:#fff;}
+
+/* Lightbox foto penuh: pinch-zoom + geser + swipe ganti foto */
+.wsn-lightbox{position:fixed;inset:0;background:#000;z-index:300;display:none;
+  align-items:center;justify-content:center;}
+.wsn-lightbox.open{display:flex;}
+.wsn-lightbox-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.15);color:#fff;border:none;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;z-index:2;}
+.wsn-lightbox-close svg{width:18px;height:18px;}
+.wsn-lightbox-counter{position:absolute;top:22px;left:16px;color:rgba(255,255,255,.85);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;z-index:2;}
+.wsn-lightbox-stage{position:relative;width:100%;height:100%;overflow:hidden;touch-action:none;}
+.wsn-lightbox-stage img{position:absolute;top:50%;left:50%;max-width:100%;max-height:100%;
+  width:auto;height:auto;object-fit:contain;transform:translate(-50%,-50%) scale(1);
+  will-change:transform;user-select:none;-webkit-user-drag:none;}
+.wsn-lightbox-stage img.wsn-lb-anim{transition:transform .25s ease-out;}
+.wsn-lightbox-hint{position:absolute;bottom:20px;left:0;right:0;text-align:center;
+  color:rgba(255,255,255,.55);font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;z-index:2;}
 
 .wsn-video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--r-lg);
   margin-bottom:14px;background:#000;}
@@ -487,6 +505,17 @@ footer p{font-size:11px;color:var(--gray-soft);}
   </div>
 </div>
 
+<div class="wsn-lightbox" id="wsnLightbox">
+  <button class="wsn-lightbox-close" id="wsnLightboxClose" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  </button>
+  <div class="wsn-lightbox-counter" id="wsnLightboxCounter"></div>
+  <div class="wsn-lightbox-stage" id="wsnLightboxStage">
+    <img id="wsnLightboxImg" src="" alt="">
+  </div>
+  <div class="wsn-lightbox-hint">Cubit untuk zoom &middot; geser untuk pindah foto</div>
+</div>
+
 <footer>
   <p>CBT Kabut Digital — bagian dari ekosistem Kabut Digital</p>
   <p style="margin-top:6px;"><a href="./kebijakan-privasi.html" style="color:var(--gray-soft);text-decoration:underline;">Kebijakan Privasi</a> &middot; <a href="./syarat-ketentuan.html" style="color:var(--gray-soft);text-decoration:underline;">Syarat dan Ketentuan</a></p>
@@ -496,7 +525,8 @@ footer p{font-size:11px;color:var(--gray-soft);}
 // ═══ Konfigurasi ═══
 const CBTKD_WIZARD_URL      = './wizard.html';
 const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo9aLVvvulLeH9qce3Qtz_5PZ1GFWXk5qiTNNj4_T-6vf7lZOt-K0tkMSdKkR/exec';
-const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbzPQA7tnBd_-yJ2U9QyjxEpv12l6Uk4QDbkWHmqC6Hs42l0FvKbMRZNEvpyI_ozqBgS/exec';
+// TODO(Ghani): ganti dengan Web App URL hasil deploy Wawasan (Code.gs/Admin.html)
+const CBTKD_WAWASAN_API_URL = 'GANTI_DENGAN_URL_WEB_APP_WAWASAN';
 
 function cbtkdScrollKe(id) {
   let el = document.getElementById(id);
@@ -769,8 +799,158 @@ function _wsnOpenDetail(id) {
       var dotEls = document.querySelectorAll('.wsn-gallery-dots span');
       dotEls.forEach(function (d, i) { d.classList.toggle('on', i === idx); });
     });
+
+    Array.prototype.forEach.call(track.querySelectorAll('img'), function (img, i) {
+      img.addEventListener('click', function () { _wsnOpenLightbox(post.foto, i); });
+    });
   }
 }
+
+// ---- Lightbox foto: pinch-zoom, geser, swipe ganti foto ----
+var _wsnLbPhotos = [];
+var _wsnLbIndex = 0;
+var _wsnLbScale = 1;
+var _wsnLbX = 0;
+var _wsnLbY = 0;
+var _wsnLbLastTapTime = 0;
+var _wsnLbGesture = null; // { mode: 'pinch'|'pan'|'swipe', ... }
+
+function _wsnOpenLightbox(photos, startIndex) {
+  _wsnLbPhotos = photos || [];
+  _wsnLbIndex = startIndex || 0;
+  if (!_wsnLbPhotos.length) return;
+
+  document.getElementById('wsnLightbox').classList.add('open');
+  _wsnLbRenderImage();
+}
+
+function _wsnCloseLightbox() {
+  document.getElementById('wsnLightbox').classList.remove('open');
+}
+
+function _wsnLbRenderImage() {
+  var img = document.getElementById('wsnLightboxImg');
+  img.src = _wsnLbPhotos[_wsnLbIndex];
+  _wsnLbScale = 1; _wsnLbX = 0; _wsnLbY = 0;
+  _wsnLbApplyTransform(false);
+
+  var counter = document.getElementById('wsnLightboxCounter');
+  counter.textContent = _wsnLbPhotos.length > 1 ? (_wsnLbIndex + 1) + ' / ' + _wsnLbPhotos.length : '';
+}
+
+function _wsnLbApplyTransform(animate) {
+  var img = document.getElementById('wsnLightboxImg');
+  img.classList.toggle('wsn-lb-anim', !!animate);
+  img.style.transform = 'translate(calc(-50% + ' + _wsnLbX + 'px), calc(-50% + ' + _wsnLbY + 'px)) scale(' + _wsnLbScale + ')';
+}
+
+function _wsnLbClamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+function _wsnLbDistance(t1, t2) {
+  return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+}
+
+function _wsnLbClampPan() {
+  var stage = document.getElementById('wsnLightboxStage');
+  var maxOffsetX = (stage.clientWidth * (_wsnLbScale - 1)) / 2;
+  var maxOffsetY = (stage.clientHeight * (_wsnLbScale - 1)) / 2;
+  _wsnLbX = _wsnLbClamp(_wsnLbX, -maxOffsetX, maxOffsetX);
+  _wsnLbY = _wsnLbClamp(_wsnLbY, -maxOffsetY, maxOffsetY);
+}
+
+function _wsnLbTouchStart(e) {
+  if (e.touches.length === 2) {
+    _wsnLbGesture = {
+      mode: 'pinch',
+      startDist: _wsnLbDistance(e.touches[0], e.touches[1]),
+      startScale: _wsnLbScale
+    };
+    return;
+  }
+  if (e.touches.length === 1) {
+    _wsnLbGesture = {
+      mode: _wsnLbScale > 1.02 ? 'pan' : 'swipe',
+      startX: e.touches[0].clientX,
+      startY: e.touches[0].clientY,
+      baseX: _wsnLbX,
+      baseY: _wsnLbY,
+      moved: false
+    };
+  }
+}
+
+function _wsnLbTouchMove(e) {
+  if (!_wsnLbGesture) return;
+  e.preventDefault();
+
+  if (_wsnLbGesture.mode === 'pinch' && e.touches.length === 2) {
+    var dist = _wsnLbDistance(e.touches[0], e.touches[1]);
+    var ratio = dist / _wsnLbGesture.startDist;
+    _wsnLbScale = _wsnLbClamp(_wsnLbGesture.startScale * ratio, 1, 4);
+    _wsnLbClampPan();
+    _wsnLbApplyTransform(false);
+  } else if (_wsnLbGesture.mode === 'pan' && e.touches.length === 1) {
+    var dxPan = e.touches[0].clientX - _wsnLbGesture.startX;
+    var dyPan = e.touches[0].clientY - _wsnLbGesture.startY;
+    if (Math.abs(dxPan) > 6 || Math.abs(dyPan) > 6) _wsnLbGesture.moved = true;
+    _wsnLbX = _wsnLbGesture.baseX + dxPan;
+    _wsnLbY = _wsnLbGesture.baseY + dyPan;
+    _wsnLbClampPan();
+    _wsnLbApplyTransform(false);
+  } else if (_wsnLbGesture.mode === 'swipe' && e.touches.length === 1) {
+    var dxSwipe = e.touches[0].clientX - _wsnLbGesture.startX;
+    if (Math.abs(dxSwipe) > 6) _wsnLbGesture.moved = true;
+    _wsnLbX = dxSwipe;
+    _wsnLbApplyTransform(false);
+  }
+}
+
+function _wsnLbToggleZoomTap() {
+  var now = Date.now();
+  if (now - _wsnLbLastTapTime < 300) {
+    _wsnLbScale = _wsnLbScale > 1 ? 1 : 2.5;
+    _wsnLbX = 0; _wsnLbY = 0;
+    _wsnLbApplyTransform(true);
+    _wsnLbLastTapTime = 0;
+    return true;
+  }
+  _wsnLbLastTapTime = now;
+  return false;
+}
+
+function _wsnLbTouchEnd() {
+  if (!_wsnLbGesture) return;
+  var g = _wsnLbGesture;
+
+  if (g.mode === 'swipe') {
+    if (!g.moved) {
+      if (!_wsnLbToggleZoomTap()) { _wsnLbX = 0; _wsnLbApplyTransform(true); }
+    } else if (_wsnLbX < -70 && _wsnLbIndex < _wsnLbPhotos.length - 1) {
+      _wsnLbIndex++;
+      _wsnLbRenderImage();
+    } else if (_wsnLbX > 70 && _wsnLbIndex > 0) {
+      _wsnLbIndex--;
+      _wsnLbRenderImage();
+    } else {
+      _wsnLbX = 0;
+      _wsnLbApplyTransform(true);
+    }
+  } else if (g.mode === 'pan' && !g.moved) {
+    _wsnLbToggleZoomTap();
+  } else if (g.mode === 'pinch' && _wsnLbScale < 1.05) {
+    _wsnLbScale = 1; _wsnLbX = 0; _wsnLbY = 0;
+    _wsnLbApplyTransform(true);
+  }
+
+  _wsnLbGesture = null;
+}
+
+document.getElementById('wsnLightboxClose').addEventListener('click', _wsnCloseLightbox);
+var _wsnLbStageEl = document.getElementById('wsnLightboxStage');
+_wsnLbStageEl.addEventListener('touchstart', _wsnLbTouchStart, { passive: true });
+_wsnLbStageEl.addEventListener('touchmove', _wsnLbTouchMove, { passive: false });
+_wsnLbStageEl.addEventListener('touchend', _wsnLbTouchEnd);
+_wsnLbStageEl.addEventListener('touchcancel', _wsnLbTouchEnd);
 
 function _wsnOpenBrowse() {
   var html = '<div class="wsn-detail-title" style="margin-bottom:14px;">Semua Postingan</div>' +
