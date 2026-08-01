@@ -159,9 +159,11 @@ footer p{font-size:11px;color:var(--gray-soft);}
   animation:wsnPulse 1.8s ease-out 2;}
 @keyframes wsnPulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.45);}100%{box-shadow:0 0 0 10px rgba(16,185,129,0);}}
 .wsn-thumb{flex-shrink:0;width:76px;height:76px;border-radius:var(--r-md);overflow:hidden;
-  background:var(--blue-pale);display:flex;align-items:center;justify-content:center;}
+  background:var(--blue-pale);display:flex;align-items:center;justify-content:center;position:relative;}
 .wsn-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .wsn-thumb svg{width:26px;height:26px;color:var(--blue-mid);}
+.wsn-thumb-play, .wsn-thumb svg.wsn-thumb-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:26px;height:26px;color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));pointer-events:none;}
 .wsn-card-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
 .wsn-card-title{font-size:13.5px;font-weight:700;color:var(--gray-dark);line-height:1.35;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:3px;}
@@ -525,7 +527,8 @@ footer p{font-size:11px;color:var(--gray-soft);}
 // ═══ Konfigurasi ═══
 const CBTKD_WIZARD_URL      = './wizard.html';
 const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo9aLVvvulLeH9qce3Qtz_5PZ1GFWXk5qiTNNj4_T-6vf7lZOt-K0tkMSdKkR/exec';
-const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbzPQA7tnBd_-yJ2U9QyjxEpv12l6Uk4QDbkWHmqC6Hs42l0FvKbMRZNEvpyI_ozqBgS/exec';
+// TODO(Ghani): ganti dengan Web App URL hasil deploy Wawasan (Code.gs/Admin.html)
+const CBTKD_WAWASAN_API_URL = 'GANTI_DENGAN_URL_WEB_APP_WAWASAN';
 
 function cbtkdScrollKe(id) {
   let el = document.getElementById(id);
@@ -692,6 +695,18 @@ function _wsnFormatDate(iso) {
   } catch (e) { return ''; }
 }
 
+function _wsnCardThumb(p) {
+  var playIcon = '<svg class="wsn-thumb-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+
+  if (p.foto && p.foto[0]) {
+    return '<img src="' + p.foto[0] + '" alt="' + _wsnEscape(p.judul) + '">';
+  }
+  if (p.youtube) {
+    return '<img src="https://img.youtube.com/vi/' + p.youtube + '/hqdefault.jpg" alt="' + _wsnEscape(p.judul) + '">' + playIcon;
+  }
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m4 15 4-4 4 4 4-6 4 4"/></svg>';
+}
+
 function _wsnRenderGrid() {
   var grid = document.getElementById('wsnGrid');
   var moreBtn = document.getElementById('wsnMoreBtn');
@@ -711,9 +726,7 @@ function _wsnRenderGrid() {
   }
 
   grid.innerHTML = latest.map(function (p) {
-    var thumb = p.foto && p.foto[0]
-      ? '<img src="' + p.foto[0] + '" alt="' + _wsnEscape(p.judul) + '">'
-      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m4 15 4-4 4 4 4-6 4 4"/></svg>';
+    var thumb = _wsnCardThumb(p);
     var highlightClass = (deepLinkPost && p.id === deepLinkPost.id) ? ' wsn-highlight' : '';
     return '<div class="wsn-card' + highlightClass + '" data-id="' + _wsnEscape(p.id) + '">' +
       '<div class="wsn-thumb">' + thumb + '</div>' +
@@ -979,9 +992,7 @@ function _wsnRenderBrowseList(query) {
   }
 
   list.innerHTML = filtered.map(function (p) {
-    var thumb = p.foto && p.foto[0]
-      ? '<img src="' + p.foto[0] + '" alt="' + _wsnEscape(p.judul) + '">'
-      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m4 15 4-4 4 4 4-6 4 4"/></svg>';
+    var thumb = _wsnCardThumb(p);
     return '<div class="wsn-card" data-id="' + _wsnEscape(p.id) + '">' +
       '<div class="wsn-thumb">' + thumb + '</div>' +
       '<div class="wsn-card-body">' +
