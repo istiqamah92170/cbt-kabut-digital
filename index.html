@@ -228,6 +228,15 @@ footer p{font-size:11px;color:var(--gray-soft);}
 .wsn-detail-date{font-size:11.5px;color:var(--blue-main);font-weight:700;margin-bottom:14px;}
 .wsn-detail-body p{font-size:13.5px;color:var(--gray-mid);line-height:1.75;margin-bottom:12px;}
 
+.wsn-cta-box{background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-main) 100%);
+  border-radius:var(--r-lg);padding:20px 18px;margin-top:18px;color:#fff;text-align:center;}
+.wsn-cta-title{font-size:15px;font-weight:800;margin-bottom:6px;}
+.wsn-cta-desc{font-size:12px;color:rgba(255,255,255,.85);line-height:1.6;margin-bottom:14px;}
+.wsn-cta-btns{display:flex;flex-direction:column;gap:9px;}
+.wsn-cta-btn{display:block;padding:11px;border-radius:var(--r-md);font-size:12.5px;font-weight:700;
+  text-decoration:none;text-align:center;}
+.wsn-cta-btn.primary{background:#fff;color:var(--blue-deep);}
+.wsn-cta-btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.4);}
 .wsn-share-row{display:flex;gap:10px;margin-top:18px;}
 .wsn-share-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;
   border-radius:var(--r-md);border:1.5px solid var(--gray-line);background:var(--white);
@@ -535,7 +544,7 @@ const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo
 // PENTING: URL ini HARUS mengarah ke deployment PublicReadAPI.gs (akses "Anyone"),
 // BUKAN ke deployment Form Admin (Code.gs, akses "Only myself") -- kalau salah,
 // section Wawasan akan kosong untuk semua pengunjung kecuali Anda sendiri yang login.
-const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbzPQA7tnBd_-yJ2U9QyjxEpv12l6Uk4QDbkWHmqC6Hs42l0FvKbMRZNEvpyI_ozqBgS/exec';
+const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbxcPippy0KmB96VDMm_O_v6k4T_J0AoYqOvpjUKqLKUwFPe0KjydUarbp9FSo4qeUVn/exec';
 
 function cbtkdScrollKe(id) {
   let el = document.getElementById(id);
@@ -821,6 +830,13 @@ function _wsnOpenDetail(id) {
     '<div class="wsn-detail-title">' + _wsnEscape(post.judul) + '</div>' +
     '<div class="wsn-detail-date">' + _wsnFormatDate(post.tanggal) + '</div>' +
     '<div class="wsn-detail-body">' + post.isi + '</div>' +
+    '<div class="wsn-cta-box">' +
+    '<div class="wsn-cta-title">Siap membuat ujian sendiri?</div>' +
+    '<p class="wsn-cta-desc">Buat sistem CBT gratis untuk institusi Anda, atau langsung coba Aplikasi Utama CBT Kabut Digital.</p>' +
+    '<div class="wsn-cta-btns">' +
+    '<a class="wsn-cta-btn primary" href="https://cbtkabutdigital.com/wizard.html">Buat CBT Sekarang</a>' +
+    '<a class="wsn-cta-btn secondary" href="https://cbtkabutdigital.com/app/index.html">Buka Aplikasi CBT</a>' +
+    '</div></div>' +
     '<div class="wsn-share-row">' +
     '<button class="wsn-share-btn" id="wsnShareBtn" type="button">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>' +
