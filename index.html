@@ -174,6 +174,10 @@ footer p{font-size:11px;color:var(--gray-soft);}
   background:var(--white);color:var(--blue-main);font-family:inherit;font-size:12.5px;font-weight:700;
   cursor:pointer;}
 .wsn-empty{font-size:12.5px;color:var(--gray-soft);text-align:center;padding:20px 0;}
+.wsn-skeleton{animation:wsnSkeletonPulse 1.3s ease-in-out infinite;pointer-events:none;cursor:default;}
+.wsn-skeleton .wsn-thumb{background:var(--gray-line);}
+.wsn-skeleton .sk-line{height:9px;border-radius:4px;background:var(--gray-line);margin-bottom:7px;}
+@keyframes wsnSkeletonPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 
 /* Modal */
 .wsn-overlay{position:fixed;inset:0;background:rgba(6,20,15,.55);z-index:200;display:none;
@@ -656,6 +660,20 @@ function cbtkdLanjut() {
 // ============================================================
 var _wsnPosts = [];
 var _wsnDeepLinkId = null;
+var _wsnReady = false;
+var _wsnPendingCallbacks = [];
+
+function _wsnWhenReady(fn) {
+  if (_wsnReady) { fn(); return; }
+  _wsnPendingCallbacks.push(fn);
+}
+
+function _wsnSkeletonHtml(count) {
+  var one = '<div class="wsn-card wsn-skeleton"><div class="wsn-thumb"></div><div class="wsn-card-body">' +
+    '<div class="sk-line" style="width:82%;"></div><div class="sk-line" style="width:95%;"></div>' +
+    '<div class="sk-line" style="width:38%;margin-bottom:0;"></div></div></div>';
+  return new Array(count).fill(one).join('');
+}
 
 function cbtkdWawasanInit() {
   var params = new URLSearchParams(window.location.search);
@@ -666,10 +684,15 @@ function cbtkdWawasanInit() {
     return; // belum dikonfigurasi, section disembunyikan diam-diam
   }
 
+  document.getElementById('wsnGrid').innerHTML = _wsnSkeletonHtml(3);
+
   var callbackName = 'cbtkdWawasanCallback_' + Date.now();
   window[callbackName] = function (data) {
     _wsnPosts = Array.isArray(data) ? data : [];
+    _wsnReady = true;
     _wsnRenderGrid();
+    _wsnPendingCallbacks.forEach(function (fn) { fn(); });
+    _wsnPendingCallbacks = [];
     delete window[callbackName];
     script.remove();
   };
@@ -979,24 +1002,40 @@ function _wsnOpenBrowse() {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
     '<input type="text" id="wsnBrowseSearch" placeholder="Cari postingan...">' +
     '</div>' +
-    '<div class="wsn-grid" id="wsnBrowseList"></div>';
+    '<div class="wsn-grid" id="wsnBrowseList">' + (_wsnReady ? '' : _wsnSkeletonHtml(4)) + '</div>';
 
   document.getElementById('wsnModalInner').innerHTML = html;
-  _wsnRenderBrowseList('');
   document.getElementById('wsnBrowseSearch').addEventListener('input', function (e) {
     _wsnRenderBrowseList(e.target.value.trim().toLowerCase());
   });
   _wsnOpenModal();
+
+  _wsnWhenReady(function () {
+    // Data mungkin baru siap SETELAH modal ini dibuka -- render ulang begitu tersedia,
+    // dan hormati apa pun yang sudah diketik pengguna di kotak cari selagi menunggu.
+    var input = document.getElementById('wsnBrowseSearch');
+    _wsnRenderBrowseList(input ? input.value.trim().toLowerCase() : '');
+  });
+}
+
+function _wsnStripHtml(html) {
+  var d = document.createElement('div');
+  d.innerHTML = html || '';
+  return d.textContent || '';
 }
 
 function _wsnRenderBrowseList(query) {
   var list = document.getElementById('wsnBrowseList');
+  if (!list) return; // modal sudah ditutup/berganti sebelum data siap
+
   var filtered = _wsnPosts.filter(function (p) {
-    return !query || (p.judul + ' ' + p.ringkasan).toLowerCase().indexOf(query) !== -1;
+    if (!query) return true;
+    var haystack = (p.judul + ' ' + p.ringkasan + ' ' + _wsnStripHtml(p.isi)).toLowerCase();
+    return haystack.indexOf(query) !== -1;
   });
 
   if (!filtered.length) {
-    list.innerHTML = '<div class="wsn-empty">Tidak ada postingan yang cocok.</div>';
+    list.innerHTML = '<div class="wsn-empty">' + (_wsnReady ? 'Tidak ada postingan yang cocok.' : 'Memuat postingan...') + '</div>';
     return;
   }
 
