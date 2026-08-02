@@ -238,6 +238,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
 .wsn-browse-search input:focus{border-color:var(--blue-main);}
 .wsn-browse-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;
   color:var(--gray-soft);}
+.wsn-card mark.search-hl{background:var(--blue-light);color:var(--blue-deep);padding:0 2px;border-radius:3px;}
 
 </style>
 </head>
@@ -687,6 +688,15 @@ function _wsnEscape(text) {
   return d.innerHTML;
 }
 
+function _wsnHighlightEscape(text, query) {
+  var escaped = _wsnEscape(text);
+  if (!query) return escaped;
+  var escapedQuery = _wsnEscape(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!escapedQuery) return escaped;
+  var re = new RegExp('(' + escapedQuery + ')', 'gi');
+  return escaped.replace(re, '<mark class="search-hl">$1</mark>');
+}
+
 function _wsnFormatDate(iso) {
   try {
     var d = new Date(iso);
@@ -995,8 +1005,8 @@ function _wsnRenderBrowseList(query) {
     return '<div class="wsn-card" data-id="' + _wsnEscape(p.id) + '">' +
       '<div class="wsn-thumb">' + thumb + '</div>' +
       '<div class="wsn-card-body">' +
-      '<div class="wsn-card-title">' + _wsnEscape(p.judul) + '</div>' +
-      '<div class="wsn-card-snippet">' + _wsnEscape(p.ringkasan) + '</div>' +
+      '<div class="wsn-card-title">' + _wsnHighlightEscape(p.judul, query) + '</div>' +
+      '<div class="wsn-card-snippet">' + _wsnHighlightEscape(p.ringkasan, query) + '</div>' +
       '<div class="wsn-card-date">' + _wsnFormatDate(p.tanggal) + '</div>' +
       '</div></div>';
   }).join('');
