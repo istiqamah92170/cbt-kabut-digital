@@ -36,6 +36,15 @@ background:var(--blue-pale);margin-bottom:16px;}
 margin-bottom:16px;background:#000;}
 .video iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
 .body p{font-size:14px;line-height:1.75;color:var(--gray-mid);margin-bottom:14px;}
+.cta-box{background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-main) 100%);
+border-radius:var(--r-lg);padding:22px 20px;margin-top:22px;color:#fff;text-align:center;}
+.cta-title{font-size:16px;font-weight:800;margin-bottom:6px;}
+.cta-desc{font-size:12.5px;color:rgba(255,255,255,.85);line-height:1.6;margin-bottom:16px;}
+.cta-btns{display:flex;flex-direction:column;gap:10px;}
+.cta-btn{display:block;padding:12px;border-radius:var(--r-md);font-size:13px;font-weight:700;
+text-decoration:none;text-align:center;}
+.cta-btn.primary{background:#fff;color:var(--blue-deep);}
+.cta-btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.4);}
 .share-row{display:flex;gap:10px;margin-top:20px;}
 .share-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;
 border-radius:var(--r-md);border:1.5px solid var(--gray-line);background:var(--white);
@@ -81,6 +90,7 @@ color:rgba(255,255,255,.55);font-family:"Plus Jakarta Sans",sans-serif;font-size
 <p>**🌐 Branding Institusi dari Server**<br>- Nama institusi, logo, warna tema, label field — semua dari konfigurasi server<br>- Selector institusi otomatis terisi dari nama institusi yang didaftarkan guru<br>- Dukungan multi-institusi dalam satu ujian (tambah institusi di konfigurasi)<br>- Placeholder dan pesan dapat dikustomisasi per institusi<br>- Nama singkat institusi tampil di header Portal<br>- Jika tidak dikonfigurasi, engine menggunakan branding default CBT-KD</p>
 <p>**🎨 Desain &amp; Pengalaman Pengguna**<br>- Antarmuka modern dan responsif (mobile-first)<br>- Tipografi premium: Plus Jakarta Sans + JetBrains Mono<br>- Navigasi grid nomor soal dengan kode warna status (dijawab, ragu, belum)<br>- Indikator status soal: PG Gambar (ungu), PG Teks (biru), Esai (oranye)<br>- Tampilan hasil ujian dengan pesan motivasi berdasarkan tingkat kejujuran<br>- Pembahasan soal dengan tampilan dua kolom (PG Teks) dan horizontal (PG Gambar)<br>- Print/cetak pembahasan sebagai PDF langsung dari layar hasil<br>- Layar loading dengan informasi status pemuatan soal</p>
 <p>**⚙️ Konfigurasi Terpusat dari Google Spreadsheet**<br>- Semua parameter ujian dikonfigurasi dari satu sheet *Konfigurasi*<br>- Parameter tersedia: token login, durasi, judul, batas pelanggaran, acak soal, buka pembahasan, KKM, bobot PG/Esai, pesan pelanggaran ke-1/2/3, ukuran font Arab, warna tema, identitas institusi, token reset pelanggaran, dan lainnya<br>- Sheet otomatis terisi dengan konfigurasi default saat setup pertama<br>- Pengelompokan parameter: 🔐 UJIAN · 📊 PENILAIAN · 💬 PESAN PELANGGARAN · 🎨 TAMPILAN · 🏫 IDENTITAS INSTITUSI · 🔑 TOKEN RESET<br>- Keterangan tiap parameter tersedia di kolom C<br>- Cache server 5 menit untuk performa optimal; dapat dihapus manual kapan saja</p></div>
+<div class="cta-box"><div class="cta-title">Siap membuat ujian sendiri?</div><p class="cta-desc">Buat sistem CBT gratis untuk institusi Anda, atau langsung coba Aplikasi Utama CBT Kabut Digital.</p><div class="cta-btns"><a class="cta-btn primary" href="https://cbtkabutdigital.com/wizard.html">Buat CBT Sekarang</a><a class="cta-btn secondary" href="https://cbtkabutdigital.com/app/index.html">Buka Aplikasi CBT</a></div></div>
 <div class="share-row"><button class="share-btn" id="shareBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Bagikan</button><a class="share-btn" href="https://cbtkabutdigital.com/index.html?post=cbt-kabut-digital-engine-ujian-online-1785643522962#wawasan">Wawasan Lainnya</a></div>
 </div>
 <div class="lightbox" id="lightbox"><button class="lightbox-close" id="lightboxClose" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><div class="lightbox-counter" id="lightboxCounter"></div><div class="lightbox-stage" id="lightboxStage"><img id="lightboxImg" src="" alt=""></div><div class="lightbox-hint">Cubit untuk zoom - geser untuk pindah foto</div></div>
