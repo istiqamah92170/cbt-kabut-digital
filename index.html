@@ -532,6 +532,9 @@ footer p{font-size:11px;color:var(--gray-soft);}
 // ═══ Konfigurasi ═══
 const CBTKD_WIZARD_URL      = './wizard.html';
 const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo9aLVvvulLeH9qce3Qtz_5PZ1GFWXk5qiTNNj4_T-6vf7lZOt-K0tkMSdKkR/exec';
+// PENTING: URL ini HARUS mengarah ke deployment PublicReadAPI.gs (akses "Anyone"),
+// BUKAN ke deployment Form Admin (Code.gs, akses "Only myself") -- kalau salah,
+// section Wawasan akan kosong untuk semua pengunjung kecuali Anda sendiri yang login.
 const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbzPQA7tnBd_-yJ2U9QyjxEpv12l6Uk4QDbkWHmqC6Hs42l0FvKbMRZNEvpyI_ozqBgS/exec';
 
 function cbtkdScrollKe(id) {
