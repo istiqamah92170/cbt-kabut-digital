@@ -26,11 +26,26 @@ a{color:inherit;}
 .site-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);
   border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-sm);}
 .site-nav-inner{max-width:560px;margin:0 auto;padding:12px 20px;display:flex;
-  align-items:center;justify-content:space-between;gap:10px;}
+  align-items:center;justify-content:space-between;gap:10px;position:relative;}
 .site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
   color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
-.site-nav-links{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-.site-nav-links::-webkit-scrollbar{display:none;}
+.nav-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;
+  border:none;background:none;color:var(--blue-deep);cursor:pointer;padding:0;flex-shrink:0;}
+.nav-toggle svg{width:22px;height:22px;}
+.site-nav-links{display:none;flex-direction:column;position:absolute;top:100%;left:0;right:0;
+  background:var(--white);border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-md);
+  padding:4px 20px 8px;}
+.site-nav-links.open{display:flex;}
+.site-nav-links .nav-link{padding:12px 4px;border-radius:0;border-bottom:1px solid var(--gray-line);
+  width:100%;box-sizing:border-box;}
+.site-nav-links .nav-link:last-child{border-bottom:none;}
+@media(min-width:720px){
+  .nav-toggle{display:none;}
+  .site-nav-inner{max-width:900px;}
+  .site-nav-links{display:flex!important;flex-direction:row;position:static;background:none;
+    border-bottom:none;box-shadow:none;padding:0;width:auto;gap:2px;}
+  .site-nav-links .nav-link{border-bottom:none;padding:7px 9px;width:auto;border-radius:var(--r-sm);}
+}
 .nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
   padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
 .nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
@@ -72,9 +87,13 @@ footer p{font-size:11px;color:var(--gray-soft);}
 <nav class="site-nav">
   <div class="site-nav-inner">
     <a href="./index.html" class="site-logo">CBT Kabut Digital</a>
-    <div class="site-nav-links">
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+    </button>
+    <div class="site-nav-links" id="navLinks">
       <a href="./index.html" class="nav-link">Beranda</a>
       <a href="./aplikasi.html" class="nav-link">Aplikasi</a>
+      <a href="./wawasan.html" class="nav-link">Wawasan</a>
       <a href="./tentang.html" class="nav-link active">Tentang</a>
       <a href="./pusat-bantuan.html" class="nav-link">Pusat Bantuan</a>
     </div>
@@ -125,6 +144,21 @@ footer p{font-size:11px;color:var(--gray-soft);}
   <p>CBT Kabut Digital — bagian dari ekosistem Kabut Digital</p>
   <p style="margin-top:6px;"><a href="./kebijakan-privasi.html" style="color:var(--gray-soft);text-decoration:underline;">Kebijakan Privasi</a> &middot; <a href="./syarat-ketentuan.html" style="color:var(--gray-soft);text-decoration:underline;">Syarat dan Ketentuan</a></p>
 </footer>
+
+<script>
+var navToggleBtn = document.getElementById('navToggle');
+var navLinksEl = document.getElementById('navLinks');
+if (navToggleBtn && navLinksEl) {
+  navToggleBtn.addEventListener('click', function () {
+    navLinksEl.classList.toggle('open');
+  });
+  document.addEventListener('click', function (e) {
+    if (!navLinksEl.classList.contains('open')) return;
+    if (navLinksEl.contains(e.target) || navToggleBtn.contains(e.target)) return;
+    navLinksEl.classList.remove('open');
+  });
+}
+</script>
 
 </body>
 </html>

@@ -66,11 +66,26 @@ a{color:inherit;}
 .site-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);
   border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-sm);}
 .site-nav-inner{max-width:560px;margin:0 auto;padding:12px 20px;display:flex;
-  align-items:center;justify-content:space-between;gap:10px;}
+  align-items:center;justify-content:space-between;gap:10px;position:relative;}
 .site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
   color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
-.site-nav-links{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-.site-nav-links::-webkit-scrollbar{display:none;}
+.nav-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;
+  border:none;background:none;color:var(--blue-deep);cursor:pointer;padding:0;flex-shrink:0;}
+.nav-toggle svg{width:22px;height:22px;}
+.site-nav-links{display:none;flex-direction:column;position:absolute;top:100%;left:0;right:0;
+  background:var(--white);border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-md);
+  padding:4px 20px 8px;}
+.site-nav-links.open{display:flex;}
+.site-nav-links .nav-link{padding:12px 4px;border-radius:0;border-bottom:1px solid var(--gray-line);
+  width:100%;box-sizing:border-box;}
+.site-nav-links .nav-link:last-child{border-bottom:none;}
+@media(min-width:720px){
+  .nav-toggle{display:none;}
+  .site-nav-inner{max-width:900px;}
+  .site-nav-links{display:flex!important;flex-direction:row;position:static;background:none;
+    border-bottom:none;box-shadow:none;padding:0;width:auto;gap:2px;}
+  .site-nav-links .nav-link{border-bottom:none;padding:7px 9px;width:auto;border-radius:var(--r-sm);}
+}
 .nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
   padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
 .nav-link.active{color:var(--blue-main);background:var(--blue-pale);}
@@ -172,7 +187,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
 .wsn-card-date{font-size:10.5px;color:var(--blue-main);font-weight:700;}
 .wsn-more{width:100%;margin-top:4px;padding:11px;border-radius:var(--r-md);border:1.5px solid var(--gray-line);
   background:var(--white);color:var(--blue-main);font-family:inherit;font-size:12.5px;font-weight:700;
-  cursor:pointer;}
+  cursor:pointer;display:block;text-align:center;text-decoration:none;box-sizing:border-box;}
 .wsn-empty{font-size:12.5px;color:var(--gray-soft);text-align:center;padding:20px 0;}
 .wsn-skeleton{animation:wsnSkeletonPulse 1.3s ease-in-out infinite;pointer-events:none;cursor:default;}
 .wsn-skeleton .wsn-thumb{background:var(--gray-line);}
@@ -240,7 +255,8 @@ footer p{font-size:11px;color:var(--gray-soft);}
 .wsn-share-row{display:flex;gap:10px;margin-top:18px;}
 .wsn-share-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;
   border-radius:var(--r-md);border:1.5px solid var(--gray-line);background:var(--white);
-  color:var(--blue-deep);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;}
+  color:var(--blue-deep);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+  text-decoration:none;box-sizing:border-box;}
 .wsn-share-btn svg{width:15px;height:15px;}
 
 /* Mode "lihat semua" di dalam modal */
@@ -260,9 +276,13 @@ footer p{font-size:11px;color:var(--gray-soft);}
 <nav class="site-nav">
   <div class="site-nav-inner">
     <a href="./index.html" class="site-logo">CBT Kabut Digital</a>
-    <div class="site-nav-links">
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+    </button>
+    <div class="site-nav-links" id="navLinks">
       <a href="./index.html" class="nav-link active">Beranda</a>
       <a href="./aplikasi.html" class="nav-link">Aplikasi</a>
+      <a href="./wawasan.html" class="nav-link">Wawasan</a>
       <a href="./tentang.html" class="nav-link">Tentang</a>
       <a href="./pusat-bantuan.html" class="nav-link">Pusat Bantuan</a>
     </div>
@@ -507,7 +527,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
     <div class="wsn-grid" id="wsnGrid">
       <div class="wsn-empty">Memuat postingan...</div>
     </div>
-    <button class="wsn-more" id="wsnMoreBtn" style="display:none;" type="button">Lihat Postingan Lainnya</button>
+    <a class="wsn-more" id="wsnMoreBtn" href="./wawasan.html" style="display:none;">Lihat Semua Wawasan</a>
   </section>
 
 </div>
@@ -538,13 +558,26 @@ footer p{font-size:11px;color:var(--gray-soft);}
 </footer>
 
 <script>
+var navToggleBtn = document.getElementById('navToggle');
+var navLinksEl = document.getElementById('navLinks');
+if (navToggleBtn && navLinksEl) {
+  navToggleBtn.addEventListener('click', function () {
+    navLinksEl.classList.toggle('open');
+  });
+  document.addEventListener('click', function (e) {
+    if (!navLinksEl.classList.contains('open')) return;
+    if (navLinksEl.contains(e.target) || navToggleBtn.contains(e.target)) return;
+    navLinksEl.classList.remove('open');
+  });
+}
+
 // ═══ Konfigurasi ═══
 const CBTKD_WIZARD_URL      = './wizard.html';
 const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo9aLVvvulLeH9qce3Qtz_5PZ1GFWXk5qiTNNj4_T-6vf7lZOt-K0tkMSdKkR/exec';
 // PENTING: URL ini HARUS mengarah ke deployment PublicReadAPI.gs (akses "Anyone"),
 // BUKAN ke deployment Form Admin (Code.gs, akses "Only myself") -- kalau salah,
 // section Wawasan akan kosong untuk semua pengunjung kecuali Anda sendiri yang login.
-const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbxH3ski_9EZdrLDCT3ecXm09SMlsNUocvrk5QdFnIFGIghg_7fp6nzop5-vDtPvGqeF/exec';
+const CBTKD_WAWASAN_API_URL = 'GANTI_DENGAN_URL_DEPLOYMENT_PUBLICREADAPI';
 
 function cbtkdScrollKe(id) {
   let el = document.getElementById(id);
@@ -723,15 +756,6 @@ function _wsnEscape(text) {
   return d.innerHTML;
 }
 
-function _wsnHighlightEscape(text, query) {
-  var escaped = _wsnEscape(text);
-  if (!query) return escaped;
-  var escapedQuery = _wsnEscape(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  if (!escapedQuery) return escaped;
-  var re = new RegExp('(' + escapedQuery + ')', 'gi');
-  return escaped.replace(re, '<mark class="search-hl">$1</mark>');
-}
-
 function _wsnFormatDate(iso) {
   try {
     var d = new Date(iso);
@@ -761,7 +785,12 @@ function _wsnRenderGrid() {
     return;
   }
 
-  var latest = _wsnPosts.slice(0, 3);
+  var pinned = _wsnPosts.filter(function (p) { return p.pin; });
+  var nonPinned = _wsnPosts.filter(function (p) { return !p.pin; });
+  var latest = pinned.slice(0, 3);
+  if (latest.length < 3) {
+    latest = latest.concat(nonPinned.slice(0, 3 - latest.length));
+  }
   var deepLinkPost = _wsnDeepLinkId ? _wsnPosts.filter(function (p) { return p.id === _wsnDeepLinkId; })[0] : null;
 
   // Kalau postingan dari link share tidak ada di 3 terbaru, sisipkan di paling atas
@@ -841,7 +870,7 @@ function _wsnOpenDetail(id) {
     '<button class="wsn-share-btn" id="wsnShareBtn" type="button">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>' +
     'Bagikan</button>' +
-    '<button class="wsn-share-btn" id="wsnMoreFromDetailBtn" type="button">Lihat Lainnya</button>' +
+    '<a class="wsn-share-btn" href="./wawasan.html">Lihat Lainnya</a>' +
     '</div>';
 
   document.getElementById('wsnShareBtn').addEventListener('click', function () {
@@ -851,7 +880,6 @@ function _wsnOpenDetail(id) {
       window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(post.judul + ' - ' + shareUrl), '_blank');
     }
   });
-  document.getElementById('wsnMoreFromDetailBtn').addEventListener('click', _wsnOpenBrowse);
 
   _wsnOpenModal();
 
@@ -1015,66 +1043,6 @@ _wsnLbStageEl.addEventListener('touchmove', _wsnLbTouchMove, { passive: false })
 _wsnLbStageEl.addEventListener('touchend', _wsnLbTouchEnd);
 _wsnLbStageEl.addEventListener('touchcancel', _wsnLbTouchEnd);
 
-function _wsnOpenBrowse() {
-  var html = '<div class="wsn-detail-title" style="margin-bottom:14px;">Semua Postingan</div>' +
-    '<div class="wsn-browse-search">' +
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
-    '<input type="text" id="wsnBrowseSearch" placeholder="Cari postingan...">' +
-    '</div>' +
-    '<div class="wsn-grid" id="wsnBrowseList">' + (_wsnReady ? '' : _wsnSkeletonHtml(4)) + '</div>';
-
-  document.getElementById('wsnModalInner').innerHTML = html;
-  document.getElementById('wsnBrowseSearch').addEventListener('input', function (e) {
-    _wsnRenderBrowseList(e.target.value.trim().toLowerCase());
-  });
-  _wsnOpenModal();
-
-  _wsnWhenReady(function () {
-    // Data mungkin baru siap SETELAH modal ini dibuka -- render ulang begitu tersedia,
-    // dan hormati apa pun yang sudah diketik pengguna di kotak cari selagi menunggu.
-    var input = document.getElementById('wsnBrowseSearch');
-    _wsnRenderBrowseList(input ? input.value.trim().toLowerCase() : '');
-  });
-}
-
-function _wsnStripHtml(html) {
-  var d = document.createElement('div');
-  d.innerHTML = html || '';
-  return d.textContent || '';
-}
-
-function _wsnRenderBrowseList(query) {
-  var list = document.getElementById('wsnBrowseList');
-  if (!list) return; // modal sudah ditutup/berganti sebelum data siap
-
-  var filtered = _wsnPosts.filter(function (p) {
-    if (!query) return true;
-    var haystack = (p.judul + ' ' + p.ringkasan + ' ' + _wsnStripHtml(p.isi)).toLowerCase();
-    return haystack.indexOf(query) !== -1;
-  });
-
-  if (!filtered.length) {
-    list.innerHTML = '<div class="wsn-empty">' + (_wsnReady ? 'Tidak ada postingan yang cocok.' : 'Memuat postingan...') + '</div>';
-    return;
-  }
-
-  list.innerHTML = filtered.map(function (p) {
-    var thumb = _wsnCardThumb(p);
-    return '<div class="wsn-card" data-id="' + _wsnEscape(p.id) + '">' +
-      '<div class="wsn-thumb">' + thumb + '</div>' +
-      '<div class="wsn-card-body">' +
-      '<div class="wsn-card-title">' + _wsnHighlightEscape(p.judul, query) + '</div>' +
-      '<div class="wsn-card-snippet">' + _wsnHighlightEscape(p.ringkasan, query) + '</div>' +
-      '<div class="wsn-card-date">' + _wsnFormatDate(p.tanggal) + '</div>' +
-      '</div></div>';
-  }).join('');
-
-  Array.prototype.forEach.call(list.querySelectorAll('.wsn-card'), function (card) {
-    card.addEventListener('click', function () { _wsnOpenDetail(card.getAttribute('data-id')); });
-  });
-}
-
-document.getElementById('wsnMoreBtn').addEventListener('click', _wsnOpenBrowse);
 document.getElementById('wsnCloseBtn').addEventListener('click', _wsnCloseModal);
 document.getElementById('wsnOverlay').addEventListener('click', function (e) {
   if (e.target.id === 'wsnOverlay') _wsnCloseModal();

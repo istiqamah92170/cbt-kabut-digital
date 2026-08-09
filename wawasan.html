@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Wawasan — CBT Kabut Digital</title>
+<meta name="description" content="Tips dan panduan praktis membuat ujian online sendiri dengan CBT Kabut Digital — gratis, berbasis Google Sheets, mudah dipelihara sekolah/institusi sendiri.">
+<link rel="canonical" href="https://cbtkabutdigital.com/wawasan.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2693613981937449"
+     crossorigin="anonymous"></script>
+<style>
+:root {
+  --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+  --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+  --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+  --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --sh-sm:0 1px 4px rgba(10,53,102,.08);
+  --sh-md:0 4px 16px rgba(10,53,102,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:var(--gray-dark);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+a{color:var(--blue-main);}
+.wrap{width:100%;max-width:560px;padding:0 20px 64px;}
+
+.site-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);
+  border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-sm);}
+.site-nav-inner{max-width:560px;margin:0 auto;padding:12px 20px;display:flex;
+  align-items:center;justify-content:space-between;gap:10px;position:relative;}
+.site-logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;
+  color:var(--blue-deep);text-decoration:none;white-space:nowrap;}
+.nav-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;
+  border:none;background:none;color:var(--blue-deep);cursor:pointer;padding:0;flex-shrink:0;}
+.nav-toggle svg{width:22px;height:22px;}
+.site-nav-links{display:none;flex-direction:column;position:absolute;top:100%;left:0;right:0;
+  background:var(--white);border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-md);
+  padding:4px 20px 8px;}
+.site-nav-links.open{display:flex;}
+.nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
+  padding:12px 4px;border-radius:0;border-bottom:1px solid var(--gray-line);white-space:nowrap;}
+.site-nav-links .nav-link:last-child{border-bottom:none;}
+.nav-link.active{color:var(--blue-main);}
+@media(min-width:720px){
+  .nav-toggle{display:none;}
+  .site-nav-inner{max-width:900px;}
+  .site-nav-links{display:flex!important;flex-direction:row;position:static;background:none;
+    border-bottom:none;box-shadow:none;padding:0;width:auto;gap:2px;}
+  .site-nav-links .nav-link{border-bottom:none;padding:7px 9px;width:auto;border-radius:var(--r-sm);}
+  .site-nav-links .nav-link.active{background:var(--blue-pale);}
+}
+
+.page-head{width:100%;background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-main) 100%);
+  color:white;padding:36px 20px 34px;}
+.page-head-inner{max-width:520px;margin:0 auto;}
+.page-head h1{font-size:24px;font-weight:800;margin-bottom:8px;}
+.page-head p{font-size:13.5px;opacity:.88;line-height:1.6;max-width:440px;}
+
+.search-wrap{width:100%;max-width:900px;padding:20px 20px 0;}
+.search-box{position:relative;max-width:560px;margin:0 auto;}
+.search-box input{width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--gray-line);
+  border-radius:var(--r-md);font-family:inherit;font-size:13px;color:var(--gray-dark);
+  background:var(--white);outline:none;}
+.search-box input:focus{border-color:var(--blue-main);}
+.search-box svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;
+  color:var(--gray-soft);pointer-events:none;}
+
+.list-wrap{width:100%;max-width:900px;padding:18px 20px 8px;}
+.wsn-list{display:flex;flex-direction:column;gap:10px;}
+.wsn-empty{font-size:12.5px;color:var(--gray-soft);text-align:center;padding:40px 0;grid-column:1/-1;}
+
+.wsn-card{display:flex;gap:14px;background:var(--white);border:1.5px solid var(--gray-line);
+  border-radius:var(--r-lg);padding:14px;box-shadow:var(--sh-sm);text-decoration:none;color:inherit;
+  transition:border-color .2s;}
+.wsn-card:hover{border-color:var(--blue-mid);}
+.wsn-thumb{flex-shrink:0;width:88px;height:88px;border-radius:var(--r-md);overflow:hidden;
+  background:var(--blue-pale);display:flex;align-items:center;justify-content:center;position:relative;}
+.wsn-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.wsn-thumb svg.icon{width:28px;height:28px;color:var(--blue-mid);}
+.wsn-thumb-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;
+  color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+.wsn-card-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.wsn-card-title{font-size:14px;font-weight:700;color:var(--gray-dark);line-height:1.4;margin-bottom:4px;}
+.wsn-card-snippet{font-size:12.5px;color:var(--gray-soft);line-height:1.5;margin-bottom:6px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.wsn-card-date{font-size:11px;color:var(--blue-main);font-weight:700;}
+.wsn-card mark.search-hl{background:var(--blue-light);color:var(--blue-deep);padding:0 2px;border-radius:3px;}
+
+.skeleton{animation:skPulse 1.3s ease-in-out infinite;pointer-events:none;}
+.skeleton .wsn-thumb{background:var(--gray-line);}
+.skeleton .sk-line{height:9px;border-radius:4px;background:var(--gray-line);margin-bottom:7px;}
+@keyframes skPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+footer{width:100%;max-width:560px;padding:24px 20px 40px;text-align:center;}
+footer p{font-size:11px;color:var(--gray-soft);}
+
+@media(min-width:720px){
+  .wsn-list{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  footer{max-width:900px;}
+}
+@media(min-width:1024px){
+  .wsn-list{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a href="./index.html" class="site-logo">CBT Kabut Digital</a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+    </button>
+    <div class="site-nav-links" id="navLinks">
+      <a href="./index.html" class="nav-link">Beranda</a>
+      <a href="./aplikasi.html" class="nav-link">Aplikasi</a>
+      <a href="./wawasan.html" class="nav-link active">Wawasan</a>
+      <a href="./tentang.html" class="nav-link">Tentang</a>
+      <a href="./pusat-bantuan.html" class="nav-link">Pusat Bantuan</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-head">
+  <div class="page-head-inner">
+    <h1>Wawasan</h1>
+    <p>Tips, panduan, dan cerita seputar CBT Kabut Digital — cara membuat ujian online sendiri, memaksimalkan fitur, dan kabar terbaru dari kami.</p>
+  </div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Cari artikel Wawasan...">
+  </div>
+</div>
+
+<div class="list-wrap">
+  <div class="wsn-list" id="wsnList"></div>
+</div>
+
+<footer>
+  <p>CBT Kabut Digital — bagian dari ekosistem Kabut Digital</p>
+  <p style="margin-top:6px;"><a href="./kebijakan-privasi.html" style="color:var(--gray-soft);text-decoration:underline;">Kebijakan Privasi</a> &middot; <a href="./syarat-ketentuan.html" style="color:var(--gray-soft);text-decoration:underline;">Syarat dan Ketentuan</a></p>
+</footer>
+
+<script>
+// PENTING: URL ini HARUS mengarah ke deployment PublicReadAPI.gs (akses "Anyone"),
+// BUKAN ke deployment Form Admin (akses "Only myself").
+const WAWASAN_API_URL = 'GANTI_DENGAN_URL_DEPLOYMENT_PUBLICREADAPI';
+
+var navToggleBtn = document.getElementById('navToggle');
+var navLinksEl = document.getElementById('navLinks');
+if (navToggleBtn && navLinksEl) {
+  navToggleBtn.addEventListener('click', function () {
+    navLinksEl.classList.toggle('open');
+  });
+  document.addEventListener('click', function (e) {
+    if (!navLinksEl.classList.contains('open')) return;
+    if (navLinksEl.contains(e.target) || navToggleBtn.contains(e.target)) return;
+    navLinksEl.classList.remove('open');
+  });
+}
+
+var _allPosts = [];
+var _ready = false;
+
+function esc(text) {
+  var d = document.createElement('div');
+  d.textContent = text || '';
+  return d.innerHTML;
+}
+
+function highlightEsc(text, query) {
+  var escaped = esc(text);
+  if (!query) return escaped;
+  var escapedQuery = esc(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!escapedQuery) return escaped;
+  var re = new RegExp('(' + escapedQuery + ')', 'gi');
+  return escaped.replace(re, '<mark class="search-hl">$1</mark>');
+}
+
+function formatDate(iso) {
+  try {
+    var d = new Date(iso);
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch (e) { return ''; }
+}
+
+function stripHtml(html) {
+  var d = document.createElement('div');
+  d.innerHTML = html || '';
+  return d.textContent || '';
+}
+
+function cardThumb(p) {
+  var playIcon = '<svg class="wsn-thumb-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  if (p.foto && p.foto[0]) {
+    return '<img src="' + p.foto[0] + '" alt="' + esc(p.judul) + '">';
+  }
+  if (p.youtube) {
+    return '<img src="https://img.youtube.com/vi/' + p.youtube + '/hqdefault.jpg" alt="' + esc(p.judul) + '">' + playIcon;
+  }
+  return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m4 15 4-4 4 4 4-6 4 4"/></svg>';
+}
+
+function skeletonHtml(count) {
+  var one = '<div class="wsn-card skeleton"><div class="wsn-thumb"></div><div class="wsn-card-body">' +
+    '<div class="sk-line" style="width:80%;"></div><div class="sk-line" style="width:95%;"></div>' +
+    '<div class="sk-line" style="width:38%;margin-bottom:0;"></div></div></div>';
+  return new Array(count).fill(one).join('');
+}
+
+function renderList(query) {
+  var list = document.getElementById('wsnList');
+  var filtered = _allPosts.filter(function (p) {
+    if (!query) return true;
+    var haystack = (p.judul + ' ' + p.ringkasan + ' ' + stripHtml(p.isi)).toLowerCase();
+    return haystack.indexOf(query) !== -1;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="wsn-empty">' + (_ready ? 'Tidak ada artikel yang cocok.' : 'Memuat artikel...') + '</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function (p) {
+    var href = p.urlStatis || ('https://cbtkabutdigital.com/wawasan/' + p.id + '.html');
+    return '<a class="wsn-card" href="' + href + '">' +
+      '<div class="wsn-thumb">' + cardThumb(p) + '</div>' +
+      '<div class="wsn-card-body">' +
+      '<div class="wsn-card-title">' + highlightEsc(p.judul, query) + '</div>' +
+      '<div class="wsn-card-snippet">' + highlightEsc(p.ringkasan, query) + '</div>' +
+      '<div class="wsn-card-date">' + formatDate(p.tanggal) + '</div>' +
+      '</div></a>';
+  }).join('');
+}
+
+document.getElementById('wsnList').innerHTML = skeletonHtml(6);
+
+document.getElementById('searchInput').addEventListener('input', function (e) {
+  renderList(e.target.value.trim().toLowerCase());
+});
+
+if (WAWASAN_API_URL && WAWASAN_API_URL.indexOf('GANTI_') !== 0) {
+  var callbackName = 'wawasanListCallback_' + Date.now();
+  window[callbackName] = function (data) {
+    _allPosts = Array.isArray(data) ? data : [];
+    _ready = true;
+    renderList(document.getElementById('searchInput').value.trim().toLowerCase());
+    delete window[callbackName];
+    scriptTag.remove();
+  };
+  var scriptTag = document.createElement('script');
+  scriptTag.src = WAWASAN_API_URL + '?action=list&callback=' + callbackName;
+  scriptTag.onerror = function () {
+    document.getElementById('wsnList').innerHTML = '<div class="wsn-empty">Gagal memuat artikel. Coba muat ulang halaman.</div>';
+  };
+  document.body.appendChild(scriptTag);
+} else {
+  document.getElementById('wsnList').innerHTML = '<div class="wsn-empty">Belum ada artikel.</div>';
+}
+</script>
+
+</body>
+</html>
