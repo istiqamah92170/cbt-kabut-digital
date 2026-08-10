@@ -85,6 +85,13 @@ a{color:inherit;}
   .site-nav-links{display:flex!important;flex-direction:row;position:static;background:none;
     border-bottom:none;box-shadow:none;padding:0;width:auto;gap:2px;}
   .site-nav-links .nav-link{border-bottom:none;padding:7px 9px;width:auto;border-radius:var(--r-sm);}
+  .wrap{max-width:720px;}
+  .section{max-width:720px;}
+  .page-head-inner{max-width:640px;}
+  .hero-inner{max-width:640px;}
+  .wsn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .wsn-card{flex-direction:column;}
+  .wsn-thumb{width:100%;height:140px;}
 }
 .nav-link{font-size:12px;font-weight:700;color:var(--gray-mid);text-decoration:none;
   padding:7px 9px;border-radius:var(--r-sm);transition:all .2s;white-space:nowrap;}
@@ -577,7 +584,7 @@ const CBTKD_LOG_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzBLERBo
 // PENTING: URL ini HARUS mengarah ke deployment PublicReadAPI.gs (akses "Anyone"),
 // BUKAN ke deployment Form Admin (Code.gs, akses "Only myself") -- kalau salah,
 // section Wawasan akan kosong untuk semua pengunjung kecuali Anda sendiri yang login.
-const CBTKD_WAWASAN_API_URL = 'https://script.google.com/macros/s/AKfycbx-uYmq-1J044KGBg13v-ILUXvtZaNNw4sh0jT5MWY3rsx2H_pND-6KEWeML3EzLPIu/exec';
+const CBTKD_WAWASAN_API_URL = 'GANTI_DENGAN_URL_DEPLOYMENT_PUBLICREADAPI';
 
 function cbtkdScrollKe(id) {
   let el = document.getElementById(id);
