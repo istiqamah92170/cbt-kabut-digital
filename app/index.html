@@ -3,8 +3,8 @@
   WATERMARK DIGITAL
   Pemilik  : Rapian Hasanuddin
   Kontak   : rapian0279@gmail.com
-  ID Unik  : WM-MTE93KTPI3G1G
-  Tanggal  : 2026-08-29
+  ID Unik  : WM-MTGC4X12VLU4U
+  Tanggal  : 2026-08-30
   Hak Cipta: © 2026 Rapian Hasanuddin
   PERINGATAN: Dilarang menyalin, mendistribusikan ulang,
   atau menghapus atribusi ini tanpa izin tertulis dari pemilik.
@@ -14,8 +14,8 @@
 <html lang="id"><head>
 <meta name="author" content="Rapian Hasanuddin">
 <meta name="copyright" content="© 2026 Rapian Hasanuddin">
-<meta name="protection-id" content="WM-MTE93KTPI3G1G">
-<meta name="_wm" content="WM-MTE93KTPI3G1G"><meta name="_bh" content="64b625f0">
+<meta name="protection-id" content="WM-MTGC4X12VLU4U">
+<meta name="_wm" content="WM-MTGC4X12VLU4U"><meta name="_bh" content="64b625f0">
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
@@ -32,7 +32,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
-<style>/* __WM:WM-MTE93KTPI3G1G:462d424b */
+<style>/* __WM:WM-MTGC4X12VLU4U:67a0109f */
 :root {
   --font-arab:20px;
   --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
@@ -108,7 +108,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── LOADING OVERLAY ── */
-.load-overlay{position:absolute;inset:0;background:rgba(243,246,250,.85);border-radius:var(--r-lg);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+/* BUG-FIX (2026-08): dulu position:absolute (hanya menutupi .login-card,
+   dan CUMA TAMPIL selama login-screen tidak disembunyikan). Begitu
+   login-screen di-display:none (yaitu persis saat ujian berjalan/selesai --
+   momen paling penting untuk overlay "jangan tutup halaman"), overlay ini
+   ikut tidak pernah tampil sama sekali walau class 'hide' sudah dilepas --
+   penyebab layar terlihat kosong/putih tanpa peringatan apa pun saat
+   menyimpan/memuat nilai. Sekarang position:fixed & dipindah ke luar
+   login-screen (jadi anak langsung <body data-wm="WM-MTGC4X12VLU4U" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
+<!-- OWNER:WM-MTGC4X12VLU4U:Rapian%20Hasanuddin:2026-08-30 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MTGC4X12VLU4U">WM-MTGC4X12VLU4U</span>
+) supaya selalu bisa tampil di
+   layar mana pun. */
+.load-overlay{position:fixed;inset:0;background:rgba(243,246,250,.85);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
 .load-overlay.hide{display:none;}
 .spin{width:36px;height:36px;border:3px solid var(--blue-light);border-top-color:var(--blue-mid);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -640,7 +651,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2A2A2A;border-radi
 html[data-theme="dark"] .theme-toggle-btn .ico-sun{display:none;}
 html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
 @media(max-width:480px){ .theme-toggle-btn{top:10px;right:10px;width:36px;height:36px;} .theme-toggle-btn svg{width:17px;height:17px;} }
-/* _b:462d42 */</style>
+/* _b:67a010 */</style>
 <meta name="description" content="CBT Kabut Digital: buat ujian online untuk sekolah, kampus, atau perusahaan lewat wizard 5 langkah — tanpa server, pakai Google Sheets sendiri."><meta name="theme-color" content="#daa520"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"><script data-pwa-converter="v2">
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -669,16 +680,33 @@ function _pwaInstall() {
 window.addEventListener('appinstalled', () => {
   const b = document.getElementById('_pwa_banner');
   if (b) b.style.display = 'none';
-});</script><script data-wm-rt="1">(function(){var _id="WM-MTE93KTPI3G1G";var _bh="64b625f0";var _on="Rapian Hasanuddin";var _id8="WM-MTE93";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
-<body data-wm="WM-MTE93KTPI3G1G" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
-<!-- OWNER:WM-MTE93KTPI3G1G:Rapian%20Hasanuddin:2026-08-29 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MTE93KTPI3G1G">WM-MTE93KTPI3G1G</span>
-<div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#daa520;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#daa520;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
+});</script><script data-wm-rt="1">(function(){var _id="WM-MTGC4X12VLU4U";var _bh="64b625f0";var _on="Rapian Hasanuddin";var _id8="WM-MTGC4";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
+<body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#daa520;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#daa520;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
 
 <!-- ── TOGGLE MODE MALAM — mengambang, tampil di semua layar ── -->
 <button class="theme-toggle-btn" id="btn-theme-toggle" onclick="toggleTema()" title="Ganti mode terang/malam" type="button">
   <svg class="ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
   <svg class="ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
 </button>
+
+<!-- Overlay kunci layar selama fetch -- BUG-FIX (2026-08): dipindah jadi
+     anak langsung body (position:fixed) supaya tetap bisa tampil di layar
+     mana pun (login, exam, maupun hasil), bukan cuma saat login-screen
+     aktif. Lihat catatan BUG-FIX di CSS .load-overlay.
+     BUG-FIX REGRESI (2026-08, batch kedua): dulu (saat masih di dalam
+     login-screen) elemen ini TIDAK punya class "hide" secara default, tapi
+     tetap tak kelihatan karena ikut tersembunyi bersama ancestor-nya
+     (login-screen) begitu portalInit() pindah ke layar beranda. Setelah
+     dipindah jadi overlay global, ketiadaan class "hide" bawaan itu jadi
+     benar-benar tampil di LAYAR MANA PUN saat halaman pertama kali dibuka
+     -- termasuk beranda, sebelum peserta sempat mengisi link ujian sama
+     sekali. Semua alur yang memang butuh overlay ini (muatSoal(),
+     selesaiFinal(), dst) sudah memanggil classList.remove('hide') sendiri
+     saat mulai fetch, jadi aman dijadikan hide by default di sini. -->
+<div class="load-overlay hide" id="load-overlay">
+  <div class="spin"></div>
+  <p id="overlay-txt">Memuat soal dari server...<br><small style="font-weight:400;color:var(--gray-soft);">Harap tunggu, ini mungkin memakan waktu 5–15 detik</small></p>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════
      PORTAL SISWA — HTML
@@ -732,7 +760,7 @@ window.addEventListener('appinstalled', () => {
         <div class="lbl">Backup &amp; Pemulihan</div>
         <div class="sub">Ekspor &amp; impor data</div>
       </div>
-      <a id="menu-wizard" class="p-menu-item wizard" href="https://cbtkabutdigital.com/index.html" target="_blank" rel="noopener">
+      <a id="menu-wizard" class="p-menu-item wizard" href="__CBTKD_WIZARD_URL__" target="_blank" rel="noopener">
         <div class="ico-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z"></path></svg></div>
         <div class="txt">
           <div class="lbl">Buat CBT Baru</div>
@@ -961,12 +989,6 @@ window.addEventListener('appinstalled', () => {
         <button class="btn-login" id="btn-login" onclick="mulaiUjian()" disabled="">▶ Mulai Ujian</button>
         <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--gray-soft);letter-spacing:0.5px;">v7.1.0</div>
       </div>
-    </div>
-
-    <!-- Overlay kunci form selama fetch -->
-    <div class="load-overlay" id="load-overlay">
-      <div class="spin"></div>
-      <p id="overlay-txt">Memuat soal dari server...<br><small style="font-weight:400;color:var(--gray-soft);">Harap tunggu, ini mungkin memakan waktu 5–15 detik</small></p>
     </div>
   </div>
 </div>
@@ -2210,7 +2232,15 @@ function selesaiFinal() {
 
   (async () => {
     let sukses = await _kirimSemuaHasilUjian();
-    document.getElementById('load-overlay').classList.add('hide');
+    // BUG-FIX (2026-08): overlay dulu ditutup DI SINI, sebelum nilai akhir
+    // resmi selesai dimuat (_muatHasilDariServer() di dalam
+    // tampilHasilAkhir() bisa mencoba ulang sampai beberapa detik kalau
+    // jaringan lambat) -- akibatnya selama jeda itu peserta cuma melihat
+    // layar hasil dengan angka "..." tanpa overlay/peringatan apa pun.
+    // Sekarang overlay TETAP tampil (dengan pesan baru) sampai
+    // _muatHasilDariServer() sendiri yang menutupnya setelah selesai
+    // (berhasil ataupun gagal total, lihat di dalam fungsi itu).
+    setOverlay('Memuat nilai akhir dari server...<br><small style="font-weight:400;color:var(--gray-soft);">Mohon jangan tutup halaman ini</small>');
     tampilHasilAkhir();
     _tampilStatusKirimHasil(sukses);
     // BUG-FIX KEAMANAN (2026-07): begitu submit terkonfirmasi, patch entry
@@ -2357,6 +2387,10 @@ async function _muatHasilDariServer(esaiC, percobaan) {
     document.getElementById('h-poin-max').textContent   = (d.poin_max||0) + poinMEsaiLokal;
     let subEl = document.getElementById('h-nilai-sub');
     if (subEl) subEl.textContent = subLabel;
+    // BUG-FIX (2026-08): nilai akhir sudah berhasil dimuat -- overlay
+    // "Mohon jangan tutup halaman ini" (dipasang di selesaiFinal()) boleh
+    // ditutup sekarang.
+    document.getElementById('load-overlay').classList.add('hide');
   } catch(e) {
     console.warn('Gagal memuat hasil dari server:', e);
     if (percobaan < 2) {
@@ -2376,6 +2410,10 @@ function _tampilHasilGagalDimuat() {
   document.getElementById('h-poin-max').textContent   = '--';
   let subEl = document.getElementById('h-nilai-sub');
   if (subEl) subEl.textContent = 'Nilai belum bisa dimuat dari server';
+  // BUG-FIX (2026-08): gagal total setelah semua percobaan -- overlay
+  // "Mohon jangan tutup halaman ini" harus ditutup juga di sini, kalau
+  // tidak akan tetap terkunci menutupi layar padahal sudah menyerah mencoba.
+  document.getElementById('load-overlay').classList.add('hide');
   // Pakai lagi banner + tombol "Coba Kirim Ulang" yang sudah ada -- kalau
   // datanya memang sudah tersimpan, percobaan ulang ini juga akan berhasil
   // memuat nilainya (bukan mengirim dobel, lihat _kirimSemuaHasilUjian()).
@@ -2628,7 +2666,7 @@ async function printAnalisis() {
   .hdr{background:#064E3B;color:white;padding:18px 22px;border-radius:8px;margin-bottom:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .hdr h1{font-size:17px;margin:0 0 5px;}
   .hdr p{font-size:13px;margin:3px 0 0;opacity:.9;}
-  .ana-item{border:1.5px solid #DDE3EC;border-radius:10px;overflow:hidden;margin-bottom:16px;break-inside:avoid;page-break-inside:avoid;}
+  .ana-item{border:1.5px solid #DDE3EC;border-radius:10px;overflow:hidden;margin-bottom:16px;}
   .ana-head{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .ana-head.benar{background:#E6F7EE;} .ana-head.salah{background:#FDECEA;} .ana-head.kosong{background:#F3F6FA;} .ana-head.esai-p{background:#FFF3E8;}
   .ana-no{font-size:14px;font-weight:800;}
@@ -2659,7 +2697,10 @@ async function printAnalisis() {
   @media print{
     body{padding:10px;}
     .btn-print-now{display:none;}
-    .ana-item{break-inside:avoid;page-break-inside:avoid;}
+    /* BUG-FIX (2026-08): dulu ada break-inside:avoid di sini -- memaksa
+       setiap kartu soal pindah UTUH ke halaman berikutnya kalau tidak muat
+       di sisa halaman saat ini, jadi sumber ruang kosong yang boros kertas.
+       Sekarang konten boleh terpotong & lanjut ke halaman berikutnya. */
     .hdr,.ana-head,.ana-badge{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
 </style>
@@ -3449,11 +3490,15 @@ function portalSimpanRiwayat() {
       _peserta_label    : SERVER_BRAND.participant_field_label,   // label dinamis saat ujian
       _institusi_label  : SERVER_BRAND.institution_field_label    // label dinamis saat ujian
     };
-    // Dedup: judul + profilId + hari yang sama → timpa
-    let tgl = entry.tanggal.slice(0, 10);
-    list = list.filter(r => !(r.judul === entry.judul
-                             && r.profilId === entry.profilId
-                             && r.tanggal.slice(0, 10) === tgl));
+    // BUG-FIX (2026-08): dulu di-dedup berdasarkan judul+profilId+hari yang
+    // sama (entry lama ditimpa) -- ini menyembunyikan pengerjaan ulang yang
+    // memang sengaja diberi guru pada hari yang sama, padahal di server
+    // sudah dibedakan dengan suffix "(2)", dst (lihat _simpanRekap() di
+    // Library). Sekarang setiap ujian yang benar-benar selesai (submit)
+    // selalu jadi entry riwayat baru; nama akan disesuaikan pakai
+    // nama_tersimpan dari server begitu dikonfirmasi (lihat
+    // _pSyncNilaiDariServer()), supaya percobaan kedua tampil sebagai
+    // "Nama(2)" di daftar riwayat -- bukan menghilang/menimpa yang pertama.
     list.unshift(entry);
     if (list.length > 100) list = list.slice(0, 100); // naikkan limit dari 50
     pRiwayatSimpanList(list);
@@ -3513,9 +3558,15 @@ function pBukaDetail(id) {
 // [C] Ambil nilai terbaru dari GAS dan perbarui cache lokal jika ada perubahan
 function _pSyncNilaiDariServer(r) {
   if (!r.gas_url) return;
+  // BUG-FIX (2026-08): setelah nama pasti diketahui dari server
+  // (nama_tersimpan, lihat bawah), sync ULANG untuk entry ini wajib pakai
+  // exact=1 -- tanpa ini, entry riwayat percobaan LAMA (mis. "Anggy") bisa
+  // salah sync ke data percobaan BARU yang lebih baru (mis. "Anggy(2)")
+  // karena keduanya sama-sama prefix-match di server.
   let url = r.gas_url + '?action=getHasilSiswa'
     + '&nama='    + encodeURIComponent(r.siswa)
-    + '&sekolah=' + encodeURIComponent(r.sekolah);
+    + '&sekolah=' + encodeURIComponent(r.sekolah)
+    + (r._namaPasti ? '&exact=1' : '');
 
   // Gunakan AbortSignal.timeout jika tersedia (Chrome ≥ 111), fallback manual
   let fetchOpts = {};
@@ -3562,6 +3613,18 @@ function _pSyncNilaiDariServer(r) {
       if (typeof d.salah !== 'undefined' && d.salah !== r.salah) { r.salah = d.salah; berubah = true; }
       if (typeof d.poin_dapat !== 'undefined' && d.poin_dapat !== r.poinD) { r.poinD = d.poin_dapat; berubah = true; }
       if (typeof d.poin_max   !== 'undefined' && d.poin_max   !== r.poinM) { r.poinM = d.poin_max;   berubah = true; }
+
+      // BUG-FIX (2026-08): tampilkan nama PERSIS dari server -- bisa ada
+      // suffix "(2)", dst kalau ini pengerjaan ulang -- supaya riwayat jelas
+      // membedakan tiap percobaan alih-alih menampilkan nama asli yang
+      // diketik peserta (tanpa suffix) untuk semua percobaan. Begitu nama
+      // pasti ini diterima, tandai entry (_namaPasti) supaya sync
+      // BERIKUTNYA untuk entry yang sama otomatis pakai exact=1 (lihat atas)
+      // -- mencegah entry percobaan lama ikut "ketiban" data percobaan baru.
+      if (d.nama_tersimpan) {
+        if (d.nama_tersimpan !== r.siswa) { r.siswa = d.nama_tersimpan; berubah = true; }
+        if (!r._namaPasti) { r._namaPasti = true; berubah = true; }
+      }
 
       // [D] Sinkronisasi status pembahasan dari server
       // GAS mengirim: buka_pembahasan (boolean) atau review_locked (boolean)
@@ -3932,29 +3995,29 @@ function _predikatKls(p) {
 
 
 
-<!-- PROTECTED:WM-MTE93KTPI3G1G | Rapian Hasanuddin | 2026-08-29 -->
-<script data-pid="WM-MTE93KTPI3G1G" data-feature="devtools-keys">
-(function(){var _a=2591,_b=1076,_c=4006,_d=9818;
+<!-- PROTECTED:WM-MTGC4X12VLU4U | Rapian Hasanuddin | 2026-08-30 -->
+<script data-pid="WM-MTGC4X12VLU4U" data-feature="devtools-keys">
+(function(){var _a=3591,_b=6436,_c=6385,_d=4830;
 document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C'].includes(e.key))||(e.ctrlKey&&e.key==='U')){e.preventDefault();}});
 })();
 </script>
-<script data-pid="WM-MTE93KTPI3G1G" data-feature="devdestroy">
-(function(){var _a=5397,_b=4103,_c=6953,_d=6009;
+<script data-pid="WM-MTGC4X12VLU4U" data-feature="devdestroy">
+(function(){var _a=2007,_b=4685,_c=9435,_d=1593;
 eval(atob('KGZ1bmN0aW9uKCl7CnZhciBfZHQ9ZmFsc2UsX2M9MCxfY2M9MCxfdGM9MDsKdmFyIF9tc2c9JzxkaXYgc3R5bGU9ImZvbnQtZmFtaWx5OnNhbnMtc2VyaWY7dGV4dC1hbGlnbjpjZW50ZXI7cGFkZGluZzo1cmVtO2JhY2tncm91bmQ6I2ZmZiI+JwogICsnPGgyIHN0eWxlPSJjb2xvcjojZGMyNjI2Ij5cdTI2YTAgU2VzaSBUaWRhayBWYWxpZDwvaDI+JwogICsnPHAgc3R5bGU9ImNvbG9yOiM2NjY7bWFyZ2luLXRvcDouNXJlbSI+RGV2VG9vbHMgdGVyZGV0ZWtzaS4gTXVhdCB1bGFuZyBoYWxhbWFuLjwvcD4nCiAgKyc8cCBzdHlsZT0iY29sb3I6Izk5OTtmb250LXNpemU6MTJweDttYXJnaW4tdG9wOjFyZW0iPlx1MDBhOSBEaWxpbmR1bmdpIEhhayBDaXB0YTwvcD4nCiAgKyc8L2Rpdj4nOwpmdW5jdGlvbiBfa2lsbCgpe2lmKCFfZHQpe19kdD10cnVlO2RvY3VtZW50LmJvZHkuaW5uZXJIVE1MPV9tc2c7fX0KZnVuY3Rpb24gX2Noa1QoKXt2YXIgX3M9cGVyZm9ybWFuY2Uubm93KCk7ZGVidWdnZXI7dmFyIF9kPXBlcmZvcm1hbmNlLm5vdygpLV9zO2lmKF9kPjE1MCl7X3RjKys7aWYoX3RjPj0yKV9raWxsKCk7fWVsc2V7X3RjPTA7fX0KdmFyIF9pbWc9bmV3IEltYWdlKCksX29wPWZhbHNlOwpPYmplY3QuZGVmaW5lUHJvcGVydHkoX2ltZywnaWQnLHtnZXQ6ZnVuY3Rpb24oKXtfb3A9dHJ1ZTt9fSk7CmZ1bmN0aW9uIF9jaGtDKCl7Y29uc29sZS5sb2coX2ltZyk7aWYoX29wKXtfY2MrKztpZihfY2M+PTIpX2tpbGwoKTt9X29wPWZhbHNlO30KZnVuY3Rpb24gX2Noa1MoKXt2YXIgX3c9d2luZG93Lm91dGVyV2lkdGgtd2luZG93LmlubmVyV2lkdGgsX2g9d2luZG93Lm91dGVySGVpZ2h0LXdpbmRvdy5pbm5lckhlaWdodDtpZihfdz4zMDAmJl9oPjMwMCl7X2MrKztpZihfYz49Mylfa2lsbCgpO31lbHNle19jPTA7fX0Kc2V0SW50ZXJ2YWwoX2Noa1QsMzAwMCk7CnNldEludGVydmFsKF9jaGtDLDQwMDApOwpzZXRJbnRlcnZhbChfY2hrUywzMDAwKTsKfSkoKQ=='))
 })();
 </script>
-<script data-pid="WM-MTE93KTPI3G1G" data-feature="fingerprint">
-(function(){var _a=4769,_b=5186,_c=7823,_d=2964;
-(function(){try{var _d={ts:new Date().toISOString(),ua:navigator.userAgent,lang:navigator.language,w:screen.width,h:screen.height,tz:Intl.DateTimeFormat().resolvedOptions().timeZone,url:window.location.href,ref:document.referrer,id:'WM-MTE93KTPI3G1G',event:'access'};navigator.sendBeacon('https://script.google.com/macros/s/AKfycbwA2D9sJtj9OUHnj5fLoukN-7ITCtBGqgsVi7Fw8eQdQ1f5HKpR8snR8P2VYiLdB5o09w/exec',JSON.stringify(_d));}catch(e){}})();
+<script data-pid="WM-MTGC4X12VLU4U" data-feature="fingerprint">
+(function(){var _a=5322,_b=3566,_c=1510,_d=8260;
+(function(){try{var _d={ts:new Date().toISOString(),ua:navigator.userAgent,lang:navigator.language,w:screen.width,h:screen.height,tz:Intl.DateTimeFormat().resolvedOptions().timeZone,url:window.location.href,ref:document.referrer,id:'WM-MTGC4X12VLU4U',event:'access'};navigator.sendBeacon('https://script.google.com/macros/s/AKfycbwA2D9sJtj9OUHnj5fLoukN-7ITCtBGqgsVi7Fw8eQdQ1f5HKpR8snR8P2VYiLdB5o09w/exec',JSON.stringify(_d));}catch(e){}})();
 })();
 </script>
-<script data-pid="WM-MTE93KTPI3G1G" data-feature="consolewarn">
-(function(){var _a=6140,_b=4419,_c=8965,_d=3917;
-console.log('%c\u26a0 HAK CIPTA\n%c\u00a9 2026 Rapian Hasanuddin | rapian0279@gmail.com\nID: WM-MTE93KTPI3G1G\nDilarang menyalin atau mendistribusikan tanpa izin tertulis pemilik.','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
+<script data-pid="WM-MTGC4X12VLU4U" data-feature="consolewarn">
+(function(){var _a=947,_b=9709,_c=945,_d=6853;
+console.log('%c\u26a0 HAK CIPTA\n%c\u00a9 2026 Rapian Hasanuddin | rapian0279@gmail.com\nID: WM-MTGC4X12VLU4U\nDilarang menyalin atau mendistribusikan tanpa izin tertulis pemilik.','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
 })();
 </script>
-<script data-pid="WM-MTE93KTPI3G1G" data-feature="domainlock">
-(function(){var _a=4902,_b=2187,_c=2566,_d=7048;
+<script data-pid="WM-MTGC4X12VLU4U" data-feature="domainlock">
+(function(){var _a=6665,_b=8636,_c=4702,_d=1569;
 (function(){var h=window.location.hostname;var ok=['cbtkabutdigital.com','www.cbtkabutdigital.com','localhost',''];if(ok.indexOf(h)===-1){document.body.innerHTML="<div style='font:16px sans-serif;text-align:center;padding:4rem'><h2>Akses Tidak Sah</h2><p>Hubungi pemilik resmi.</p></div>";}})();
 })();
 </script>
