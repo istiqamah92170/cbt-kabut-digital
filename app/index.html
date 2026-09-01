@@ -3,8 +3,8 @@
   WATERMARK DIGITAL
   Pemilik  : Rapian Hasanuddin
   Kontak   : rapian0279@gmail.com
-  ID Unik  : WM-MTGC4X12VLU4U
-  Tanggal  : 2026-08-30
+  ID Unik  : WM-MTJA40DGGB8LP
+  Tanggal  : 2026-09-01
   Hak Cipta: © 2026 Rapian Hasanuddin
   PERINGATAN: Dilarang menyalin, mendistribusikan ulang,
   atau menghapus atribusi ini tanpa izin tertulis dari pemilik.
@@ -14,8 +14,8 @@
 <html lang="id"><head>
 <meta name="author" content="Rapian Hasanuddin">
 <meta name="copyright" content="© 2026 Rapian Hasanuddin">
-<meta name="protection-id" content="WM-MTGC4X12VLU4U">
-<meta name="_wm" content="WM-MTGC4X12VLU4U"><meta name="_bh" content="64b625f0">
+<meta name="protection-id" content="WM-MTJA40DGGB8LP">
+<meta name="_wm" content="WM-MTJA40DGGB8LP"><meta name="_bh" content="64b625f0">
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
@@ -32,7 +32,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
-<style>/* __WM:WM-MTGC4X12VLU4U:67a0109f */
+<style>/* __WM:WM-MTJA40DGGB8LP:12a0186b */
 :root {
   --font-arab:20px;
   --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
@@ -115,8 +115,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
    ikut tidak pernah tampil sama sekali walau class 'hide' sudah dilepas --
    penyebab layar terlihat kosong/putih tanpa peringatan apa pun saat
    menyimpan/memuat nilai. Sekarang position:fixed & dipindah ke luar
-   login-screen (jadi anak langsung <body data-wm="WM-MTGC4X12VLU4U" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
-<!-- OWNER:WM-MTGC4X12VLU4U:Rapian%20Hasanuddin:2026-08-30 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MTGC4X12VLU4U">WM-MTGC4X12VLU4U</span>
+   login-screen (jadi anak langsung <body data-wm="WM-MTJA40DGGB8LP" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
+<!-- OWNER:WM-MTJA40DGGB8LP:Rapian%20Hasanuddin:2026-09-01 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MTJA40DGGB8LP">WM-MTJA40DGGB8LP</span>
 ) supaya selalu bisa tampil di
    layar mana pun. */
 .load-overlay{position:fixed;inset:0;background:rgba(243,246,250,.85);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
@@ -126,6 +126,40 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
 .load-overlay p{font-size:13px;font-weight:600;color:var(--gray-mid);text-align:center;padding:0 20px;}
 .btn-refresh{margin-top:4px;padding:8px 18px;background:var(--blue-main);color:white;border:none;border-radius:var(--r-sm);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
 .btn-refresh:hover{opacity:.88;}
+
+/* FITUR BARU (2026-08): kanvas gambar tangan (soal esai izin_gambar) */
+.btn-kanvas-buka{width:100%;margin-top:10px;padding:12px;background:var(--orange-light);border:1.5px dashed var(--orange);border-radius:var(--r-md);color:var(--orange);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+.btn-kanvas-buka:hover{opacity:.85;}
+.btn-kanvas-buka.ada-isi{background:var(--green-light);border-color:var(--green);color:var(--green);border-style:solid;}
+.kg-screen{position:fixed;inset:0;z-index:700;background:var(--gray-bg);display:flex;flex-direction:column;touch-action:none;}
+.kg-screen.hide{display:none;}
+.kg-toolbar{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--white);border-bottom:1px solid var(--gray-line);box-shadow:var(--sh-sm);flex-wrap:wrap;z-index:2;}
+.kg-btn{padding:8px 12px;background:var(--gray-bg);border:1px solid var(--gray-line);border-radius:var(--r-sm);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;color:var(--gray-mid);cursor:pointer;white-space:nowrap;}
+.kg-btn:hover{opacity:.85;}
+.kg-btn-icon{padding:8px 11px;font-size:15px;line-height:1;}
+.kg-btn-selesai{background:var(--blue-main);border-color:var(--blue-main);color:white;}
+.kg-sep{width:1px;align-self:stretch;background:var(--gray-line);margin:2px 2px;}
+.kg-sep-grow{flex:1;background:transparent;min-width:6px;}
+.kg-tebal{display:flex;gap:4px;background:var(--gray-bg);border:1px solid var(--gray-line);border-radius:var(--r-sm);padding:3px;}
+.kg-mode{display:flex;gap:4px;background:var(--gray-bg);border:1px solid var(--gray-line);border-radius:var(--r-sm);padding:3px;}
+.kg-btn-mode{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:5px;cursor:pointer;font-size:14px;color:var(--gray-mid);}
+.kg-btn-mode.aktif{background:var(--blue-light);color:var(--blue-deep);}
+.kg-offset{display:flex;align-items:center;gap:2px;}
+.kg-offset-lbl{font-size:11px;font-weight:700;color:var(--gray-soft);min-width:44px;text-align:center;}
+.kg-btn-tebal{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:5px;cursor:pointer;}
+.kg-btn-tebal.aktif{background:var(--blue-light);}
+.kg-btn-tebal .kg-dot{border-radius:50%;background:var(--gray-dark);display:block;}
+.kg-zoom-lbl{font-size:11px;font-weight:700;color:var(--gray-soft);min-width:38px;text-align:center;}
+.kg-canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--white);}
+#kg-canvas{position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none;}
+.kg-soal-panel{position:absolute;inset:0;z-index:3;background:rgba(20,26,34,.55);display:flex;align-items:flex-end;}
+.kg-soal-panel.hide{display:none;}
+.kg-soal-panel-inner{width:100%;max-height:70%;overflow-y:auto;background:var(--white);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:16px;box-shadow:var(--sh-lg);}
+.kg-soal-panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px;color:var(--gray-mid);}
+html[data-theme="dark"] .kg-screen{background:#15181B;}
+html[data-theme="dark"] .kg-toolbar,html[data-theme="dark"] .kg-soal-panel-inner{background:#1E2226;border-color:#2A2F34;}
+html[data-theme="dark"] .kg-canvas-wrap{background:#1B1F22;}
+html[data-theme="dark"] .kg-btn{background:#262B30;border-color:#33393F;color:var(--gray-dark);}
 .login-card{position:relative;}
 
 /* ── SUDAH MENGERJAKAN BANNER ── */
@@ -371,6 +405,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
   .left-panel{width:100%;}
   .right-panel{width:100%;position:static;max-height:none;}
   .grid-nomor{grid-template-columns:repeat(6,1fr);}
+  /* FITUR BARU (2026-08): toolbar kanvas gambar tangan di layar sempit --
+     tombol lebih ringkas & boleh melipat ke baris kedua kalau perlu,
+     tidak sampai memotong/menyembunyikan tombol Selesai. */
+  .kg-toolbar{padding:6px 8px;gap:4px;}
+  .kg-btn{padding:7px 9px;font-size:11px;}
+  .kg-btn-icon{padding:7px 9px;}
+  .kg-zoom-lbl{min-width:30px;font-size:10px;}
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -651,7 +692,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2A2A2A;border-radi
 html[data-theme="dark"] .theme-toggle-btn .ico-sun{display:none;}
 html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
 @media(max-width:480px){ .theme-toggle-btn{top:10px;right:10px;width:36px;height:36px;} .theme-toggle-btn svg{width:17px;height:17px;} }
-/* _b:67a010 */</style>
+/* _b:12a018 */</style>
 <meta name="description" content="CBT Kabut Digital: buat ujian online untuk sekolah, kampus, atau perusahaan lewat wizard 5 langkah — tanpa server, pakai Google Sheets sendiri."><meta name="theme-color" content="#daa520"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"><script data-pwa-converter="v2">
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -680,7 +721,7 @@ function _pwaInstall() {
 window.addEventListener('appinstalled', () => {
   const b = document.getElementById('_pwa_banner');
   if (b) b.style.display = 'none';
-});</script><script data-wm-rt="1">(function(){var _id="WM-MTGC4X12VLU4U";var _bh="64b625f0";var _on="Rapian Hasanuddin";var _id8="WM-MTGC4";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
+});</script><script data-wm-rt="1">(function(){var _id="WM-MTJA40DGGB8LP";var _bh="64b625f0";var _on="Rapian Hasanuddin";var _id8="WM-MTJA4";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
 <body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#daa520;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#daa520;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
 
 <!-- ── TOGGLE MODE MALAM — mengambang, tampil di semua layar ── -->
@@ -706,6 +747,56 @@ window.addEventListener('appinstalled', () => {
 <div class="load-overlay hide" id="load-overlay">
   <div class="spin"></div>
   <p id="overlay-txt">Memuat soal dari server...<br><small style="font-weight:400;color:var(--gray-soft);">Harap tunggu, ini mungkin memakan waktu 5–15 detik</small></p>
+</div>
+
+<!-- FITUR BARU (2026-08): kanvas gambar tangan untuk soal esai yang
+     mengizinkannya (izin_gambar). Full-layar, anak langsung body (sama
+     pola dengan load-overlay di atas) supaya selalu tampil benar menutupi
+     exam-screen. Goresan TIDAK PERNAH dihapus saat "Lihat Soal" ditekan --
+     panel soal cuma menutupi sementara di atas kanvas, bukan mengganti
+     layar/membongkar canvas. -->
+<div class="kg-screen hide" id="kg-screen">
+  <div class="kg-toolbar">
+    <button class="kg-btn" id="kg-btn-lihat-soal" onclick="_kgToggleLihatSoal()" type="button" title="Lihat soal">👁 Lihat Soal</button>
+    <div class="kg-sep"></div>
+    <button class="kg-btn kg-btn-icon" onclick="_kgUndo()" type="button" title="Batalkan goresan terakhir">↩</button>
+    <div class="kg-sep"></div>
+    <div class="kg-mode" id="kg-mode">
+      <button class="kg-btn-mode aktif" data-m="gambar" onclick="_kgSetMode('gambar')" type="button" title="Mode gambar (klik lagi untuk tampil/sembunyikan pointer)">✎</button>
+      <button class="kg-btn-mode" data-m="hapus" onclick="_kgSetMode('hapus')" type="button" title="Mode penghapus -- sentuh/seret goresan yang mau dihapus">⌫</button>
+    </div>
+    <div class="kg-sep"></div>
+    <div class="kg-tebal" id="kg-tebal">
+      <button class="kg-btn-tebal" data-t="1" onclick="_kgSetTebal(1)" type="button" title="Tipis"><span class="kg-dot" style="width:4px;height:4px;"></span></button>
+      <button class="kg-btn-tebal aktif" data-t="2" onclick="_kgSetTebal(2)" type="button" title="Sedang"><span class="kg-dot" style="width:7px;height:7px;"></span></button>
+      <button class="kg-btn-tebal" data-t="4" onclick="_kgSetTebal(4)" type="button" title="Tebal"><span class="kg-dot" style="width:11px;height:11px;"></span></button>
+    </div>
+    <div class="kg-sep"></div>
+    <div class="kg-offset" title="Jarak pointer dari sentuhan jari">
+      <button class="kg-btn kg-btn-icon" onclick="_kgAturOffset(-10)" type="button" title="Perdekat pointer">−</button>
+      <span class="kg-offset-lbl" id="kg-offset-lbl">📌 30</span>
+      <button class="kg-btn kg-btn-icon" onclick="_kgAturOffset(10)" type="button" title="Perjauh pointer">+</button>
+    </div>
+    <div class="kg-sep"></div>
+    <button class="kg-btn kg-btn-icon" onclick="_kgZoom(-1)" type="button" title="Perkecil">−</button>
+    <span class="kg-zoom-lbl" id="kg-zoom-lbl">100%</span>
+    <button class="kg-btn kg-btn-icon" onclick="_kgZoom(1)" type="button" title="Perbesar">+</button>
+    <div class="kg-sep kg-sep-grow"></div>
+    <button class="kg-btn kg-btn-selesai" onclick="tutupKanvasGambar()" type="button">✓ Selesai</button>
+  </div>
+  <div class="kg-canvas-wrap" id="kg-canvas-wrap">
+    <canvas id="kg-canvas"></canvas>
+  </div>
+  <div class="kg-soal-panel hide" id="kg-soal-panel">
+    <div class="kg-soal-panel-inner">
+      <div class="kg-soal-panel-hdr">
+        <strong>Soal <span id="kg-soal-no"></span></strong>
+        <button class="kg-btn kg-btn-icon" onclick="_kgToggleLihatSoal()" type="button" title="Tutup">✕</button>
+      </div>
+      <div id="kg-soal-teks" class="box-teks"></div>
+      <div id="kg-soal-img-wrap" class="box-gambar hide"><img id="kg-soal-img" class="img-soal" src="" alt=""></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -1059,6 +1150,13 @@ window.addEventListener('appinstalled', () => {
         <span id="esai-char">0 karakter</span>
         <span class="kirim-ind" id="kirim-ind"></span>
       </div>
+      <!-- FITUR BARU (2026-08): tombol kanvas gambar tangan -- cuma tampil
+           kalau guru mengizinkan gambar untuk soal ini (s.izin_gambar).
+           Dipakai untuk hitungan manual/diagram, terpisah dari jawaban teks
+           di atas (boleh diisi keduanya sekaligus). -->
+      <button class="btn-kanvas-buka" id="btn-kanvas-buka" onclick="bukaKanvasGambar()" style="display:none;" type="button">
+        ✎ <span id="btn-kanvas-label">Buka Kanvas Gambar</span>
+      </button>
     </div>
 
     <div class="nav-row">
@@ -1412,6 +1510,12 @@ function _applyMasterConfigToPortal() {
 let idx        = 0;
 let jawPG      = {};
 let jawEsai    = {};
+// FITUR BARU (2026-08): jawGbr[no] = {strokes:[{t:ketebalan,p:[[x,y],...]},...]}
+// -- data GORESAN (vektor), TERPISAH dari jawEsai (yang tetap teks polos
+// seperti sebelumnya) supaya semua kode lama yang mengasumsikan jawEsai[no]
+// selalu string (.trim(), dst) tidak perlu diubah sama sekali. Gabungan
+// teks+gambar cuma dibentuk di titik pengiriman lewat _jawabanEsaiKirim().
+let jawGbr     = {};
 let raguMap    = {};
 let namaSiswa  = "";
 let namaSekolah= "";
@@ -1636,7 +1740,11 @@ function muatSoal() {
           opsi_a          : (s.opsi_a||"").trim(),
           opsi_b          : (s.opsi_b||"").trim(),
           opsi_c          : (s.opsi_c||"").trim(),
-          opsi_d          : (s.opsi_d||"").trim()
+          opsi_d          : (s.opsi_d||"").trim(),
+          // FITUR BARU (2026-08): true kalau guru mengizinkan kanvas gambar
+          // tangan untuk soal esai ini -- server LAMA yang belum kirim
+          // field ini otomatis dianggap false (aman, fitur baru mati total).
+          izin_gambar     : !!s.izin_gambar
         }));
         if(ACAK_SOAL){
           let _pg=_rawSoal.filter(s=>s.tipe!=='esai');
@@ -1663,6 +1771,7 @@ function muatSoal() {
           namaSekolah = sudah.sekolah || '';
           jawPG       = sudah.jawPG   || {};
           jawEsai     = sudah.jawEsai || {};
+          jawGbr      = sudah.jawGbr  || {}; // FITUR BARU (2026-08)
           raguMap     = sudah.raguMap || {};
           tMulai      = sudah.tMulai   ? new Date(sudah.tMulai)   : null;
           tSelesai    = sudah.tSelesai ? new Date(sudah.tSelesai) : null;
@@ -1888,6 +1997,17 @@ function tampil() {
     document.getElementById('esai-char').textContent = ta.value.length + ' karakter';
     document.getElementById('kirim-ind').textContent = '';
     document.getElementById('btn-ragu').classList.add('btn-ragu-hidden');
+    // FITUR BARU (2026-08): tombol kanvas gambar tangan -- cuma tampil
+    // kalau guru mengizinkan (s.izin_gambar) untuk soal ini.
+    let btnKg = document.getElementById('btn-kanvas-buka');
+    if (s.izin_gambar) {
+      btnKg.style.display = 'block';
+      btnKg.classList.toggle('ada-isi', _gambarAdaIsi(no));
+      document.getElementById('btn-kanvas-label').textContent =
+        _gambarAdaIsi(no) ? 'Lihat/Ubah Gambar' : 'Buka Kanvas Gambar';
+    } else {
+      btnKg.style.display = 'none';
+    }
   }
   if (tipe !== 'esai') document.getElementById('btn-ragu').classList.toggle('aktif', !!raguMap[no]);
   updateGrid();
@@ -2072,7 +2192,7 @@ function simpanDraft() {
   try {
     localStorage.setItem(_lsKeyDraft(), JSON.stringify({
       nama: namaSiswa, sekolah: namaSekolah,
-      jawPG: jawPG, jawEsai: jawEsai, raguMap: raguMap,
+      jawPG: jawPG, jawEsai: jawEsai, jawGbr: jawGbr, raguMap: raguMap, // FITUR BARU (2026-08): jawGbr ikut disimpan
       tMulai: tMulai?.toISOString(),
       pelanggar: pelanggar // BUG-FIX (2026-07): ikut disimpan, lihat catatan di mulaiUjian()
     }));
@@ -2087,6 +2207,7 @@ function muatDraft() {
     if (d.nama !== namaSiswa || d.sekolah !== namaSekolah) return false;
     jawPG    = d.jawPG    || {};
     jawEsai  = d.jawEsai  || {};
+    jawGbr   = d.jawGbr   || {}; // FITUR BARU (2026-08)
     raguMap  = d.raguMap  || {};
     if (d.tMulai) tMulai = new Date(d.tMulai);
     pelanggar = Number.isFinite(d.pelanggar) ? d.pelanggar : pelanggar; // BUG-FIX (2026-07)
@@ -2110,10 +2231,410 @@ function simpanEsai(ta) {
   jawEsai[no] = txt;
   ta.className = 'esai-textarea' + (txt.trim() ? ' terisi' : '');
   document.getElementById('esai-char').textContent = txt.length + ' karakter';
-  document.getElementById('nn' + idx).classList.toggle('dijawab', txt.trim().length > 0);
+  document.getElementById('nn' + idx).classList.toggle('dijawab', _esaiTerisi(no));
   clearTimeout(dbEsai);
   dbEsai = setTimeout(() => { simpanDraft(); }, 800);
 }
+
+// ═══════════════════════════════════════════════
+//  FITUR BARU (2026-08): KANVAS GAMBAR TANGAN (soal esai izin_gambar)
+// ═══════════════════════════════════════════════
+// Disimpan sebagai data VEKTOR (titik-titik goresan), bukan gambar jadi --
+// jauh lebih hemat (muat di satu sel Sheet tanpa Google Drive) dan
+// ketebalan garisnya tetap konsisten di zoom berapa pun karena disimpan
+// dalam satuan "kanvas virtual" (KG_VW x KG_VH), bukan piksel layar asli.
+const KG_VW = 1000, KG_VH = 1400; // ukuran kanvas virtual (rasio ~potret)
+const KG_TITIK_MIN_JARAK = 3;     // px virtual -- buang titik yang lebih rapat dari ini saat menggambar
+
+function _gambarAdaIsi(no) {
+  return !!(jawGbr[no] && jawGbr[no].strokes && jawGbr[no].strokes.length > 0);
+}
+function _esaiTerisi(no) {
+  return (jawEsai[no]||'').trim().length > 0 || _gambarAdaIsi(no);
+}
+// Gabungan jawaban esai yang DIKIRIM ke server: tetap teks polos seperti
+// sebelumnya kalau soal ini tidak mengizinkan gambar atau gambarnya kosong
+// (zero risiko ke soal esai lama) -- baru jadi JSON gabungan kalau memang
+// ada isi gambar.
+function _jawabanEsaiKirim(no) {
+  let teks = jawEsai[no] || '';
+  if (_gambarAdaIsi(no)) {
+    return JSON.stringify({ teks: teks, gbr: jawGbr[no].strokes });
+  }
+  return teks;
+}
+
+let _kgNo = null;          // no soal yang sedang dibuka di kanvas
+let _kgZoomVal = 1, _kgPanX = 0, _kgPanY = 0;
+let _kgTebalAktif = 2;
+let _kgStrokeAktif = null; // stroke yang sedang digambar (belum di-commit)
+let _kgPointers = new Map(); // pointerId -> {x,y} layar, dipakai utk pinch/pan 2 jari
+// BUG-FIX: baseline pinch HARUS direset ke null setiap gesture 2-jari
+// berakhir (lihat _kgPointerUp/_kgPointerDown) -- dulu tidak pernah
+// direset, jadi pinch/pan KEDUA dan seterusnya membandingkan jarak jari
+// yang baru dengan baseline gesture yang PERTAMA (sudah basi), bikin
+// tampilan melompat ke posisi salah lalu balik lagi begitu jari bergerak.
+let _kgPinchAwal = null;
+// FITUR BARU: mode gambar vs mode hapus (toggle di toolbar)
+let _kgMode = 'gambar';
+// FITUR BARU: jarak "pointer" (satuan virtual) dari titik sentuh jari yang
+// sebenarnya -- supaya titik gambar/hapus tidak tertutup jari. Bisa diatur
+// user lewat tombol +/- di toolbar (_kgAturOffset).
+let _kgOffsetJarak = 30;
+// FITUR BARU: posisi pointer (pen-tip) TERAKHIR, satuan virtual -- tetap
+// digambar sebagai indikator walau jari sudah lepas dari layar, supaya
+// siswa bisa lihat & lanjutkan dengan presisi dari titik itu.
+let _kgPenTipTerakhir = null;
+// FITUR BARU: posisi sentuh jari TERAKHIR (virtual, sebelum di-offset) --
+// sekarang PERMANEN sama seperti _kgPenTipTerakhir (tidak direset saat
+// jari lepas), digambar bersamaan dengan titik pointer + garis penghubung
+// putus-putus, supaya siswa selalu tahu posisi layar yang akan disentuh.
+let _kgSentuhAktif = null;
+// FITUR BARU: tampil/sembunyikan seluruh indikator pointer -- diatur lewat
+// klik ulang tombol mode Gambar saat sudah aktif di mode itu (lihat _kgSetMode).
+let _kgTampilPenunjuk = true;
+const KG_ERASER_RADIUS = 26; // satuan virtual -- radius sentuh mode hapus
+
+function bukaKanvasGambar() {
+  let s = getSoal();
+  if (!s || !s.izin_gambar) return;
+  _kgNo = s.no;
+  if (!jawGbr[_kgNo]) jawGbr[_kgNo] = { strokes: [] };
+  _kgZoomVal = 1; _kgPanX = 0; _kgPanY = 0;
+  _kgPinchAwal = null;
+  _kgPenTipTerakhir = null; // FITUR BARU: reset penunjuk tiap buka soal baru (posisi soal sebelumnya tidak relevan)
+  _kgSentuhAktif = null;
+  document.getElementById('kg-screen').classList.remove('hide');
+  document.getElementById('kg-soal-panel').classList.add('hide');
+  _kgSetupCanvas();
+  _kgRedraw();
+  _kgUpdateZoomLabel();
+}
+
+function tutupKanvasGambar() {
+  document.getElementById('kg-screen').classList.add('hide');
+  _kgStrokeAktif = null;
+  _kgPointers.clear();
+  if (_kgNo != null) {
+    let btn = document.getElementById('btn-kanvas-buka');
+    if (btn) {
+      btn.classList.toggle('ada-isi', _gambarAdaIsi(_kgNo));
+      document.getElementById('btn-kanvas-label').textContent =
+        _gambarAdaIsi(_kgNo) ? 'Lihat/Ubah Gambar' : 'Buka Kanvas Gambar';
+    }
+    let nnIdx = soalData.findIndex(s => s.no === _kgNo);
+    if (nnIdx >= 0) {
+      let b = document.getElementById('nn' + nnIdx);
+      if (b) b.classList.toggle('dijawab', _esaiTerisi(_kgNo));
+    }
+  }
+  simpanDraft();
+}
+
+function _kgSetupCanvas() {
+  let cv = document.getElementById('kg-canvas');
+  let wrap = document.getElementById('kg-canvas-wrap');
+  let dpr = window.devicePixelRatio || 1;
+  cv.width  = Math.round(wrap.clientWidth  * dpr);
+  cv.height = Math.round(wrap.clientHeight * dpr);
+  cv._dpr = dpr;
+  if (!cv._kgBound) {
+    cv.addEventListener('pointerdown', _kgPointerDown);
+    cv.addEventListener('pointermove', _kgPointerMove);
+    cv.addEventListener('pointerup',   _kgPointerUp);
+    cv.addEventListener('pointercancel', _kgPointerUp);
+    cv.addEventListener('pointerleave', _kgPointerUp);
+    cv._kgBound = true;
+  }
+}
+
+// Konversi koordinat layar (px, relatif elemen canvas) -> koordinat kanvas
+// virtual (KG_VW x KG_VH), memperhitungkan zoom & pan saat ini. Titik-titik
+// SELALU disimpan dalam koordinat virtual ini -- itu sebabnya ketebalan
+// garis & posisi goresan tetap konsisten di zoom/ukuran layar berapa pun.
+function _kgLayarKeVirtual(cv, xLayar, yLayar) {
+  let dpr = cv._dpr || 1;
+  let skalaDasar = Math.min(cv.width / dpr / KG_VW, cv.height / dpr / KG_VH);
+  let skala = skalaDasar * _kgZoomVal;
+  let offX = (cv.width  / dpr - KG_VW * skala) / 2 + _kgPanX;
+  let offY = (cv.height / dpr - KG_VH * skala) / 2 + _kgPanY;
+  return [ (xLayar - offX) / skala, (yLayar - offY) / skala ];
+}
+
+// FITUR BARU: batasi koordinat ke dalam area kertas/kanvas (0..KG_VW,
+// 0..KG_VH) -- mencegah goresan/hapus "keluar kertas" saat digambar di
+// area kosong sekitar kanvas (terutama saat sedang di-zoom).
+function _kgClamp(x, y) {
+  return [ Math.min(KG_VW, Math.max(0, x)), Math.min(KG_VH, Math.max(0, y)) ];
+}
+
+// FITUR BARU: posisi "pen-tip" sesungguhnya = titik sentuh jari digeser ke
+// ATAS sejauh _kgOffsetJarak (satuan virtual), supaya tidak tertutup jari
+// saat menggambar/menghapus. offset=0 berarti pen-tip = titik sentuh asli.
+function _kgHitungPenTip(vxSentuh, vySentuh) {
+  return _kgClamp(vxSentuh, vySentuh - _kgOffsetJarak);
+}
+
+function _kgPointerDown(e) {
+  let cv = e.currentTarget;
+  _kgPointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+  if (_kgPointers.size >= 2) {
+    _kgStrokeAktif = null;
+    _kgSentuhAktif = null;
+    _kgPinchAwal = null; // BUG-FIX: selalu mulai baseline pinch baru, jangan warisi dari gesture sebelumnya
+    return;
+  }
+  cv.setPointerCapture(e.pointerId);
+  let [vxS, vyS] = _kgLayarKeVirtual(cv, e.offsetX, e.offsetY);
+  _kgSentuhAktif = _kgClamp(vxS, vyS); // FITUR BARU: titik sentuh mentah, untuk garis penghubung ke pointer
+  let [vx, vy] = _kgHitungPenTip(vxS, vyS);
+  _kgPenTipTerakhir = [vx, vy];
+  if (_kgMode === 'hapus') { _kgHapusDiTitik(vx, vy); _kgRedraw(); return; }
+  _kgStrokeAktif = { t: _kgTebalAktif, p: [[Math.round(vx), Math.round(vy)]] };
+  _kgRedraw();
+}
+
+function _kgPointerMove(e) {
+  let cv = e.currentTarget;
+  if (_kgPointers.has(e.pointerId)) _kgPointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+
+  if (_kgPointers.size >= 2) { _kgTanganiPinchPan(cv); return; }
+
+  let [vxS, vyS] = _kgLayarKeVirtual(cv, e.offsetX, e.offsetY);
+  _kgSentuhAktif = _kgClamp(vxS, vyS);
+  let [vx, vy] = _kgHitungPenTip(vxS, vyS);
+  _kgPenTipTerakhir = [vx, vy];
+
+  if (_kgMode === 'hapus') {
+    if (_kgPointers.size === 1) _kgHapusDiTitik(vx, vy);
+    _kgRedraw();
+    return;
+  }
+  if (!_kgStrokeAktif) return;
+  let pts = _kgStrokeAktif.p, last = pts[pts.length - 1];
+  let dx = vx - last[0], dy = vy - last[1];
+  if ((dx*dx + dy*dy) < (KG_TITIK_MIN_JARAK * KG_TITIK_MIN_JARAK)) { _kgRedraw(); return; } // FITUR BARU: sederhanakan titik saat menggambar
+  pts.push([Math.round(vx), Math.round(vy)]);
+  _kgRedraw();
+}
+
+function _kgPointerUp(e) {
+  let cv = e.currentTarget;
+  _kgPointers.delete(e.pointerId);
+  if (_kgPointers.size < 2) _kgPinchAwal = null; // BUG-FIX: gesture pinch selesai -- baseline harus dilupakan
+  if (_kgStrokeAktif && _kgStrokeAktif.p.length > 1) {
+    jawGbr[_kgNo].strokes.push(_kgStrokeAktif);
+    _kgSimpanDraftDebounced();
+  }
+  _kgStrokeAktif = null;
+  // FITUR: _kgSentuhAktif TIDAK lagi direset di sini -- sekarang tampil
+  // permanen bersamaan dengan _kgPenTipTerakhir (lihat _kgGambarPenunjuk),
+  // bisa disembunyikan lewat klik ulang tombol mode Gambar (_kgSetMode).
+  _kgRedraw();
+}
+
+// FITUR BARU: hapus goresan (stroke UTUH) yang melewati titik (vx,vy)
+// dalam radius KG_ERASER_RADIUS -- dipanggil dari mode "Hapus" (sentuh
+// atau seret jari di atas goresan yang ingin dibuang).
+function _kgHapusDiTitik(vx, vy) {
+  if (!jawGbr[_kgNo] || !jawGbr[_kgNo].strokes.length) return;
+  let sebelum = jawGbr[_kgNo].strokes.length;
+  jawGbr[_kgNo].strokes = jawGbr[_kgNo].strokes.filter(function(st) {
+    return !st.p.some(function(pt) {
+      let dx = pt[0] - vx, dy = pt[1] - vy;
+      return (dx*dx + dy*dy) < (KG_ERASER_RADIUS * KG_ERASER_RADIUS);
+    });
+  });
+  if (jawGbr[_kgNo].strokes.length !== sebelum) _kgSimpanDraftDebounced();
+}
+
+function _kgTanganiPinchPan(cv) {
+  let pts = Array.from(_kgPointers.values());
+  if (pts.length < 2) return;
+  let [a, b] = pts;
+  let jarak = Math.hypot(a.x - b.x, a.y - b.y);
+  let tengah = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  if (!_kgPinchAwal) { _kgPinchAwal = { jarak, tengah, zoom: _kgZoomVal, panX: _kgPanX, panY: _kgPanY }; return; }
+  let rasio = jarak / _kgPinchAwal.jarak;
+  _kgZoomVal = Math.min(4, Math.max(0.5, _kgPinchAwal.zoom * rasio));
+  _kgPanX = _kgPinchAwal.panX + (tengah.x - _kgPinchAwal.tengah.x);
+  _kgPanY = _kgPinchAwal.panY + (tengah.y - _kgPinchAwal.tengah.y);
+  _kgRedraw();
+  _kgUpdateZoomLabel();
+}
+
+function _kgRedraw() {
+  let cv = document.getElementById('kg-canvas');
+  if (!cv) return;
+  let ctx = cv.getContext('2d');
+  let dpr = cv._dpr || 1;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  let skalaDasar = Math.min(cv.width / dpr / KG_VW, cv.height / dpr / KG_VH);
+  let skala = skalaDasar * _kgZoomVal * dpr;
+  let offX = (cv.width  - KG_VW * skala) / 2 + _kgPanX * dpr;
+  let offY = (cv.height - KG_VH * skala) / 2 + _kgPanY * dpr;
+  ctx.setTransform(skala, 0, 0, skala, offX, offY);
+  // Batas kanvas virtual (biar siswa tahu area gambarnya)
+  ctx.strokeStyle = 'rgba(136,150,165,.35)'; ctx.lineWidth = 1.5 / skala;
+  ctx.strokeRect(0, 0, KG_VW, KG_VH);
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, KG_VW, KG_VH);
+  ctx.strokeStyle = 'rgba(136,150,165,.35)'; ctx.strokeRect(0, 0, KG_VW, KG_VH);
+
+  let strokes = (jawGbr[_kgNo] && jawGbr[_kgNo].strokes) || [];
+  if (_kgStrokeAktif) strokes = strokes.concat([_kgStrokeAktif]);
+  _kgGambarStrokes(ctx, strokes, skala);
+  _kgGambarPenunjuk(ctx, skala, skalaDasar * _kgZoomVal); // FITUR BARU: indikator pointer (offset dari jari)
+}
+
+// FITUR BARU: indikator posisi "pen-tip" -- lingkaran kecil (mode gambar)
+// atau lingkaran radius hapus (mode hapus), digeser dari titik sentuh jari
+// yang sebenarnya sejauh _kgOffsetJarak supaya kelihatan (tidak tertutup
+// jari). Sekarang PERMANEN -- tetap digambar bersamaan dengan marker
+// posisi jari + garis penghubung putus-putus, walau jari sudah lepas dari
+// layar, supaya siswa selalu tahu posisi layar yang akan disentuh dan bisa
+// lanjut menggambar dari situ dengan presisi. Bisa disembunyikan lewat
+// klik ulang tombol mode Gambar di toolbar (_kgSetMode).
+function _kgGambarPenunjuk(ctx, skala, skalaCss) {
+  if (!_kgTampilPenunjuk || !_kgPenTipTerakhir) return;
+  let [px, py] = _kgPenTipTerakhir;
+  // FITUR BARU: lingkaran posisi jari di-ukur dalam CSS px (bukan satuan
+  // virtual/device px) supaya ukurannya selalu ~sebesar diameter jari
+  // sesungguhnya di layar, konsisten di zoom & kerapatan piksel berapa pun.
+  // ~18px CSS radius (~36px diameter) mendekati ukuran rata-rata bantalan jari.
+  let rJariVirtual = 18 / skalaCss;
+  ctx.save();
+  if (_kgSentuhAktif) {
+    // Garis putus-putus penghubung dari posisi jari ke pointer
+    ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 1.5 / skala;
+    ctx.setLineDash([5/skala, 5/skala]);
+    ctx.beginPath(); ctx.moveTo(_kgSentuhAktif[0], _kgSentuhAktif[1]); ctx.lineTo(px, py); ctx.stroke();
+    ctx.setLineDash([]);
+    // FITUR: marker di posisi sentuh jari sesungguhnya -- lingkaran
+    // berlubang seukuran diameter jari. Warna oranye + garis putih tipis
+    // di luarnya supaya tetap kontras baik di kertas putih maupun kalau
+    // kebetulan menimpa goresan gelap -- terlihat di kedua tema.
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 4 / skala;
+    ctx.beginPath(); ctx.arc(_kgSentuhAktif[0], _kgSentuhAktif[1], rJariVirtual, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 2.5 / skala;
+    ctx.beginPath(); ctx.arc(_kgSentuhAktif[0], _kgSentuhAktif[1], rJariVirtual, 0, Math.PI * 2); ctx.stroke();
+  }
+  if (_kgMode === 'hapus') {
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 3.5 / skala;
+    ctx.beginPath(); ctx.arc(px, py, KG_ERASER_RADIUS, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#C0392B'; ctx.lineWidth = 2 / skala;
+    ctx.beginPath(); ctx.arc(px, py, KG_ERASER_RADIUS, 0, Math.PI * 2); ctx.stroke();
+  } else {
+    ctx.fillStyle = '#059669';
+    ctx.beginPath(); ctx.arc(px, py, 6 / skala, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.5 / skala; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Dipakai baik oleh kanvas hidup (di atas) maupun renderer statis di layar
+// analisis siswa (_kgRenderKeCanvasStatis) -- satu fungsi gambar untuk
+// keduanya supaya hasilnya selalu identik.
+function _kgGambarStrokes(ctx, strokes, skala) {
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1E2B3A';
+  strokes.forEach(function(st) {
+    if (!st.p || st.p.length < 2) return;
+    ctx.lineWidth = (st.t || 2) / skala; // FITUR BARU: ketebalan dlm satuan virtual, dibagi skala saat ini -- konsisten di zoom berapa pun
+    ctx.beginPath();
+    ctx.moveTo(st.p[0][0], st.p[0][1]);
+    for (let i = 1; i < st.p.length; i++) ctx.lineTo(st.p[i][0], st.p[i][1]);
+    ctx.stroke();
+  });
+}
+
+function _kgUndo() {
+  if (!jawGbr[_kgNo] || !jawGbr[_kgNo].strokes.length) return;
+  jawGbr[_kgNo].strokes.pop();
+  _kgRedraw();
+  _kgSimpanDraftDebounced();
+}
+function _kgSetTebal(t) {
+  _kgTebalAktif = t;
+  document.querySelectorAll('#kg-tebal .kg-btn-tebal').forEach(b => b.classList.toggle('aktif', Number(b.dataset.t) === t));
+}
+// FITUR BARU: toggle mode gambar/hapus dari toolbar -- klik ulang tombol
+// Gambar SAAT SUDAH aktif di mode itu jadi toggle tampil/sembunyikan
+// seluruh indikator pointer (bukan ganti mode, karena mode-nya memang
+// sudah gambar).
+function _kgSetMode(m) {
+  if (m === 'gambar' && _kgMode === 'gambar') {
+    _kgTampilPenunjuk = !_kgTampilPenunjuk;
+  } else {
+    _kgMode = m;
+    if (m === 'gambar') _kgTampilPenunjuk = true; // FITUR: nyalakan lagi kalau balik dari mode hapus
+  }
+  document.querySelectorAll('#kg-mode .kg-btn-mode').forEach(b => b.classList.toggle('aktif', b.dataset.m === _kgMode));
+  _kgRedraw();
+}
+// FITUR BARU: atur jarak pointer (offset) dari titik sentuh jari, 0-80 satuan virtual
+function _kgAturOffset(delta) {
+  _kgOffsetJarak = Math.min(80, Math.max(0, _kgOffsetJarak + delta));
+  let el = document.getElementById('kg-offset-lbl');
+  if (el) el.textContent = '\u{1F4CC} ' + _kgOffsetJarak;
+}
+function _kgZoom(arah) {
+  _kgZoomVal = Math.min(4, Math.max(0.5, _kgZoomVal + arah * 0.25));
+  _kgRedraw();
+  _kgUpdateZoomLabel();
+}
+function _kgUpdateZoomLabel() {
+  let el = document.getElementById('kg-zoom-lbl');
+  if (el) el.textContent = Math.round(_kgZoomVal * 100) + '%';
+}
+function _kgToggleLihatSoal() {
+  let s = soalData.find(x => x.no === _kgNo);
+  let panel = document.getElementById('kg-soal-panel');
+  let sedangTampil = !panel.classList.contains('hide');
+  if (sedangTampil) { panel.classList.add('hide'); return; }
+  document.getElementById('kg-soal-no').textContent = s ? s.no_tampil : '';
+  let teksEl = document.getElementById('kg-soal-teks');
+  teksEl.innerHTML = ''; teksEl.style.display = 'none';
+  if (s && s.pertanyaan) { teksEl.style.display = 'block'; renderTeksQ(teksEl, s.pertanyaan); }
+  let imgWrap = document.getElementById('kg-soal-img-wrap');
+  if (s && s.url_gambar) { imgWrap.classList.remove('hide'); document.getElementById('kg-soal-img').src = gdrive(s.url_gambar); }
+  else { imgWrap.classList.add('hide'); }
+  panel.classList.remove('hide'); // Goresan & canvas TIDAK disentuh sama sekali -- cuma panel ini yang tampil di atasnya
+}
+let _kgDraftTimer = null;
+function _kgSimpanDraftDebounced() {
+  clearTimeout(_kgDraftTimer);
+  _kgDraftTimer = setTimeout(() => { simpanDraft(); }, 600);
+}
+// Render statis (non-interaktif) dari data strokes ke sebuah <canvas> --
+// dipakai di layar analisis/riwayat siswa untuk menampilkan hasil gambar.
+function _kgRenderKeCanvasStatis(canvasEl, strokes, lebarCss) {
+  let dpr = window.devicePixelRatio || 1;
+  let tinggiCss = Math.round(lebarCss * (KG_VH / KG_VW));
+  canvasEl.style.width = lebarCss + 'px';
+  canvasEl.style.height = tinggiCss + 'px';
+  canvasEl.width  = Math.round(lebarCss  * dpr);
+  canvasEl.height = Math.round(tinggiCss * dpr);
+  let ctx = canvasEl.getContext('2d');
+  let skala = (lebarCss * dpr) / KG_VW;
+  ctx.setTransform(skala, 0, 0, skala, 0, 0);
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, KG_VW, KG_VH);
+  ctx.strokeStyle = 'rgba(136,150,165,.35)'; ctx.lineWidth = 1.5 / skala; ctx.strokeRect(0, 0, KG_VW, KG_VH);
+  _kgGambarStrokes(ctx, strokes || [], skala);
+}
+// Render strokes ke canvas offscreen lalu keluarkan sebagai data URL PNG --
+// dipakai buatHtmlAnalisis() supaya hasil gambar bisa ditampilkan sebagai
+// <img> biasa (aman untuk innerHTML & ikut tercetak ke PDF), tidak perlu
+// <canvas> hidup di layar yang murni untuk dibaca ulang ini.
+function _kgDataUrlDariStrokes(strokes, lebarPx) {
+  let off = document.createElement('canvas');
+  _kgRenderKeCanvasStatis(off, strokes, lebarPx);
+  return off.toDataURL('image/png');
+}
+window.addEventListener('resize', () => {
+  if (_kgNo != null && !document.getElementById('kg-screen').classList.contains('hide')) {
+    _kgSetupCanvas(); _kgRedraw();
+  }
+});
 
 function setKirimInd(cls, txt) {
   let el = document.getElementById('kirim-ind');
@@ -2134,7 +2655,7 @@ function updateGrid() {
     let b = document.getElementById('nn' + i); if (!b) return;
     b.className = 'btn-no' + (s.tipe === 'esai' ? ' esai-m' : '');
     if (i === idx) b.classList.add('aktif');
-    let dij = s.tipe === 'esai' ? (jawEsai[s.no]||'').trim().length > 0 : !!jawPG[s.no];
+    let dij = s.tipe === 'esai' ? _esaiTerisi(s.no) : !!jawPG[s.no];
     if (dij) b.classList.add('dijawab');
     if (s.tipe !== 'esai' && raguMap[s.no]) b.classList.add('ragu');
   });
@@ -2170,13 +2691,13 @@ function mulaiTimer() {
 // ═══════════════════════════════════════════════
 function bukaKonfirmasi() {
   let pg = soalData.filter(s => s.tipe !== 'esai'), esaiL = soalData.filter(s => s.tipe === 'esai');
-  let dijPG = pg.filter(s => jawPG[s.no]).length, dijE = esaiL.filter(s => (jawEsai[s.no]||'').trim()).length;
+  let dijPG = pg.filter(s => jawPG[s.no]).length, dijE = esaiL.filter(s => _esaiTerisi(s.no)).length;
   document.getElementById('sum-grid').innerHTML = `
     <div class="sum-c t"><div class="sum-num">${soalData.length}</div><div class="sum-lbl">Total Soal</div></div>
     <div class="sum-c d"><div class="sum-num">${dijPG+dijE}</div><div class="sum-lbl">Dijawab</div></div>
     <div class="sum-c b"><div class="sum-num">${pg.filter(s=>!jawPG[s.no]).length}</div><div class="sum-lbl">PG Belum</div></div>
   `;
-  let eK = esaiL.filter(s => !(jawEsai[s.no]||'').trim()).map(s => s.no_tampil);
+  let eK = esaiL.filter(s => !_esaiTerisi(s.no)).map(s => s.no_tampil);
   document.getElementById('w-esai').style.display = eK.length ? 'block' : 'none';
   document.getElementById('w-esai-list').innerHTML = eK.map(n => `<span class="pill e">No.${n}</span>`).join('');
   let nR = pg.filter(s => raguMap[s.no]).map(s => s.no_tampil);
@@ -2266,7 +2787,7 @@ async function _kirimSemuaHasilUjian() {
     let no = s.no, tipe = s.tipe;
     if (tipe === 'esai') {
       items.push({ action:'simpanJawaban', sekolah:namaSekolah, siswa:namaSiswa,
-        no_soal:no, tipe:'esai', jawaban:jawEsai[no]||'' });
+        no_soal:no, tipe:'esai', jawaban:_jawabanEsaiKirim(no) });
     } else {
       let jwb = jawPG[no]||'';
       items.push({ action:'simpanJawaban', sekolah:namaSekolah, siswa:namaSiswa,
@@ -2570,13 +3091,21 @@ async function buatHtmlAnalisis() {
     let pemb = formatTeksArabHTML(pb.pembahasan||'');
     let poinBar = `<div class="poin-bar">Poin soal ini: ${s.poin}</div>`;
     if (tipe === 'esai') {
-      let teks=jawEsai[no]||'', diisi=teks.trim().length>0;
+      let teks=jawEsai[no]||'', adaGbr=_gambarAdaIsi(no), diisi=teks.trim().length>0||adaGbr;
       let rubrik=(pb.kunci||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // FITUR BARU (2026-08): kalau soal ini ada isi gambar tangan, render
+      // jadi gambar statis (dari data vektor) untuk ditampilkan di layar
+      // analisis & ikut ke cetak PDF -- tidak perlu <canvas> hidup di sini,
+      // cukup satu <img> biasa (aman untuk innerHTML & print).
+      let gbrBlok = adaGbr
+        ? `<div class="esai-ans" style="margin-top:8px;"><strong>Gambar/Coretan Anda:</strong><div class="teks" style="padding:0;overflow:hidden;"><img src="${_kgDataUrlDariStrokes(jawGbr[no].strokes,700)}" style="width:100%;display:block;" loading="lazy"></div></div>`
+        : '';
       html+=`<div class="ana-item">
   <div class="ana-head esai-p"><span class="ana-no">No.${no} <span style="font-size:10px;background:var(--orange-light);color:var(--orange);padding:1px 7px;border-radius:8px;border:1px solid #F5C6A0;margin-left:6px;">ESAI</span></span><span class="ana-badge esai-p">${diisi?'Diisi':'Kosong'}</span></div>
   ${s.pertanyaan?`<div class="ana-teks">${formatTeksArabHTML(s.pertanyaan)}</div>`:''}
   ${s.url_gambar?`<div class="ana-img"><img src="${gdrive(s.url_gambar)}" loading="lazy"></div>`:''}
-  <div class="esai-ans"><strong>Jawaban Anda:</strong><div class="teks">${diisi?teks.replace(/</g,'&lt;').replace(/>/g,'&gt;'):'<span style="color:var(--gray-soft);font-style:italic;">Tidak diisi</span>'}</div></div>
+  <div class="esai-ans"><strong>Jawaban Anda:</strong><div class="teks">${teks.trim()?teks.replace(/</g,'&lt;').replace(/>/g,'&gt;'):'<span style="color:var(--gray-soft);font-style:italic;">Tidak diisi</span>'}</div></div>
+  ${gbrBlok}
   ${rubrik?`<div class="rubrik-bar"><strong>Rubrik/Kunci:</strong> ${rubrik}</div>`:''}
   ${pemb?`<div class="pemb-bar"><strong>Pembahasan</strong>${pemb}</div>`:''}
   ${pb.url_pemb_gambar?`<div class="ana-img"><img src="${gdrive(pb.url_pemb_gambar)}" loading="lazy"></div>`:''}
@@ -3483,6 +4012,7 @@ function portalSimpanRiwayat() {
       soalSnapshot: soalData.map(s => ({...s})),
       jawPG       : {...jawPG},
       jawEsai     : {...jawEsai},
+      jawGbr      : JSON.parse(JSON.stringify(jawGbr)), // FITUR BARU (2026-08)
       raguMap     : {...raguMap},
       buka_pemb   : BUKA_PEMB,
       gas_url     : _urlGasAktif,          // simpan URL sumber soal
@@ -3706,6 +4236,7 @@ function pBukaAnalisisRiwayat() {
   soalData  = r.soalSnapshot;
   jawPG     = r.jawPG   || {};
   jawEsai   = r.jawEsai || {};
+  jawGbr    = r.jawGbr  || {}; // FITUR BARU (2026-08)
   raguMap   = r.raguMap || {};
   namaSiswa   = r.siswa   || '';
   namaSekolah = r.sekolah || '';
@@ -3995,29 +4526,24 @@ function _predikatKls(p) {
 
 
 
-<!-- PROTECTED:WM-MTGC4X12VLU4U | Rapian Hasanuddin | 2026-08-30 -->
-<script data-pid="WM-MTGC4X12VLU4U" data-feature="devtools-keys">
-(function(){var _a=3591,_b=6436,_c=6385,_d=4830;
+<!-- PROTECTED:WM-MTJA40DGGB8LP | Rapian Hasanuddin | 2026-09-01 -->
+<script data-pid="WM-MTJA40DGGB8LP" data-feature="devtools-keys">
+(function(){var _a=615,_b=1956,_c=2416,_d=525;
 document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C'].includes(e.key))||(e.ctrlKey&&e.key==='U')){e.preventDefault();}});
 })();
 </script>
-<script data-pid="WM-MTGC4X12VLU4U" data-feature="devdestroy">
-(function(){var _a=2007,_b=4685,_c=9435,_d=1593;
-eval(atob('KGZ1bmN0aW9uKCl7CnZhciBfZHQ9ZmFsc2UsX2M9MCxfY2M9MCxfdGM9MDsKdmFyIF9tc2c9JzxkaXYgc3R5bGU9ImZvbnQtZmFtaWx5OnNhbnMtc2VyaWY7dGV4dC1hbGlnbjpjZW50ZXI7cGFkZGluZzo1cmVtO2JhY2tncm91bmQ6I2ZmZiI+JwogICsnPGgyIHN0eWxlPSJjb2xvcjojZGMyNjI2Ij5cdTI2YTAgU2VzaSBUaWRhayBWYWxpZDwvaDI+JwogICsnPHAgc3R5bGU9ImNvbG9yOiM2NjY7bWFyZ2luLXRvcDouNXJlbSI+RGV2VG9vbHMgdGVyZGV0ZWtzaS4gTXVhdCB1bGFuZyBoYWxhbWFuLjwvcD4nCiAgKyc8cCBzdHlsZT0iY29sb3I6Izk5OTtmb250LXNpemU6MTJweDttYXJnaW4tdG9wOjFyZW0iPlx1MDBhOSBEaWxpbmR1bmdpIEhhayBDaXB0YTwvcD4nCiAgKyc8L2Rpdj4nOwpmdW5jdGlvbiBfa2lsbCgpe2lmKCFfZHQpe19kdD10cnVlO2RvY3VtZW50LmJvZHkuaW5uZXJIVE1MPV9tc2c7fX0KZnVuY3Rpb24gX2Noa1QoKXt2YXIgX3M9cGVyZm9ybWFuY2Uubm93KCk7ZGVidWdnZXI7dmFyIF9kPXBlcmZvcm1hbmNlLm5vdygpLV9zO2lmKF9kPjE1MCl7X3RjKys7aWYoX3RjPj0yKV9raWxsKCk7fWVsc2V7X3RjPTA7fX0KdmFyIF9pbWc9bmV3IEltYWdlKCksX29wPWZhbHNlOwpPYmplY3QuZGVmaW5lUHJvcGVydHkoX2ltZywnaWQnLHtnZXQ6ZnVuY3Rpb24oKXtfb3A9dHJ1ZTt9fSk7CmZ1bmN0aW9uIF9jaGtDKCl7Y29uc29sZS5sb2coX2ltZyk7aWYoX29wKXtfY2MrKztpZihfY2M+PTIpX2tpbGwoKTt9X29wPWZhbHNlO30KZnVuY3Rpb24gX2Noa1MoKXt2YXIgX3c9d2luZG93Lm91dGVyV2lkdGgtd2luZG93LmlubmVyV2lkdGgsX2g9d2luZG93Lm91dGVySGVpZ2h0LXdpbmRvdy5pbm5lckhlaWdodDtpZihfdz4zMDAmJl9oPjMwMCl7X2MrKztpZihfYz49Mylfa2lsbCgpO31lbHNle19jPTA7fX0Kc2V0SW50ZXJ2YWwoX2Noa1QsMzAwMCk7CnNldEludGVydmFsKF9jaGtDLDQwMDApOwpzZXRJbnRlcnZhbChfY2hrUywzMDAwKTsKfSkoKQ=='))
+<script data-pid="WM-MTJA40DGGB8LP" data-feature="fingerprint">
+(function(){var _a=588,_b=4762,_c=1787,_d=525;
+(function(){try{var _d={ts:new Date().toISOString(),ua:navigator.userAgent,lang:navigator.language,w:screen.width,h:screen.height,tz:Intl.DateTimeFormat().resolvedOptions().timeZone,url:window.location.href,ref:document.referrer,id:'WM-MTJA40DGGB8LP',event:'access'};navigator.sendBeacon('https://script.google.com/macros/s/AKfycbwA2D9sJtj9OUHnj5fLoukN-7ITCtBGqgsVi7Fw8eQdQ1f5HKpR8snR8P2VYiLdB5o09w/exec',JSON.stringify(_d));}catch(e){}})();
 })();
 </script>
-<script data-pid="WM-MTGC4X12VLU4U" data-feature="fingerprint">
-(function(){var _a=5322,_b=3566,_c=1510,_d=8260;
-(function(){try{var _d={ts:new Date().toISOString(),ua:navigator.userAgent,lang:navigator.language,w:screen.width,h:screen.height,tz:Intl.DateTimeFormat().resolvedOptions().timeZone,url:window.location.href,ref:document.referrer,id:'WM-MTGC4X12VLU4U',event:'access'};navigator.sendBeacon('https://script.google.com/macros/s/AKfycbwA2D9sJtj9OUHnj5fLoukN-7ITCtBGqgsVi7Fw8eQdQ1f5HKpR8snR8P2VYiLdB5o09w/exec',JSON.stringify(_d));}catch(e){}})();
+<script data-pid="WM-MTJA40DGGB8LP" data-feature="consolewarn">
+(function(){var _a=8887,_b=231,_c=2022,_d=3277;
+console.log('%c\u26a0 HAK CIPTA\n%c\u00a9 2026 Rapian Hasanuddin | rapian0279@gmail.com\nID: WM-MTJA40DGGB8LP\nDilarang menyalin atau mendistribusikan tanpa izin tertulis pemilik.','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
 })();
 </script>
-<script data-pid="WM-MTGC4X12VLU4U" data-feature="consolewarn">
-(function(){var _a=947,_b=9709,_c=945,_d=6853;
-console.log('%c\u26a0 HAK CIPTA\n%c\u00a9 2026 Rapian Hasanuddin | rapian0279@gmail.com\nID: WM-MTGC4X12VLU4U\nDilarang menyalin atau mendistribusikan tanpa izin tertulis pemilik.','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
-})();
-</script>
-<script data-pid="WM-MTGC4X12VLU4U" data-feature="domainlock">
-(function(){var _a=6665,_b=8636,_c=4702,_d=1569;
+<script data-pid="WM-MTJA40DGGB8LP" data-feature="domainlock">
+(function(){var _a=196,_b=2209,_c=4830,_d=8172;
 (function(){var h=window.location.hostname;var ok=['cbtkabutdigital.com','www.cbtkabutdigital.com','localhost',''];if(ok.indexOf(h)===-1){document.body.innerHTML="<div style='font:16px sans-serif;text-align:center;padding:4rem'><h2>Akses Tidak Sah</h2><p>Hubungi pemilik resmi.</p></div>";}})();
 })();
 </script>
