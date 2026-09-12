@@ -779,7 +779,17 @@ const GH_KEY_CLIENT_ID = 'guruhub_client_id_v1';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
-const GH_KOLOM_BANK = ['Sumber','Tahun','Mapel','No_Asal'].concat(GH_KOLOM_SOAL.slice(1)); // ganti No -> No_Asal, sisanya sama
+// FITUR (2026-09): kolom Kelas ditambahkan setelah Mapel sebelum Tahun (atas
+// permintaan DIK); Topik/Bloom/Kesulitan ditambahkan sebagai metadata
+// klasifikasi -- diisi OTOMATIS dari header kolom bernama sama di sheet
+// sumber kalau ada (dibaca lewat ghPilihSpreadsheetSumber, lihat catatan di
+// sana), dibiarkan kosong kalau sheet sumber belum punya kolom itu.
+const GH_KOLOM_BANK = ['Sumber','Mapel','Kelas','Tahun','Topik','Bloom','Kesulitan','No_Asal'].concat(GH_KOLOM_SOAL.slice(1));
+// Kolom TAMBAHAN yang dibaca dari sheet sumber (di luar 13 kolom baku Soal)
+// -- optional, dicari lewat NAMA HEADER (bukan posisi tetap), karena cuma
+// SEBAGIAN soal/sheet yang sudah diisi ini (proyek Knowledge Engine
+// Analyzer/KEA yang klasifikasi Bloom & topik terpisah dari CBT Kabut Digital).
+const GH_KOLOM_OPSIONAL_SUMBER = ['Topik', 'Bloom', 'Kesulitan'];
 
 let ghAccessToken = null;   // in-memory SAJA -- token OAuth tidak pernah disimpan ke localStorage (berumur pendek, ~1 jam)
 let ghTokenClient = null;
@@ -931,15 +941,30 @@ async function ghPilihSpreadsheetSumber(id, nama) {
   let hasilEl = document.getElementById('gh-bs-cari-hasil');
   statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Membaca soal dari "' + nama + '"...';
   try {
-    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/Soal!A2:M', { headers: ghHeaderAuth() });
+    // FITUR (2026-09): baca lewat NAMA HEADER di baris pertama (bukan posisi
+    // kolom tetap A:M) -- supaya kolom Topik/Bloom/Kesulitan ikut terbaca
+    // kalau memang ada di sheet sumber (sebagian soal sudah diisi lewat
+    // proyek Knowledge Engine Analyzer/KEA, posisinya bisa beda-beda per
+    // sekolah), dan tetap aman kalau kolom itu belum ada sama sekali.
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/Soal!A1:Z10000', { headers: ghHeaderAuth() });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
-    let rows = (hasil.values || []).filter(r => r[0]).map(r => {
-      let o = {}; GH_KOLOM_SOAL.forEach((k, i) => o[k] = r[i] || ''); return o;
+    let semua = hasil.values || [];
+    if (!semua.length) { statusEl.textContent = ''; hasilEl.innerHTML = '<div class="gh-empty">Tab "Soal" tidak ditemukan atau kosong di spreadsheet ini.</div>'; return; }
+    let header = semua[0].map(h => (h || '').toString().trim());
+    let idxOf = (nm) => header.findIndex(h => h.toLowerCase() === nm.toLowerCase());
+    let kolomBaku = GH_KOLOM_SOAL.map(k => idxOf(k));   // -1 kalau kolom baku ternyata tidak ada (harusnya selalu ada)
+    let kolomOpsional = GH_KOLOM_OPSIONAL_SUMBER.map(k => idxOf(k)); // -1 kalau memang belum diisi/ada
+    let rows = semua.slice(1).filter(r => r[kolomBaku[0]]).map(r => {
+      let o = {};
+      GH_KOLOM_SOAL.forEach((k, i) => o[k] = (kolomBaku[i] >= 0 ? (r[kolomBaku[i]] || '') : '').toString().trim());
+      GH_KOLOM_OPSIONAL_SUMBER.forEach((k, i) => o[k] = (kolomOpsional[i] >= 0 ? (r[kolomOpsional[i]] || '') : '').toString().trim());
+      return o;
     });
     statusEl.textContent = '';
-    if (!rows.length) { hasilEl.innerHTML = '<div class="gh-empty">Tab "Soal" tidak ditemukan atau kosong di spreadsheet ini.</div>'; return; }
-    ghSoalSumberDipilih = { id, nama, rows };
+    if (!rows.length) { hasilEl.innerHTML = '<div class="gh-empty">Tidak ada baris soal terbaca (kolom "No" kosong semua?).</div>'; return; }
+    let jmlOpsionalTerbaca = GH_KOLOM_OPSIONAL_SUMBER.filter((k, i) => kolomOpsional[i] >= 0).length;
+    ghSoalSumberDipilih = { id, nama, rows, jmlOpsionalTerbaca };
     ghRenderPreviewImpor();
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
@@ -950,13 +975,18 @@ async function ghPilihSpreadsheetSumber(id, nama) {
 function ghRenderPreviewImpor() {
   let d = ghSoalSumberDipilih;
   let hasilEl = document.getElementById('gh-bs-cari-hasil');
+  let infoOpsional = d.jmlOpsionalTerbaca > 0
+    ? ('Terbaca ' + d.jmlOpsionalTerbaca + '/3 kolom Topik/Bloom/Kesulitan dari sheet ini.')
+    : 'Sheet ini belum ada kolom Topik/Bloom/Kesulitan -- akan dikosongkan, bisa diisi manual nanti di Bank Soal.';
   hasilEl.innerHTML =
     '<div class="gh-esai-soal" style="margin-top:10px;">' +
       '<div class="gh-lbl">' + ghEsc(d.nama) + ' — ' + d.rows.length + ' soal ditemukan</div>' +
       '<div class="gh-row" style="margin-top:8px;">' +
-        '<div class="gh-fg"><label>Mapel</label><input type="text" id="gh-imp-mapel" placeholder="Contoh: Matematika"></div>' +
+        '<div class="gh-fg"><label>Mapel</label><input type="text" id="gh-imp-mapel" placeholder="Contoh: IPS"></div>' +
+        '<div class="gh-fg"><label>Kelas</label><input type="text" id="gh-imp-kelas" placeholder="Contoh: 7"></div>' +
         '<div class="gh-fg"><label>Tahun</label><input type="text" id="gh-imp-tahun" placeholder="2026"></div>' +
       '</div>' +
+      '<p class="gh-hint" style="margin:0;">' + infoOpsional + '</p>' +
     '</div>' +
     '<div class="gh-bs-scroll">' + d.rows.map((r, i) =>
       '<div class="gh-bs-soal-item"><input type="checkbox" id="gh-imp-c' + i + '" checked>' +
@@ -971,14 +1001,19 @@ function ghRenderPreviewImpor() {
 async function ghImporKeBank() {
   if (!ghSoalSumberDipilih || !ghBankSoalId) return;
   let mapel = (document.getElementById('gh-imp-mapel').value || '').trim();
+  let kelas = (document.getElementById('gh-imp-kelas').value || '').trim();
   let tahun = (document.getElementById('gh-imp-tahun').value || '').trim();
   let terpilih = ghSoalSumberDipilih.rows.filter((r, i) => document.getElementById('gh-imp-c' + i).checked);
   if (!terpilih.length) { ghToast('Pilih minimal 1 soal.'); return; }
   let statusEl = document.getElementById('gh-bs-status');
   statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Mengimpor ' + terpilih.length + ' soal ke Bank Soal...';
   try {
+    // FITUR (2026-09): urutan HARUS persis sama dengan GH_KOLOM_BANK --
+    // Sumber,Mapel,Kelas,Tahun,Topik,Bloom,Kesulitan,No_Asal, lalu sisa
+    // kolom soal baku. Topik/Bloom/Kesulitan diambil PER BARIS dari hasil
+    // baca sheet sumber (kosong kalau sheet itu belum punya kolomnya).
     let rowsBaru = terpilih.map(r => {
-      let baris = [ghSoalSumberDipilih.nama, tahun, mapel, r.No];
+      let baris = [ghSoalSumberDipilih.nama, mapel, kelas, tahun, r.Topik || '', r.Bloom || '', r.Kesulitan || '', r.No];
       GH_KOLOM_SOAL.slice(1).forEach(k => baris.push(r[k] || ''));
       return baris;
     });
@@ -999,6 +1034,8 @@ async function ghImporKeBank() {
 }
 
 // ── LIHAT BANK SOAL & GENERATE UJIAN ────────────────────────────────
+let ghStaging = [];   // array berurutan {_idx,...} -- SUMBER KEBENARAN untuk Generate, bisa dinaik/turunkan/hapus manual
+
 async function ghLihatBankSoal() {
   let statusEl = document.getElementById('gh-bs-status');
   let areaEl = document.getElementById('gh-bs-bank-area');
@@ -1007,11 +1044,24 @@ async function ghLihatBankSoal() {
     let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values/BankSoal!A2:' + ghKolomHuruf(GH_KOLOM_BANK.length), { headers: ghHeaderAuth() });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
-    let rows = (hasil.values || []).filter(r => r[3]).map((r, idx) => {
-      let o = { _idx: idx }; GH_KOLOM_BANK.forEach((k, i) => o[k] = r[i] || ''); return o;
+    // BUG-FIX (2026-09): dulu hardcode r[3] untuk cek No_Asal -- posisinya
+    // berubah sejak kolom Kelas/Topik/Bloom/Kesulitan ditambahkan. Cari
+    // indexnya secara dinamis dari GH_KOLOM_BANK supaya tidak salah lagi
+    // kalau urutan kolom berubah lagi nanti.
+    let idxNoAsal = GH_KOLOM_BANK.indexOf('No_Asal');
+    let rows = (hasil.values || []).filter(r => r[idxNoAsal]).map((r, idx) => {
+      let o = { _idx: idx };
+      GH_KOLOM_BANK.forEach((k, i) => o[k] = (r[i] || '').toString().trim());
+      // FITUR (2026-09): tipe tampilan turunan -- bedakan esai yang
+      // mengizinkan gambar tangan dari esai teks biasa (atas permintaan
+      // DIK), tanpa mengubah nilai Tipe ASLI (tetap dipakai apa adanya
+      // saat generate, supaya kompatibel dengan skema Soal baku CBT-KD).
+      o.TipeTampil = (o.Tipe.toLowerCase() === 'esai' && o.Izin_Gambar.toLowerCase() === 'ya') ? 'esai (izin gambar)' : o.Tipe;
+      return o;
     });
     statusEl.textContent = '';
     ghBankSoalData = rows;
+    ghStaging = [];
     ghRenderBankSoal();
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
@@ -1020,7 +1070,13 @@ async function ghLihatBankSoal() {
 }
 
 function ghOpsiUnik(rows, kolom) {
-  return [...new Set(rows.map(r => r[kolom]).filter(Boolean))].sort();
+  // BUG-FIX (2026-09): tanpa trim(), nilai yang kebetulan ada spasi
+  // tersembunyi di sel Sheets (mis. "pg_teks" vs "pg_teks ") kelihatan
+  // seperti 2 opsi berbeda padahal sama -- ini yang menyebabkan "pg_teks
+  // ada 2" di dropdown Tipe. Baris sudah di-trim() saat parsing di
+  // ghLihatBankSoal, tapi trim() lagi di sini jaga-jaga dipanggil dari
+  // tempat lain.
+  return [...new Set(rows.map(r => (r[kolom] || '').toString().trim()).filter(Boolean))].sort();
 }
 
 function ghRenderBankSoal() {
@@ -1028,46 +1084,251 @@ function ghRenderBankSoal() {
   let rows = ghBankSoalData;
   if (!rows.length) { areaEl.innerHTML = '<div class="gh-empty">Bank Soal masih kosong — impor soal dulu.</div>'; return; }
 
-  let mapelOpt = ghOpsiUnik(rows, 'Mapel'), tahunOpt = ghOpsiUnik(rows, 'Tahun'), tipeOpt = ghOpsiUnik(rows, 'Tipe');
+  let mapelOpt = ghOpsiUnik(rows, 'Mapel'), kelasOpt = ghOpsiUnik(rows, 'Kelas'), tahunOpt = ghOpsiUnik(rows, 'Tahun');
+  let tipeOpt = ghOpsiUnik(rows, 'TipeTampil');
   areaEl.innerHTML =
     '<div class="gh-bs-filter-row" style="margin-top:10px;">' +
       '<select id="gh-bs-f-mapel" onchange="ghFilterBankSoal()"><option value="">Semua Mapel</option>' + mapelOpt.map(m => '<option>' + ghEsc(m) + '</option>').join('') + '</select>' +
+      '<select id="gh-bs-f-kelas" onchange="ghFilterBankSoal()"><option value="">Semua Kelas</option>' + kelasOpt.map(k => '<option>' + ghEsc(k) + '</option>').join('') + '</select>' +
       '<select id="gh-bs-f-tahun" onchange="ghFilterBankSoal()"><option value="">Semua Tahun</option>' + tahunOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
       '<select id="gh-bs-f-tipe" onchange="ghFilterBankSoal()"><option value="">Semua Tipe</option>' + tipeOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
     '</div>' +
+
+    '<div class="gh-esai-soal">' +
+      '<div class="gh-lbl">✨ Susun Otomatis dari Perintah (best-effort, tetap bisa diedit manual sesudahnya)</div>' +
+      '<textarea id="gh-inp-prompt-otomatis" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-line);border-radius:8px;font-size:12.5px;font-family:inherit;" placeholder="Contoh: buat soal IPS kelas 7 sebanyak 35 soal PG bloom campuran kesulitan 50% mudah 30% sedang 20% sulit dan 5 Esai bloom C4 kesulitan campuran"></textarea>' +
+      '<button class="gh-btn gh-btn-outline" onclick="ghSusunOtomatis()" style="width:100%;margin-top:8px;">🤖 Susun ke Daftar Terpilih</button>' +
+      '<div class="gh-status-msg" id="gh-bs-otomatis-status"></div>' +
+    '</div>' +
+
+    '<div style="display:flex;align-items:center;gap:10px;margin:10px 0 4px;">' +
+      '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--blue-main);" onclick="ghPilihSemua()">Pilih Semua</button>' +
+      '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--blue-main);" onclick="ghBalikPilihan()">Balik Pilihan</button>' +
+      '<span style="flex:1;"></span>' +
+      '<span style="font-size:12px;font-weight:700;color:var(--gray-mid);" id="gh-bs-hitung-centang">0 dipilih</span>' +
+    '</div>' +
     '<div class="gh-bs-scroll" id="gh-bs-list"></div>' +
+
+    '<div class="gh-an-sect">' +
+      '<h4>Soal Terpilih (urutan ujian nanti) — <span id="gh-bs-staging-jml">0</span> soal</h4>' +
+      '<div class="gh-bs-scroll" id="gh-bs-staging-list"></div>' +
+    '</div>' +
+
     '<div class="gh-fg" style="margin-top:12px;">' +
       '<label>Tulis ke spreadsheet ujian (ID/URL) — akan MENIMPA tab "Soal" di sana</label>' +
       '<input type="text" id="gh-inp-target-generate" placeholder="Tempel ID/URL spreadsheet CBT tujuan">' +
     '</div>' +
     '<button class="gh-btn gh-btn-primary" onclick="ghGenerateUjian()" style="width:100%;">🛠️ Generate Ujian dari Soal Terpilih</button>';
   ghFilterBankSoal();
+  ghRenderStaging();
 }
 
 function ghFilterBankSoal() {
-  let fm = document.getElementById('gh-bs-f-mapel').value, ft = document.getElementById('gh-bs-f-tahun').value, fp = document.getElementById('gh-bs-f-tipe').value;
-  let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!ft || r.Tahun === ft) && (!fp || r.Tipe === fp));
+  let fm = document.getElementById('gh-bs-f-mapel').value, fk = document.getElementById('gh-bs-f-kelas').value;
+  let ft = document.getElementById('gh-bs-f-tahun').value, fp = document.getElementById('gh-bs-f-tipe').value;
+  let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!fk || r.Kelas === fk) && (!ft || r.Tahun === ft) && (!fp || r.TipeTampil === fp));
+  let idxTerstaging = new Set(ghStaging.map(r => r._idx));
   document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r =>
-    '<div class="gh-bs-soal-item"><input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" checked>' +
+    '<div class="gh-bs-soal-item"><input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" onchange="ghToggleStaging(' + r._idx + ', this.checked)"' + (idxTerstaging.has(r._idx) ? ' checked' : '') + '>' +
       '<div class="gh-bs-soal-txt">' + ghEsc((r.Pertanyaan || '').slice(0, 90)) + (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
-      '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.Tipe) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' + ghEsc(r.Sumber) + '</div></div>' +
+      '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' +
+      (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + ghEsc(r.Sumber) + '</div></div>' +
     '</div>'
   ).join('') : '<div class="gh-empty">Tidak ada soal yang cocok dengan filter ini.</div>';
+  ghUpdateHitungCentang();
+}
+
+// ── PILIH SEMUA / BALIK PILIHAN / HITUNG CENTANG ───────────────────
+// FITUR (2026-09): atas permintaan DIK. "Pilih Semua"/"Balik Pilihan"
+// bekerja pada daftar yang SEDANG TERLIHAT (sudah kena filter) -- bukan
+// seluruh Bank Soal -- supaya guru bisa mis. filter Mapel=IPS dulu baru
+// "Pilih Semua" hasil filter itu saja.
+function ghPilihSemua() {
+  document.querySelectorAll('.gh-bs-pilih-generate').forEach(cb => { cb.checked = true; ghToggleStaging(parseInt(cb.dataset.idx), true, true); });
+  ghRenderStaging(); ghUpdateHitungCentang();
+}
+function ghBalikPilihan() {
+  document.querySelectorAll('.gh-bs-pilih-generate').forEach(cb => { cb.checked = !cb.checked; ghToggleStaging(parseInt(cb.dataset.idx), cb.checked, true); });
+  ghRenderStaging(); ghUpdateHitungCentang();
+}
+function ghUpdateHitungCentang() {
+  let el = document.getElementById('gh-bs-hitung-centang');
+  if (!el) return;
+  let n = document.querySelectorAll('.gh-bs-pilih-generate:checked').length;
+  el.textContent = n + ' dipilih';
+}
+
+// ── STAGING (daftar terpilih -- bisa dinaik/turunkan/hapus sebelum generate) ──
+// FITUR (2026-09): atas permintaan DIK -- tampilan visual soal yang akan
+// disusun jadi ujian, terpisah dari daftar besar Bank Soal supaya guru
+// bisa lihat & atur URUTAN final sebelum generate (naik/turun/hapus),
+// tanpa harus scroll cari lagi di daftar penuh.
+function ghToggleStaging(idx, checked, tanpaRenderStaging) {
+  let sudahAda = ghStaging.some(r => r._idx === idx);
+  if (checked && !sudahAda) {
+    let soal = ghBankSoalData.find(r => r._idx === idx);
+    if (soal) ghStaging.push(soal);
+  } else if (!checked && sudahAda) {
+    ghStaging = ghStaging.filter(r => r._idx !== idx);
+  }
+  if (!tanpaRenderStaging) { ghRenderStaging(); ghUpdateHitungCentang(); }
+}
+
+function ghNaikkanStaging(pos) {
+  if (pos <= 0) return;
+  [ghStaging[pos - 1], ghStaging[pos]] = [ghStaging[pos], ghStaging[pos - 1]];
+  ghRenderStaging();
+}
+function ghTurunkanStaging(pos) {
+  if (pos >= ghStaging.length - 1) return;
+  [ghStaging[pos], ghStaging[pos + 1]] = [ghStaging[pos + 1], ghStaging[pos]];
+  ghRenderStaging();
+}
+function ghHapusDariStaging(pos) {
+  let idx = ghStaging[pos]._idx;
+  ghStaging.splice(pos, 1);
+  let cb = document.querySelector('.gh-bs-pilih-generate[data-idx="' + idx + '"]');
+  if (cb) cb.checked = false;
+  ghRenderStaging(); ghUpdateHitungCentang();
+}
+
+function ghRenderStaging() {
+  let el = document.getElementById('gh-bs-staging-list');
+  let jmlEl = document.getElementById('gh-bs-staging-jml');
+  if (!el) return;
+  jmlEl.textContent = ghStaging.length;
+  el.innerHTML = ghStaging.length ? ghStaging.map((r, i) =>
+    '<div class="gh-bs-soal-item">' +
+      '<div style="display:flex;flex-direction:column;gap:2px;">' +
+        '<button class="gh-btn gh-btn-ghost" style="padding:2px 6px;font-size:12px;" onclick="ghNaikkanStaging(' + i + ')" ' + (i === 0 ? 'disabled' : '') + '>▲</button>' +
+        '<button class="gh-btn gh-btn-ghost" style="padding:2px 6px;font-size:12px;" onclick="ghTurunkanStaging(' + i + ')" ' + (i === ghStaging.length - 1 ? 'disabled' : '') + '>▼</button>' +
+      '</div>' +
+      '<div class="gh-bs-soal-txt">' + (i + 1) + '. ' + ghEsc((r.Pertanyaan || '').slice(0, 80)) + (r.Pertanyaan && r.Pertanyaan.length > 80 ? '…' : '') +
+        '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span>' + ghEsc(r.Mapel) + ' · Kelas ' + ghEsc(r.Kelas) + '</div></div>' +
+      '<button class="gh-btn gh-btn-ghost" onclick="ghHapusDariStaging(' + i + ')" title="Keluarkan dari daftar">✕</button>' +
+    '</div>'
+  ).join('') : '<div class="gh-empty">Belum ada soal terpilih — centang soal di atas, atau pakai Susun Otomatis.</div>';
+}
+
+// ── SUSUN OTOMATIS DARI PERINTAH TEKS (best-effort, bukan AI sungguhan) ──
+// FITUR (2026-09): mem-parsing perintah bahasa natural sederhana (pola
+// "<jumlah> <PG/Esai> ... bloom <level/campuran> ... kesulitan <persen>%
+// <mudah/sedang/sulit> ...") lalu otomatis mencentang soal yang cocok dari
+// Bank Soal ke daftar Terpilih. Ini PARSER BERBASIS POLA/REGEX, bukan AI
+// sungguhan -- cakupannya terbatas ke pola yang mirip contoh, guru TETAP
+// perlu review & sesuaikan manual lewat daftar Terpilih sesudahnya (bukan
+// dianggap hasil final otomatis).
+function ghParsePromptOtomatis(teks, mapelTersedia) {
+  let t = (teks || '').toLowerCase();
+  let hasil = { mapel: null, kelas: null, segmen: [] };
+
+  let mapelCocok = (mapelTersedia || []).find(m => t.includes(m.toLowerCase()));
+  if (mapelCocok) hasil.mapel = mapelCocok;
+
+  let mKelas = t.match(/kelas\s*([0-9ivx]+)/i);
+  if (mKelas) hasil.kelas = mKelas[1].toUpperCase();
+
+  // Tandai posisi tiap "<jumlah> (soal)? (pg|esai)" sebagai awal segmen baru
+  let re = /(\d+)\s*(?:soal\s*)?(pg|esai)\b/gi;
+  let titik = [];
+  let m;
+  while ((m = re.exec(t)) !== null) titik.push({ mulai: m.index, akhirAngkaTipe: re.lastIndex, jumlah: parseInt(m[1]), tipe: m[2] });
+  if (!titik.length) return hasil;
+
+  titik.forEach((tk, i) => {
+    let batasAkhir = (i + 1 < titik.length) ? titik[i + 1].mulai : t.length;
+    let teksSegmen = t.slice(tk.akhirAngkaTipe, batasAkhir);
+
+    let bloom = null;
+    let mBloomLevel = teksSegmen.match(/\bc[1-6]\b/i);
+    if (mBloomLevel) bloom = mBloomLevel[0].toUpperCase();
+    // ('campuran'/tidak disebut -> bloom null = tidak difilter, otomatis campuran)
+
+    let distribusi = [];
+    let reKesulitan = /(\d+)\s*%\s*(mudah|sedang|sulit)/gi;
+    let mk;
+    while ((mk = reKesulitan.exec(teksSegmen)) !== null) distribusi.push({ persen: parseInt(mk[1]), level: mk[2] });
+
+    hasil.segmen.push({ jumlah: tk.jumlah, tipe: tk.tipe, bloom, distribusi });
+  });
+
+  return hasil;
+}
+
+// Pilih N soal acak dari kumpulan (Fisher-Yates parsial) -- dipakai supaya
+// hasil Susun Otomatis tidak selalu soal yang sama persis tiap dijalankan.
+function ghAcakAmbil(arr, n) {
+  let salinan = arr.slice();
+  for (let i = salinan.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [salinan[i], salinan[j]] = [salinan[j], salinan[i]];
+  }
+  return salinan.slice(0, n);
+}
+
+function ghPilihSoalUntukSegmen(bank, mapel, kelas, seg) {
+  let pool = bank.filter(r => {
+    if (mapel && r.Mapel.toLowerCase() !== mapel.toLowerCase()) return false;
+    if (kelas && r.Kelas.toUpperCase() !== kelas.toUpperCase()) return false;
+    let tipeCocok = seg.tipe === 'pg' ? r.Tipe.toLowerCase().startsWith('pg') : r.Tipe.toLowerCase() === 'esai';
+    if (!tipeCocok) return false;
+    if (seg.bloom && r.Bloom.toUpperCase() !== seg.bloom) return false;
+    return true;
+  });
+
+  if (!seg.distribusi.length) return ghAcakAmbil(pool, seg.jumlah);
+
+  // Bagi jumlah sesuai persentase kesulitan, sisa pembulatan dibebankan ke
+  // kategori pertama supaya totalnya tetap pas dengan seg.jumlah.
+  let hasil = [], totalTerpakai = 0;
+  seg.distribusi.forEach((d, i) => {
+    let target = (i === seg.distribusi.length - 1) ? (seg.jumlah - totalTerpakai) : Math.round(seg.jumlah * d.persen / 100);
+    totalTerpakai += target;
+    let poolLevel = pool.filter(r => r.Kesulitan.toLowerCase() === d.level.toLowerCase() && !hasil.includes(r));
+    hasil = hasil.concat(ghAcakAmbil(poolLevel, target));
+  });
+  return hasil;
+}
+
+function ghSusunOtomatis() {
+  let teks = document.getElementById('gh-inp-prompt-otomatis').value;
+  let statusEl = document.getElementById('gh-bs-otomatis-status');
+  if (!teks.trim()) { ghToast('Tulis perintahnya dulu.'); return; }
+  let mapelTersedia = ghOpsiUnik(ghBankSoalData, 'Mapel');
+  let parsed = ghParsePromptOtomatis(teks, mapelTersedia);
+  if (!parsed.segmen.length) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Tidak ketemu pola "<jumlah> PG/Esai" di perintahnya -- coba format seperti contoh.';
+    return;
+  }
+  let ditambahkan = 0, catatan = [];
+  parsed.segmen.forEach(seg => {
+    let dapat = ghPilihSoalUntukSegmen(ghBankSoalData, parsed.mapel, parsed.kelas, seg);
+    dapat.forEach(r => { if (!ghStaging.some(s => s._idx === r._idx)) { ghStaging.push(r); ditambahkan++; } });
+    if (dapat.length < seg.jumlah) catatan.push(seg.jumlah + ' ' + seg.tipe.toUpperCase() + ' diminta, cuma ' + dapat.length + ' ketemu di Bank Soal');
+  });
+  ghRenderStaging();
+  document.querySelectorAll('.gh-bs-pilih-generate').forEach(cb => { cb.checked = ghStaging.some(r => r._idx === parseInt(cb.dataset.idx)); });
+  ghUpdateHitungCentang();
+  statusEl.className = catatan.length ? 'gh-status-msg err' : 'gh-status-msg';
+  statusEl.textContent = (catatan.length ? '⚠️ ' : '✅ ') + ditambahkan + ' soal ditambahkan ke daftar Terpilih.' + (catatan.length ? ' Catatan: ' + catatan.join('; ') + '.' : '') + ' Silakan cek & sesuaikan manual sebelum generate.';
 }
 
 async function ghGenerateUjian() {
   let target = ghEkstrakSheetId(document.getElementById('gh-inp-target-generate').value);
   if (!target) { ghToast('Isi ID/URL spreadsheet tujuan dulu.'); return; }
-  let idxTerpilih = Array.from(document.querySelectorAll('.gh-bs-pilih-generate:checked')).map(el => parseInt(el.dataset.idx));
-  if (!idxTerpilih.length) { ghToast('Pilih minimal 1 soal.'); return; }
-  if (!confirm('Ini akan MENIMPA seluruh isi tab "Soal" di spreadsheet tujuan dengan ' + idxTerpilih.length + ' soal terpilih. Lanjutkan?')) return;
+  // FITUR (2026-09): SUMBER data generate sekarang ghStaging (daftar
+  // Terpilih yang sudah diurutkan manual), bukan lagi baca ulang checkbox
+  // langsung -- supaya urutan naik/turun yang diatur guru benar-benar
+  // terpakai persis seperti yang terlihat di panel Terpilih.
+  if (!ghStaging.length) { ghToast('Belum ada soal di daftar Terpilih.'); return; }
+  if (!confirm('Ini akan MENIMPA seluruh isi tab "Soal" di spreadsheet tujuan dengan ' + ghStaging.length + ' soal terpilih (sesuai urutan di panel Terpilih). Lanjutkan?')) return;
 
   let statusEl = document.getElementById('gh-bs-status');
-  statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Menulis ' + idxTerpilih.length + ' soal ke spreadsheet tujuan...';
+  statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Menulis ' + ghStaging.length + ' soal ke spreadsheet tujuan...';
   try {
-    let terpilih = ghBankSoalData.filter(r => idxTerpilih.includes(r._idx));
-    let rowsBaru = terpilih.map((r, i) => {
-      let baris = [i + 1]; // No diurutkan ulang 1..N di ujian baru
+    let rowsBaru = ghStaging.map((r, i) => {
+      let baris = [i + 1]; // No diurutkan ulang 1..N sesuai urutan panel Terpilih
       GH_KOLOM_SOAL.slice(1).forEach(k => baris.push(r[k] || ''));
       return baris;
     });
@@ -1079,7 +1340,7 @@ async function ghGenerateUjian() {
     let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A2?valueInputOption=RAW', { method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: rowsBaru }) });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
-    statusEl.textContent = '✅ Berhasil! ' + idxTerpilih.length + ' soal tertulis ke tab "Soal" spreadsheet tujuan.';
+    statusEl.textContent = '✅ Berhasil! ' + ghStaging.length + ' soal tertulis ke tab "Soal" spreadsheet tujuan.';
     setTimeout(() => { statusEl.textContent = ''; }, 5000);
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
