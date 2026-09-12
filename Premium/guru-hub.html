@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guru Hub · CBT Kabut Digital</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+    --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+    --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+    --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+    --red:#C0392B; --red-light:#FDECEA;
+    --r-sm:6px; --r-md:10px; --r-lg:16px;
+    --sh-sm:0 1px 4px rgba(0,0,0,.06); --sh-md:0 4px 16px rgba(0,0,0,.08);
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--gray-bg); color:var(--gray-dark); line-height:1.5;
+  }
+  .gh-header {
+    background:linear-gradient(135deg,var(--blue-deep),var(--blue-main));
+    color:var(--white); padding:28px 20px 24px; text-align:center;
+  }
+  .gh-header h1 { margin:0 0 4px; font-size:22px; font-weight:800; }
+  .gh-header p { margin:0; font-size:13px; opacity:.85; }
+  .gh-wrap { max-width:640px; margin:0 auto; padding:20px 16px 60px; }
+  .gh-card {
+    background:var(--white); border-radius:var(--r-lg); padding:20px;
+    box-shadow:var(--sh-sm); margin-bottom:18px; border:1px solid var(--gray-line);
+  }
+  .gh-card h2 { margin:0 0 4px; font-size:16px; font-weight:800; color:var(--blue-deep); }
+  .gh-card .gh-sub { margin:0 0 16px; font-size:12.5px; color:var(--gray-soft); }
+  .gh-fg { margin-bottom:12px; }
+  .gh-fg label { display:block; font-size:11.5px; font-weight:700; color:var(--gray-mid); text-transform:uppercase; letter-spacing:.02em; margin-bottom:5px; }
+  .gh-fg input[type=text], .gh-fg input[type=url] {
+    width:100%; padding:10px 12px; border:1.5px solid var(--gray-line); border-radius:var(--r-md);
+    font-size:14px; color:var(--gray-dark); background:var(--white);
+  }
+  .gh-fg input:focus { outline:none; border-color:var(--blue-main); }
+  .gh-row { display:flex; gap:10px; align-items:flex-end; }
+  .gh-row .gh-fg { flex:1; margin-bottom:0; }
+  .gh-btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    padding:10px 16px; border:none; border-radius:var(--r-md); font-size:13.5px; font-weight:700;
+    cursor:pointer; transition:opacity .15s;
+  }
+  .gh-btn:hover { opacity:.9; }
+  .gh-btn:disabled { opacity:.45; cursor:not-allowed; }
+  .gh-btn-primary { background:var(--blue-main); color:var(--white); }
+  .gh-btn-outline { background:var(--white); color:var(--blue-main); border:1.5px solid var(--blue-main); }
+  .gh-btn-ghost { background:transparent; color:var(--gray-soft); padding:6px 8px; font-size:16px; line-height:1; }
+  .gh-btn-ghost:hover { color:var(--red); opacity:1; }
+  .gh-list { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+  .gh-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    background:var(--blue-pale); border:1px solid var(--blue-light); border-radius:var(--r-md);
+  }
+  .gh-item .gh-item-info { flex:1; min-width:0; }
+  .gh-item .gh-item-label { font-weight:700; font-size:13.5px; color:var(--blue-deep); }
+  .gh-item .gh-item-url { font-size:11.5px; color:var(--gray-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gh-empty { text-align:center; color:var(--gray-soft); font-size:13px; padding:20px 10px; }
+  .gh-out-wrap { margin-top:16px; }
+  .gh-out { display:flex; gap:8px; }
+  .gh-out input { flex:1; background:var(--gray-bg); }
+  .gh-hint { font-size:11.5px; color:var(--gray-soft); margin-top:6px; }
+  .gh-toast {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--gray-dark); color:var(--white); padding:9px 18px; border-radius:20px;
+    font-size:12.5px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .2s;
+    box-shadow:var(--sh-md); z-index:50;
+  }
+  .gh-toast.on { opacity:1; }
+  .gh-soon {
+    background:var(--white); border:1.5px dashed var(--gray-line); border-radius:var(--r-lg);
+    padding:16px 18px; margin-bottom:14px; color:var(--gray-soft);
+  }
+  .gh-soon h3 { margin:0 0 3px; font-size:14px; font-weight:800; color:var(--gray-mid); }
+  .gh-soon p { margin:0; font-size:12.5px; }
+  .gh-soon .gh-badge {
+    display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase;
+    letter-spacing:.03em; background:var(--gray-line); color:var(--gray-mid);
+    padding:2px 8px; border-radius:20px; margin-bottom:6px;
+  }
+  /* FITUR (2026-09): komponen untuk kartu Nilai & Koreksi Esai */
+  .gh-sekolah-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+  .gh-sekolah-row select { flex:1; padding:9px 10px; border:1.5px solid var(--gray-line); border-radius:var(--r-md); font-size:13.5px; background:var(--white); color:var(--gray-dark); }
+  .gh-esai-nav { display:flex; align-items:center; gap:10px; margin:4px 0 14px; }
+  .gh-esai-nav .gh-esai-idx { flex:1; text-align:center; font-size:12.5px; font-weight:700; color:var(--gray-mid); }
+  .gh-esai-soal { background:var(--blue-pale); border:1px solid var(--blue-light); border-radius:var(--r-md); padding:12px 14px; margin-bottom:14px; }
+  .gh-esai-soal .gh-lbl { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--blue-main); margin-bottom:4px; }
+  .gh-esai-soal .gh-pertanyaan { font-size:13.5px; color:var(--gray-dark); white-space:pre-wrap; line-height:1.55; }
+  .gh-esai-soal .gh-kunci { background:var(--white); border:1px dashed var(--blue-light); border-radius:var(--r-sm); padding:8px 10px; margin-top:8px; font-size:12.5px; color:var(--gray-mid); }
+  .gh-esai-soal .gh-poinmax { display:inline-block; background:var(--blue-main); color:var(--white); font-size:11px; font-weight:700; padding:2px 10px; border-radius:20px; margin-top:8px; }
+  .gh-jawab-card { background:var(--white); border:1px solid var(--gray-line); border-radius:var(--r-md); padding:12px 14px; margin-bottom:10px; }
+  .gh-jawab-card .gh-nama { font-weight:800; font-size:13.5px; color:var(--blue-deep); margin-bottom:5px; }
+  .gh-jawab-card .gh-teks { font-size:13px; color:var(--gray-mid); white-space:pre-wrap; line-height:1.5; margin-bottom:6px; }
+  .gh-jawab-card canvas.gh-canvas { display:block; max-width:260px; width:100%; height:auto; border:1px solid var(--gray-line); border-radius:var(--r-sm); margin-bottom:8px; background:#fff; }
+  .gh-poin-row { display:flex; align-items:center; gap:6px; }
+  .gh-poin-row input { width:70px; padding:6px 8px; border:1.5px solid var(--gray-line); border-radius:var(--r-sm); font-size:14px; font-weight:700; text-align:center; }
+  .gh-poin-row input.gh-over { border-color:var(--red); background:var(--red-light); }
+  .gh-poin-row span { font-size:12px; color:var(--gray-soft); }
+  .gh-status-msg { font-size:12px; text-align:center; margin-top:10px; min-height:16px; color:var(--blue-main); font-weight:600; }
+  .gh-status-msg.err { color:var(--red); }
+  /* FITUR (2026-09): tampilan hasil Buat & Lihat Analisis */
+  .gh-an-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 0; }
+  .gh-an-box { background:var(--blue-pale); border:1px solid var(--blue-light); border-radius:var(--r-md); padding:10px 12px; text-align:center; }
+  .gh-an-box .gh-an-num { font-size:20px; font-weight:800; color:var(--blue-deep); }
+  .gh-an-box .gh-an-lbl { font-size:10.5px; color:var(--gray-mid); text-transform:uppercase; letter-spacing:.02em; margin-top:2px; }
+  .gh-an-sect { margin-top:16px; }
+  .gh-an-sect h4 { font-size:12.5px; font-weight:800; color:var(--blue-deep); margin-bottom:8px; text-transform:uppercase; letter-spacing:.02em; }
+  .gh-an-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .gh-an-table th, .gh-an-table td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--gray-line); }
+  .gh-an-table th { color:var(--gray-soft); font-weight:700; font-size:11px; text-transform:uppercase; }
+  .gh-an-table tr:last-child td { border-bottom:none; }
+  .gh-an-warn-row { background:var(--red-light); }
+  .gh-an-scroll { max-height:280px; overflow-y:auto; border:1px solid var(--gray-line); border-radius:var(--r-md); }
+  .gh-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .gh-modal-bg.on { display:flex; }
+  .gh-modal { background:var(--white); border-radius:var(--r-lg); padding:20px; width:100%; max-width:340px; }
+  .gh-modal h4 { font-size:14px; font-weight:800; color:var(--blue-deep); margin-bottom:8px; }
+  .gh-modal p { font-size:12.5px; color:var(--gray-mid); line-height:1.5; margin-bottom:14px; }
+  .gh-modal .gh-mb { display:flex; gap:8px; }
+  .gh-modal .gh-mb button { flex:1; }
+  /* FITUR (2026-09): komponen Bank Soal (Fase 7) */
+  .gh-bs-sheet-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid var(--gray-line); border-radius:var(--r-md); margin-bottom:6px; cursor:pointer; }
+  .gh-bs-sheet-item:hover { background:var(--blue-pale); border-color:var(--blue-light); }
+  .gh-bs-sheet-item .gh-bs-sheet-nm { flex:1; font-size:13px; font-weight:600; color:var(--gray-dark); }
+  .gh-bs-sheet-item .gh-bs-sheet-dt { font-size:11px; color:var(--gray-soft); }
+  .gh-bs-soal-item { display:flex; align-items:flex-start; gap:10px; padding:9px 12px; border:1px solid var(--gray-line); border-radius:var(--r-md); margin-bottom:6px; }
+  .gh-bs-soal-item input[type=checkbox] { margin-top:3px; width:16px; height:16px; accent-color:var(--blue-main); flex-shrink:0; }
+  .gh-bs-soal-item .gh-bs-soal-txt { flex:1; font-size:12.5px; color:var(--gray-dark); line-height:1.45; }
+  .gh-bs-soal-item .gh-bs-soal-meta { font-size:10.5px; color:var(--gray-soft); margin-top:3px; }
+  .gh-bs-badge { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--blue-light); color:var(--blue-deep); margin-right:5px; }
+  .gh-bs-filter-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .gh-bs-filter-row select { padding:7px 9px; border:1.5px solid var(--gray-line); border-radius:var(--r-sm); font-size:12.5px; background:var(--white); }
+  .gh-bs-scroll { max-height:340px; overflow-y:auto; }
+</style>
+</head>
+<body>
+
+<div class="gh-header">
+  <h1>Guru Hub</h1>
+  <p>CBT Kabut Digital · Alat bantu guru</p>
+</div>
+
+<div class="gh-wrap">
+
+  <div class="gh-card">
+    <h2>Link Ujian untuk Siswa</h2>
+    <p class="gh-sub">Kumpulkan beberapa link/kode ujian, lalu buat SATU link gabungan — siswa tinggal memilih dari daftar, tidak perlu ketik atau tempel link satu-satu.</p>
+
+    <div class="gh-row">
+      <div class="gh-fg">
+        <label>Label Ujian</label>
+        <input type="text" id="gh-inp-label" placeholder="Contoh: Matematika VII">
+      </div>
+      <div class="gh-fg">
+        <label>Link / Kode CBT</label>
+        <input type="text" id="gh-inp-url" placeholder="URL GAS atau alamat server offline">
+      </div>
+      <button class="gh-btn gh-btn-primary" onclick="ghTambahEntri()">+ Tambah</button>
+    </div>
+
+    <div class="gh-list" id="gh-list"></div>
+
+    <div class="gh-out-wrap" id="gh-out-wrap" style="display:none;">
+      <div class="gh-fg">
+        <label>Alamat Portal (Online: link GitHub Pages · Offline: alamat server, mis. http://192.168.x.x:8080/)</label>
+        <input type="text" id="gh-inp-basePortal" placeholder="https://cbtkabutdigital.com/portal.html">
+      </div>
+      <button class="gh-btn gh-btn-outline" onclick="ghBuatLinkGabungan()" style="width:100%;margin-top:4px;">🔗 Buat Link Gabungan</button>
+
+      <div class="gh-out-wrap" id="gh-hasil-wrap" style="display:none;">
+        <div class="gh-fg" style="margin-top:14px;">
+          <label>Link Gabungan — bagikan ini ke siswa</label>
+          <div class="gh-out">
+            <input type="text" id="gh-hasil-link" readonly>
+            <button class="gh-btn gh-btn-primary" onclick="ghSalinLink()">Salin</button>
+          </div>
+        </div>
+        <p class="gh-hint">Siswa yang membuka link ini akan melihat dropdown pilihan ujian di Portal — tidak perlu ketik apa pun. Link lama (tanpa daftar ini) tetap berfungsi seperti biasa.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="gh-card">
+    <h2>Nilai &amp; Koreksi Esai</h2>
+    <p class="gh-sub">Lihat &amp; nilai jawaban esai siswa, dan buat analisis — langsung dari sini, tanpa buka Google Sheets.</p>
+
+    <div class="gh-sekolah-row">
+      <select id="gh-sel-sekolah" onchange="ghPilihSekolah(this.value)">
+        <option value="">-- Pilih soal --</option>
+      </select>
+      <button class="gh-btn gh-btn-outline" onclick="ghToggleFormSekolah()">+ Soal</button>
+      <button class="gh-btn gh-btn-ghost" id="gh-btn-hapus-sekolah" onclick="ghHapusSekolahAktif()" title="Hapus soal ini dari daftar" style="display:none;">✕</button>
+    </div>
+
+    <div id="gh-form-sekolah" style="display:none;">
+      <div class="gh-fg">
+        <label>Nama Soal/Ujian (label saja, bebas)</label>
+        <input type="text" id="gh-inp-sekolah-nama" placeholder="Contoh: PAT Matematika VII 2026">
+      </div>
+      <div class="gh-fg">
+        <label>URL Google Apps Script sekolah (sama seperti dipakai Portal)</label>
+        <input type="text" id="gh-inp-sekolah-url" placeholder="https://script.google.com/macros/s/xxx/exec">
+      </div>
+      <div class="gh-fg">
+        <label>Token Pelanggaran (reset_token_pel di Konfigurasi sekolah itu)</label>
+        <input type="text" id="gh-inp-sekolah-token" placeholder="Token rahasia yang diisi manual oleh guru">
+      </div>
+      <button class="gh-btn gh-btn-primary" onclick="ghSimpanSekolah()" style="width:100%;">Simpan Soal</button>
+      <p class="gh-hint">Token ini dicocokkan ke reset_token_pel — token rahasia yang memang diisi manual oleh guru dan tidak pernah diberitahu ke peserta (beda dari reset_token biasa yang otomatis dan bukan rahasia). Tersimpan di perangkat ini saja.</p>
+    </div>
+
+    <div id="gh-esai-area" style="display:none;">
+      <div class="gh-esai-nav">
+        <button class="gh-btn gh-btn-outline" onclick="ghMuatEsai(ghEsaiIdx - 1)">◀</button>
+        <div class="gh-esai-idx" id="gh-esai-idx">Memuat...</div>
+        <button class="gh-btn gh-btn-outline" onclick="ghMuatEsai(ghEsaiIdx + 1)">▶</button>
+      </div>
+      <div id="gh-esai-soal"></div>
+      <div id="gh-esai-jawaban"></div>
+      <button class="gh-btn gh-btn-primary" id="gh-btn-simpan-esai" onclick="ghSimpanNilaiEsai()" style="width:100%;display:none;">💾 Simpan Nilai Soal Ini</button>
+      <div class="gh-status-msg" id="gh-esai-status"></div>
+
+      <button class="gh-btn gh-btn-outline" id="gh-btn-buat-analisis" onclick="ghKonfirmasiAnalisis()" style="width:100%;margin-top:16px;">📊 Buat &amp; Lihat Analisis</button>
+      <div class="gh-status-msg" id="gh-analisis-status"></div>
+      <div id="gh-analisis-hasil"></div>
+    </div>
+  </div>
+
+  <div class="gh-card" id="gh-card-banksoal">
+    <h2>Bank Soal</h2>
+    <p class="gh-sub">Kumpulkan soal dari berbagai ujian &amp; tahun (lintas spreadsheet), lalu susun ujian baru dari kumpulan itu.</p>
+
+    <div id="gh-bs-langkah-oauth">
+      <div class="gh-fg">
+        <label>OAuth Client ID (dari Google Cloud Console milik Anda)</label>
+        <input type="text" id="gh-inp-client-id" placeholder="xxxxxxxxxx-xxxxxxxxxxxxx.apps.googleusercontent.com">
+      </div>
+      <button class="gh-btn gh-btn-primary" id="gh-btn-hubungkan" onclick="ghHubungkanGoogle()" style="width:100%;">🔗 Hubungkan Google Drive</button>
+      <p class="gh-hint">Client ID ini milik Anda sendiri (dibuat di Google Cloud Console — Sheets API &amp; Drive API harus aktif, domain tempat halaman ini dibuka harus terdaftar di "Authorized JavaScript origins"). Tersimpan di perangkat ini saja, tidak dikirim ke mana pun selain Google.</p>
+      <div class="gh-status-msg" id="gh-bs-oauth-status"></div>
+    </div>
+
+    <div id="gh-bs-area" style="display:none;">
+      <div class="gh-fg">
+        <label>Spreadsheet Bank Soal aktif</label>
+        <div class="gh-row">
+          <div class="gh-fg" style="margin-bottom:0;"><input type="text" id="gh-bs-nama-aktif" readonly placeholder="Belum ada — buat atau pilih dulu"></div>
+          <button class="gh-btn gh-btn-outline" onclick="ghBuatBankSoalBaru()">+ Buat Baru</button>
+          <button class="gh-btn gh-btn-outline" onclick="ghToggleFormBankManual()">Pakai ID Lain</button>
+        </div>
+        <div id="gh-bs-form-manual" style="display:none;margin-top:10px;">
+          <input type="text" id="gh-inp-bs-id-manual" placeholder="Tempel ID atau URL spreadsheet Bank Soal yang sudah ada">
+          <button class="gh-btn gh-btn-primary" onclick="ghPakaiBankSoalManual()" style="width:100%;margin-top:8px;">Pakai Spreadsheet Ini</button>
+        </div>
+      </div>
+      <div class="gh-status-msg" id="gh-bs-setup-status"></div>
+
+      <div id="gh-bs-fitur" style="display:none;margin-top:16px;border-top:1px solid var(--gray-line);padding-top:16px;">
+        <button class="gh-btn gh-btn-outline" onclick="ghCariSpreadsheet()" style="width:100%;">🔍 Cari &amp; Impor Soal dari Spreadsheet Lain</button>
+        <div id="gh-bs-cari-hasil"></div>
+
+        <button class="gh-btn gh-btn-outline" onclick="ghLihatBankSoal()" style="width:100%;margin-top:10px;">📚 Lihat Bank Soal &amp; Generate Ujian</button>
+        <div id="gh-bs-bank-area"></div>
+
+        <div class="gh-status-msg" id="gh-bs-status"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="gh-toast" id="gh-toast"></div>
+
+<div class="gh-modal-bg" id="gh-modal-analisis">
+  <div class="gh-modal">
+    <h4>Buat Analisis?</h4>
+    <p>Pastikan semua poin esai sudah diperiksa dan diisi. Ini akan menimpa data di sheet <b>Analisis_CBT</b> dengan hasil terbaru.</p>
+    <div class="gh-mb">
+      <button class="gh-btn gh-btn-outline" onclick="ghTutupModalAnalisis()">Batal</button>
+      <button class="gh-btn gh-btn-primary" onclick="ghJalankanAnalisis()">Buat Analisis</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  PENYIMPANAN LOKAL (localStorage, per perangkat guru)
+// ═══════════════════════════════════════════════
+const GH_KEY_ENTRI = 'guruhub_daftar_link_v1';
+let ghEntri = [];
+
+function ghMuatEntri() {
+  try {
+    let raw = localStorage.getItem(GH_KEY_ENTRI);
+    ghEntri = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(ghEntri)) ghEntri = [];
+  } catch (e) { ghEntri = []; }
+}
+
+function ghSimpanEntri() {
+  try { localStorage.setItem(GH_KEY_ENTRI, JSON.stringify(ghEntri)); } catch (e) {}
+}
+
+// ═══════════════════════════════════════════════
+//  ENCODE — HARUS SAMA PERSIS dengan _b64urlDecode di Portal
+//  (cbt_v3_8_4_portal_tanpa_wizard.html, fungsi _pInitDaftarUjianDariLink)
+// ═══════════════════════════════════════════════
+function ghB64urlEncode(str) {
+  let bytes = new TextEncoder().encode(str);
+  let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// FITUR (2026-09): pemadatan link -- kalau beberapa URL berbagi AWALAN yang
+// sama persis (umum terjadi di mode offline: semua diawali
+// "http://<ip>:<port>/" yang sama), awalan itu disimpan SEKALI SAJA di
+// field "p", tiap entri cuma simpan sisanya di "u" (bukan URL penuh
+// berulang-ulang). Key JSON juga dipendekkan (l/u bukan label/url). Kalau
+// tidak ada kesamaan sama sekali, "p" jadi string kosong dan setiap "u"
+// tetap URL penuh -- tidak lebih buruk dari sebelumnya, cuma tidak dapat
+// penghematan tambahan. HARUS disepadankan dengan decoder di Portal
+// (_pInitDaftarUjianDariLink).
+function ghCariAwalanSama(strs) {
+  if (strs.length === 0) return '';
+  let awalan = strs[0];
+  for (let i = 1; i < strs.length && awalan; i++) {
+    let s = strs[i], j = 0;
+    while (j < awalan.length && j < s.length && awalan[j] === s[j]) j++;
+    awalan = awalan.slice(0, j);
+  }
+  return awalan;
+}
+
+function ghEsc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function ghToast(msg) {
+  let t = document.getElementById('gh-toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+function ghTambahEntri() {
+  let inpLabel = document.getElementById('gh-inp-label');
+  let inpUrl   = document.getElementById('gh-inp-url');
+  let label = inpLabel.value.trim();
+  let url   = inpUrl.value.trim();
+  if (!label || !url) { ghToast('Isi label dan link/kode dulu.'); return; }
+  ghEntri.push({ label, url });
+  ghSimpanEntri();
+  inpLabel.value = ''; inpUrl.value = '';
+  inpLabel.focus();
+  ghRenderList();
+}
+
+function ghHapusEntri(idx) {
+  ghEntri.splice(idx, 1);
+  ghSimpanEntri();
+  ghRenderList();
+}
+
+function ghRenderList() {
+  let wrap = document.getElementById('gh-list');
+  let outWrap = document.getElementById('gh-out-wrap');
+  if (ghEntri.length === 0) {
+    wrap.innerHTML = '<div class="gh-empty">Belum ada ujian ditambahkan.</div>';
+    outWrap.style.display = 'none';
+    return;
+  }
+  wrap.innerHTML = ghEntri.map((x, i) => `
+    <div class="gh-item">
+      <div class="gh-item-info">
+        <div class="gh-item-label">${ghEsc(x.label)}</div>
+        <div class="gh-item-url">${ghEsc(x.url)}</div>
+      </div>
+      <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
+    </div>
+  `).join('');
+  outWrap.style.display = 'block';
+}
+
+function ghBuatLinkGabungan() {
+  if (ghEntri.length === 0) { ghToast('Tambahkan minimal 1 ujian dulu.'); return; }
+  let basePortal = document.getElementById('gh-inp-basePortal').value.trim();
+  if (!basePortal) { ghToast('Isi alamat Portal dulu.'); return; }
+  let awalan = ghCariAwalanSama(ghEntri.map(x => x.url));
+  let payload = {
+    p: awalan,
+    e: ghEntri.map(x => ({ l: x.label, u: x.url.slice(awalan.length) }))
+  };
+  let encoded = ghB64urlEncode(JSON.stringify(payload));
+  let pemisah = basePortal.includes('?') ? '&' : '?';
+  let linkGabungan = basePortal + pemisah + 'd=' + encoded;
+  document.getElementById('gh-hasil-link').value = linkGabungan;
+  document.getElementById('gh-hasil-wrap').style.display = 'block';
+}
+
+function ghSalinLink() {
+  let inp = document.getElementById('gh-hasil-link');
+  inp.select();
+  inp.setSelectionRange(0, 99999);
+  // BUG-FIX (2026-09): navigator.clipboard.writeText() itu ASYNC (Promise) --
+  // kalau ditolak (sering terjadi kalau file dibuka langsung dari disk tanpa
+  // HTTPS, atau browser minta izin dulu), penolakannya TIDAK tertangkap oleh
+  // try/catch biasa (itu cuma menangkap error SINKRON). Akibatnya dulu cuma
+  // .select() yang kejadian (teks ke-blok/ter-highlight) tanpa benar-benar
+  // tersalin, dan tidak ada pesan error sama sekali -- kelihatan seperti
+  // "diam saja". Sekarang ditangani lewat .then(sukses, gagal) supaya jalur
+  // gagal SELALU dicoba fallback-nya, bukan cuma diam.
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(inp.value).then(
+      () => ghToast('Link disalin!'),
+      () => ghSalinFallback()
+    );
+  } else {
+    ghSalinFallback();
+  }
+}
+
+function ghSalinFallback() {
+  try {
+    let ok = document.execCommand('copy');
+    ghToast(ok ? 'Link disalin!' : 'Gagal menyalin otomatis -- salin manual dari kolom di atas (sudah ter-blok).');
+  } catch (e) {
+    ghToast('Gagal menyalin otomatis -- salin manual dari kolom di atas (sudah ter-blok).');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  NILAI & KOREKSI ESAI (Fase 6)
+// ═══════════════════════════════════════════════
+const GH_KEY_SEKOLAH = 'guruhub_sekolah_v1';
+let ghSekolah = [];       // [{nama, urlGas, tokenAdmin}, ...]
+let ghSekolahAktif = null;
+let ghSekolahIdxAktif = null;
+let ghEsaiIdx = 0;
+let ghEsaiData = null;    // respons terakhir dari getEsaiUntukKoreksi
+
+function ghMuatSekolah() {
+  try {
+    let raw = localStorage.getItem(GH_KEY_SEKOLAH);
+    ghSekolah = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(ghSekolah)) ghSekolah = [];
+  } catch (e) { ghSekolah = []; }
+}
+function ghSimpanDaftarSekolah() {
+  try { localStorage.setItem(GH_KEY_SEKOLAH, JSON.stringify(ghSekolah)); } catch (e) {}
+}
+
+function ghRenderSekolah() {
+  let sel = document.getElementById('gh-sel-sekolah');
+  sel.innerHTML = '<option value="">-- Pilih soal --</option>' +
+    ghSekolah.map((s, i) => '<option value="' + i + '">' + ghEsc(s.nama) + '</option>').join('');
+}
+
+function ghToggleFormSekolah() {
+  let f = document.getElementById('gh-form-sekolah');
+  f.style.display = (f.style.display === 'none') ? 'block' : 'none';
+}
+
+function ghSimpanSekolah() {
+  let nama  = document.getElementById('gh-inp-sekolah-nama').value.trim();
+  let url   = document.getElementById('gh-inp-sekolah-url').value.trim();
+  let token = document.getElementById('gh-inp-sekolah-token').value.trim();
+  if (!nama || !url || !token) { ghToast('Isi nama, URL, dan token dulu.'); return; }
+  ghSekolah.push({ nama, urlGas: url, tokenAdmin: token });
+  ghSimpanDaftarSekolah();
+  document.getElementById('gh-inp-sekolah-nama').value = '';
+  document.getElementById('gh-inp-sekolah-url').value = '';
+  document.getElementById('gh-inp-sekolah-token').value = '';
+  document.getElementById('gh-form-sekolah').style.display = 'none';
+  ghRenderSekolah();
+  document.getElementById('gh-sel-sekolah').value = String(ghSekolah.length - 1);
+  ghPilihSekolah(String(ghSekolah.length - 1));
+}
+
+function ghPilihSekolah(idx) {
+  document.getElementById('gh-analisis-hasil').innerHTML = '';
+  document.getElementById('gh-analisis-status').textContent = '';
+  if (idx === '' || idx === null) {
+    ghSekolahAktif = null;
+    document.getElementById('gh-esai-area').style.display = 'none';
+    document.getElementById('gh-btn-hapus-sekolah').style.display = 'none';
+    return;
+  }
+  ghSekolahIdxAktif = parseInt(idx);
+  ghSekolahAktif = ghSekolah[ghSekolahIdxAktif];
+  if (!ghSekolahAktif) return;
+  document.getElementById('gh-esai-area').style.display = 'block';
+  document.getElementById('gh-btn-hapus-sekolah').style.display = 'inline-flex';
+  ghMuatEsai(0);
+}
+
+// FITUR (2026-09): hapus soal dari daftar (permintaan DIK -- sebelumnya
+// cuma bisa tambah, belum bisa hapus). Ini cuma menghapus ENTRI di Guru
+// Hub (URL+token yang tersimpan lokal) -- TIDAK menghapus data ujian di
+// Google Sheets/cbt.db sekolah itu sendiri.
+function ghHapusSekolahAktif() {
+  if (ghSekolahIdxAktif === null || !ghSekolahAktif) return;
+  if (!confirm('Hapus "' + ghSekolahAktif.nama + '" dari daftar? (Cuma dari Guru Hub -- data ujian di sekolah tidak ikut terhapus.)')) return;
+  ghSekolah.splice(ghSekolahIdxAktif, 1);
+  ghSimpanDaftarSekolah();
+  ghSekolahAktif = null; ghSekolahIdxAktif = null;
+  document.getElementById('gh-esai-area').style.display = 'none';
+  document.getElementById('gh-btn-hapus-sekolah').style.display = 'none';
+  ghRenderSekolah();
+  ghToast('Soal dihapus dari daftar.');
+}
+
+async function ghMuatEsai(idx) {
+  if (!ghSekolahAktif) return;
+  let statusEl = document.getElementById('gh-esai-status');
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = 'Memuat...';
+  document.getElementById('gh-btn-simpan-esai').style.display = 'none';
+  try {
+    let url = ghSekolahAktif.urlGas + '?action=getEsaiUntukKoreksi&idx=' + idx
+      + '&token_admin=' + encodeURIComponent(ghSekolahAktif.tokenAdmin);
+    let resp = await fetch(url);
+    let hasil = await resp.json();
+    if (!hasil || hasil.status !== 'ok') {
+      document.getElementById('gh-esai-idx').textContent = 'Gagal memuat';
+      document.getElementById('gh-esai-soal').innerHTML = '';
+      document.getElementById('gh-esai-jawaban').innerHTML = '';
+      statusEl.className = 'gh-status-msg err';
+      statusEl.textContent = '❌ ' + (hasil && hasil.msg ? hasil.msg : 'Gagal memuat data.');
+      return;
+    }
+    statusEl.textContent = '';
+    ghEsaiData = hasil.data;
+    ghEsaiIdx = ghEsaiData.idxSoal;
+    ghRenderEsai(ghEsaiData);
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal terhubung ke sekolah ini (cek URL / koneksi): ' + e.message;
+  }
+}
+
+function ghRenderEsai(d) {
+  document.getElementById('gh-esai-idx').textContent = 'Soal Esai ' + (d.idxSoal + 1) + ' / ' + d.totalSoal;
+
+  let gm = d.urlGambar ? '<img src="' + ghEsc(d.urlGambar) + '" style="max-width:100%;border-radius:8px;margin-top:8px;">' : '';
+  document.getElementById('gh-esai-soal').innerHTML =
+    '<div class="gh-esai-soal">' +
+      '<div class="gh-lbl">Pertanyaan</div>' +
+      '<div class="gh-pertanyaan">' + ghEsc(d.pertanyaan) + '</div>' + gm +
+      '<div class="gh-kunci">Kunci: ' + ghEsc(d.kunci || '(belum ada)') + '</div>' +
+      '<span class="gh-poinmax">Poin Maks: ' + d.poinMax + '</span>' +
+    '</div>';
+
+  let jl = document.getElementById('gh-esai-jawaban');
+  if (!d.jawabSiswa || !d.jawabSiswa.length) {
+    jl.innerHTML = '<div class="gh-empty">Belum ada jawaban peserta untuk soal ini.</div>';
+    document.getElementById('gh-btn-simpan-esai').style.display = 'none';
+    return;
+  }
+  jl.innerHTML = d.jawabSiswa.map((s, i) => {
+    let pv = (s.poinD !== '' && s.poinD !== null && s.poinD !== undefined) ? s.poinD : '';
+    return '<div class="gh-jawab-card">' +
+      '<div class="gh-nama">' + ghEsc(s.nama) + '</div>' +
+      '<div class="gh-teks">' + ghEsc(s.jawaban) + '</div>' +
+      (s.jawabanGbr ? '<canvas class="gh-canvas" id="gh-gc' + i + '" width="780" height="1092"></canvas>' : '') +
+      '<div class="gh-poin-row">' +
+        '<input type="number" id="gh-p' + i + '" min="0" max="' + d.poinMax + '" value="' + pv + '" placeholder="0" data-max="' + d.poinMax + '" oninput="ghCekPoin(this,' + i + ')">' +
+        '<span>/ ' + d.poinMax + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  d.jawabSiswa.forEach((s, i) => { if (s.jawabanGbr) ghGambarKanvas(document.getElementById('gh-gc' + i), s.jawabanGbr); });
+  document.getElementById('gh-btn-simpan-esai').style.display = 'block';
+}
+
+function ghCekPoin(el, i) {
+  let max = parseFloat(el.dataset.max) || 0, v = parseFloat(el.value);
+  if (!isNaN(v) && v > max) el.classList.add('gh-over'); else el.classList.remove('gh-over');
+  if (v < 0) el.value = 0;
+}
+
+async function ghSimpanNilaiEsai() {
+  if (!ghEsaiData || !ghEsaiData.jawabSiswa || !ghEsaiData.jawabSiswa.length || !ghSekolahAktif) return;
+  let max = ghEsaiData.poinMax, valid = true, payload = [];
+  ghEsaiData.jawabSiswa.forEach((s, i) => {
+    let raw = document.getElementById('gh-p' + i).value.trim();
+    let v = raw === '' ? null : parseFloat(raw);
+    if (v !== null && (isNaN(v) || v < 0 || v > max)) { valid = false; document.getElementById('gh-p' + i).classList.add('gh-over'); }
+    payload.push({ rowIdx: s.rowIdx, poin: v });
+  });
+  let statusEl = document.getElementById('gh-esai-status');
+  if (!valid) { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Ada poin tidak valid atau melebihi maksimal (' + max + ').'; return; }
+
+  let btn = document.getElementById('gh-btn-simpan-esai');
+  btn.disabled = true;
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = 'Menyimpan...';
+  try {
+    let resp = await fetch(ghSekolahAktif.urlGas, {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'simpanNilaiEsaiLangsung',
+        token_admin: ghSekolahAktif.tokenAdmin,
+        payload: payload, poinMax: max
+      })
+    });
+    let hasil = await resp.json();
+    btn.disabled = false;
+    if (hasil && hasil.status === 'ok') {
+      statusEl.className = 'gh-status-msg';
+      statusEl.textContent = '✅ Tersimpan (' + hasil.disimpan + ' peserta)';
+      setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    } else {
+      statusEl.className = 'gh-status-msg err';
+      statusEl.textContent = '❌ Gagal: ' + (hasil && hasil.msg ? hasil.msg : 'Error tidak diketahui');
+    }
+  } catch (e) {
+    btn.disabled = false;
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal terhubung: ' + e.message;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  BUAT & LIHAT ANALISIS
+// ═══════════════════════════════════════════════
+function ghKonfirmasiAnalisis() {
+  if (!ghSekolahAktif) return;
+  document.getElementById('gh-modal-analisis').classList.add('on');
+}
+function ghTutupModalAnalisis() {
+  document.getElementById('gh-modal-analisis').classList.remove('on');
+}
+
+async function ghJalankanAnalisis() {
+  ghTutupModalAnalisis();
+  if (!ghSekolahAktif) return;
+  let statusEl = document.getElementById('gh-analisis-status');
+  let hasilEl = document.getElementById('gh-analisis-hasil');
+  let btn = document.getElementById('gh-btn-buat-analisis');
+  btn.disabled = true;
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = 'Menghitung & menulis ke sheet Analisis_CBT...';
+  hasilEl.innerHTML = '';
+  try {
+    let resp = await fetch(ghSekolahAktif.urlGas, {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'buatAnalisis', token_admin: ghSekolahAktif.tokenAdmin })
+    });
+    let hasil = await resp.json();
+    btn.disabled = false;
+    if (!hasil || hasil.status !== 'ok') {
+      statusEl.className = 'gh-status-msg err';
+      statusEl.textContent = '❌ Gagal: ' + (hasil && hasil.msg ? hasil.msg : 'Error tidak diketahui');
+      return;
+    }
+    statusEl.textContent = '✅ Selesai — tersimpan juga di sheet Analisis_CBT.';
+    ghRenderAnalisis(hasil.data);
+  } catch (e) {
+    btn.disabled = false;
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal terhubung: ' + e.message;
+  }
+}
+
+function ghRenderAnalisis(d) {
+  let el = document.getElementById('gh-analisis-hasil');
+  let html = '';
+
+  html += '<div class="gh-an-grid">';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.jumlah_peserta + '</div><div class="gh-an-lbl">Peserta</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.rata_nilai + '</div><div class="gh-an-lbl">Rata-rata</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.tertinggi + '</div><div class="gh-an-lbl">Tertinggi</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.terendah + '</div><div class="gh-an-lbl">Terendah</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.tuntas + '</div><div class="gh-an-lbl">Tuntas (KKM ' + d.kkm + ')</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.tidak_tuntas + '</div><div class="gh-an-lbl">Belum Tuntas</div></div>';
+  html += '</div>';
+
+  html += '<div class="gh-an-sect"><h4>Ranking Peserta</h4><div class="gh-an-scroll"><table class="gh-an-table">' +
+    '<thead><tr><th>#</th><th>Nama</th><th>Nilai</th><th>Benar</th><th>Esai</th></tr></thead><tbody>' +
+    (d.ranking || []).map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + ghEsc(r.nama) + '</td><td>' + r.nilai + '</td><td>' + r.benar + '</td><td>' + r.esai_poin + '</td></tr>').join('') +
+    '</tbody></table></div></div>';
+
+  if (d.soal_stats && d.soal_stats.length) {
+    html += '<div class="gh-an-sect"><h4>Analisis Butir Soal (PG)</h4><div class="gh-an-scroll"><table class="gh-an-table">' +
+      '<thead><tr><th>No</th><th>% Benar</th><th>Distraktor Terbanyak</th></tr></thead><tbody>' +
+      d.soal_stats.map(s => '<tr' + (s.pct_benar < 0.5 ? ' class="gh-an-warn-row"' : '') + '><td>' + ghEsc(s.no) + '</td><td>' + Math.round(s.pct_benar * 100) + '%</td><td>' + ghEsc(s.distraktor) + '</td></tr>').join('') +
+      '</tbody></table></div></div>';
+  }
+
+  if (d.pelanggar && d.pelanggar.length) {
+    html += '<div class="gh-an-sect"><h4>Peserta dengan Pelanggaran</h4><div class="gh-an-scroll"><table class="gh-an-table">' +
+      '<thead><tr><th>Nama</th><th>Jml Pelanggaran</th><th>Nilai</th></tr></thead><tbody>' +
+      d.pelanggar.map(p => '<tr class="gh-an-warn-row"><td>' + ghEsc(p.nama) + '</td><td>' + p.pel + '</td><td>' + p.nilai + '</td></tr>').join('') +
+      '</tbody></table></div></div>';
+  }
+
+  if (d.anomali && d.anomali.length) {
+    html += '<div class="gh-an-sect"><h4>⚠️ Deteksi Anomali (nilai tinggi, durasi janggal cepat)</h4><div class="gh-an-scroll"><table class="gh-an-table">' +
+      '<thead><tr><th>Nama</th><th>Nilai</th><th>Durasi (menit)</th></tr></thead><tbody>' +
+      d.anomali.map(a => '<tr class="gh-an-warn-row"><td>' + ghEsc(a.nama) + '</td><td>' + a.nilai + '</td><td>' + a.dur + '</td></tr>').join('') +
+      '</tbody></table></div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// FITUR (2026-09): render jawaban gambar tangan (kanvas) -- disalin PERSIS
+// dari fungsi gambarKanvas() di sidebar koreksi guru (CBTKD_MasterLib.js,
+// SIDEBAR_HTML), BUKAN ditulis ulang -- supaya hasilnya identik lintas
+// tempat (Portal, analisis, sidebar, dan sekarang Guru Hub), sesuai prinsip
+// konsistensi render yang sudah dipegang proyek ini. Kalau rumus render di
+// sidebar berubah lagi nanti, salin ulang persis dari sana ke sini juga.
+function ghGambarKanvas(cv, strokes) {
+  if (!cv) return;
+  var VW = 1000, VH = 1400;
+  var LEBAR_MAKS = 0.4;
+  var RES = 3;
+  var SUDUT_KALIGRAFI = Math.PI / 4;
+  var skala = cv.width / VW;
+  var ctx = cv.getContext('2d');
+  ctx.setTransform(skala, 0, 0, skala, 0, 0);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, VW, VH);
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1.5 * RES / skala;
+  ctx.strokeRect(0, 0, VW, VH);
+  ctx.strokeStyle = '#1E2B3A';
+  var KUAS = {
+    pena: { a: 1, k: 1, cap: 'round', join: 'round' },
+    pensil: { a: .75, k: .8, cap: 'round', join: 'round' },
+    spidol: { a: .95, k: 1.6, cap: 'square', join: 'bevel' },
+    stabilo: { a: .35, k: 3.2, cap: 'square', join: 'round' }
+  };
+  (strokes || []).forEach(function (st) {
+    if (!st.p || st.p.length < 1) return;
+    var ku = KUAS[st.k] || KUAS.pena;
+    if (st.p.length === 1) {
+      ctx.save(); ctx.globalAlpha = ku.a; ctx.fillStyle = '#1E2B3A';
+      var rad = Math.min((st.t || 2) * (st.k === 'kaligrafi' ? 1.3 : ku.k), LEBAR_MAKS * 2) * RES / 2 / skala;
+      ctx.beginPath(); ctx.arc(st.p[0][0], st.p[0][1], rad, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      return;
+    }
+    if (st.k === 'kaligrafi') {
+      ctx.save(); ctx.strokeStyle = '#1E2B3A'; ctx.lineCap = 'round';
+      for (var i = 1; i < st.p.length; i++) {
+        var dx = st.p[i][0] - st.p[i - 1][0], dy = st.p[i][1] - st.p[i - 1][1];
+        var arah = Math.atan2(dy, dx);
+        var faktor = 0.15 + 0.85 * Math.abs(Math.sin(arah - SUDUT_KALIGRAFI));
+        ctx.lineWidth = Math.min((st.t || 2) * 1.6 * faktor, LEBAR_MAKS) * RES / skala;
+        ctx.beginPath(); ctx.moveTo(st.p[i - 1][0], st.p[i - 1][1]); ctx.lineTo(st.p[i][0], st.p[i][1]); ctx.stroke();
+      }
+      ctx.restore(); return;
+    }
+    ctx.save(); ctx.globalAlpha = ku.a; ctx.lineCap = ku.cap; ctx.lineJoin = ku.join;
+    ctx.lineWidth = Math.min((st.t || 2) * ku.k, LEBAR_MAKS) * RES / skala;
+    ctx.beginPath(); ctx.moveTo(st.p[0][0], st.p[0][1]);
+    for (var k = 1; k < st.p.length; k++) ctx.lineTo(st.p[k][0], st.p[k][1]);
+    ctx.stroke(); ctx.restore();
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  BANK SOAL (Fase 7) — OAuth Google + Sheets API + Drive API
+// ═══════════════════════════════════════════════
+// CATATAN ARSITEKTUR: bagian ini TIDAK lewat backend Apps Script sama
+// sekali -- begitu guru memberi izin lewat OAuth (Google Identity
+// Services), Guru Hub bicara LANGSUNG ke Sheets API & Drive API dari
+// browser. Bank Soal = SATU spreadsheet di Drive guru sendiri (bukan bank
+// terpusat), dibuat otomatis atau ditunjuk manual.
+const GH_KEY_CLIENT_ID = 'guruhub_client_id_v1';
+const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
+const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
+const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
+const GH_KOLOM_BANK = ['Sumber','Tahun','Mapel','No_Asal'].concat(GH_KOLOM_SOAL.slice(1)); // ganti No -> No_Asal, sisanya sama
+
+let ghAccessToken = null;   // in-memory SAJA -- token OAuth tidak pernah disimpan ke localStorage (berumur pendek, ~1 jam)
+let ghTokenClient = null;
+let ghBankSoalId = null;
+let ghSoalSumberDipilih = null;   // {id, nama, rows: [...]} -- hasil baca sheet sumber sebelum diimpor
+let ghBankSoalData = null;        // seluruh isi Bank Soal setelah dimuat (untuk filter & generate)
+
+function ghEkstrakSheetId(input) {
+  input = (input || '').trim();
+  let m = input.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9-_]{20,}$/.test(input)) return input; // sudah berupa ID mentah
+  return null;
+}
+
+function ghHubungkanGoogle() {
+  let clientId = document.getElementById('gh-inp-client-id').value.trim();
+  if (!clientId) { ghToast('Isi OAuth Client ID dulu.'); return; }
+  localStorage.setItem(GH_KEY_CLIENT_ID, clientId);
+  let statusEl = document.getElementById('gh-bs-oauth-status');
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Google Identity Services belum termuat -- cek koneksi internet, lalu muat ulang halaman.';
+    return;
+  }
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = 'Membuka jendela izin Google...';
+  ghTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: GH_SCOPES,
+    callback: (resp) => {
+      if (resp.error) {
+        statusEl.className = 'gh-status-msg err';
+        statusEl.textContent = '❌ Gagal menghubungkan: ' + resp.error + ' (cek Client ID & Authorized origins di Google Cloud Console).';
+        return;
+      }
+      ghAccessToken = resp.access_token;
+      statusEl.textContent = '';
+      document.getElementById('gh-bs-langkah-oauth').style.display = 'none';
+      document.getElementById('gh-bs-area').style.display = 'block';
+      ghMuatBankSoalTersimpan();
+    }
+  });
+  ghTokenClient.requestAccessToken();
+}
+
+function ghHeaderAuth() {
+  return { 'Authorization': 'Bearer ' + ghAccessToken, 'Content-Type': 'application/json' };
+}
+
+async function ghMuatBankSoalTersimpan() {
+  let id = localStorage.getItem(GH_KEY_BANKSOAL_ID);
+  if (!id) return;
+  await ghSetBankSoalAktif(id, true);
+}
+
+async function ghSetBankSoalAktif(id, diam) {
+  let statusEl = document.getElementById('gh-bs-setup-status');
+  try {
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '?fields=properties.title', { headers: ghHeaderAuth() });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    ghBankSoalId = id;
+    localStorage.setItem(GH_KEY_BANKSOAL_ID, id);
+    document.getElementById('gh-bs-nama-aktif').value = hasil.properties.title;
+    document.getElementById('gh-bs-fitur').style.display = 'block';
+    if (!diam) ghToast('Bank Soal aktif: ' + hasil.properties.title);
+    statusEl.textContent = '';
+  } catch (e) {
+    if (!diam) { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Gagal membuka spreadsheet ini: ' + e.message; }
+  }
+}
+
+async function ghBuatBankSoalBaru() {
+  let statusEl = document.getElementById('gh-bs-setup-status');
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = 'Membuat spreadsheet Bank Soal baru...';
+  try {
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+      method: 'POST', headers: ghHeaderAuth(),
+      body: JSON.stringify({
+        properties: { title: 'Bank Soal - Guru Hub (' + new Date().toLocaleDateString('id-ID') + ')' },
+        sheets: [{ properties: { title: 'BankSoal' } }]
+      })
+    });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    // Tulis baris header
+    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + hasil.spreadsheetId + '/values/BankSoal!A1:' + ghKolomHuruf(GH_KOLOM_BANK.length) + '1?valueInputOption=RAW', {
+      method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [GH_KOLOM_BANK] })
+    });
+    await ghSetBankSoalAktif(hasil.spreadsheetId, true);
+    statusEl.textContent = '';
+    ghToast('Bank Soal baru dibuat!');
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal membuat spreadsheet: ' + e.message;
+  }
+}
+
+function ghToggleFormBankManual() {
+  let f = document.getElementById('gh-bs-form-manual');
+  f.style.display = (f.style.display === 'none') ? 'block' : 'none';
+}
+
+function ghPakaiBankSoalManual() {
+  let raw = document.getElementById('gh-inp-bs-id-manual').value;
+  let id = ghEkstrakSheetId(raw);
+  if (!id) { ghToast('ID/URL spreadsheet tidak valid.'); return; }
+  ghSetBankSoalAktif(id, false);
+}
+
+// Ubah angka kolom (1-based) jadi huruf kolom A1 notation (1->A, 27->AA, dst) --
+// dipakai supaya rentang tulis header/data selalu pas dengan jumlah kolom
+// GH_KOLOM_BANK, tidak hardcode "P" dsb yang bisa salah kalau kolomnya berubah.
+function ghKolomHuruf(n) {
+  let s = '';
+  while (n > 0) { let sisa = (n - 1) % 26; s = String.fromCharCode(65 + sisa) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+
+// ── CARI & IMPOR DARI SPREADSHEET LAIN ──────────────────────────────
+async function ghCariSpreadsheet() {
+  let statusEl = document.getElementById('gh-bs-status');
+  let hasilEl = document.getElementById('gh-bs-cari-hasil');
+  statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Mencari spreadsheet Anda di Google Drive...';
+  hasilEl.innerHTML = '';
+  try {
+    let q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and trashed=false");
+    let resp = await fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=30', { headers: ghHeaderAuth() });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    statusEl.textContent = '';
+    if (!hasil.files || !hasil.files.length) { hasilEl.innerHTML = '<div class="gh-empty">Tidak ada spreadsheet ditemukan di Drive Anda.</div>'; return; }
+    hasilEl.innerHTML = '<div class="gh-bs-scroll">' + hasil.files.map(f =>
+      '<div class="gh-bs-sheet-item" onclick=\'ghPilihSpreadsheetSumber(' + JSON.stringify(f.id) + ',' + JSON.stringify(f.name) + ')\'>' +
+        '<div class="gh-bs-sheet-nm">' + ghEsc(f.name) + '</div>' +
+        '<div class="gh-bs-sheet-dt">' + new Date(f.modifiedTime).toLocaleDateString('id-ID') + '</div>' +
+      '</div>'
+    ).join('') + '</div>';
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal mencari: ' + e.message;
+  }
+}
+
+async function ghPilihSpreadsheetSumber(id, nama) {
+  let statusEl = document.getElementById('gh-bs-status');
+  let hasilEl = document.getElementById('gh-bs-cari-hasil');
+  statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Membaca soal dari "' + nama + '"...';
+  try {
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/Soal!A2:M', { headers: ghHeaderAuth() });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    let rows = (hasil.values || []).filter(r => r[0]).map(r => {
+      let o = {}; GH_KOLOM_SOAL.forEach((k, i) => o[k] = r[i] || ''); return o;
+    });
+    statusEl.textContent = '';
+    if (!rows.length) { hasilEl.innerHTML = '<div class="gh-empty">Tab "Soal" tidak ditemukan atau kosong di spreadsheet ini.</div>'; return; }
+    ghSoalSumberDipilih = { id, nama, rows };
+    ghRenderPreviewImpor();
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal membaca "' + nama + '": ' + e.message + ' (pastikan spreadsheet ini punya tab bernama persis "Soal")';
+  }
+}
+
+function ghRenderPreviewImpor() {
+  let d = ghSoalSumberDipilih;
+  let hasilEl = document.getElementById('gh-bs-cari-hasil');
+  hasilEl.innerHTML =
+    '<div class="gh-esai-soal" style="margin-top:10px;">' +
+      '<div class="gh-lbl">' + ghEsc(d.nama) + ' — ' + d.rows.length + ' soal ditemukan</div>' +
+      '<div class="gh-row" style="margin-top:8px;">' +
+        '<div class="gh-fg"><label>Mapel</label><input type="text" id="gh-imp-mapel" placeholder="Contoh: Matematika"></div>' +
+        '<div class="gh-fg"><label>Tahun</label><input type="text" id="gh-imp-tahun" placeholder="2026"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="gh-bs-scroll">' + d.rows.map((r, i) =>
+      '<div class="gh-bs-soal-item"><input type="checkbox" id="gh-imp-c' + i + '" checked>' +
+        '<div class="gh-bs-soal-txt">No.' + ghEsc(r.No) + ' — ' + ghEsc((r.Pertanyaan || '').slice(0, 90)) +
+        (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
+        '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.Tipe) + '</span>' + r.Poin + ' poin</div></div>' +
+      '</div>'
+    ).join('') + '</div>' +
+    '<button class="gh-btn gh-btn-primary" onclick="ghImporKeBank()" style="width:100%;margin-top:10px;">📥 Impor Soal Terpilih ke Bank Soal</button>';
+}
+
+async function ghImporKeBank() {
+  if (!ghSoalSumberDipilih || !ghBankSoalId) return;
+  let mapel = (document.getElementById('gh-imp-mapel').value || '').trim();
+  let tahun = (document.getElementById('gh-imp-tahun').value || '').trim();
+  let terpilih = ghSoalSumberDipilih.rows.filter((r, i) => document.getElementById('gh-imp-c' + i).checked);
+  if (!terpilih.length) { ghToast('Pilih minimal 1 soal.'); return; }
+  let statusEl = document.getElementById('gh-bs-status');
+  statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Mengimpor ' + terpilih.length + ' soal ke Bank Soal...';
+  try {
+    let rowsBaru = terpilih.map(r => {
+      let baris = [ghSoalSumberDipilih.nama, tahun, mapel, r.No];
+      GH_KOLOM_SOAL.slice(1).forEach(k => baris.push(r[k] || ''));
+      return baris;
+    });
+    let lebarBank = ghKolomHuruf(GH_KOLOM_BANK.length);
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values/BankSoal!A:' + lebarBank + ':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS', {
+      method: 'POST', headers: ghHeaderAuth(), body: JSON.stringify({ values: rowsBaru })
+    });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    statusEl.textContent = '✅ ' + terpilih.length + ' soal berhasil diimpor ke Bank Soal.';
+    document.getElementById('gh-bs-cari-hasil').innerHTML = '';
+    ghSoalSumberDipilih = null;
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal mengimpor: ' + e.message;
+  }
+}
+
+// ── LIHAT BANK SOAL & GENERATE UJIAN ────────────────────────────────
+async function ghLihatBankSoal() {
+  let statusEl = document.getElementById('gh-bs-status');
+  let areaEl = document.getElementById('gh-bs-bank-area');
+  statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Memuat Bank Soal...';
+  try {
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values/BankSoal!A2:' + ghKolomHuruf(GH_KOLOM_BANK.length), { headers: ghHeaderAuth() });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    let rows = (hasil.values || []).filter(r => r[3]).map((r, idx) => {
+      let o = { _idx: idx }; GH_KOLOM_BANK.forEach((k, i) => o[k] = r[i] || ''); return o;
+    });
+    statusEl.textContent = '';
+    ghBankSoalData = rows;
+    ghRenderBankSoal();
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal memuat Bank Soal: ' + e.message;
+  }
+}
+
+function ghOpsiUnik(rows, kolom) {
+  return [...new Set(rows.map(r => r[kolom]).filter(Boolean))].sort();
+}
+
+function ghRenderBankSoal() {
+  let areaEl = document.getElementById('gh-bs-bank-area');
+  let rows = ghBankSoalData;
+  if (!rows.length) { areaEl.innerHTML = '<div class="gh-empty">Bank Soal masih kosong — impor soal dulu.</div>'; return; }
+
+  let mapelOpt = ghOpsiUnik(rows, 'Mapel'), tahunOpt = ghOpsiUnik(rows, 'Tahun'), tipeOpt = ghOpsiUnik(rows, 'Tipe');
+  areaEl.innerHTML =
+    '<div class="gh-bs-filter-row" style="margin-top:10px;">' +
+      '<select id="gh-bs-f-mapel" onchange="ghFilterBankSoal()"><option value="">Semua Mapel</option>' + mapelOpt.map(m => '<option>' + ghEsc(m) + '</option>').join('') + '</select>' +
+      '<select id="gh-bs-f-tahun" onchange="ghFilterBankSoal()"><option value="">Semua Tahun</option>' + tahunOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
+      '<select id="gh-bs-f-tipe" onchange="ghFilterBankSoal()"><option value="">Semua Tipe</option>' + tipeOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
+    '</div>' +
+    '<div class="gh-bs-scroll" id="gh-bs-list"></div>' +
+    '<div class="gh-fg" style="margin-top:12px;">' +
+      '<label>Tulis ke spreadsheet ujian (ID/URL) — akan MENIMPA tab "Soal" di sana</label>' +
+      '<input type="text" id="gh-inp-target-generate" placeholder="Tempel ID/URL spreadsheet CBT tujuan">' +
+    '</div>' +
+    '<button class="gh-btn gh-btn-primary" onclick="ghGenerateUjian()" style="width:100%;">🛠️ Generate Ujian dari Soal Terpilih</button>';
+  ghFilterBankSoal();
+}
+
+function ghFilterBankSoal() {
+  let fm = document.getElementById('gh-bs-f-mapel').value, ft = document.getElementById('gh-bs-f-tahun').value, fp = document.getElementById('gh-bs-f-tipe').value;
+  let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!ft || r.Tahun === ft) && (!fp || r.Tipe === fp));
+  document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r =>
+    '<div class="gh-bs-soal-item"><input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" checked>' +
+      '<div class="gh-bs-soal-txt">' + ghEsc((r.Pertanyaan || '').slice(0, 90)) + (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
+      '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.Tipe) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' + ghEsc(r.Sumber) + '</div></div>' +
+    '</div>'
+  ).join('') : '<div class="gh-empty">Tidak ada soal yang cocok dengan filter ini.</div>';
+}
+
+async function ghGenerateUjian() {
+  let target = ghEkstrakSheetId(document.getElementById('gh-inp-target-generate').value);
+  if (!target) { ghToast('Isi ID/URL spreadsheet tujuan dulu.'); return; }
+  let idxTerpilih = Array.from(document.querySelectorAll('.gh-bs-pilih-generate:checked')).map(el => parseInt(el.dataset.idx));
+  if (!idxTerpilih.length) { ghToast('Pilih minimal 1 soal.'); return; }
+  if (!confirm('Ini akan MENIMPA seluruh isi tab "Soal" di spreadsheet tujuan dengan ' + idxTerpilih.length + ' soal terpilih. Lanjutkan?')) return;
+
+  let statusEl = document.getElementById('gh-bs-status');
+  statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Menulis ' + idxTerpilih.length + ' soal ke spreadsheet tujuan...';
+  try {
+    let terpilih = ghBankSoalData.filter(r => idxTerpilih.includes(r._idx));
+    let rowsBaru = terpilih.map((r, i) => {
+      let baris = [i + 1]; // No diurutkan ulang 1..N di ujian baru
+      GH_KOLOM_SOAL.slice(1).forEach(k => baris.push(r[k] || ''));
+      return baris;
+    });
+    let lebarKolom = ghKolomHuruf(GH_KOLOM_SOAL.length);
+    // Bersihkan dulu isi lama (kalau data baru lebih pendek dari yang lama,
+    // baris sisa dari data lama harus dikosongkan, bukan cuma ditimpa sebagian)
+    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A2:' + lebarKolom + '10000:clear', { method: 'POST', headers: ghHeaderAuth() });
+    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A1:' + lebarKolom + '1?valueInputOption=RAW', { method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [GH_KOLOM_SOAL] }) });
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A2?valueInputOption=RAW', { method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: rowsBaru }) });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    statusEl.textContent = '✅ Berhasil! ' + idxTerpilih.length + ' soal tertulis ke tab "Soal" spreadsheet tujuan.';
+    setTimeout(() => { statusEl.textContent = ''; }, 5000);
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal menulis ke tujuan: ' + e.message + ' (pastikan Anda punya akses edit ke spreadsheet itu, dan tab-nya bernama persis "Soal")';
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+// BUG-FIX (2026-09): blok ini SEBELUMNYA ditaruh di ATAS, sebelum deklarasi
+// const/let (GH_KEY_SEKOLAH, ghSekolah, dst) yang dipakai di dalamnya --
+// akibatnya ghMuatSekolah() dipanggil saat GH_KEY_SEKOLAH masih di
+// "temporal dead zone" (belum diinisialisasi), melempar error yang
+// menghentikan SISA skrip secara diam-diam (tidak ada pesan ke pengguna).
+// Ini yang menyebabkan tombol Simpan Sekolah kelihatan seperti tidak
+// bereaksi sama sekali. Taruh blok INIT SELALU di paling akhir skrip,
+// setelah semua deklarasi -- bukan di atas -- supaya aman untuk fitur
+// yang ditambahkan berikutnya juga.
+ghMuatEntri();
+ghRenderList();
+ghMuatSekolah();
+ghRenderSekolah();
+// FITUR (2026-09): isi ulang OAuth Client ID yang tersimpan (kalau ada)
+// supaya guru tidak perlu ketik ulang tiap buka Guru Hub -- token akses
+// sendiri TETAP harus diminta ulang tiap sesi (tidak disimpan).
+(function ghIsiUlangClientId() {
+  let cid = localStorage.getItem(GH_KEY_CLIENT_ID);
+  if (cid) document.getElementById('gh-inp-client-id').value = cid;
+})();
+</script>
+
+</body>
+</html>
