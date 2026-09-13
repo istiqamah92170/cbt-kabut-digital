@@ -131,8 +131,18 @@
   .gh-bs-sheet-item .gh-bs-sheet-dt { font-size:11px; color:var(--gray-soft); }
   .gh-bs-soal-item { display:flex; align-items:flex-start; gap:10px; padding:9px 12px; border:1px solid var(--gray-line); border-radius:var(--r-md); margin-bottom:6px; }
   .gh-bs-soal-item input[type=checkbox] { margin-top:3px; width:16px; height:16px; accent-color:var(--blue-main); flex-shrink:0; }
-  .gh-bs-soal-item .gh-bs-soal-txt { flex:1; font-size:12.5px; color:var(--gray-dark); line-height:1.45; }
+  .gh-bs-soal-item .gh-bs-soal-txt { flex:1; min-width:0; font-size:12.5px; color:var(--gray-dark); line-height:1.45; }
   .gh-bs-soal-item .gh-bs-soal-meta { font-size:10.5px; color:var(--gray-soft); margin-top:3px; }
+  /* FITUR (2026-09): kolom Topik di samping soal -- tanpa garis pemisah,
+     lebar tetap & bisa digeser horizontal (overflow-x) untuk lihat topik
+     lengkap + sub-nya (dipisah "|"). Pertanyaan tetap melipat normal
+     karena punya min-width:0 di atas (flex bisa menyusut wajar). */
+  .gh-bs-soal-topik {
+    flex-shrink:0; width:92px; align-self:center;
+    overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;
+    font-size:10.5px; color:var(--blue-main); font-weight:600;
+    padding-bottom:2px; scrollbar-width:thin;
+  }
   .gh-bs-badge { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--blue-light); color:var(--blue-deep); margin-right:5px; }
   .gh-bs-filter-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .gh-bs-filter-row select { padding:7px 9px; border:1.5px solid var(--gray-line); border-radius:var(--r-sm); font-size:12.5px; background:var(--white); }
@@ -1217,6 +1227,17 @@ function ghOpsiUnik(rows, kolom) {
   return [...new Set(rows.map(r => (r[kolom] || '').toString().trim()).filter(Boolean))].sort();
 }
 
+// FITUR (2026-09): Topik bisa berisi topik+sub dipisah "|" (mis. "Peta &
+// Letak Geografis | Letak Astronomis") -- kalau dropdown filter pakai teks
+// itu APA ADANYA, jadi sangat panjang/berantakan. Ambil cuma kalimat
+// PERTAMA (sebelum "|" pertama) untuk dropdown & pencocokan filter --
+// jadi guru filter per topik UTAMA, hasilnya tetap mencakup semua sub-nya.
+// Detail topik+sub LENGKAP tetap tampil di kolom samping tiap soal (lihat
+// ghFilterBankSoal), cuma dropdown-nya yang dipersingkat.
+function ghTopikUtama(topik) {
+  return (topik || '').split('|')[0].trim();
+}
+
 function ghRenderBankSoal() {
   let areaEl = document.getElementById('gh-bs-bank-area');
   let rows = ghBankSoalData;
@@ -1224,7 +1245,8 @@ function ghRenderBankSoal() {
 
   let mapelOpt = ghOpsiUnik(rows, 'Mapel'), kelasOpt = ghOpsiUnik(rows, 'Kelas'), tahunOpt = ghOpsiUnik(rows, 'Tahun');
   let tipeOpt = ghOpsiUnik(rows, 'TipeTampil');
-  let topikOpt = ghOpsiUnik(rows, 'Topik'), bloomOpt = ghOpsiUnik(rows, 'Bloom'), kesulitanOpt = ghOpsiUnik(rows, 'Kesulitan');
+  let topikOpt = [...new Set(rows.map(r => ghTopikUtama(r.Topik)).filter(Boolean))].sort();
+  let bloomOpt = ghOpsiUnik(rows, 'Bloom'), kesulitanOpt = ghOpsiUnik(rows, 'Kesulitan');
   areaEl.innerHTML =
     '<div class="gh-bs-filter-row" style="margin-top:10px;">' +
       '<select id="gh-bs-f-mapel" onchange="ghFilterBankSoal()"><option value="">Semua Mapel</option>' + mapelOpt.map(m => '<option>' + ghEsc(m) + '</option>').join('') + '</select>' +
@@ -1270,13 +1292,14 @@ function ghFilterBankSoal() {
   let ft = document.getElementById('gh-bs-f-tahun').value, fp = document.getElementById('gh-bs-f-tipe').value;
   let ftp = document.getElementById('gh-bs-f-topik').value, fbl = document.getElementById('gh-bs-f-bloom').value, fks = document.getElementById('gh-bs-f-kesulitan').value;
   let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!fk || r.Kelas === fk) && (!ft || r.Tahun === ft) && (!fp || r.TipeTampil === fp)
-    && (!ftp || r.Topik === ftp) && (!fbl || r.Bloom === fbl) && (!fks || r.Kesulitan === fks));
+    && (!ftp || ghTopikUtama(r.Topik) === ftp) && (!fbl || r.Bloom === fbl) && (!fks || r.Kesulitan === fks));
   let idxTerstaging = new Set(ghStaging.map(r => r._idx));
   document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r =>
     '<div class="gh-bs-soal-item"><input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" onchange="ghToggleStaging(' + r._idx + ', this.checked)"' + (idxTerstaging.has(r._idx) ? ' checked' : '') + '>' +
       '<div class="gh-bs-soal-txt">' + ghEsc((r.Pertanyaan || '').slice(0, 90)) + (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
       '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' +
       (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + ghEsc(r.Sumber) + '</div></div>' +
+      (r.Topik ? '<div class="gh-bs-soal-topik" title="' + ghEsc(r.Topik) + '">' + ghEsc(r.Topik) + '</div>' : '') +
     '</div>'
   ).join('') : '<div class="gh-empty">Tidak ada soal yang cocok dengan filter ini.</div>';
   ghUpdateHitungCentang();
