@@ -134,15 +134,18 @@
   .gh-bs-soal-item .gh-bs-soal-txt { flex:1; min-width:0; font-size:12.5px; color:var(--gray-dark); line-height:1.45; }
   .gh-bs-soal-item .gh-bs-soal-meta { font-size:10.5px; color:var(--gray-soft); margin-top:3px; }
   /* FITUR (2026-09): kolom Topik di samping soal -- tanpa garis pemisah,
-     lebar tetap & bisa digeser horizontal (overflow-x) untuk lihat topik
-     lengkap + sub-nya (dipisah "|"). Pertanyaan tetap melipat normal
-     karena punya min-width:0 di atas (flex bisa menyusut wajar). */
+     lebar tetap, teks MELIPAT (bukan geser lagi) supaya langsung terbaca
+     tanpa interaksi. Topik utama pakai warna hijau (--blue-main, sudah
+     cocok), sub-topik dibedakan abu-abu (--gray-soft) lewat span
+     terpisah -- lihat ghRenderTopikKolom(). Pertanyaan tetap melipat
+     normal karena .gh-bs-soal-txt punya min-width:0 di atas. */
   .gh-bs-soal-topik {
-    flex-shrink:0; width:92px; align-self:center;
-    overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;
-    font-size:10.5px; color:var(--blue-main); font-weight:600;
-    padding-bottom:2px; scrollbar-width:thin;
+    flex-shrink:0; width:100px; align-self:center;
+    white-space:normal; word-break:break-word;
+    font-size:10.5px; line-height:1.35;
   }
+  .gh-bs-soal-topik .gh-topik-utama { color:var(--blue-main); font-weight:700; }
+  .gh-bs-soal-topik .gh-topik-sub { color:var(--gray-soft); font-weight:500; }
   .gh-bs-badge { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--blue-light); color:var(--blue-deep); margin-right:5px; }
   .gh-bs-filter-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .gh-bs-filter-row select { padding:7px 9px; border:1.5px solid var(--gray-line); border-radius:var(--r-sm); font-size:12.5px; background:var(--white); }
@@ -270,12 +273,8 @@
     <p class="gh-sub">Kumpulkan soal dari berbagai ujian &amp; tahun (lintas spreadsheet), lalu susun ujian baru dari kumpulan itu.</p>
 
     <div id="gh-bs-langkah-oauth">
-      <div class="gh-fg">
-        <label>OAuth Client ID (dari Google Cloud Console milik Anda)</label>
-        <input type="text" id="gh-inp-client-id" placeholder="xxxxxxxxxx-xxxxxxxxxxxxx.apps.googleusercontent.com">
-      </div>
+      <p class="gh-hint" style="margin-top:0;">Klik tombol di bawah untuk memberi izin akses Google Drive Anda (dipakai untuk membaca/menulis spreadsheet Bank Soal &amp; ujian).</p>
       <button class="gh-btn gh-btn-primary" id="gh-btn-hubungkan" onclick="ghHubungkanGoogle()" style="width:100%;">🔗 Hubungkan Google Drive</button>
-      <p class="gh-hint">Client ID ini milik Anda sendiri (dibuat di Google Cloud Console — Sheets API &amp; Drive API harus aktif, domain tempat halaman ini dibuka harus terdaftar di "Authorized JavaScript origins"). Tersimpan di perangkat ini saja, tidak dikirim ke mana pun selain Google.</p>
       <div class="gh-status-msg" id="gh-bs-oauth-status"></div>
     </div>
 
@@ -918,7 +917,26 @@ function ghGambarKanvas(cv, strokes) {
 // Services), Guru Hub bicara LANGSUNG ke Sheets API & Drive API dari
 // browser. Bank Soal = SATU spreadsheet di Drive guru sendiri (bukan bank
 // terpusat), dibuat otomatis atau ditunjuk manual.
-const GH_KEY_CLIENT_ID = 'guruhub_client_id_v1';
+// FITUR (2026-09): Client ID SATU untuk SEMUA pengguna (bukan diisi
+// manual per guru lagi) -- ini cara kerja OAuth yang benar untuk produk
+// SaaS: Client ID mengidentifikasi APLIKASINYA (Guru Hub), bukan
+// penggunanya. Tiap guru tetap login & beri izin pakai akun Google
+// MEREKA SENDIRI lewat tombol "Hubungkan Google Drive" -- datanya tetap
+// terpisah per akun, itu bawaan cara kerja OAuth.
+//
+// ⚠️ GANTI nilai di bawah ini dengan Client ID asli dari Google Cloud
+// Console milik Anda sebelum deploy ke produksi (masih placeholder).
+// Syaratnya: Sheets API + Drive API aktif di project itu, dan domain
+// tempat Guru Hub di-hosting terdaftar di "Authorized JavaScript origins".
+//
+// ⚠️ CATATAN PENTING soal rencana premium/berlangganan: karena aplikasi
+// ini minta scope "sensitif" (drive.readonly + spreadsheets), Google
+// MEWAJIBKAN proses verifikasi aplikasi (OAuth App Verification, gratis
+// tapi perlu waktu & syarat administratif seperti halaman kebijakan
+// privasi) begitu pengguna lebih dari ~100 orang -- sebelum itu, cuma
+// "test user" yang didaftarkan manual di Cloud Console yang bisa pakai
+// tanpa melihat peringatan "Aplikasi belum diverifikasi".
+const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
@@ -954,10 +972,12 @@ function ghEkstrakSheetId(input) {
 }
 
 function ghHubungkanGoogle() {
-  let clientId = document.getElementById('gh-inp-client-id').value.trim();
-  if (!clientId) { ghToast('Isi OAuth Client ID dulu.'); return; }
-  localStorage.setItem(GH_KEY_CLIENT_ID, clientId);
   let statusEl = document.getElementById('gh-bs-oauth-status');
+  if (GH_CLIENT_ID.startsWith('GANTI_DENGAN_CLIENT_ID_ASLI')) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ GH_CLIENT_ID di kode masih placeholder -- ganti dulu dengan Client ID asli dari Google Cloud Console sebelum dipakai.';
+    return;
+  }
   if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
     statusEl.className = 'gh-status-msg err';
     statusEl.textContent = '❌ Google Identity Services belum termuat -- cek koneksi internet, lalu muat ulang halaman.';
@@ -966,7 +986,7 @@ function ghHubungkanGoogle() {
   statusEl.className = 'gh-status-msg';
   statusEl.textContent = 'Membuka jendela izin Google...';
   ghTokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
+    client_id: GH_CLIENT_ID,
     scope: GH_SCOPES,
     callback: (resp) => {
       if (resp.error) {
@@ -1238,6 +1258,19 @@ function ghTopikUtama(topik) {
   return (topik || '').split('|')[0].trim();
 }
 
+// FITUR (2026-09): render kolom Topik di samping soal -- topik utama
+// (sebelum "|" pertama) dan sub-topik (sisanya) dibedakan warna lewat
+// span terpisah, teks melipat normal (bukan mode geser lagi).
+function ghRenderTopikKolom(topik) {
+  if (!topik) return '';
+  let bagian = topik.split('|').map(s => s.trim()).filter(Boolean);
+  let utama = bagian[0], sub = bagian.slice(1).join(' | ');
+  return '<div class="gh-bs-soal-topik" title="' + ghEsc(topik) + '">' +
+    '<span class="gh-topik-utama">' + ghEsc(utama) + '</span>' +
+    (sub ? '<span class="gh-topik-sub"> | ' + ghEsc(sub) + '</span>' : '') +
+  '</div>';
+}
+
 function ghRenderBankSoal() {
   let areaEl = document.getElementById('gh-bs-bank-area');
   let rows = ghBankSoalData;
@@ -1299,7 +1332,7 @@ function ghFilterBankSoal() {
       '<div class="gh-bs-soal-txt">' + ghEsc((r.Pertanyaan || '').slice(0, 90)) + (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
       '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' +
       (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + ghEsc(r.Sumber) + '</div></div>' +
-      (r.Topik ? '<div class="gh-bs-soal-topik" title="' + ghEsc(r.Topik) + '">' + ghEsc(r.Topik) + '</div>' : '') +
+      (r.Topik ? ghRenderTopikKolom(r.Topik) : '') +
     '</div>'
   ).join('') : '<div class="gh-empty">Tidak ada soal yang cocok dengan filter ini.</div>';
   ghUpdateHitungCentang();
@@ -1531,13 +1564,6 @@ ghMuatEntri();
 ghRenderList();
 ghMuatSekolah();
 ghRenderSekolah();
-// FITUR (2026-09): isi ulang OAuth Client ID yang tersimpan (kalau ada)
-// supaya guru tidak perlu ketik ulang tiap buka Guru Hub -- token akses
-// sendiri TETAP harus diminta ulang tiap sesi (tidak disimpan).
-(function ghIsiUlangClientId() {
-  let cid = localStorage.getItem(GH_KEY_CLIENT_ID);
-  if (cid) document.getElementById('gh-inp-client-id').value = cid;
-})();
 </script>
 
 </body>
