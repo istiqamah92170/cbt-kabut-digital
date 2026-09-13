@@ -146,6 +146,33 @@
   }
   .gh-bs-soal-topik .gh-topik-utama { color:var(--blue-main); font-weight:700; }
   .gh-bs-soal-topik .gh-topik-sub { color:var(--gray-soft); font-weight:500; }
+  /* FITUR (2026-09): kolom checkbox + tombol preview (ikon saja) di bawahnya */
+  .gh-bs-cb-col { display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0; }
+  .gh-bs-cb-col input[type=checkbox] { margin:0; width:16px; height:16px; accent-color:var(--blue-main); }
+  .gh-bs-btn-preview {
+    border:none; background:transparent; cursor:pointer; font-size:15px; padding:2px;
+    line-height:1; opacity:.6; border-radius:4px;
+  }
+  .gh-bs-btn-preview:hover { opacity:1; background:var(--blue-pale); }
+  /* Modal preview soal lengkap -- kartu lebih besar dari modal konfirmasi biasa */
+  .gh-modal-preview {
+    background:var(--white); border-radius:var(--r-lg); padding:20px; width:100%; max-width:480px;
+    max-height:85vh; overflow-y:auto;
+  }
+  .gh-modal-preview h4 { font-size:15px; font-weight:800; color:var(--blue-deep); margin:0 0 10px; }
+  .gh-prev-meta { margin-bottom:10px; }
+  .gh-prev-img { max-width:100%; border-radius:8px; margin:8px 0; display:block; }
+  .gh-prev-pertanyaan { font-size:13.5px; color:var(--gray-dark); line-height:1.55; white-space:pre-wrap; margin-bottom:10px; }
+  .gh-prev-opsi { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+  .gh-prev-opsi-item {
+    display:flex; gap:8px; padding:8px 10px; border-radius:8px; border:1px solid var(--gray-line);
+    font-size:13px; color:var(--gray-dark); align-items:flex-start;
+  }
+  .gh-prev-opsi-item.gh-prev-benar { background:var(--blue-pale); border-color:var(--blue-mid); font-weight:700; color:var(--blue-deep); }
+  .gh-prev-opsi-item .gh-prev-huruf { font-weight:800; flex-shrink:0; }
+  .gh-prev-box { background:var(--gray-bg); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+  .gh-prev-box .gh-prev-box-lbl { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--gray-soft); margin-bottom:4px; }
+  .gh-prev-box .gh-prev-box-txt { font-size:13px; color:var(--gray-dark); white-space:pre-wrap; line-height:1.5; }
   .gh-bs-badge { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--blue-light); color:var(--blue-deep); margin-right:5px; }
   .gh-bs-filter-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .gh-bs-filter-row select { padding:7px 9px; border:1.5px solid var(--gray-line); border-radius:var(--r-sm); font-size:12.5px; background:var(--white); }
@@ -318,6 +345,10 @@
       <button class="gh-btn gh-btn-primary" onclick="ghJalankanAnalisis()">Buat Analisis</button>
     </div>
   </div>
+</div>
+
+<div class="gh-modal-bg" id="gh-modal-preview" onclick="if(event.target===this) ghTutupPreviewSoal()">
+  <div class="gh-modal-preview" id="gh-preview-konten"></div>
 </div>
 
 <script>
@@ -854,6 +885,66 @@ function ghRenderAnalisis(d) {
   el.innerHTML = html;
 }
 
+// ═══════════════════════════════════════════════
+//  PREVIEW SOAL LENGKAP (Fase 7 lanjutan)
+// ═══════════════════════════════════════════════
+// FITUR (2026-09): tombol ikon di bawah checkbox tiap soal -- buka kartu
+// preview lengkap (gambar, opsi PG, kunci/rubrik, pembahasan) atas
+// permintaan DIK, supaya guru bisa cek isi soal tanpa buka spreadsheet.
+// gdrive() di sini disalin dari pola yang sama dipakai Portal (konsisten
+// lintas tempat) -- ubah link Drive jadi URL thumbnail yang bisa langsung
+// dirender <img>, dan aman kalau kebetulan sudah data URI.
+function ghGdrivePrev(u) {
+  if (!u) return u;
+  if (u.startsWith('data:')) return u;
+  let id = u.match(/[?&]id=([a-zA-Z0-9_-]+)/)?.[1]
+           || u.match(/thumbnail\?id=([a-zA-Z0-9_-]+)/)?.[1]
+           || u.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+  return id ? 'https://drive.google.com/thumbnail?id=' + id + '&sz=s2000' : u;
+}
+
+function ghPreviewSoal(idx) {
+  let r = ghBankSoalData.find(x => x._idx === idx);
+  if (!r) return;
+  let isPg = r.Tipe.toLowerCase().startsWith('pg');
+  let html = '';
+
+  html += '<h4>Preview Soal</h4>';
+  html += '<div class="gh-prev-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' +
+    (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + '</div>';
+  if (r.Topik) html += ghRenderTopikKolom(r.Topik);
+
+  html += '<div class="gh-prev-pertanyaan">' + ghEsc(r.Pertanyaan) + '</div>';
+  if (r.URL_Gambar) html += '<img class="gh-prev-img" src="' + ghEsc(ghGdrivePrev(r.URL_Gambar)) + '" alt="Gambar soal">';
+
+  if (isPg) {
+    let opsiKeys = [['A', r.Opsi_A], ['B', r.Opsi_B], ['C', r.Opsi_C], ['D', r.Opsi_D]];
+    html += '<div class="gh-prev-opsi">' + opsiKeys.filter(o => o[1]).map(o =>
+      '<div class="gh-prev-opsi-item' + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' gh-prev-benar' : '') + '">' +
+        '<span class="gh-prev-huruf">' + o[0] + '.</span><span>' + ghEsc(o[1]) + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' ✓' : '') + '</span>' +
+      '</div>'
+    ).join('') + '</div>';
+  } else {
+    html += '<div class="gh-prev-box"><div class="gh-prev-box-lbl">Kunci / Rubrik</div><div class="gh-prev-box-txt">' + ghEsc(r.Kunci || '(belum diisi)') + '</div></div>';
+    if (r.Izin_Gambar && r.Izin_Gambar.toLowerCase() === 'ya') html += '<p class="gh-hint" style="margin:-6px 0 10px;">✏️ Soal ini mengizinkan siswa menjawab dengan gambar tangan.</p>';
+  }
+
+  if (r.Pembahasan || r.URL_Gambar_Pembahasan) {
+    html += '<div class="gh-prev-box"><div class="gh-prev-box-lbl">Pembahasan</div><div class="gh-prev-box-txt">' + ghEsc(r.Pembahasan || '(belum diisi)') + '</div>' +
+      (r.URL_Gambar_Pembahasan ? '<img class="gh-prev-img" src="' + ghEsc(ghGdrivePrev(r.URL_Gambar_Pembahasan)) + '" alt="Gambar pembahasan">' : '') +
+    '</div>';
+  }
+
+  html += '<button class="gh-btn gh-btn-outline" onclick="ghTutupPreviewSoal()" style="width:100%;">Tutup</button>';
+
+  document.getElementById('gh-preview-konten').innerHTML = html;
+  document.getElementById('gh-modal-preview').classList.add('on');
+}
+
+function ghTutupPreviewSoal() {
+  document.getElementById('gh-modal-preview').classList.remove('on');
+}
+
 // FITUR (2026-09): render jawaban gambar tangan (kanvas) -- disalin PERSIS
 // dari fungsi gambarKanvas() di sidebar koreksi guru (CBTKD_MasterLib.js,
 // SIDEBAR_HTML), BUKAN ditulis ulang -- supaya hasilnya identik lintas
@@ -936,7 +1027,7 @@ function ghGambarKanvas(cv, strokes) {
 // privasi) begitu pengguna lebih dari ~100 orang -- sebelum itu, cuma
 // "test user" yang didaftarkan manual di Cloud Console yang bisa pakai
 // tanpa melihat peringatan "Aplikasi belum diverifikasi".
-const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
+const GH_CLIENT_ID = 'GANTI_DENGAN_CLIENT_ID_ASLI.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
@@ -1328,7 +1419,11 @@ function ghFilterBankSoal() {
     && (!ftp || ghTopikUtama(r.Topik) === ftp) && (!fbl || r.Bloom === fbl) && (!fks || r.Kesulitan === fks));
   let idxTerstaging = new Set(ghStaging.map(r => r._idx));
   document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r =>
-    '<div class="gh-bs-soal-item"><input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" onchange="ghToggleStaging(' + r._idx + ', this.checked)"' + (idxTerstaging.has(r._idx) ? ' checked' : '') + '>' +
+    '<div class="gh-bs-soal-item">' +
+      '<div class="gh-bs-cb-col">' +
+        '<input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" onchange="ghToggleStaging(' + r._idx + ', this.checked)"' + (idxTerstaging.has(r._idx) ? ' checked' : '') + '>' +
+        '<button class="gh-bs-btn-preview" onclick="ghPreviewSoal(' + r._idx + ')" title="Preview soal lengkap">👁️</button>' +
+      '</div>' +
       '<div class="gh-bs-soal-txt">' + ghEsc((r.Pertanyaan || '').slice(0, 90)) + (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
       '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' +
       (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + ghEsc(r.Sumber) + '</div></div>' +
