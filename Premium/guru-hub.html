@@ -212,20 +212,18 @@
     </div>
 
     <div id="gh-form-sekolah" style="display:none;">
-      <div class="gh-fg">
-        <label>Nama Soal/Ujian (label saja, bebas)</label>
-        <input type="text" id="gh-inp-sekolah-nama" placeholder="Contoh: PAT Matematika VII 2026">
-      </div>
+      <p class="gh-hint" style="margin-top:0;">ℹ️ Nama diambil <b>otomatis</b> dari judul di Konfigurasi ujian itu sendiri — tidak perlu diketik manual.</p>
       <div class="gh-fg">
         <label>URL Google Apps Script sekolah (sama seperti dipakai Portal)</label>
         <input type="text" id="gh-inp-sekolah-url" placeholder="https://script.google.com/macros/s/xxx/exec" onblur="ghAutoIsiJudul()">
       </div>
+      <div class="gh-status-msg" id="gh-preview-judul"></div>
       <div class="gh-fg">
         <label>Token Pelanggaran (reset_token_pel di Konfigurasi sekolah itu)</label>
         <input type="text" id="gh-inp-sekolah-token" placeholder="Token rahasia yang diisi manual oleh guru">
       </div>
       <button class="gh-btn gh-btn-primary" onclick="ghSimpanSekolah()" style="width:100%;">Simpan Soal</button>
-      <p class="gh-hint" id="gh-hint-autojudul">Token ini dicocokkan ke reset_token_pel — token rahasia yang memang diisi manual oleh guru dan tidak pernah diberitahu ke peserta (beda dari reset_token biasa yang otomatis dan bukan rahasia). Tersimpan di perangkat ini saja.</p>
+      <p class="gh-hint">Token ini dicocokkan ke reset_token_pel — token rahasia yang memang diisi manual oleh guru dan tidak pernah diberitahu ke peserta (beda dari reset_token biasa yang otomatis dan bukan rahasia). Tersimpan di perangkat ini saja.</p>
     </div>
 
     <div id="gh-esai-area" style="display:none;">
@@ -528,44 +526,62 @@ function ghToggleFormSekolah() {
   f.style.display = (f.style.display === 'none') ? 'block' : 'none';
 }
 
-function ghSimpanSekolah() {
-  let nama  = document.getElementById('gh-inp-sekolah-nama').value.trim();
+let ghJudulOtomatis = '';   // hasil terakhir dari ghAutoIsiJudul -- dipakai ghSimpanSekolah sebagai `nama`
+
+async function ghSimpanSekolah() {
   let url   = document.getElementById('gh-inp-sekolah-url').value.trim();
   let token = document.getElementById('gh-inp-sekolah-token').value.trim();
-  if (!nama || !url || !token) { ghToast('Isi nama, URL, dan token dulu.'); return; }
+  if (!url || !token) { ghToast('Isi URL dan token dulu.'); return; }
+  let nama = ghJudulOtomatis;
+  if (!nama) {
+    // Jaga-jaga: guru langsung klik Simpan tanpa sempat blur dari kolom URL
+    // (mis. paste lalu langsung klik tombol) -- coba ambil sekali lagi di
+    // sini supaya tetap tidak perlu ketik manual.
+    ghToast('Mengambil judul otomatis...');
+    await ghAutoIsiJudul();
+    nama = ghJudulOtomatis;
+  }
+  if (!nama) { ghToast('Gagal mengambil judul otomatis dari URL ini -- cek URL-nya benar & bisa diakses.'); return; }
   ghSekolah.push({ nama, urlGas: url, tokenAdmin: token });
   ghSimpanDaftarSekolah();
-  document.getElementById('gh-inp-sekolah-nama').value = '';
   document.getElementById('gh-inp-sekolah-url').value = '';
   document.getElementById('gh-inp-sekolah-token').value = '';
+  document.getElementById('gh-preview-judul').textContent = '';
+  ghJudulOtomatis = '';
   document.getElementById('gh-form-sekolah').style.display = 'none';
   ghRenderSekolah();
   document.getElementById('gh-sel-sekolah').value = String(ghSekolah.length - 1);
   ghPilihSekolah(String(ghSekolah.length - 1));
 }
 
-// FITUR (2026-09): auto-isi Nama Soal/Ujian dari judul yang tersimpan di
-// Konfigurasi sekolah itu sendiri (atas permintaan DIK) -- dipicu saat
-// guru selesai mengisi kolom URL (onblur). Cuma mengisi kalau kolom Nama
-// masih KOSONG -- tidak menimpa label yang sudah diketik manual oleh guru.
-// Pakai action=getDataSoal (publik, tidak perlu token) yang memang sudah
+// FITUR (2026-09): ambil judul otomatis dari Konfigurasi ujian (atas
+// permintaan DIK, kolom Nama manual sudah DIHAPUS sepenuhnya dari form --
+// ini satu-satunya sumber `nama` sekarang). Dipicu saat guru selesai
+// mengisi kolom URL (onblur), hasilnya ditampilkan sebagai PREVIEW teks
+// (bukan mengisi input lagi, karena inputnya sudah tidak ada). Pakai
+// action=getDataSoal (publik, tidak perlu token) yang memang sudah
 // mengembalikan field judul.
 async function ghAutoIsiJudul() {
-  let inpNama = document.getElementById('gh-inp-sekolah-nama');
   let inpUrl = document.getElementById('gh-inp-sekolah-url');
-  let hintEl = document.getElementById('gh-hint-autojudul');
+  let previewEl = document.getElementById('gh-preview-judul');
   let url = inpUrl.value.trim();
-  if (!url || inpNama.value.trim()) return; // sudah diisi manual, jangan ditimpa
+  ghJudulOtomatis = '';
+  if (!url) { previewEl.textContent = ''; return; }
+  previewEl.className = 'gh-status-msg';
+  previewEl.textContent = 'Mengambil judul...';
   try {
     let resp = await fetch(url + '?action=getDataSoal');
     let hasil = await resp.json();
     if (hasil && hasil.judul) {
-      inpNama.value = hasil.judul;
-      ghToast('Judul otomatis terisi dari Konfigurasi: ' + hasil.judul);
+      ghJudulOtomatis = hasil.judul;
+      previewEl.textContent = '✅ Nama: ' + hasil.judul;
+    } else {
+      previewEl.className = 'gh-status-msg err';
+      previewEl.textContent = '❌ URL ini tidak mengembalikan judul -- cek lagi URL-nya.';
     }
   } catch (e) {
-    // Gagal ambil otomatis -- diamkan saja, guru tetap bisa isi manual.
-    // Tidak ditampilkan sebagai error karena ini cuma kenyamanan opsional.
+    previewEl.className = 'gh-status-msg err';
+    previewEl.textContent = '❌ Gagal mengambil judul: ' + e.message;
   }
 }
 
@@ -907,6 +923,11 @@ const GH_KOLOM_BANK = ['Sumber','Mapel','Kelas','Tahun','Topik','Bloom','Kesulit
 // SEBAGIAN soal/sheet yang sudah diisi ini (proyek Knowledge Engine
 // Analyzer/KEA yang klasifikasi Bloom & topik terpisah dari CBT Kabut Digital).
 const GH_KOLOM_OPSIONAL_SUMBER = ['Topik', 'Bloom', 'Kesulitan'];
+// FITUR (2026-09): saat GENERATE ke spreadsheet tujuan, sertakan juga
+// header Topik/Bloom/Kesulitan (persiapan skema masa depan, atas
+// permintaan DIK) -- walaupun datanya kosong untuk soal yang belum
+// diklasifikasi, kolomnya tetap ditulis supaya siap dipakai nanti.
+const GH_KOLOM_GENERATE = GH_KOLOM_SOAL.concat(GH_KOLOM_OPSIONAL_SUMBER);
 
 let ghAccessToken = null;   // in-memory SAJA -- token OAuth tidak pernah disimpan ke localStorage (berumur pendek, ~1 jam)
 let ghTokenClient = null;
@@ -1203,12 +1224,16 @@ function ghRenderBankSoal() {
 
   let mapelOpt = ghOpsiUnik(rows, 'Mapel'), kelasOpt = ghOpsiUnik(rows, 'Kelas'), tahunOpt = ghOpsiUnik(rows, 'Tahun');
   let tipeOpt = ghOpsiUnik(rows, 'TipeTampil');
+  let topikOpt = ghOpsiUnik(rows, 'Topik'), bloomOpt = ghOpsiUnik(rows, 'Bloom'), kesulitanOpt = ghOpsiUnik(rows, 'Kesulitan');
   areaEl.innerHTML =
     '<div class="gh-bs-filter-row" style="margin-top:10px;">' +
       '<select id="gh-bs-f-mapel" onchange="ghFilterBankSoal()"><option value="">Semua Mapel</option>' + mapelOpt.map(m => '<option>' + ghEsc(m) + '</option>').join('') + '</select>' +
       '<select id="gh-bs-f-kelas" onchange="ghFilterBankSoal()"><option value="">Semua Kelas</option>' + kelasOpt.map(k => '<option>' + ghEsc(k) + '</option>').join('') + '</select>' +
       '<select id="gh-bs-f-tahun" onchange="ghFilterBankSoal()"><option value="">Semua Tahun</option>' + tahunOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
       '<select id="gh-bs-f-tipe" onchange="ghFilterBankSoal()"><option value="">Semua Tipe</option>' + tipeOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
+      '<select id="gh-bs-f-topik" onchange="ghFilterBankSoal()"><option value="">Semua Topik</option>' + topikOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
+      '<select id="gh-bs-f-bloom" onchange="ghFilterBankSoal()"><option value="">Semua Bloom</option>' + bloomOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
+      '<select id="gh-bs-f-kesulitan" onchange="ghFilterBankSoal()"><option value="">Semua Kesulitan</option>' + kesulitanOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
     '</div>' +
 
     '<div class="gh-esai-soal">' +
@@ -1243,7 +1268,9 @@ function ghRenderBankSoal() {
 function ghFilterBankSoal() {
   let fm = document.getElementById('gh-bs-f-mapel').value, fk = document.getElementById('gh-bs-f-kelas').value;
   let ft = document.getElementById('gh-bs-f-tahun').value, fp = document.getElementById('gh-bs-f-tipe').value;
-  let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!fk || r.Kelas === fk) && (!ft || r.Tahun === ft) && (!fp || r.TipeTampil === fp));
+  let ftp = document.getElementById('gh-bs-f-topik').value, fbl = document.getElementById('gh-bs-f-bloom').value, fks = document.getElementById('gh-bs-f-kesulitan').value;
+  let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!fk || r.Kelas === fk) && (!ft || r.Tahun === ft) && (!fp || r.TipeTampil === fp)
+    && (!ftp || r.Topik === ftp) && (!fbl || r.Bloom === fbl) && (!fks || r.Kesulitan === fks));
   let idxTerstaging = new Set(ghStaging.map(r => r._idx));
   document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r =>
     '<div class="gh-bs-soal-item"><input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" onchange="ghToggleStaging(' + r._idx + ', this.checked)"' + (idxTerstaging.has(r._idx) ? ' checked' : '') + '>' +
@@ -1446,14 +1473,14 @@ async function ghGenerateUjian() {
   try {
     let rowsBaru = ghStaging.map((r, i) => {
       let baris = [i + 1]; // No diurutkan ulang 1..N sesuai urutan panel Terpilih
-      GH_KOLOM_SOAL.slice(1).forEach(k => baris.push(r[k] || ''));
+      GH_KOLOM_GENERATE.slice(1).forEach(k => baris.push(r[k] || ''));
       return baris;
     });
-    let lebarKolom = ghKolomHuruf(GH_KOLOM_SOAL.length);
+    let lebarKolom = ghKolomHuruf(GH_KOLOM_GENERATE.length);
     // Bersihkan dulu isi lama (kalau data baru lebih pendek dari yang lama,
     // baris sisa dari data lama harus dikosongkan, bukan cuma ditimpa sebagian)
     await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A2:' + lebarKolom + '10000:clear', { method: 'POST', headers: ghHeaderAuth() });
-    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A1:' + lebarKolom + '1?valueInputOption=RAW', { method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [GH_KOLOM_SOAL] }) });
+    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A1:' + lebarKolom + '1?valueInputOption=RAW', { method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [GH_KOLOM_GENERATE] }) });
     let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A2?valueInputOption=RAW', { method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: rowsBaru }) });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
