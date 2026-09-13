@@ -146,6 +146,11 @@
   }
   .gh-bs-soal-topik .gh-topik-utama { color:var(--blue-main); font-weight:700; }
   .gh-bs-soal-topik .gh-topik-sub { color:var(--gray-soft); font-weight:500; }
+  /* FITUR (2026-09): di kartu preview soal, Topik TIDAK dilipat -- beda
+     dari tampilan di daftar (lebar tetap ~100px + melipat). Di preview
+     ruangnya lebih lega jadi biarkan satu baris, boleh geser kalau memang
+     sangat panjang. */
+  .gh-bs-soal-topik.gh-prev-topik { width:auto; white-space:nowrap; overflow-x:auto; margin-bottom:10px; -webkit-overflow-scrolling:touch; }
   /* FITUR (2026-09): kolom checkbox + tombol preview (ikon saja) di bawahnya */
   .gh-bs-cb-col { display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0; }
   .gh-bs-cb-col input[type=checkbox] { margin:0; width:16px; height:16px; accent-color:var(--blue-main); }
@@ -651,16 +656,24 @@ function ghPilihSekolah(idx) {
 // (bukan hal kritis, guru masih bisa klik Buat Analisis manual).
 async function ghCekAnalisisTersimpan() {
   if (!ghSekolahAktif) return;
+  let statusEl = document.getElementById('gh-analisis-status');
   try {
     let url = ghSekolahAktif.urlGas + '?action=getAnalisisTersimpan&token_admin=' + encodeURIComponent(ghSekolahAktif.tokenAdmin);
     let resp = await fetch(url);
     let hasil = await resp.json();
     if (hasil && hasil.status === 'ok' && hasil.ada) {
-      let statusEl = document.getElementById('gh-analisis-status');
       statusEl.className = 'gh-status-msg';
       let tgl = hasil.dibuat_pada ? new Date(hasil.dibuat_pada).toLocaleString('id-ID') : '(tanggal tidak diketahui)';
       statusEl.innerHTML = '📁 Analisis tersimpan — dibuat: ' + ghEsc(tgl);
       ghRenderAnalisis(hasil.data);
+    } else if (hasil && hasil.status === 'ok' && hasil.sheetAdaTapiBelumTersinkron) {
+      // BUG-FIX (2026-09): analisis SUDAH ADA di sheet (dibuat lewat
+      // sidebar Sheets versi lama, sebelum cache ini ada) tapi belum
+      // pernah ke-cache -- kasih tahu jelas ke guru, jangan diam seperti
+      // tidak ada apa-apa. Cukup klik "Buat Analisis" SEKALI untuk
+      // sinkronkan -- setelah itu akan selalu otomatis terdeteksi lagi.
+      statusEl.className = 'gh-status-msg';
+      statusEl.innerHTML = 'ℹ️ Analisis sudah ada di sheet Analisis_CBT tapi belum tersinkron ke Guru Hub — klik "Buat & Lihat Analisis" sekali untuk sinkronkan (setelah itu otomatis terdeteksi seterusnya).';
     }
   } catch (e) { /* diam-diam -- bukan hal kritis */ }
 }
@@ -912,7 +925,7 @@ function ghPreviewSoal(idx) {
   html += '<h4>Preview Soal</h4>';
   html += '<div class="gh-prev-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' +
     (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + '</div>';
-  if (r.Topik) html += ghRenderTopikKolom(r.Topik);
+  if (r.Topik) html += ghRenderTopikKolom(r.Topik, 'gh-prev-topik');
 
   html += '<div class="gh-prev-pertanyaan">' + ghEsc(r.Pertanyaan) + '</div>';
   if (r.URL_Gambar) html += '<img class="gh-prev-img" src="' + ghEsc(ghGdrivePrev(r.URL_Gambar)) + '" alt="Gambar soal">';
@@ -1027,7 +1040,7 @@ function ghGambarKanvas(cv, strokes) {
 // privasi) begitu pengguna lebih dari ~100 orang -- sebelum itu, cuma
 // "test user" yang didaftarkan manual di Cloud Console yang bisa pakai
 // tanpa melihat peringatan "Aplikasi belum diverifikasi".
-const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
+const GH_CLIENT_ID = 'GANTI_DENGAN_CLIENT_ID_ASLI.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
@@ -1352,11 +1365,11 @@ function ghTopikUtama(topik) {
 // FITUR (2026-09): render kolom Topik di samping soal -- topik utama
 // (sebelum "|" pertama) dan sub-topik (sisanya) dibedakan warna lewat
 // span terpisah, teks melipat normal (bukan mode geser lagi).
-function ghRenderTopikKolom(topik) {
+function ghRenderTopikKolom(topik, kelasTambahan) {
   if (!topik) return '';
   let bagian = topik.split('|').map(s => s.trim()).filter(Boolean);
   let utama = bagian[0], sub = bagian.slice(1).join(' | ');
-  return '<div class="gh-bs-soal-topik" title="' + ghEsc(topik) + '">' +
+  return '<div class="gh-bs-soal-topik' + (kelasTambahan ? ' ' + kelasTambahan : '') + '" title="' + ghEsc(topik) + '">' +
     '<span class="gh-topik-utama">' + ghEsc(utama) + '</span>' +
     (sub ? '<span class="gh-topik-sub"> | ' + ghEsc(sub) + '</span>' : '') +
   '</div>';
