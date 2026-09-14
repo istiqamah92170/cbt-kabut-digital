@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guru Hub · CBT Kabut Digital</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
@@ -195,17 +197,270 @@
     padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; color:var(--blue-deep);
   }
   .gh-analisis-tanggal { font-size:11px; color:var(--gray-soft); margin-top:4px; }
+
+  /* ════════════════════════════════════════════════════════════
+     TAMPILAN BARU (2026-09) — login, sidebar/dashboard, emblem emas.
+     Semua aturan di bawah ini murni VISUAL & NAVIGASI. Tidak ada
+     class/id lama yang dihapus atau diubah artinya -- ini cuma
+     "bingkai" baru di sekitar kartu-kartu asli (lihat markup:
+     kartu Link Ujian / Nilai & Koreksi Esai / Bank Soal isinya
+     sama persis seperti sebelumnya, cuma sekarang dibungkus per
+     halaman + sidebar). Fungsi JS lama tidak disentuh sama sekali.
+     ════════════════════════════════════════════════════════════ */
+  :root {
+    --gold:#C9A227; --gold-light:#E9C566; --gold-soft:#FBF3D9; --gold-dark:#8B6B14;
+    --gold-grad:linear-gradient(135deg,#F5E29A,#C9A227 55%,#8B6B14);
+    --sidebar-w:252px; --topbar-h:54px;
+    --font-display:'Fraunces','Georgia',serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+
+  .gh-emblem { display:inline-flex; flex-shrink:0; }
+  .gh-emblem-svg { display:block; }
+  .gh-emblem-lg { width:60px; height:60px; margin:0 auto 12px; }
+  .gh-emblem-sm { width:36px; height:36px; }
+
+  /* ---- Layar Login (gerbang tampilan saja, BUKAN akun/password
+     sungguhan -- Guru Hub tidak punya server otentikasi terpusat) ---- */
+  #gh-screen-login {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px; background:radial-gradient(circle at 22% 18%,#0B4433,var(--blue-deep) 65%);
+  }
+  .gh-login-card { width:100%; max-width:380px; background:var(--white); border-radius:20px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+  .gh-login-top { background:linear-gradient(160deg,var(--blue-deep),var(--blue-main)); padding:32px 28px 26px; text-align:center; color:var(--white); }
+  .gh-login-top h1 { margin:0 0 4px; font-family:var(--font-display); font-size:26px; font-weight:700; }
+  .gh-login-top p { margin:0; font-size:12.5px; opacity:.82; }
+  .gh-login-body { padding:24px 26px 28px; }
+  .gh-btn-login { width:100%; margin-top:6px; padding:12px; font-size:14px; }
+
+  /* ---- Sidebar & shell aplikasi ---- */
+  .gh-sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(6,20,15,.45); z-index:299; }
+  .gh-sidebar-backdrop.on { display:block; }
+  .gh-sidebar {
+    position:fixed; left:0; top:0; bottom:0; width:var(--sidebar-w);
+    background:var(--blue-deep); color:var(--white);
+    display:flex; flex-direction:column; z-index:300; transition:transform .25s;
+  }
+  .gh-sb-head { display:flex; align-items:center; gap:10px; padding:18px 16px; border-bottom:1px solid rgba(255,255,255,.14); }
+  .gh-sb-brand { font-family:var(--font-display); font-size:16px; font-weight:700; }
+  .gh-sb-brand span { color:var(--gold-light); }
+  .gh-sb-tagline { font-size:10.5px; opacity:.65; margin-top:1px; }
+  .gh-sb-user { padding:12px 16px; border-bottom:1px solid rgba(255,255,255,.14); }
+  .gh-sb-user-name { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gh-sb-user-sub { font-size:11px; opacity:.65; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gh-sb-chip { display:inline-flex; align-items:center; gap:4px; margin-top:7px; padding:2px 10px; border-radius:20px; font-size:10px; font-weight:800; background:var(--gold-grad); color:#3E2E05; }
+  .gh-sb-nav { flex:1; overflow-y:auto; padding:10px; }
+  .gh-nav-item {
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    padding:10px 12px; border-radius:10px; border:none; background:none; color:rgba(255,255,255,.78);
+    font-size:13.5px; font-weight:600; cursor:pointer; margin-bottom:3px; transition:all .15s;
+  }
+  .gh-nav-item:hover { background:rgba(255,255,255,.08); color:var(--white); }
+  .gh-nav-item.active { background:rgba(255,255,255,.15); color:var(--white); }
+  .gh-nav-ico { font-size:15px; width:18px; text-align:center; flex-shrink:0; }
+  .gh-nav-lbl { flex:1; }
+  .gh-nav-gold { color:var(--gold-light); font-size:12px; }
+  .gh-sb-foot { padding:12px 16px; border-top:1px solid rgba(255,255,255,.14); }
+  .gh-btn-out { width:100%; padding:9px; border-radius:8px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); color:var(--white); font-size:12.5px; font-weight:600; cursor:pointer; }
+  .gh-btn-out:hover { background:rgba(255,255,255,.15); }
+
+  .gh-main { margin-left:var(--sidebar-w); min-height:100vh; }
+  .gh-topbar { display:none; align-items:center; justify-content:space-between; height:var(--topbar-h); padding:0 14px; background:var(--white); border-bottom:1px solid var(--gray-line); position:sticky; top:0; z-index:200; }
+  .gh-topbar-burger { background:none; border:none; font-size:20px; cursor:pointer; color:var(--gray-dark); }
+  .gh-topbar-brand { font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--gray-dark); }
+  .gh-topbar-brand span { color:var(--blue-main); }
+  .gh-pagewrap { max-width:720px; margin:0 auto; padding:24px 18px 60px; }
+  .gh-page-hd { margin-bottom:18px; }
+  .gh-page-hd h2 { margin:0 0 3px; font-family:var(--font-display); font-size:21px; font-weight:700; color:var(--blue-deep); }
+  .gh-page-hd p { margin:0; font-size:12.5px; color:var(--gray-soft); }
+
+  @media (max-width:860px) {
+    .gh-sidebar { transform:translateX(-100%); }
+    .gh-sidebar.open { transform:translateX(0); box-shadow:0 0 30px rgba(0,0,0,.3); }
+    .gh-main { margin-left:0; }
+    .gh-topbar { display:flex; }
+    .gh-pagewrap { padding:16px 14px 50px; }
+  }
+
+  /* ---- Dashboard ---- */
+  .gh-dash-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+  .gh-stat-card { background:var(--white); border:1px solid var(--gray-line); border-radius:var(--r-lg); padding:14px; box-shadow:var(--sh-sm); }
+  .gh-stat-ico { font-size:18px; margin-bottom:8px; }
+  .gh-stat-num { font-family:var(--mono); font-size:21px; font-weight:700; line-height:1; color:var(--blue-deep); }
+  .gh-sc-gold .gh-stat-num { color:var(--gold-dark); }
+  .gh-stat-lbl { font-size:10px; color:var(--gray-soft); margin-top:5px; text-transform:uppercase; letter-spacing:.03em; }
+  .gh-dash-quick { display:flex; flex-direction:column; gap:10px; }
+  .gh-quick-card { display:flex; align-items:center; gap:12px; background:var(--white); border:1px solid var(--gray-line); border-radius:var(--r-lg); padding:14px 16px; cursor:pointer; transition:border-color .15s, transform .15s; }
+  .gh-quick-card:hover { border-color:var(--blue-mid); transform:translateY(-1px); }
+  .gh-quick-ico { font-size:20px; flex-shrink:0; }
+  .gh-quick-title { font-size:13.5px; font-weight:700; color:var(--gray-dark); }
+  .gh-quick-sub { font-size:11.5px; color:var(--gray-soft); margin-top:1px; }
+  .gh-quick-premium { border-color:var(--gold-light); background:linear-gradient(180deg,var(--gold-soft),var(--white) 65%); }
+
+  /* ---- Aksen emas "premium" pada kartu Bank Soal ---- */
+  .gh-card-premium { position:relative; border-color:var(--gold-light); overflow:hidden; }
+  .gh-card-premium::before { content:''; position:absolute; inset:0 0 auto 0; height:4px; background:var(--gold-grad); }
+  .gh-premium-ribbon {
+    position:absolute; top:15px; right:-32px; transform:rotate(35deg);
+    background:var(--gold-grad); color:#3E2E05; font-size:10px; font-weight:800;
+    padding:3px 36px; letter-spacing:.04em; box-shadow:0 2px 6px rgba(0,0,0,.18);
+  }
+
+  .gh-card h2 { font-family:var(--font-display); }
 </style>
 </head>
 <body>
 
-<div class="gh-header">
-  <h1>Guru Hub</h1>
-  <p>CBT Kabut Digital · Alat bantu guru</p>
+<!-- ════════════════════════════════════════════════════════════
+     LAYAR LOGIN — gerbang TAMPILAN saja, bukan akun/password
+     sungguhan (Guru Hub tidak punya server otentikasi terpusat).
+     Nama & instansi cuma disimpan lokal untuk sapaan di sidebar
+     dan dashboard. TIDAK ADA fitur asli yang digerbangi oleh ini.
+     ════════════════════════════════════════════════════════════ -->
+<div id="gh-screen-login">
+  <div class="gh-login-card">
+    <div class="gh-login-top">
+      <div class="gh-emblem gh-emblem-lg">
+        <svg viewBox="0 0 100 100" class="gh-emblem-svg" aria-hidden="true">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="url(#ghGoldRingLogin)" stroke-width="4"/>
+          <circle cx="50" cy="50" r="36" fill="url(#ghGoldFillLogin)"/>
+          <path d="M50 27 L56.5 44 L74 44 L60 54.5 L65 71 L50 61 L35 71 L40 54.5 L26 44 L43.5 44 Z" fill="#5B4300" opacity=".85"/>
+          <defs>
+            <linearGradient id="ghGoldRingLogin" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#F5E29A"/><stop offset=".5" stop-color="#C9A227"/><stop offset="1" stop-color="#8B6B14"/>
+            </linearGradient>
+            <linearGradient id="ghGoldFillLogin" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#F0D77B"/><stop offset="1" stop-color="#B8860B"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h1>Guru Hub</h1>
+      <p>CBT Kabut Digital · Alat bantu guru</p>
+    </div>
+    <div class="gh-login-body">
+      <div class="gh-fg">
+        <label>Nama Guru</label>
+        <input type="text" id="gh-ui-inp-nama" placeholder="Contoh: Bu Sari Wulandari">
+      </div>
+      <div class="gh-fg">
+        <label>Asal Sekolah (opsional)</label>
+        <input type="text" id="gh-ui-inp-instansi" placeholder="Contoh: SMPN 1 Kabut Digital">
+      </div>
+      <button class="gh-btn gh-btn-primary gh-btn-login" onclick="ghUiLogin()">Masuk ke Guru Hub</button>
+      <p class="gh-hint" style="text-align:center;margin-top:12px;">Nama ini hanya tersimpan di perangkat ini untuk sapaan — bukan akun/password.</p>
+    </div>
+  </div>
 </div>
 
-<div class="gh-wrap">
+<!-- ════════════════════════════════════════════════════════════
+     APLIKASI — sidebar + dashboard + halaman-halaman fitur asli.
+     ════════════════════════════════════════════════════════════ -->
+<div id="gh-screen-app" style="display:none;">
+  <div class="gh-sidebar-backdrop" id="gh-sidebar-backdrop" onclick="ghUiCloseSidebar()"></div>
 
+  <aside class="gh-sidebar" id="gh-sidebar">
+    <div class="gh-sb-head">
+      <div class="gh-emblem gh-emblem-sm">
+        <svg viewBox="0 0 100 100" class="gh-emblem-svg" aria-hidden="true">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="url(#ghGoldRingSb)" stroke-width="5"/>
+          <circle cx="50" cy="50" r="36" fill="url(#ghGoldFillSb)"/>
+          <path d="M50 27 L56.5 44 L74 44 L60 54.5 L65 71 L50 61 L35 71 L40 54.5 L26 44 L43.5 44 Z" fill="#5B4300" opacity=".85"/>
+          <defs>
+            <linearGradient id="ghGoldRingSb" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#F5E29A"/><stop offset=".5" stop-color="#C9A227"/><stop offset="1" stop-color="#8B6B14"/>
+            </linearGradient>
+            <linearGradient id="ghGoldFillSb" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#F0D77B"/><stop offset="1" stop-color="#B8860B"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>
+        <div class="gh-sb-brand">Guru <span>Hub</span></div>
+        <div class="gh-sb-tagline">CBT Kabut Digital</div>
+      </div>
+    </div>
+
+    <div class="gh-sb-user">
+      <div class="gh-sb-user-name" id="gh-ui-sb-nama">Guru</div>
+      <div class="gh-sb-user-sub" id="gh-ui-sb-instansi">—</div>
+      <span class="gh-sb-chip">✦ Akses Premium</span>
+    </div>
+
+    <nav class="gh-sb-nav">
+      <button class="gh-nav-item active" id="gh-nav-dashboard" onclick="ghUiGotoPage('dashboard')">
+        <span class="gh-nav-ico">🏠</span><span class="gh-nav-lbl">Dashboard</span>
+      </button>
+      <button class="gh-nav-item" id="gh-nav-linkujian" onclick="ghUiGotoPage('linkujian')">
+        <span class="gh-nav-ico">🔗</span><span class="gh-nav-lbl">Link Ujian</span>
+      </button>
+      <button class="gh-nav-item" id="gh-nav-esai" onclick="ghUiGotoPage('esai')">
+        <span class="gh-nav-ico">📝</span><span class="gh-nav-lbl">Nilai &amp; Koreksi Esai</span>
+      </button>
+      <button class="gh-nav-item" id="gh-nav-banksoal" onclick="ghUiGotoPage('banksoal')">
+        <span class="gh-nav-ico">📚</span><span class="gh-nav-lbl">Bank Soal</span>
+        <span class="gh-nav-gold">✦</span>
+      </button>
+    </nav>
+
+    <div class="gh-sb-foot">
+      <button class="gh-btn-out" onclick="ghUiLogout()">Keluar</button>
+    </div>
+  </aside>
+
+  <div class="gh-main">
+    <div class="gh-topbar">
+      <button class="gh-topbar-burger" onclick="ghUiOpenSidebar()">☰</button>
+      <div class="gh-topbar-brand">Guru <span>Hub</span></div>
+      <div style="width:28px"></div>
+    </div>
+
+    <div class="gh-pagewrap">
+
+      <!-- ══ DASHBOARD (baru, murni ringkasan) ══ -->
+      <div class="gh-page" id="gh-page-dashboard">
+        <div class="gh-page-hd">
+          <h2 id="gh-ui-sapaan">Selamat datang</h2>
+          <p>Ringkasan alat bantu Anda di Guru Hub.</p>
+        </div>
+
+        <div class="gh-dash-stats">
+          <div class="gh-stat-card gh-sc-green">
+            <div class="gh-stat-ico">🔗</div>
+            <div class="gh-stat-num" id="gh-ui-stat-link">0</div>
+            <div class="gh-stat-lbl">Link Ujian Tersimpan</div>
+          </div>
+          <div class="gh-stat-card gh-sc-amber">
+            <div class="gh-stat-ico">🏫</div>
+            <div class="gh-stat-num" id="gh-ui-stat-sekolah">0</div>
+            <div class="gh-stat-lbl">Soal Terhubung</div>
+          </div>
+          <div class="gh-stat-card gh-sc-gold">
+            <div class="gh-stat-ico">📚</div>
+            <div class="gh-stat-num" id="gh-ui-stat-banksoal">Belum</div>
+            <div class="gh-stat-lbl">Bank Soal</div>
+          </div>
+        </div>
+
+        <div class="gh-dash-quick">
+          <div class="gh-quick-card" onclick="ghUiGotoPage('linkujian')">
+            <div class="gh-quick-ico">🔗</div>
+            <div><div class="gh-quick-title">Link Ujian</div><div class="gh-quick-sub">Gabung beberapa link jadi satu</div></div>
+          </div>
+          <div class="gh-quick-card" onclick="ghUiGotoPage('esai')">
+            <div class="gh-quick-ico">📝</div>
+            <div><div class="gh-quick-title">Nilai &amp; Koreksi Esai</div><div class="gh-quick-sub">Nilai jawaban &amp; buat analisis</div></div>
+          </div>
+          <div class="gh-quick-card gh-quick-premium" onclick="ghUiGotoPage('banksoal')">
+            <div class="gh-quick-ico">📚</div>
+            <div><div class="gh-quick-title">Bank Soal <span class="gh-nav-gold" style="color:var(--gold-dark)">✦</span></div><div class="gh-quick-sub">Susun ujian dari kumpulan soal</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ HALAMAN: LINK UJIAN (isi kartu ASLI, tidak diubah) ══ -->
+      <div class="gh-page" id="gh-page-linkujian" style="display:none;">
   <div class="gh-card">
     <h2>Link Ujian untuk Siswa</h2>
     <p class="gh-sub">Kumpulkan beberapa link/kode ujian, lalu buat SATU link gabungan — siswa tinggal memilih dari daftar, tidak perlu ketik atau tempel link satu-satu.</p>
@@ -243,7 +498,10 @@
       </div>
     </div>
   </div>
+  </div><!-- /gh-page-linkujian -->
 
+  <!-- ══ HALAMAN: NILAI & KOREKSI ESAI (isi kartu ASLI, tidak diubah) ══ -->
+  <div class="gh-page" id="gh-page-esai" style="display:none;">
   <div class="gh-card">
     <h2>Nilai &amp; Koreksi Esai</h2>
     <p class="gh-sub">Lihat &amp; nilai jawaban esai siswa, dan buat analisis — langsung dari sini, tanpa buka Google Sheets.</p>
@@ -299,8 +557,14 @@
       </div>
     </div>
   </div>
+  </div><!-- /gh-page-esai -->
 
-  <div class="gh-card" id="gh-card-banksoal">
+  <!-- ══ HALAMAN: BANK SOAL (isi kartu ASLI, tidak diubah) — kartu ini
+       ditandai "Premium" (pita emas) sesuai rencana produk berlangganan
+       DIK yang disebut di Handover 2 §2.3. ══ -->
+  <div class="gh-page" id="gh-page-banksoal" style="display:none;">
+  <div class="gh-card gh-card-premium" id="gh-card-banksoal">
+    <div class="gh-premium-ribbon">✦ Premium</div>
     <h2>Bank Soal</h2>
     <p class="gh-sub">Kumpulkan soal dari berbagai ujian &amp; tahun (lintas spreadsheet), lalu susun ujian baru dari kumpulan itu.</p>
 
@@ -336,8 +600,10 @@
       </div>
     </div>
   </div>
+  </div><!-- /gh-page-banksoal -->
 
-</div>
+    </div><!-- /gh-pagewrap -->
+  </div><!-- /gh-main -->
 
 <div class="gh-toast" id="gh-toast"></div>
 
@@ -355,6 +621,8 @@
 <div class="gh-modal-bg" id="gh-modal-preview" onclick="if(event.target===this) ghTutupPreviewSoal()">
   <div class="gh-modal-preview" id="gh-preview-konten"></div>
 </div>
+
+</div><!-- /gh-screen-app -->
 
 <script>
 // ═══════════════════════════════════════════════
@@ -1040,7 +1308,7 @@ function ghGambarKanvas(cv, strokes) {
 // privasi) begitu pengguna lebih dari ~100 orang -- sebelum itu, cuma
 // "test user" yang didaftarkan manual di Cloud Console yang bisa pakai
 // tanpa melihat peringatan "Aplikasi belum diverifikasi".
-const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
+const GH_CLIENT_ID = 'GANTI_DENGAN_CLIENT_ID_ASLI.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
@@ -1672,6 +1940,90 @@ ghMuatEntri();
 ghRenderList();
 ghMuatSekolah();
 ghRenderSekolah();
+
+// ═══════════════════════════════════════════════
+//  UI SHELL BARU (2026-09) — login (tampilan saja), sidebar,
+//  navigasi halaman, dashboard ringkasan. Blok ini HANYA
+//  membaca data yang sudah ada (ghEntri, ghSekolah, dst) dan
+//  mengatur tampil/sembunyi elemen -- TIDAK mengubah satu pun
+//  fungsi atau alur data di atas.
+// ═══════════════════════════════════════════════
+const GH_UI_KEY_PROFIL = 'guruhub_profil_tampilan_v1'; // {nama, instansi} -- cuma sapaan, BUKAN akun
+
+function ghUiSapaanWaktu() {
+  let jam = new Date().getHours();
+  if (jam < 11) return 'Selamat pagi';
+  if (jam < 15) return 'Selamat siang';
+  if (jam < 19) return 'Selamat sore';
+  return 'Selamat malam';
+}
+
+function ghUiUpdateDashboardStats() {
+  let elLink = document.getElementById('gh-ui-stat-link');
+  let elSekolah = document.getElementById('gh-ui-stat-sekolah');
+  let elBank = document.getElementById('gh-ui-stat-banksoal');
+  if (elLink) elLink.textContent = ghEntri.length;
+  if (elSekolah) elSekolah.textContent = ghSekolah.length;
+  if (elBank) elBank.textContent = localStorage.getItem(GH_KEY_BANKSOAL_ID) ? 'Siap' : 'Belum';
+}
+
+function ghUiGotoPage(nama) {
+  ['dashboard', 'linkujian', 'esai', 'banksoal'].forEach(p => {
+    let el = document.getElementById('gh-page-' + p);
+    if (el) el.style.display = (p === nama) ? '' : 'none';
+    let nav = document.getElementById('gh-nav-' + p);
+    if (nav) nav.classList.toggle('active', p === nama);
+  });
+  if (nama === 'dashboard') ghUiUpdateDashboardStats();
+  ghUiCloseSidebar();
+  window.scrollTo(0, 0);
+}
+
+function ghUiOpenSidebar() {
+  document.getElementById('gh-sidebar').classList.add('open');
+  document.getElementById('gh-sidebar-backdrop').classList.add('on');
+}
+function ghUiCloseSidebar() {
+  document.getElementById('gh-sidebar').classList.remove('open');
+  document.getElementById('gh-sidebar-backdrop').classList.remove('on');
+}
+
+function ghUiTampilkanApp(profil) {
+  document.getElementById('gh-screen-login').style.display = 'none';
+  document.getElementById('gh-screen-app').style.display = '';
+  let nama = (profil.nama || '').trim() || 'Guru';
+  document.getElementById('gh-ui-sb-nama').textContent = nama;
+  document.getElementById('gh-ui-sb-instansi').textContent = (profil.instansi || '').trim() || 'CBT Kabut Digital';
+  document.getElementById('gh-ui-sapaan').textContent = ghUiSapaanWaktu() + ', ' + nama;
+  ghUiUpdateDashboardStats();
+}
+
+function ghUiLogin() {
+  let nama = document.getElementById('gh-ui-inp-nama').value.trim();
+  if (!nama) { ghToast('Isi nama dulu, ya.'); return; }
+  let instansi = document.getElementById('gh-ui-inp-instansi').value.trim();
+  let profil = { nama, instansi };
+  localStorage.setItem(GH_UI_KEY_PROFIL, JSON.stringify(profil));
+  ghUiTampilkanApp(profil);
+}
+
+function ghUiLogout() {
+  if (!confirm('Keluar dari Guru Hub? (Data Link Ujian / Soal / Bank Soal yang tersimpan TIDAK terhapus -- cuma sapaan nama yang di-reset)')) return;
+  localStorage.removeItem(GH_UI_KEY_PROFIL);
+  document.getElementById('gh-screen-app').style.display = 'none';
+  document.getElementById('gh-screen-login').style.display = '';
+  document.getElementById('gh-ui-inp-nama').value = '';
+  document.getElementById('gh-ui-inp-instansi').value = '';
+}
+
+// Login TIDAK menggerbangi fitur -- ini cuma cek apakah nama profil
+// sudah pernah diisi sebelumnya di perangkat ini ("ingat saya").
+(function ghUiInit() {
+  try {
+    let raw = localStorage.getItem(GH_UI_KEY_PROFIL);
+    if (raw) ghUiTampilkanApp(JSON.parse(raw));
+  } catch (e) { /* data profil rusak -> biarkan tampil di layar login */ }
+})();
 </script>
 
 </body>
