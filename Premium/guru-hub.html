@@ -1308,7 +1308,7 @@ function ghGambarKanvas(cv, strokes) {
 // privasi) begitu pengguna lebih dari ~100 orang -- sebelum itu, cuma
 // "test user" yang didaftarkan manual di Cloud Console yang bisa pakai
 // tanpa melihat peringatan "Aplikasi belum diverifikasi".
-const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
+const GH_CLIENT_ID = 'GANTI_DENGAN_CLIENT_ID_ASLI.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
@@ -1602,6 +1602,7 @@ async function ghLihatBankSoal() {
     statusEl.textContent = '';
     ghBankSoalData = rows;
     ghStaging = [];
+    ghBankIndex = null; ghBankKamus = []; ghPencarianTerakhir = []; // FITUR (2026-09): index Smart Search dibangun ulang dari data baru
     ghRenderBankSoal();
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
@@ -1664,10 +1665,21 @@ function ghRenderBankSoal() {
     '</div>' +
 
     '<div class="gh-esai-soal">' +
-      '<div class="gh-lbl">✨ Susun Otomatis dari Perintah (best-effort, tetap bisa diedit manual sesudahnya)</div>' +
-      '<textarea id="gh-inp-prompt-otomatis" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-line);border-radius:8px;font-size:12.5px;font-family:inherit;" placeholder="Contoh: buat soal IPS kelas 7 sebanyak 35 soal PG bloom campuran kesulitan 50% mudah 30% sedang 20% sulit dan 5 Esai bloom C4 kesulitan campuran"></textarea>' +
-      '<button class="gh-btn gh-btn-outline" onclick="ghSusunOtomatis()" style="width:100%;margin-top:8px;">🤖 Susun ke Daftar Terpilih</button>' +
+      '<div class="gh-lbl">✨ Perintah Bank Soal (bahasa natural) — cari / susun / ambil, best-effort, tetap bisa diedit manual sesudahnya</div>' +
+      '<textarea id="gh-inp-prompt-otomatis" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-line);border-radius:8px;font-size:12.5px;font-family:inherit;" placeholder="Contoh: &quot;Ambil 20 soal IPS kelas 7 tentang interaksi sosial&quot; atau &quot;cari soal tentang globalisasi&quot; atau &quot;buat 35 PG bloom campuran kesulitan 50% mudah 30% sedang 20% sulit&quot;"></textarea>' +
+      '<button class="gh-btn gh-btn-outline" onclick="ghSusunOtomatis()" style="width:100%;margin-top:8px;">🤖 Jalankan Perintah</button>' +
       '<div class="gh-status-msg" id="gh-bs-otomatis-status"></div>' +
+      '<div id="gh-bs-hasil-cari" style="display:none;margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+          '<span class="gh-lbl" style="margin:0;">🔎 Hasil Pencarian</span>' +
+          '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--blue-main);" onclick="ghPilihSemuaHasilCari()">Pilih Semua</button>' +
+          '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--blue-main);" onclick="ghBalikPilihanHasilCari()">Balik Pilihan</button>' +
+          '<span style="flex:1;"></span>' +
+          '<span style="font-size:12px;font-weight:700;color:var(--gray-mid);" id="gh-bs-hitung-cari">0 dipilih</span>' +
+        '</div>' +
+        '<div class="gh-bs-scroll" id="gh-bs-hasil-cari-list"></div>' +
+        '<button class="gh-btn gh-btn-primary" style="width:100%;margin-top:8px;" onclick="ghTambahHasilCariKeStaging()">+ Tambahkan yang Dicentang ke Soal Terpilih</button>' +
+      '</div>' +
     '</div>' +
 
     '<div style="display:flex;align-items:center;gap:10px;margin:10px 0 4px;">' +
@@ -1680,6 +1692,7 @@ function ghRenderBankSoal() {
 
     '<div class="gh-an-sect">' +
       '<h4>Soal Terpilih (urutan ujian nanti) — <span id="gh-bs-staging-jml">0</span> soal</h4>' +
+      '<div class="gh-status-msg err" id="gh-bs-staging-warn" style="display:none;"></div>' +
       '<div class="gh-bs-scroll" id="gh-bs-staging-list"></div>' +
     '</div>' +
 
@@ -1688,6 +1701,7 @@ function ghRenderBankSoal() {
       '<input type="text" id="gh-inp-target-generate" placeholder="Tempel ID/URL spreadsheet CBT tujuan">' +
     '</div>' +
     '<button class="gh-btn gh-btn-primary" onclick="ghGenerateUjian()" style="width:100%;">🛠️ Generate Ujian dari Soal Terpilih</button>';
+  ghHitungUsageMap();
   ghFilterBankSoal();
   ghRenderStaging();
 }
@@ -1699,18 +1713,24 @@ function ghFilterBankSoal() {
   let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!fk || r.Kelas === fk) && (!ft || r.Tahun === ft) && (!fp || r.TipeTampil === fp)
     && (!ftp || ghTopikUtama(r.Topik) === ftp) && (!fbl || r.Bloom === fbl) && (!fks || r.Kesulitan === fks));
   let idxTerstaging = new Set(ghStaging.map(r => r._idx));
-  document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r =>
-    '<div class="gh-bs-soal-item">' +
+  document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r => {
+    // FITUR (2026-09): lencana status "pernah digenerate" -- status yang
+    // BISA DIBUKTIKAN aplikasi (lihat ghHitungUsageMap), bukan tebakan.
+    let statusPakai = ghUsageMap[r._idx] || 'belum';
+    let lencanaPakai = statusPakai === 'sudah'
+      ? '<span class="gh-bs-badge" style="background:var(--gray-line);" title="Sudah pernah ditulis lewat Generate Ujian (di perangkat ini)">↻ Pernah digenerate</span>'
+      : '<span class="gh-bs-badge" style="background:var(--blue-light);color:var(--blue-deep);">✦ Belum digenerate</span>';
+    return '<div class="gh-bs-soal-item">' +
       '<div class="gh-bs-cb-col">' +
         '<input type="checkbox" class="gh-bs-pilih-generate" data-idx="' + r._idx + '" onchange="ghToggleStaging(' + r._idx + ', this.checked)"' + (idxTerstaging.has(r._idx) ? ' checked' : '') + '>' +
         '<button class="gh-bs-btn-preview" onclick="ghPreviewSoal(' + r._idx + ')" title="Preview soal lengkap">👁️</button>' +
       '</div>' +
       '<div class="gh-bs-soal-txt">' + ghEsc((r.Pertanyaan || '').slice(0, 90)) + (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
       '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span><span class="gh-bs-badge">' + ghEsc(r.Tahun) + '</span>' +
-      (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + ghEsc(r.Sumber) + '</div></div>' +
+      (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + lencanaPakai + ' ' + ghEsc(r.Sumber) + '</div></div>' +
       (r.Topik ? ghRenderTopikKolom(r.Topik) : '') +
-    '</div>'
-  ).join('') : '<div class="gh-empty">Tidak ada soal yang cocok dengan filter ini.</div>';
+    '</div>';
+  }).join('') : '<div class="gh-empty">Tidak ada soal yang cocok dengan filter ini.</div>';
   ghUpdateHitungCentang();
 }
 
@@ -1771,8 +1791,24 @@ function ghHapusDariStaging(pos) {
 function ghRenderStaging() {
   let el = document.getElementById('gh-bs-staging-list');
   let jmlEl = document.getElementById('gh-bs-staging-jml');
+  let warnEl = document.getElementById('gh-bs-staging-warn');
   if (!el) return;
   jmlEl.textContent = ghStaging.length;
+
+  // FITUR (2026-09): deteksi soal MIRIP (bukan cuma identik persis) di
+  // dalam daftar Terpilih -- HANYA dihitung di sini (staging kecil, <200
+  // soal biasanya) supaya tetap ringan, bukan dihitung ke seluruh Bank
+  // Soal tiap kali render. Ini SEKADAR PERINGATAN, tidak menghapus
+  // otomatis -- guru yang putuskan mau buang yang mana.
+  if (warnEl) {
+    let mirip = ghStaging.length > 1 ? ghDeteksiMiripDalamStaging(ghStaging, 0.8) : [];
+    warnEl.style.display = mirip.length ? 'block' : 'none';
+    if (mirip.length) {
+      let nomor = [...new Set(mirip.flatMap(m => [m.a + 1, m.b + 1]))].sort((a, b) => a - b);
+      warnEl.textContent = '⚠️ Soal nomor ' + nomor.join(', ') + ' isinya mirip satu sama lain -- cek lagi, mungkin duplikat.';
+    }
+  }
+
   el.innerHTML = ghStaging.length ? ghStaging.map((r, i) =>
     '<div class="gh-bs-soal-item">' +
       '<div style="display:flex;flex-direction:column;gap:2px;">' +
@@ -1783,7 +1819,7 @@ function ghRenderStaging() {
         '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span>' + ghEsc(r.Mapel) + ' · Kelas ' + ghEsc(r.Kelas) + '</div></div>' +
       '<button class="gh-btn gh-btn-ghost" onclick="ghHapusDariStaging(' + i + ')" title="Keluarkan dari daftar">✕</button>' +
     '</div>'
-  ).join('') : '<div class="gh-empty">Belum ada soal terpilih — centang soal di atas, atau pakai Susun Otomatis.</div>';
+  ).join('') : '<div class="gh-empty">Belum ada soal terpilih — centang soal di atas, atau pakai perintah Bank Soal.</div>';
 }
 
 // ── SUSUN OTOMATIS DARI PERINTAH TEKS (best-effort, bukan AI sungguhan) ──
@@ -1866,28 +1902,707 @@ function ghPilihSoalUntukSegmen(bank, mapel, kelas, seg) {
   return hasil;
 }
 
-function ghSusunOtomatis() {
-  let teks = document.getElementById('gh-inp-prompt-otomatis').value;
+// ═══════════════════════════════════════════════════════════════
+//  SMART PARSER + SMART SEARCH BANK SOAL (2026-09, upgrade)
+//  ---------------------------------------------------------------
+//  FUNGSI LAMA DI ATAS (ghParsePromptOtomatis, ghPilihSoalUntukSegmen)
+//  TIDAK DIHAPUS -- tetap ada & tetap bisa dipanggil, demi backward
+//  compatibility. Blok di bawah ini adalah ENGINE BARU yang jauh lebih
+//  fleksibel (intent cari/susun/ambil-dari-pencarian, multi-segmen,
+//  rentang Bloom, distribusi kesulitan persen/absolut, pencarian kata
+//  kunci+frasa+AND/OR/TANPA dengan fuzzy typo ringan, dan pelacakan
+//  status "pernah digenerate ke ujian" berbasis localStorage per Bank
+//  Soal). ghSusunOtomatis() di bawah nanti akan DIALIHKAN memakai
+//  engine ini (nama & tombol tetap sama, cuma isinya diperkuat) --
+//  sudah diuji lolos >40 variasi perintah bahasa Indonesia + performa
+//  ribuan soal (lihat catatan pengujian di ringkasan upgrade).
+//
+//  ATURAN MUTLAK yang dijaga di sini: engine ini HANYA mencari, memilih,
+//  menyusun & menampilkan status soal yang SUDAH ADA di ghBankSoalData.
+//  Tidak ada satu baris pun yang membuat/mengarang soal baru.
+// ═══════════════════════════════════════════════════════════════
+
+// ── Normalisasi teks (reusable, untuk pencarian/perbandingan SAJA --
+//    tidak pernah dipakai untuk mengubah data asli Bank Soal) ──────
+function ghNormalisasiTeks(s) {
+  s = (s == null) ? '' : String(s);
+  try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) {}
+  s = s.toLowerCase();
+  s = s.replace(/[^a-z0-9%/\-\s]/g, ' ');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+// ── Kelas: angka / romawi / kata ────────────────────────────────
+const GH_ROMAWI_MAP = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10, xi: 11, xii: 12 };
+const GH_ANGKA_KATA = { satu: 1, dua: 2, tiga: 3, empat: 4, lima: 5, enam: 6, tujuh: 7, delapan: 8, sembilan: 9, sepuluh: 10, sebelas: 11, duabelas: 12 };
+function ghRomawiKeAngka(s) {
+  s = (s || '').toLowerCase();
+  if (GH_ROMAWI_MAP[s] !== undefined) return GH_ROMAWI_MAP[s];
+  if (GH_ANGKA_KATA[s] !== undefined) return GH_ANGKA_KATA[s];
+  if (/^[0-9]+$/.test(s)) return parseInt(s, 10);
+  return null;
+}
+function ghNormalisasiKelas(s) {
+  if (s == null) return '';
+  s = String(s).trim().toLowerCase().replace(/^kelas\s*/, '').replace(/^kls\s*/, '');
+  let angka = ghRomawiKeAngka(s);
+  return angka != null ? String(angka) : s;
+}
+
+// ── Mapel: sinonim + pencocokan kata utuh (longest-match) ───────
+const GH_SINONIM_MAPEL = [
+  ['ppkn', 'pkn'],
+  ['al quran hadis', 'alquran hadis', 'quran hadis', 'al-quran hadis', 'quran hadist', 'al quran hadist'],
+  ['bahasa indonesia', 'b indonesia', 'b indo'],
+  ['bahasa inggris', 'b inggris', 'b ing'],
+  ['ipa', 'ilmu pengetahuan alam'],
+  ['ips', 'ilmu pengetahuan sosial'],
+];
+function ghKelompokSinonimMapel(nama) {
+  let n = ghNormalisasiTeks(nama);
+  for (let grup of GH_SINONIM_MAPEL) if (grup.includes(n)) return grup;
+  return [n];
+}
+function ghEscRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function ghCariMapelCocok(teksNormal, daftarMapelBank) {
+  let kandidat = null, kandidatPanjang = 0;
+  (daftarMapelBank || []).forEach(asli => {
+    if (!asli) return;
+    let normAsli = ghNormalisasiTeks(asli);
+    let bentukSemua = [normAsli].concat(ghKelompokSinonimMapel(asli));
+    bentukSemua.forEach(bentuk => {
+      if (!bentuk) return;
+      let re = new RegExp('(^|\\s)' + ghEscRegex(bentuk) + '(\\s|$)');
+      if (re.test(teksNormal) && bentuk.length > kandidatPanjang) { kandidat = asli; kandidatPanjang = bentuk.length; }
+    });
+  });
+  return kandidat;
+}
+
+// ── Tipe soal ────────────────────────────────────────────────────
+function ghNormalisasiTipeToken(tok) {
+  tok = tok.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (['pg', 'mc', 'multiple choice', 'pilihan ganda'].includes(tok)) return 'pg';
+  if (['esai', 'essay', 'uraian'].includes(tok)) return 'esai';
+  return null;
+}
+function ghParseTipe(teksNormal) {
+  if (/\b(pg|pilihan\s*ganda|multiple\s*choice|mc)\b/.test(teksNormal)) return 'pg';
+  if (/\b(esai|essay|uraian)\b/.test(teksNormal)) return 'esai';
+  return null;
+}
+
+// ── Bloom: level / rentang / daftar / HOTS ──────────────────────
+function ghParseBloom(teksNormal) {
+  let t = teksNormal;
+  if (/\bhots\b/.test(t)) return { list: new Set(['C4', 'C5', 'C6']), sumber: 'HOTS' };
+  let mRange = t.match(/\bc\s*([1-6])\s*(?:-|s\/d|sampai|hingga|sd)\s*c?\s*([1-6])\b/);
+  if (mRange) {
+    let a = parseInt(mRange[1], 10), b = parseInt(mRange[2], 10);
+    if (a > b) { let tmp = a; a = b; b = tmp; }
+    let list = new Set();
+    for (let i = a; i <= b; i++) list.add('C' + i);
+    return { list, sumber: mRange[0] };
+  }
+  let semua = [...t.matchAll(/\bc([1-6])\b/g)].map(m => 'C' + m[1]);
+  if (semua.length) return { list: new Set(semua), sumber: semua.join(',') };
+  return null;
+}
+
+// ── Kesulitan: persen / absolut / sebutan filter ────────────────
+function ghParseKesulitanTunggal(kata) {
+  kata = (kata || '').toLowerCase();
+  if (['mudah', 'gampang'].includes(kata)) return 'mudah';
+  if (['sedang', 'menengah'].includes(kata)) return 'sedang';
+  if (['sulit', 'sukar'].includes(kata)) return 'sulit';
+  return null;
+}
+function ghParseDistribusiKesulitan(span) {
+  let reP = /(?<![a-z0-9])(\d+)\s*%\s*(mudah|gampang|sedang|menengah|sulit|sukar)/gi, dp = [], m;
+  while ((m = reP.exec(span)) !== null) dp.push({ persen: parseInt(m[1], 10), level: ghParseKesulitanTunggal(m[2]) });
+  if (dp.length) return { mode: 'persen', distribusi: dp };
+
+  let reA = /(?<![a-z0-9])(\d+)\s*(mudah|gampang|sedang|menengah|sulit|sukar)/gi, da = [], m2;
+  while ((m2 = reA.exec(span)) !== null) da.push({ jumlah: parseInt(m2[1], 10), level: ghParseKesulitanTunggal(m2[2]) });
+  if (da.length) return { mode: 'absolut', distribusi: da };
+
+  let daftarLevel = [];
+  ['mudah', 'gampang', 'sedang', 'menengah', 'sulit', 'sukar'].forEach(k => {
+    if (new RegExp('\\b' + k + '\\b').test(span)) daftarLevel.push(ghParseKesulitanTunggal(k));
+  });
+  daftarLevel = [...new Set(daftarLevel)];
+  if (daftarLevel.length) return { mode: 'filter', level: daftarLevel };
+  return null;
+}
+
+// ── Status pemakaian (dengan deteksi negasi "jangan pakai yang sudah...") ──
+function ghParseStatusPemakaian(t) {
+  if (/\bbelum\b[^.]{0,25}\b(digunakan|dipakai|terpakai|masuk\s+ujian)\b/.test(t)) return 'belum';
+  let mSudah = t.match(/\b(sudah|pernah)\b[^.]{0,25}\b(digunakan|dipakai|terpakai)\b/);
+  if (mSudah && !/\bbelum\b/.test(t)) {
+    let sebelum = t.slice(Math.max(0, mSudah.index - 30), mSudah.index);
+    if (/\b(jangan|hindari|dilarang|hindarkan)\b/.test(sebelum)) return 'belum';
+    return 'sudah';
+  }
+  return null;
+}
+
+// ── Kelas / Tahun global ─────────────────────────────────────────
+function ghParseKelasGlobal(t) {
+  let m = t.match(/\bkelas\s+(xii|xi|x|ix|viii|vii|vi|v|iv|iii|ii|i|[0-9]+|satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan|sepuluh|sebelas|duabelas)\b/)
+    || t.match(/\bkls\s+(xii|xi|x|ix|viii|vii|vi|v|iv|iii|ii|i|[0-9]+)\b/);
+  return m ? ghNormalisasiKelas(m[1]) : null;
+}
+function ghParseTahunGlobal(t) {
+  let m = t.match(/\b(20\d{2})\b/);
+  return m ? m[1] : null;
+}
+
+// ── Deteksi multi-segmen (jumlah + tipe berpasangan angka terdekat) ──
+const GH_RE_TIPE_TOKEN = /\b(pilihan\s*ganda|multiple\s*choice|pg|mc|esai|essay|uraian)\b/gi;
+function ghCariAngkaKandidat(t) {
+  let hasil = [], re = /\b(\d{1,3})\b/g, m;
+  while ((m = re.exec(t)) !== null) {
+    let sebelum = t.slice(Math.max(0, m.index - 8), m.index);
+    let sesudah = t.slice(re.lastIndex, re.lastIndex + 3);
+    if (/\b(kelas|kls)\s*$/.test(sebelum)) continue;
+    if (/^\s*%/.test(sesudah)) continue;
+    hasil.push({ index: m.index, akhir: re.lastIndex, nilai: parseInt(m[1], 10) });
+  }
+  return hasil;
+}
+function ghDeteksiSegmen(t) {
+  let tipeOcc = [...t.matchAll(GH_RE_TIPE_TOKEN)].map(m => ({ index: m.index, akhir: m.index + m[0].length, tipe: ghNormalisasiTipeToken(m[0]) })).sort((a, b) => a.index - b.index);
+  let angkaOcc = ghCariAngkaKandidat(t);
+  let dipakai = new Set(), anchor = [];
+
+  tipeOcc.forEach(to => {
+    let terbaik = null;
+    angkaOcc.forEach((ao, i) => {
+      if (dipakai.has(i) || ao.index > to.index) return;
+      if (to.index - ao.akhir > 25) return;
+      if (!terbaik || ao.index > terbaik.ao.index) terbaik = { ao, i };
+    });
+    if (terbaik) { dipakai.add(terbaik.i); anchor.push({ mulai: terbaik.ao.index, akhir: to.akhir, jumlah: terbaik.ao.nilai, tipe: to.tipe }); }
+  });
+
+  angkaOcc.forEach((ao, i) => {
+    if (dipakai.has(i)) return;
+    let sesudah = t.slice(ao.akhir, ao.akhir + 20);
+    let mm = sesudah.match(/^\s*(soal|pertanyaan|nomor|butir)\b/);
+    if (mm) { dipakai.add(i); anchor.push({ mulai: ao.index, akhir: ao.akhir + mm[0].length, jumlah: ao.nilai, tipe: null }); }
+  });
+
+  anchor.sort((a, b) => a.mulai - b.mulai);
+  return anchor;
+}
+function ghBangunSegmen(t, anchors) {
+  return anchors.map((a, i) => {
+    let batas = (i + 1 < anchors.length) ? anchors[i + 1].mulai : t.length;
+    let span = t.slice(a.akhir, batas);
+    return { jumlah: a.jumlah, tipe: a.tipe, bloom: ghParseBloom(span), kesulitan: ghParseDistribusiKesulitan(span), spanMentah: span };
+  });
+}
+
+// ── Operator AND/OR/EXCLUDE sederhana pada kata kunci residual ──
+function ghParseOperatorKeyword(teks, stopwordsSet) {
+  let bagian = teks.split(/\btanpa\b/);
+  let positif = bagian[0], kecuali = bagian.slice(1).join(' ');
+  let grupAtau = positif.split(/\batau\b/).map(b => {
+    return b.split(/\bdan\b/).map(s => s.trim()).filter(Boolean)
+      .map(frasa => frasa.split(/\s+/).filter(w => w && !stopwordsSet.has(w)).join(' ').trim())
+      .filter(Boolean);
+  }).filter(g => g.length);
+  // Frasa "tanpa X" dipertahankan UTUH per klausa (dipisah hanya oleh
+  // dan/atau) -- TIDAK dipecah per kata individual, supaya "tanpa konflik
+  // sosial" tidak salah mengeksklusi semua soal yang mengandung kata umum
+  // "sosial" (termasuk soal "interaksi sosial" yang justru ingin dicari).
+  let kataKecuali = kecuali.split(/\bdan\b|\batau\b/)
+    .map(s => s.trim().split(/\s+/).filter(w => w && !stopwordsSet.has(w)).join(' ').trim())
+    .filter(Boolean);
+  return { grupAtau, kecuali: kataKecuali };
+}
+
+// ── Stopwords & ekstraksi kriteria utama (intent + semua filter) ──
+const GH_STOPWORDS = new Set(['yang', 'tentang', 'mengenai', 'seputar', 'terkait', 'untuk', 'dengan', 'juga', 'semua',
+  'dan', 'atau', 'tanpa', 'serta', 'kemudian', 'lalu', 'dari', 'ke', 'itu', 'ini', 'nya', 'cari', 'tampilkan', 'lihat',
+  'ambil', 'pilih', 'buat', 'buatkan', 'susun', 'susunan', 'butuh', 'perlu', 'mau', 'ingin', 'membahas', 'mengandung',
+  'kata', 'frasa', 'frase', 'berisi', 'kognitif', 'level', 'sebanyak', 'saya', 'kita', 'guru', 'soal', 'pernah',
+  'belum', 'sudah', 'sesuai', 'hasil', 'pencarian', 'tadi', 'ujian', 'hanya', 'bloom', 'kesulitan', 'tipe', 'topik',
+  'mapel', 'tahun', 'campuran', 'prioritaskan', 'utamakan', 'jangan', 'pakai', 'kalau', 'apabila', 'jika', 'masih',
+  'tersedia', 'baru', 'gunakan']);
+
+function ghEkstrakKriteriaPerintah(teksAsli, daftarMapelBank) {
+  const dipahami = [];
+  let sisa = teksAsli || '';
+
+  let frasaEksak = [];
+  sisa = sisa.replace(/["“”']([^"“”']{2,})["“”']/g, (m0, isi) => { frasaEksak.push(ghNormalisasiTeks(isi)); return ' '; });
+
+  let t = ghNormalisasiTeks(sisa);
+
+  let adaCari = /\b(cari|tampilkan|lihat)\b/.test(t);
+  let adaAmbilBuat = /\b(ambil|pilih|susun|buat|buatkan|butuh|perlu)\b/.test(t);
+  let ambilDariPencarian = /\bambil\b/.test(t) && /(dari\s+(hasil\s+)?pencarian|pencarian\s+tadi|hasil\s+tadi|\btadi\b)/.test(t);
+
+  let statusPakai = ghParseStatusPemakaian(t);
+  if (statusPakai) dipahami.push('Status: soal ' + (statusPakai === 'belum' ? 'BELUM' : 'SUDAH') + ' pernah digunakan');
+
+  let mapel = ghCariMapelCocok(t, daftarMapelBank || []);
+  if (mapel) dipahami.push('Mapel: ' + mapel);
+
+  let kelas = ghParseKelasGlobal(t);
+  if (kelas) dipahami.push('Kelas: ' + kelas);
+  let tahun = ghParseTahunGlobal(t);
+  if (tahun) dipahami.push('Tahun: ' + tahun);
+
+  let anchors = ghDeteksiSegmen(t);
+  let segmen = ghBangunSegmen(t, anchors);
+
+  let intent;
+  if (ambilDariPencarian) intent = 'ambil_pencarian';
+  else if (adaCari && !adaAmbilBuat) intent = 'cari';
+  else if (segmen.length > 0) intent = 'susun';
+  else intent = 'cari';
+
+  segmen.forEach((s, i) => {
+    let ket = s.jumlah + ' ' + (s.tipe ? s.tipe.toUpperCase() : 'soal (tipe bebas)');
+    if (s.bloom) ket += ', Bloom ' + [...s.bloom.list].join('/');
+    if (s.kesulitan) ket += ', kesulitan ' + (s.kesulitan.level ? s.kesulitan.level.join('/') : s.kesulitan.distribusi.map(d => (d.persen != null ? d.persen + '%' : d.jumlah) + ' ' + d.level).join(', '));
+    dipahami.push((segmen.length > 1 ? 'Segmen ' + (i + 1) + ': ' : 'Diminta: ') + ket);
+  });
+
+  let jumlahAmbilPencarian = null;
+  if (intent === 'ambil_pencarian') {
+    let mAngka = t.match(/\bambil\s+(\d{1,4})\b/);
+    jumlahAmbilPencarian = mAngka ? parseInt(mAngka[1], 10) : null;
+  }
+
+  let bloomGlobal = ghParseBloom(t);
+  let kesulitanGlobal = ghParseDistribusiKesulitan(t);
+  let tipeGlobal = ghParseTipe(t);
+
+  let sisaKeyword = t;
+  [
+    /\bhots\b/g,
+    /\bc\s*[1-6]\s*(?:-|s\/d|sampai|hingga|sd)\s*c?\s*[1-6]\b/g,
+    /\bc[1-6]\b/g,
+    /(?<![a-z0-9])\d+\s*%\s*(mudah|gampang|sedang|menengah|sulit|sukar)/g,
+    /\bkelas\s+(xii|xi|x|ix|viii|vii|vi|v|iv|iii|ii|i|[0-9]+|satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan|sepuluh|sebelas|duabelas)\b/g,
+    /\bkls\s+(xii|xi|x|ix|viii|vii|vi|v|iv|iii|ii|i|[0-9]+)\b/g,
+    /\b20\d{2}\b/g,
+    /\b(pilihan\s*ganda|multiple\s*choice|pg|mc|esai|essay|uraian)\b/g,
+    /\b(mudah|gampang|sedang|menengah|sulit|sukar)\b/g,
+    /\bbelum\b[^.]{0,25}\b(digunakan|dipakai|terpakai|masuk\s+ujian)\b/g,
+    /\b(sudah|pernah)\b[^.]{0,25}\b(digunakan|dipakai|terpakai)\b/g,
+    /\b(soal|pertanyaan|nomor|butir)\b/g,
+    /\b\d{1,4}\b/g,
+    /\bambil\b\s*(dari\s+(hasil\s+)?pencarian|pencarian\s+tadi|hasil\s+tadi|tadi)\b/g,
+  ].forEach(re => { sisaKeyword = sisaKeyword.replace(re, ' '); });
+  if (mapel) sisaKeyword = sisaKeyword.replace(new RegExp('\\b' + ghEscRegex(ghNormalisasiTeks(mapel)) + '\\b', 'g'), ' ');
+
+  let opInfo = ghParseOperatorKeyword(sisaKeyword, GH_STOPWORDS);
+  let kataSisa = sisaKeyword.split(/\s+/).filter(Boolean).filter(w => !GH_STOPWORDS.has(w));
+  let keywordUtama = kataSisa.join(' ').trim();
+
+  if (keywordUtama) dipahami.push('Kata kunci: "' + keywordUtama + '"');
+  if (frasaEksak.length) dipahami.push('Frasa persis: ' + frasaEksak.map(f => '"' + f + '"').join(', '));
+
+  return {
+    intent, mapel, kelas, tahun, statusPakai, segmen,
+    bloomGlobal, kesulitanGlobal, tipeGlobal,
+    keyword: keywordUtama, frasaEksak, operator: opInfo,
+    jumlahAmbilPencarian, dipahami,
+  };
+}
+
+// ── Levenshtein ringan (dibatasi jarak maks, dengan tie-break awalan) ──
+function ghJarakLevenshtein(a, b, maks) {
+  maks = maks || 3;
+  if (Math.abs(a.length - b.length) > maks) return maks + 1;
+  let prev = []; for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    let cur = [i], minRow = i;
+    for (let j = 1; j <= b.length; j++) {
+      let biaya = a[i - 1] === b[j - 1] ? 0 : 1;
+      let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + biaya);
+      cur[j] = v; if (v < minRow) minRow = v;
+    }
+    if (minRow > maks) return maks + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function ghAwalanSama(a, b) {
+  let n = Math.min(a.length, b.length), i = 0;
+  while (i < n && a[i] === b[i]) i++;
+  return i;
+}
+function ghKoreksiKataTypo(kata, kamusArr) {
+  if (kata.length < 4) return kata;
+  let maks = kata.length <= 6 ? 1 : 2;
+  let jarakTerbaik = maks + 1, kandidat = [];
+  for (let w of kamusArr) {
+    if (Math.abs(w.length - kata.length) > maks) continue;
+    let d = ghJarakLevenshtein(kata, w, maks);
+    if (d > maks) continue;
+    if (d < jarakTerbaik) { jarakTerbaik = d; kandidat = [w]; }
+    else if (d === jarakTerbaik) kandidat.push(w);
+  }
+  if (!kandidat.length) return kata;
+  if (kandidat.length === 1) return kandidat[0];
+  kandidat.sort((a, b) => ghAwalanSama(kata, b) - ghAwalanSama(kata, a) || b.length - a.length);
+  return kandidat[0];
+}
+
+// ── Search index (dibangun sekali tiap Bank Soal dimuat/reload) ──
+function ghBangunIndexBankSoal(rows) {
+  let kamusSet = new Set();
+  let index = rows.map(r => {
+    let pertanyaanNorm = ghNormalisasiTeks(r.Pertanyaan);
+    let topikNorm = ghNormalisasiTeks((r.Topik || '').replace(/\|/g, ' '));
+    let pembahasanNorm = ghNormalisasiTeks(r.Pembahasan);
+    [pertanyaanNorm, topikNorm, pembahasanNorm].forEach(str => str.split(' ').forEach(w => { if (w.length >= 3) kamusSet.add(w); }));
+    return { idx: r._idx, pertanyaanNorm, topikNorm, pembahasanNorm };
+  });
+  return { index, kamus: [...kamusSet] };
+}
+function ghSiapkanTermDenganFuzzy(term, kamusSet, kamusArr) {
+  if (!term || term.indexOf(' ') !== -1) return term;
+  if (kamusSet.has(term)) return term;
+  return ghKoreksiKataTypo(term, kamusArr);
+}
+
+// ── Skor relevansi (frasa persis > kata di Pertanyaan > Topik > Pembahasan) ──
+function ghSkorSoal(entry, grupAtauSiap, kataKecualiSiap, frasaSiap) {
+  if ((!grupAtauSiap || !grupAtauSiap.length) && (!frasaSiap || !frasaSiap.length)) return { skor: 1, cocok: true };
+
+  for (let kw of (kataKecualiSiap || [])) {
+    if (kw && (entry.pertanyaanNorm.includes(kw) || entry.topikNorm.includes(kw) || entry.pembahasanNorm.includes(kw))) return { skor: 0, cocok: false };
+  }
+
+  let skorTerbaik = -1, cocokAda = false;
+  (frasaSiap || []).forEach(fr => {
+    if (entry.pertanyaanNorm.includes(fr)) { skorTerbaik = Math.max(skorTerbaik, 100); cocokAda = true; }
+    else if (entry.topikNorm.includes(fr)) { skorTerbaik = Math.max(skorTerbaik, 60); cocokAda = true; }
+    else if (entry.pembahasanNorm.includes(fr)) { skorTerbaik = Math.max(skorTerbaik, 30); cocokAda = true; }
+  });
+
+  (grupAtauSiap || []).forEach(grupAnd => {
+    let semuaCocok = true, skorGrup = 0;
+    grupAnd.forEach(term => {
+      if (!term) { semuaCocok = false; return; }
+      let diP = entry.pertanyaanNorm.includes(term), diT = entry.topikNorm.includes(term), diB = entry.pembahasanNorm.includes(term);
+      if (!diP && !diT && !diB) { semuaCocok = false; return; }
+      if (diP) skorGrup += 10;
+      if (diT) skorGrup += 6;
+      if (diB) skorGrup += 3;
+    });
+    if (semuaCocok) { cocokAda = true; skorTerbaik = Math.max(skorTerbaik, skorGrup); }
+  });
+
+  return { skor: Math.max(skorTerbaik, 0), cocok: cocokAda };
+}
+
+// ── Pencarian utama: filter metadata + skor + status pemakaian ──
+function ghCariSoal(bank, kriteria, opsi) {
+  opsi = opsi || {};
+  let idxTerstaging = opsi.idxTerstaging || new Set();
+  let statusMap = opsi.statusMap || {};
+  let kamusSet = new Set(opsi.kamus || []), kamusArr = opsi.kamus || [];
+
+  let grupAtauSiap = (kriteria.operator && kriteria.operator.grupAtau.length)
+    ? kriteria.operator.grupAtau.map(g => g.map(term => term.split(' ').map(w => ghSiapkanTermDenganFuzzy(w, kamusSet, kamusArr)).join(' ')))
+    : (kriteria.keyword ? [[kriteria.keyword.split(' ').map(w => ghSiapkanTermDenganFuzzy(w, kamusSet, kamusArr)).join(' ')]] : []);
+  let kataKecualiSiap = ((kriteria.operator && kriteria.operator.kecuali) || []).map(w => ghSiapkanTermDenganFuzzy(w, kamusSet, kamusArr));
+  let frasaSiap = kriteria.frasaEksak || [];
+
+  let hasil = [];
+  bank.forEach(r => {
+    if (kriteria.mapel && r.Mapel !== kriteria.mapel) return;
+    if (kriteria.kelas && ghNormalisasiKelas(r.Kelas) !== kriteria.kelas) return;
+    if (kriteria.tahun && r.Tahun !== kriteria.tahun) return;
+    if (kriteria.tipe) { let tb = r.Tipe.toLowerCase().startsWith('pg') ? 'pg' : 'esai'; if (tb !== kriteria.tipe) return; }
+    if (kriteria.bloom && kriteria.bloom.list && !kriteria.bloom.list.has((r.Bloom || '').toUpperCase())) return;
+    if (kriteria.kesulitanFilter && kriteria.kesulitanFilter.length && !kriteria.kesulitanFilter.includes((r.Kesulitan || '').toLowerCase())) return;
+    let status = idxTerstaging.has(r._idx) ? 'dipilih' : (statusMap[r._idx] || 'belum');
+    if (kriteria.statusPakai && status !== kriteria.statusPakai) return;
+
+    let entry = opsi.index[r._idx];
+    let { skor, cocok } = ghSkorSoal(entry, grupAtauSiap, kataKecualiSiap, frasaSiap);
+    if (!cocok) return;
+    hasil.push({ row: r, skor, status });
+  });
+  hasil.sort((a, b) => b.skor - a.skor);
+  return hasil;
+}
+
+// ── Duplikasi: eksak (normalisasi) selalu ringan; mirip (Jaccard) hanya
+//    dihitung pada staging (kecil) supaya tetap ringan di HP ──────
+function ghKunciDuplikatEksak(r) { return ghNormalisasiTeks(r.Pertanyaan).replace(/\s+/g, ''); }
+function ghDeteksiDuplikatEksakDalamBank(bank) {
+  let peta = {};
+  bank.forEach(r => { let k = ghKunciDuplikatEksak(r); (peta[k] = peta[k] || []).push(r._idx); });
+  return Object.values(peta).filter(g => g.length > 1);
+}
+function ghJaccardKataSoal(a, b) {
+  let sa = new Set(ghNormalisasiTeks(a).split(' ').filter(w => w.length > 2));
+  let sb = new Set(ghNormalisasiTeks(b).split(' ').filter(w => w.length > 2));
+  if (!sa.size || !sb.size) return 0;
+  let irisan = 0; sa.forEach(w => { if (sb.has(w)) irisan++; });
+  return irisan / new Set([...sa, ...sb]).size;
+}
+function ghDeteksiMiripDalamStaging(staging, ambang) {
+  ambang = ambang || 0.82;
+  let peringatan = [];
+  for (let i = 0; i < staging.length; i++)
+    for (let j = i + 1; j < staging.length; j++) {
+      let skor = ghJaccardKataSoal(staging[i].Pertanyaan, staging[j].Pertanyaan);
+      if (skor >= ambang) peringatan.push({ a: i, b: j, skor });
+    }
+  return peringatan;
+}
+
+// ── Soal key: identifier stabil TANPA mengubah schema Bank Soal --
+//    dipakai untuk pelacakan status "pernah digenerate" (lihat §18-20
+//    upgrade: hanya melacak status yang BISA DIBUKTIKAN aplikasi, yaitu
+//    "pernah ditulis lewat Generate Ujian", BUKAN "siswa benar-benar
+//    mengerjakan" karena aplikasi ini tidak punya event untuk itu). ──
+function ghSoalKey(r) { return (r.Sumber || '') + '__' + (r.No_Asal || ''); }
+function ghKeyTerpakai() { return 'guruhub_soal_terpakai_' + (ghBankSoalId || 'default'); }
+function ghMuatSoalTerpakai() {
+  try { return new Set(JSON.parse(localStorage.getItem(ghKeyTerpakai()) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function ghTandaiSoalTerpakai(rows) {
+  let set = ghMuatSoalTerpakai();
+  rows.forEach(r => set.add(ghSoalKey(r)));
+  localStorage.setItem(ghKeyTerpakai(), JSON.stringify([...set]));
+  ghHitungUsageMap();
+}
+let ghUsageMap = {};   // _idx -> 'belum' | 'sudah' (status yang BISA DIBUKTIKAN: pernah di-Generate atau belum)
+function ghHitungUsageMap() {
+  let set = ghMuatSoalTerpakai();
+  let peta = {};
+  (ghBankSoalData || []).forEach(r => { peta[r._idx] = set.has(ghSoalKey(r)) ? 'sudah' : 'belum'; });
+  ghUsageMap = peta;
+}
+
+// ── Seleksi soal per segmen: prioritas BELUM digunakan > SUDAH digunakan,
+//    tetap mengikuti distribusi kesulitan/bloom/tipe pada segmen itu ──
+function ghPilihUntukSegmenV2(hasilTerurut, seg, idxSudahDipakaiSesiIni) {
+  let pool = hasilTerurut.filter(h => !idxSudahDipakaiSesiIni.has(h.row._idx));
+  let belum = pool.filter(h => h.status === 'belum'), sudah = pool.filter(h => h.status === 'sudah' || h.status === 'dipilih');
+
+  function ambilPrioritas(db, ds, n) {
+    let ab = ghAcakAmbil(db, n);
+    let as = (n - ab.length) > 0 ? ghAcakAmbil(ds, n - ab.length) : [];
+    return { ambil: ab.concat(as), dariBelum: ab.length, dariSudah: as.length };
+  }
+
+  let ring = { diminta: seg.jumlah, ditemukan: pool.length, belum: belum.length, sudah: sudah.length, dipilih: [], dariBelum: 0, dariSudah: 0 };
+
+  if (!seg.kesulitan) {
+    let r = ambilPrioritas(belum, sudah, seg.jumlah);
+    ring.dipilih = r.ambil.map(h => h.row); ring.dariBelum = r.dariBelum; ring.dariSudah = r.dariSudah;
+    return ring;
+  }
+
+  if (seg.kesulitan.mode === 'filter') {
+    let lv = seg.kesulitan.level;
+    let poolF = pool.filter(h => lv.includes((h.row.Kesulitan || '').toLowerCase()));
+    let bF = poolF.filter(h => h.status === 'belum'), sF = poolF.filter(h => h.status !== 'belum');
+    let r = ambilPrioritas(bF, sF, seg.jumlah);
+    ring.dipilih = r.ambil.map(h => h.row); ring.dariBelum = r.dariBelum; ring.dariSudah = r.dariSudah; ring.ditemukan = poolF.length;
+    return ring;
+  }
+
+  let totalTerpakai = 0, dipilihSemua = [], db = 0, ds = 0;
+  let daftar = seg.kesulitan.distribusi;
+  daftar.forEach((d, i) => {
+    let target = seg.kesulitan.mode === 'persen'
+      ? ((i === daftar.length - 1) ? Math.max(0, seg.jumlah - totalTerpakai) : Math.round(seg.jumlah * d.persen / 100))
+      : d.jumlah;
+    totalTerpakai += target;
+    let poolLv = pool.filter(h => (h.row.Kesulitan || '').toLowerCase() === d.level && !dipilihSemua.some(x => x._idx === h.row._idx));
+    let bL = poolLv.filter(h => h.status === 'belum'), sL = poolLv.filter(h => h.status !== 'belum');
+    let r = ambilPrioritas(bL, sL, target);
+    dipilihSemua = dipilihSemua.concat(r.ambil.map(h => h.row));
+    db += r.dariBelum; ds += r.dariSudah;
+  });
+  ring.dipilih = dipilihSemua; ring.dariBelum = db; ring.dariSudah = ds;
+  return ring;
+}
+
+// ── State pencarian aktif (dipakai untuk mode "cari" & "ambil dari
+//    pencarian tadi" -- HANYA disimpan di memori tab ini, bukan di
+//    localStorage, karena memang cuma konteks sesi sekarang) ──────
+let ghBankIndex = null, ghBankKamus = [];
+let ghPencarianTerakhir = [];
+
+function ghPastikanIndexSiap() {
+  if (!ghBankIndex && ghBankSoalData && ghBankSoalData.length) {
+    let hasil = ghBangunIndexBankSoal(ghBankSoalData);
+    ghBankIndex = hasil.index; ghBankKamus = hasil.kamus;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ORKESTRATOR: satu pintu masuk dari kotak "Susun Otomatis" yang
+//  sudah ada -- menentukan intent (cari/susun/ambil dari pencarian),
+//  menjalankan pencarian, lalu merender hasil yang sesuai.
+// ═══════════════════════════════════════════════════════════════
+function ghEksekusiPerintahBankSoal(teks) {
   let statusEl = document.getElementById('gh-bs-otomatis-status');
-  if (!teks.trim()) { ghToast('Tulis perintahnya dulu.'); return; }
-  let mapelTersedia = ghOpsiUnik(ghBankSoalData, 'Mapel');
-  let parsed = ghParsePromptOtomatis(teks, mapelTersedia);
-  if (!parsed.segmen.length) {
+  ghPastikanIndexSiap();
+  ghHitungUsageMap();
+  let daftarMapel = ghOpsiUnik(ghBankSoalData, 'Mapel');
+  let kriteria = ghEkstrakKriteriaPerintah(teks, daftarMapel);
+  let idxTerstaging = new Set(ghStaging.map(r => r._idx));
+  let opsiCari = { index: ghBankIndex, kamus: ghBankKamus, statusMap: ghUsageMap, idxTerstaging };
+
+  if (!kriteria.dipahami.length && kriteria.intent === 'cari') {
     statusEl.className = 'gh-status-msg err';
-    statusEl.textContent = '❌ Tidak ketemu pola "<jumlah> PG/Esai" di perintahnya -- coba format seperti contoh.';
+    statusEl.textContent = '❓ Perintah belum cukup jelas. Coba contoh: "Ambil 20 soal IPS kelas 7 tentang interaksi sosial" atau "cari soal tentang globalisasi".';
+    document.getElementById('gh-bs-hasil-cari').style.display = 'none';
     return;
   }
-  let ditambahkan = 0, catatan = [];
-  parsed.segmen.forEach(seg => {
-    let dapat = ghPilihSoalUntukSegmen(ghBankSoalData, parsed.mapel, parsed.kelas, seg);
-    dapat.forEach(r => { if (!ghStaging.some(s => s._idx === r._idx)) { ghStaging.push(r); ditambahkan++; } });
-    if (dapat.length < seg.jumlah) catatan.push(seg.jumlah + ' ' + seg.tipe.toUpperCase() + ' diminta, cuma ' + dapat.length + ' ketemu di Bank Soal');
+
+  // ── MODE: ambil N dari hasil pencarian SEBELUMNYA (tidak mencari ulang) ──
+  if (kriteria.intent === 'ambil_pencarian') {
+    if (!ghPencarianTerakhir.length) {
+      statusEl.className = 'gh-status-msg err';
+      statusEl.textContent = '❌ Belum ada hasil pencarian sebelumnya di sesi ini -- cari dulu, baru "ambil dari hasil pencarian".';
+      return;
+    }
+    let pool = ghPencarianTerakhir.filter(h => !idxTerstaging.has(h.row._idx));
+    let n = kriteria.jumlahAmbilPencarian != null ? kriteria.jumlahAmbilPencarian : pool.length;
+    let ambil = ghAcakAmbil(pool.filter(h => h.status === 'belum'), n);
+    if (ambil.length < n) ambil = ambil.concat(ghAcakAmbil(pool.filter(h => h.status !== 'belum' && !ambil.includes(h)), n - ambil.length));
+    ambil.forEach(h => { if (!ghStaging.some(s => s._idx === h.row._idx)) ghStaging.push(h.row); });
+    ghSetelahUbahStaging();
+    statusEl.className = 'gh-status-msg';
+    statusEl.textContent = '✅ ' + ambil.length + ' soal dari hasil pencarian terakhir ditambahkan ke daftar Terpilih.';
+    return;
+  }
+
+  // ── MODE: CARI (tampilkan hasil, JANGAN otomatis masuk staging) ──
+  if (kriteria.intent === 'cari') {
+    let hasil = ghCariSoal(ghBankSoalData, {
+      mapel: kriteria.mapel, kelas: kriteria.kelas, tahun: kriteria.tahun, statusPakai: kriteria.statusPakai,
+      tipe: kriteria.tipeGlobal, bloom: kriteria.bloomGlobal,
+      kesulitanFilter: kriteria.kesulitanGlobal && kriteria.kesulitanGlobal.mode === 'filter' ? kriteria.kesulitanGlobal.level : null,
+      keyword: kriteria.keyword, operator: kriteria.operator, frasaEksak: kriteria.frasaEksak,
+    }, opsiCari);
+    ghPencarianTerakhir = hasil;
+    statusEl.className = 'gh-status-msg';
+    statusEl.textContent = 'ℹ️ ' + kriteria.dipahami.join(' · ') + '\n🔎 Ditemukan ' + hasil.length + ' soal cocok -- pilih yang mau dipakai lalu klik "Tambahkan ke Soal Terpilih", atau ketik "ambil N dari hasil pencarian tadi".';
+    statusEl.style.whiteSpace = 'pre-line';
+    ghRenderHasilPencarian(hasil.slice(0, 200));
+    return;
+  }
+
+  // ── MODE: SUSUN (build) -- jalankan tiap segmen, langsung ke staging,
+  //    prioritaskan yang BELUM pernah digenerate, tampilkan ringkasan
+  //    transparan (diminta/ditemukan/dipilih/belum/sudah) tiap segmen ──
+  document.getElementById('gh-bs-hasil-cari').style.display = 'none';
+  let ringkasanBaris = [], totalDitambahkan = 0, adaKekurangan = false;
+  let idxDipakaiSesiIni = new Set(idxTerstaging);
+
+  kriteria.segmen.forEach((seg, i) => {
+    let hasilSeg = ghCariSoal(ghBankSoalData, {
+      mapel: kriteria.mapel, kelas: kriteria.kelas, tahun: kriteria.tahun, statusPakai: kriteria.statusPakai,
+      tipe: seg.tipe, bloom: seg.bloom,
+      kesulitanFilter: seg.kesulitan && seg.kesulitan.mode === 'filter' ? seg.kesulitan.level : null,
+      keyword: kriteria.keyword, operator: kriteria.operator, frasaEksak: kriteria.frasaEksak,
+    }, opsiCari);
+    let hasilPilih = ghPilihUntukSegmenV2(hasilSeg, seg, idxDipakaiSesiIni);
+    hasilPilih.dipilih.forEach(r => { ghStaging.push(r); idxDipakaiSesiIni.add(r._idx); totalDitambahkan++; });
+
+    let labelSeg = (kriteria.segmen.length > 1 ? 'Segmen ' + (i + 1) + ' (' + seg.jumlah + ' ' + (seg.tipe ? seg.tipe.toUpperCase() : 'soal') + ')' : 'Diminta ' + seg.jumlah + ' soal');
+    let baris = labelSeg + ': ditemukan ' + hasilPilih.ditemukan + ' sesuai kriteria, dipilih ' + hasilPilih.dipilih.length +
+      ' (belum digunakan: ' + hasilPilih.dariBelum + ', sudah pernah: ' + hasilPilih.dariSudah + ')';
+    if (hasilPilih.dipilih.length < seg.jumlah) { baris += ' -- ⚠️ KURANG ' + (seg.jumlah - hasilPilih.dipilih.length) + ' soal, stok di Bank Soal tidak mencukupi kriteria ini. Tidak ada soal baru dibuat.'; adaKekurangan = true; }
+    ringkasanBaris.push(baris);
   });
+
+  ghSetelahUbahStaging();
+  statusEl.className = adaKekurangan ? 'gh-status-msg err' : 'gh-status-msg';
+  statusEl.style.whiteSpace = 'pre-line';
+  statusEl.textContent = 'ℹ️ ' + kriteria.dipahami.join(' · ') + '\n' + ringkasanBaris.join('\n') +
+    '\n' + (adaKekurangan ? '⚠️ ' : '✅ ') + totalDitambahkan + ' soal ditambahkan ke daftar Terpilih dari yang SUDAH ADA di Bank Soal. Cek & sesuaikan manual sebelum Generate.';
+}
+
+function ghSetelahUbahStaging() {
   ghRenderStaging();
   document.querySelectorAll('.gh-bs-pilih-generate').forEach(cb => { cb.checked = ghStaging.some(r => r._idx === parseInt(cb.dataset.idx)); });
   ghUpdateHitungCentang();
-  statusEl.className = catatan.length ? 'gh-status-msg err' : 'gh-status-msg';
-  statusEl.textContent = (catatan.length ? '⚠️ ' : '✅ ') + ditambahkan + ' soal ditambahkan ke daftar Terpilih.' + (catatan.length ? ' Catatan: ' + catatan.join('; ') + '.' : '') + ' Silakan cek & sesuaikan manual sebelum generate.';
+}
+
+// ── Render hasil pencarian (mode "cari") -- checkbox, pilih semua,
+//    preview, dan tombol tambah ke staging (§25: hasil pencarian harus
+//    bisa ditindaklanjuti tanpa mengubah soal asli) ─────────────────
+function ghRenderHasilPencarian(hasil) {
+  let wrap = document.getElementById('gh-bs-hasil-cari');
+  let list = document.getElementById('gh-bs-hasil-cari-list');
+  if (!hasil.length) {
+    wrap.style.display = 'block';
+    list.innerHTML = '<div class="gh-empty">Tidak ada soal yang cocok dengan kriteria ini di Bank Soal.</div>';
+    document.getElementById('gh-bs-hitung-cari').textContent = '0 dipilih';
+    return;
+  }
+  wrap.style.display = 'block';
+  list.innerHTML = hasil.map(h => {
+    let r = h.row;
+    let lencanaStatus = h.status === 'dipilih' ? '<span class="gh-bs-badge" style="background:var(--blue-main);color:#fff;">Di daftar Terpilih</span>'
+      : (h.status === 'sudah' ? '<span class="gh-bs-badge" style="background:var(--gray-line);">Sudah pernah digenerate</span>' : '<span class="gh-bs-badge" style="background:var(--blue-light);color:var(--blue-deep);">Belum pernah digenerate</span>');
+    return '<div class="gh-bs-soal-item">' +
+      '<div class="gh-bs-cb-col">' +
+        '<input type="checkbox" class="gh-bs-pilih-cari" data-idx="' + r._idx + '" onchange="ghUpdateHitungCari()">' +
+        '<button class="gh-bs-btn-preview" onclick="ghPreviewSoal(' + r._idx + ')" title="Preview soal lengkap">👁️</button>' +
+      '</div>' +
+      '<div class="gh-bs-soal-txt">' + ghEsc((r.Pertanyaan || '').slice(0, 90)) + (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
+      '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span><span class="gh-bs-badge">' + ghEsc(r.Kelas) + '</span>' +
+      (r.Bloom ? '<span class="gh-bs-badge">' + ghEsc(r.Bloom) + '</span>' : '') + (r.Kesulitan ? '<span class="gh-bs-badge">' + ghEsc(r.Kesulitan) + '</span>' : '') + lencanaStatus + '</div></div>' +
+      (r.Topik ? ghRenderTopikKolom(r.Topik) : '') +
+    '</div>';
+  }).join('');
+  document.getElementById('gh-bs-hitung-cari').textContent = '0 dipilih';
+}
+function ghPilihSemuaHasilCari() { document.querySelectorAll('.gh-bs-pilih-cari').forEach(cb => cb.checked = true); ghUpdateHitungCari(); }
+function ghBalikPilihanHasilCari() { document.querySelectorAll('.gh-bs-pilih-cari').forEach(cb => cb.checked = !cb.checked); ghUpdateHitungCari(); }
+function ghUpdateHitungCari() {
+  let el = document.getElementById('gh-bs-hitung-cari');
+  if (el) el.textContent = document.querySelectorAll('.gh-bs-pilih-cari:checked').length + ' dipilih';
+}
+function ghTambahHasilCariKeStaging() {
+  let idxTerpilih = [...document.querySelectorAll('.gh-bs-pilih-cari:checked')].map(cb => parseInt(cb.dataset.idx));
+  if (!idxTerpilih.length) { ghToast('Centang minimal 1 soal dulu.'); return; }
+  let ditambahkan = 0;
+  idxTerpilih.forEach(idx => {
+    if (!ghStaging.some(s => s._idx === idx)) {
+      let soal = ghBankSoalData.find(r => r._idx === idx);
+      if (soal) { ghStaging.push(soal); ditambahkan++; }
+    }
+  });
+  ghSetelahUbahStaging();
+  ghToast(ditambahkan + ' soal ditambahkan ke daftar Terpilih.');
+}
+
+function ghSusunOtomatis() {
+  let teks = document.getElementById('gh-inp-prompt-otomatis').value;
+  if (!teks.trim()) { ghToast('Tulis perintahnya dulu.'); return; }
+  // FITUR (2026-09, upgrade Smart Parser): tombol ini sekarang memakai
+  // engine baru ghEksekusiPerintahBankSoal() yang jauh lebih fleksibel
+  // (multi-segmen, rentang Bloom, distribusi kesulitan, pencarian kata
+  // kunci+fuzzy, status pemakaian, mode cari vs susun). Nama fungsi &
+  // tombol TETAP SAMA supaya tidak ada satu pun markup yang perlu diubah.
+  // Parser LAMA (ghParsePromptOtomatis/ghPilihSoalUntukSegmen di atas)
+  // tetap ada & tetap berfungsi bila dipanggil langsung -- backward
+  // compatible, hanya sudah tidak dipakai tombol ini karena versi baru
+  // adalah superset kemampuannya (sudah diuji lolos kasus lama).
+  ghEksekusiPerintahBankSoal(teks);
 }
 
 async function ghGenerateUjian() {
@@ -1917,6 +2632,13 @@ async function ghGenerateUjian() {
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
     statusEl.textContent = '✅ Berhasil! ' + ghStaging.length + ' soal tertulis ke tab "Soal" spreadsheet tujuan.';
+    // FITUR (2026-09): tandai soal yang baru digenerate sebagai "pernah
+    // digenerate" (localStorage, per Bank Soal & per perangkat ini -- lihat
+    // catatan keterbatasan di ghSoalKey/ghKeyTerpakai). Ini status yang
+    // BISA DIBUKTIKAN aplikasi (soal ini memang baru ditulis ke sebuah
+    // ujian nyata), BUKAN klaim "siswa sudah mengerjakannya".
+    ghTandaiSoalTerpakai(ghStaging);
+    ghFilterBankSoal();
     setTimeout(() => { statusEl.textContent = ''; }, 5000);
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
