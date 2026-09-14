@@ -177,6 +177,7 @@
   }
   .gh-prev-opsi-item.gh-prev-benar { background:var(--blue-pale); border-color:var(--blue-mid); font-weight:700; color:var(--blue-deep); }
   .gh-prev-opsi-item .gh-prev-huruf { font-weight:800; flex-shrink:0; }
+  .gh-prev-opsi-img { max-width:220px; max-height:160px; border-radius:6px; display:inline-block; vertical-align:middle; margin-top:2px; }
   .gh-prev-box { background:var(--gray-bg); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
   .gh-prev-box .gh-prev-box-lbl { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--gray-soft); margin-bottom:4px; }
   .gh-prev-box .gh-prev-box-txt { font-size:13px; color:var(--gray-dark); white-space:pre-wrap; line-height:1.5; }
@@ -1184,6 +1185,28 @@ function ghGdrivePrev(u) {
   return id ? 'https://drive.google.com/thumbnail?id=' + id + '&sz=s2000' : u;
 }
 
+// FITUR (2026-09): sebagian nilai kolom Opsi_A/B/C/D di Bank Soal ternyata
+// berisi LINK GAMBAR (bukan teks opsi biasa) -- sebelumnya link itu cuma
+// ditampilkan sebagai teks mentah di Preview, jadi tidak kebaca. Deteksi
+// otomatis: kalau nilainya URL gambar/Drive, render sebagai <img>; kalau
+// bukan, tampilkan apa adanya sebagai teks (tidak mengubah data asli).
+function ghLihatGambarAtauTeks(val, altTxt) {
+  if (!val) return '';
+  let v = val.trim();
+  let sepertiUrlGambar = /^https?:\/\//i.test(v) && (/drive\.google\.com/i.test(v) || /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(v));
+  if (sepertiUrlGambar) return '<img class="gh-prev-opsi-img" src="' + ghEsc(ghGdrivePrev(v)) + '" alt="' + ghEsc(altTxt || 'Gambar opsi') + '">';
+  return ghEsc(v);
+}
+
+// FITUR (2026-09): textarea perintah Bank Soal dulu bisa di-drag-resize
+// manual oleh pengguna (kotak jadi miring/kepotong, mengganggu tampilan).
+// Sekarang resize manual dimatikan (CSS resize:none) dan tinggi menyesuaikan
+// OTOMATIS mengikuti panjang teks lewat fungsi ini.
+function ghAutoTinggiTextarea(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight + 2) + 'px';
+}
+
 function ghPreviewSoal(idx) {
   let r = ghBankSoalData.find(x => x._idx === idx);
   if (!r) return;
@@ -1202,7 +1225,7 @@ function ghPreviewSoal(idx) {
     let opsiKeys = [['A', r.Opsi_A], ['B', r.Opsi_B], ['C', r.Opsi_C], ['D', r.Opsi_D]];
     html += '<div class="gh-prev-opsi">' + opsiKeys.filter(o => o[1]).map(o =>
       '<div class="gh-prev-opsi-item' + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' gh-prev-benar' : '') + '">' +
-        '<span class="gh-prev-huruf">' + o[0] + '.</span><span>' + ghEsc(o[1]) + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' ✓' : '') + '</span>' +
+        '<span class="gh-prev-huruf">' + o[0] + '.</span><span>' + ghLihatGambarAtauTeks(o[1], 'Opsi ' + o[0]) + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' ✓' : '') + '</span>' +
       '</div>'
     ).join('') + '</div>';
   } else {
@@ -1308,7 +1331,7 @@ function ghGambarKanvas(cv, strokes) {
 // privasi) begitu pengguna lebih dari ~100 orang -- sebelum itu, cuma
 // "test user" yang didaftarkan manual di Cloud Console yang bisa pakai
 // tanpa melihat peringatan "Aplikasi belum diverifikasi".
-const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
+const GH_CLIENT_ID = 'GANTI_DENGAN_CLIENT_ID_ASLI.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
@@ -1666,7 +1689,7 @@ function ghRenderBankSoal() {
 
     '<div class="gh-esai-soal">' +
       '<div class="gh-lbl">✨ Perintah Bank Soal (bahasa natural) — cari / susun / ambil, best-effort, tetap bisa diedit manual sesudahnya</div>' +
-      '<textarea id="gh-inp-prompt-otomatis" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-line);border-radius:8px;font-size:12.5px;font-family:inherit;" placeholder="Contoh: &quot;Ambil 20 soal IPS kelas 7 tentang interaksi sosial&quot; atau &quot;cari soal tentang globalisasi&quot; atau &quot;buat 35 PG bloom campuran kesulitan 50% mudah 30% sedang 20% sulit&quot;"></textarea>' +
+      '<textarea id="gh-inp-prompt-otomatis" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-line);border-radius:8px;font-size:12.5px;font-family:inherit;resize:none;overflow:hidden;box-sizing:border-box;" oninput="ghAutoTinggiTextarea(this)" placeholder="Contoh: &quot;Ambil 20 soal IPS kelas 7 tentang interaksi sosial&quot; atau &quot;cari soal tentang globalisasi&quot; atau &quot;buat 35 PG bloom campuran kesulitan 50% mudah 30% sedang 20% sulit&quot;"></textarea>' +
       '<button class="gh-btn gh-btn-outline" onclick="ghSusunOtomatis()" style="width:100%;margin-top:8px;">🤖 Jalankan Perintah</button>' +
       '<div class="gh-status-msg" id="gh-bs-otomatis-status"></div>' +
       '<div id="gh-bs-hasil-cari" style="display:none;margin-top:12px;border-top:1px dashed var(--gray-line);padding-top:12px;">' +
@@ -2631,7 +2654,10 @@ async function ghGenerateUjian() {
     let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A2?valueInputOption=RAW', { method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: rowsBaru }) });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
-    statusEl.textContent = '✅ Berhasil! ' + ghStaging.length + ' soal tertulis ke tab "Soal" spreadsheet tujuan.';
+    // FITUR (2026-09): tombol langsung buka spreadsheet tujuan yang baru
+    // saja ditulisi, supaya guru tidak perlu cari-cari lagi manual.
+    statusEl.innerHTML = '✅ Berhasil! ' + ghStaging.length + ' soal tertulis ke tab "Soal" spreadsheet tujuan.<br>' +
+      '<a href="https://docs.google.com/spreadsheets/d/' + ghEsc(target) + '/edit" target="_blank" rel="noopener" class="gh-btn gh-btn-primary" style="display:block;text-align:center;text-decoration:none;margin-top:8px;">🔗 Buka Spreadsheet Ujian</a>';
     // FITUR (2026-09): tandai soal yang baru digenerate sebagai "pernah
     // digenerate" (localStorage, per Bank Soal & per perangkat ini -- lihat
     // catatan keterbatasan di ghSoalKey/ghKeyTerpakai). Ini status yang
@@ -2639,7 +2665,6 @@ async function ghGenerateUjian() {
     // ujian nyata), BUKAN klaim "siswa sudah mengerjakannya".
     ghTandaiSoalTerpakai(ghStaging);
     ghFilterBankSoal();
-    setTimeout(() => { statusEl.textContent = ''; }, 5000);
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
     statusEl.textContent = '❌ Gagal menulis ke tujuan: ' + e.message + ' (pastikan Anda punya akses edit ke spreadsheet itu, dan tab-nya bernama persis "Soal")';
