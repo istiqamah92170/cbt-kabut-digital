@@ -2744,6 +2744,7 @@ let ghKlasifikasiSudahKirim = false; // FITUR-FIX (2026-09): jaga-jaga kalau eve
                                       // lebih dari sekali (pernah kejadian saat pengujian) -- tanpa penjaga ini,
                                       // tiap 'READY' yang masuk akan mengirim ULANG seluruh soal, membuat
                                       // permintaan Gemini dobel & sebagian hasil error karena diproses 2x.
+let ghKlasifikasiTimeoutId = null;   // FITUR (2026-09): batas waktu tunggu READY dari classifier
 
 function ghSoalPerluKlasifikasi(r) {
   return !r.Topik || !r.Bloom || !r.Kesulitan;
@@ -2795,11 +2796,20 @@ function ghSimpanUrlKlasifikasiLaluBuka() {
 function ghTutupKlasifikasi() {
   document.getElementById('gh-modal-klasifikasi').style.display = 'none';
   document.getElementById('gh-klasifikasi-iframe').src = 'about:blank'; // hentikan iframe, jangan biarkan jalan di background
+  clearTimeout(ghKlasifikasiTimeoutId);
+}
+
+function ghKlasifikasiTimeoutHandler() {
+  let statusEl = document.getElementById('gh-klasifikasi-status');
+  statusEl.className = 'gh-status-msg err';
+  statusEl.textContent = '❌ Aplikasi Klasifikasi tidak merespons dalam 20 detik. Pastikan URL-nya benar & aplikasi itu sudah diisi API key + Database Materi-nya, lalu coba lagi.';
+  document.getElementById('gh-btn-ganti-url-klasifikasi').style.display = 'block';
 }
 
 function ghMulaiKlasifikasi(url) {
   ghKlasifikasiSoalDikirim = (ghBankSoalData || []).filter(ghSoalPerluKlasifikasi);
   ghKlasifikasiSudahKirim = false;
+  clearTimeout(ghKlasifikasiTimeoutId);
   if (!ghKlasifikasiSoalDikirim.length) {
     document.getElementById('gh-klasifikasi-status').className = 'gh-status-msg';
     document.getElementById('gh-klasifikasi-status').textContent = '✅ Tidak ada soal yang perlu diklasifikasi.';
@@ -2807,10 +2817,15 @@ function ghMulaiKlasifikasi(url) {
   }
   document.getElementById('gh-btn-ganti-url-klasifikasi').style.display = 'block';
   document.getElementById('gh-klasifikasi-status').className = 'gh-status-msg';
-  document.getElementById('gh-klasifikasi-status').textContent = '🔌 Menghubungkan ke aplikasi Klasifikasi... (' + ghKlasifikasiSoalDikirim.length + ' soal akan dikirim)';
+  // FITUR-FIX (2026-09): classifier sekarang sengaja menunggu dulu sampai
+  // API key + Database Materi-nya benar-benar siap (bisa sampai ~15 detik)
+  // sebelum memberi sinyal siap -- supaya tidak ada soal yang diproses
+  // sebelum aplikasi itu benar-benar siap (lihat catatan di classifier).
+  document.getElementById('gh-klasifikasi-status').textContent = '🔌 Menghubungkan ke aplikasi Klasifikasi... (' + ghKlasifikasiSoalDikirim.length + ' soal akan dikirim; bisa makan waktu beberapa detik sampai aplikasi itu benar-benar siap)';
   let iframe = document.getElementById('gh-klasifikasi-iframe');
   iframe.style.display = 'block';
   iframe.src = url; // memuat ulang -> akan memicu GH_KLASIFIKASI_READY dari sisi classifier (lihat listener di bawah)
+  ghKlasifikasiTimeoutId = setTimeout(ghKlasifikasiTimeoutHandler, 20000);
 }
 
 // Menerima pesan dari iframe classifier. Ditaruh sebagai listener GLOBAL
@@ -2825,6 +2840,7 @@ window.addEventListener('message', function (ev) {
   if (d.type === 'GH_KLASIFIKASI_READY') {
     if (ghKlasifikasiSudahKirim) return; // sudah pernah dikirim di sesi buka-modal ini, abaikan READY susulan
     ghKlasifikasiSudahKirim = true;
+    clearTimeout(ghKlasifikasiTimeoutId);
     ghKlasifikasiOrigin = ev.origin;
     document.getElementById('gh-klasifikasi-status').textContent = '📤 Terhubung. Mengirim ' + ghKlasifikasiSoalDikirim.length + ' soal untuk diklasifikasi...';
     let payload = ghKlasifikasiSoalDikirim.map(r => ({
