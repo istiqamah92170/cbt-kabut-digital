@@ -178,6 +178,19 @@
   .gh-prev-opsi-item.gh-prev-benar { background:var(--blue-pale); border-color:var(--blue-mid); font-weight:700; color:var(--blue-deep); }
   .gh-prev-opsi-item .gh-prev-huruf { font-weight:800; flex-shrink:0; }
   .gh-prev-opsi-img { max-width:220px; max-height:160px; border-radius:6px; display:inline-block; vertical-align:middle; margin-top:2px; }
+
+  /* ---- Modal Klasifikasi Topik/Bloom/Kesulitan (bridge ke aplikasi lain) ---- */
+  .gh-modal-klasifikasi-box { background:var(--white); border-radius:16px; padding:20px; width:100%; max-width:640px; max-height:88vh; overflow-y:auto; }
+  .gh-modal-klasifikasi-head { display:flex; align-items:center; justify-content:space-between; font-weight:800; font-size:15px; color:var(--blue-deep); margin-bottom:12px; }
+  .gh-klasifikasi-progress-wrap { margin:10px 0; }
+  .gh-klasifikasi-progress-bar { height:10px; background:var(--gray-line); border-radius:6px; overflow:hidden; }
+  .gh-klasifikasi-progress-fill { height:100%; background:var(--blue-main); width:0%; transition:width .3s; }
+  .gh-klasifikasi-progress-label { font-size:11.5px; color:var(--gray-soft); margin-top:5px; }
+  .gh-klasifikasi-log { max-height:160px; overflow-y:auto; font-size:11.5px; background:var(--gray-bg); border-radius:8px; padding:8px 10px; margin-top:8px; font-family:monospace; }
+  .gh-klasifikasi-log div { padding:2px 0; }
+  .gh-klasifikasi-log .err { color:var(--red); }
+  .gh-klasifikasi-log .ok { color:var(--blue-main); }
+  #gh-klasifikasi-iframe { width:100%; height:280px; border:1px solid var(--gray-line); border-radius:10px; margin-top:10px; }
   .gh-prev-box { background:var(--gray-bg); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
   .gh-prev-box .gh-prev-box-lbl { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--gray-soft); margin-bottom:4px; }
   .gh-prev-box .gh-prev-box-txt { font-size:13px; color:var(--gray-dark); white-space:pre-wrap; line-height:1.5; }
@@ -621,6 +634,36 @@
 
 <div class="gh-modal-bg" id="gh-modal-preview" onclick="if(event.target===this) ghTutupPreviewSoal()">
   <div class="gh-modal-preview" id="gh-preview-konten"></div>
+</div>
+
+<!-- FITUR (2026-09): modal Klasifikasi Topik/Bloom/Kesulitan -- menghubungkan
+     ke aplikasi topik-bloom-classifier.html lewat <iframe> + postMessage
+     (bisa beda domain). Lihat ghBukaKlasifikasi() dkk di script bawah. -->
+<div class="gh-modal-bg" id="gh-modal-klasifikasi">
+  <div class="gh-modal-klasifikasi-box">
+    <div class="gh-modal-klasifikasi-head">
+      <span>🎯 Klasifikasi Topik, Bloom &amp; Kesulitan</span>
+      <button class="gh-btn gh-btn-ghost" onclick="ghTutupKlasifikasi()">✕ Tutup</button>
+    </div>
+
+    <div class="gh-fg" id="gh-klasifikasi-url-setup" style="display:none;">
+      <label>URL Aplikasi Klasifikasi (topik-bloom-classifier.html)</label>
+      <input type="text" id="gh-inp-url-klasifikasi" placeholder="https://domain-anda.com/topik-bloom-classifier.html">
+      <p class="gh-hint">Disimpan di perangkat ini saja. Bisa diganti kapan saja lewat tombol yang sama kalau nanti pindah hosting.</p>
+      <button class="gh-btn gh-btn-primary" style="width:100%;margin-top:8px;" onclick="ghSimpanUrlKlasifikasiLaluBuka()">Simpan &amp; Buka</button>
+    </div>
+
+    <div class="gh-status-msg" id="gh-klasifikasi-status"></div>
+    <div class="gh-klasifikasi-progress-wrap" id="gh-klasifikasi-progress-wrap" style="display:none;">
+      <div class="gh-klasifikasi-progress-bar"><div class="gh-klasifikasi-progress-fill" id="gh-klasifikasi-progress-fill"></div></div>
+      <div class="gh-klasifikasi-progress-label" id="gh-klasifikasi-progress-label"></div>
+    </div>
+    <div class="gh-klasifikasi-log" id="gh-klasifikasi-log" style="display:none;"></div>
+
+    <iframe id="gh-klasifikasi-iframe" style="display:none;"></iframe>
+
+    <button class="gh-btn gh-btn-outline" id="gh-btn-ganti-url-klasifikasi" style="display:none;margin-top:10px;" onclick="ghTampilkanSetupUrlKlasifikasi()">⚙️ Ganti URL Aplikasi Klasifikasi</button>
+  </div>
 </div>
 
 </div><!-- /gh-screen-app -->
@@ -1331,7 +1374,7 @@ function ghGambarKanvas(cv, strokes) {
 // privasi) begitu pengguna lebih dari ~100 orang -- sebelum itu, cuma
 // "test user" yang didaftarkan manual di Cloud Console yang bisa pakai
 // tanpa melihat peringatan "Aplikasi belum diverifikasi".
-const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
+const GH_CLIENT_ID = 'GANTI_DENGAN_CLIENT_ID_ASLI.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
 const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
@@ -1612,15 +1655,25 @@ async function ghLihatBankSoal() {
     // indexnya secara dinamis dari GH_KOLOM_BANK supaya tidak salah lagi
     // kalau urutan kolom berubah lagi nanti.
     let idxNoAsal = GH_KOLOM_BANK.indexOf('No_Asal');
-    let rows = (hasil.values || []).filter(r => r[idxNoAsal]).map((r, idx) => {
-      let o = { _idx: idx };
+    // BUG-FIX (2026-09, upgrade bridge klasifikasi): _idx dulu dihitung
+    // SETELAH baris difilter (.filter().map((r,idx)=>...)) -- kalau ada
+    // baris kosong di tengah data mentah, _idx jadi TIDAK sama dengan
+    // baris asli di spreadsheet. Ini baru ketahuan penting sekarang karena
+    // fitur klasifikasi perlu menulis balik Topik/Bloom/Kesulitan ke SEL
+    // yang tepat. Sekarang dilacak terpisah: _idx (posisi di array hasil
+    // filter, dipakai UI/staging seperti biasa) vs _sheetRow (nomor baris
+    // ASLI di sheet BankSoal, dipakai kalau perlu tulis balik ke sel).
+    let rows = [];
+    (hasil.values || []).forEach((r, rawIdx) => {
+      if (!r[idxNoAsal]) return;
+      let o = { _idx: rows.length, _sheetRow: rawIdx + 2 };
       GH_KOLOM_BANK.forEach((k, i) => o[k] = (r[i] || '').toString().trim());
       // FITUR (2026-09): tipe tampilan turunan -- bedakan esai yang
       // mengizinkan gambar tangan dari esai teks biasa (atas permintaan
       // DIK), tanpa mengubah nilai Tipe ASLI (tetap dipakai apa adanya
       // saat generate, supaya kompatibel dengan skema Soal baku CBT-KD).
       o.TipeTampil = (o.Tipe.toLowerCase() === 'esai' && o.Izin_Gambar.toLowerCase() === 'ya') ? 'esai (izin gambar)' : o.Tipe;
-      return o;
+      rows.push(o);
     });
     statusEl.textContent = '';
     ghBankSoalData = rows;
@@ -1687,6 +1740,8 @@ function ghRenderBankSoal() {
       '<select id="gh-bs-f-kesulitan" onchange="ghFilterBankSoal()"><option value="">Semua Kesulitan</option>' + kesulitanOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
     '</div>' +
 
+    '<div id="gh-bs-klasifikasi-wrap"></div>' +
+
     '<div class="gh-esai-soal">' +
       '<div class="gh-lbl">✨ Perintah Bank Soal (bahasa natural) — cari / susun / ambil, best-effort, tetap bisa diedit manual sesudahnya</div>' +
       '<textarea id="gh-inp-prompt-otomatis" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-line);border-radius:8px;font-size:12.5px;font-family:inherit;resize:none;overflow:hidden;box-sizing:border-box;" oninput="ghAutoTinggiTextarea(this)" placeholder="Contoh: &quot;Ambil 20 soal IPS kelas 7 tentang interaksi sosial&quot; atau &quot;cari soal tentang globalisasi&quot; atau &quot;buat 35 PG bloom campuran kesulitan 50% mudah 30% sedang 20% sulit&quot;"></textarea>' +
@@ -1727,6 +1782,7 @@ function ghRenderBankSoal() {
   ghHitungUsageMap();
   ghFilterBankSoal();
   ghRenderStaging();
+  ghRenderTombolKlasifikasi();
 }
 
 function ghFilterBankSoal() {
@@ -2668,6 +2724,191 @@ async function ghGenerateUjian() {
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
     statusEl.textContent = '❌ Gagal menulis ke tujuan: ' + e.message + ' (pastikan Anda punya akses edit ke spreadsheet itu, dan tab-nya bernama persis "Soal")';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BRIDGE KE APLIKASI KLASIFIKASI (topik-bloom-classifier.html)
+//  ------------------------------------------------------------------
+//  Guru Hub TIDAK menduplikasi logika klasifikasi (Gemini/Database
+//  Materi) -- aplikasi classifier aslinya yang tetap mengerjakan itu
+//  semua, dibuka di dalam <iframe> (bisa beda domain) dan komunikasi
+//  dua arah lewat postMessage. Guru Hub cuma: (1) kumpulkan soal yang
+//  Topik/Bloom/Kesulitan-nya kosong, (2) kirim ke iframe, (3) terima
+//  hasil balik, (4) tulis ke Google Sheets BankSoal + refresh tampilan.
+// ═══════════════════════════════════════════════════════════════
+const GH_KEY_URL_KLASIFIKASI = 'guruhub_url_klasifikasi_v1'; // URL topik-bloom-classifier.html, bisa diganti kapan saja
+let ghKlasifikasiSoalDikirim = []; // baris ghBankSoalData yang sedang diproses (untuk pencocokan hasil balik)
+let ghKlasifikasiOrigin = null;    // origin iframe classifier, diisi setelah dapat balasan pertama
+let ghKlasifikasiSudahKirim = false; // FITUR-FIX (2026-09): jaga-jaga kalau event 'load' iframe sempat terpicu
+                                      // lebih dari sekali (pernah kejadian saat pengujian) -- tanpa penjaga ini,
+                                      // tiap 'READY' yang masuk akan mengirim ULANG seluruh soal, membuat
+                                      // permintaan Gemini dobel & sebagian hasil error karena diproses 2x.
+
+function ghSoalPerluKlasifikasi(r) {
+  return !r.Topik || !r.Bloom || !r.Kesulitan;
+}
+
+function ghRenderTombolKlasifikasi() {
+  let wrap = document.getElementById('gh-bs-klasifikasi-wrap');
+  if (!wrap) return;
+  let jumlah = (ghBankSoalData || []).filter(ghSoalPerluKlasifikasi).length;
+  wrap.innerHTML = jumlah
+    ? '<button class="gh-btn gh-btn-outline" onclick="ghBukaKlasifikasi()">🎯 Klasifikasi Topik, Bloom &amp; Kesulitan yang Kosong (' + jumlah + ')</button>'
+    : '<div class="gh-status-msg">✅ Semua soal di Bank Soal ini sudah punya Topik, Bloom &amp; Kesulitan.</div>';
+}
+
+function ghLogKlasifikasi(kelas, teks) {
+  let log = document.getElementById('gh-klasifikasi-log');
+  log.style.display = 'block';
+  let baris = document.createElement('div');
+  baris.className = kelas; baris.textContent = teks;
+  log.appendChild(baris); log.scrollTop = log.scrollHeight;
+}
+
+function ghBukaKlasifikasi() {
+  let url = (localStorage.getItem(GH_KEY_URL_KLASIFIKASI) || '').trim();
+  document.getElementById('gh-modal-klasifikasi').style.display = 'flex';
+  document.getElementById('gh-klasifikasi-log').innerHTML = ''; document.getElementById('gh-klasifikasi-log').style.display = 'none';
+  document.getElementById('gh-klasifikasi-progress-wrap').style.display = 'none';
+  document.getElementById('gh-klasifikasi-iframe').style.display = 'none';
+  document.getElementById('gh-btn-ganti-url-klasifikasi').style.display = 'none';
+  if (!url) { ghTampilkanSetupUrlKlasifikasi(); return; }
+  ghMulaiKlasifikasi(url);
+}
+
+function ghTampilkanSetupUrlKlasifikasi() {
+  document.getElementById('gh-klasifikasi-url-setup').style.display = 'block';
+  document.getElementById('gh-inp-url-klasifikasi').value = localStorage.getItem(GH_KEY_URL_KLASIFIKASI) || '';
+  document.getElementById('gh-klasifikasi-status').textContent = '';
+  document.getElementById('gh-klasifikasi-iframe').style.display = 'none';
+}
+
+function ghSimpanUrlKlasifikasiLaluBuka() {
+  let url = document.getElementById('gh-inp-url-klasifikasi').value.trim();
+  if (!url) { ghToast('Isi URL-nya dulu.'); return; }
+  localStorage.setItem(GH_KEY_URL_KLASIFIKASI, url);
+  document.getElementById('gh-klasifikasi-url-setup').style.display = 'none';
+  ghMulaiKlasifikasi(url);
+}
+
+function ghTutupKlasifikasi() {
+  document.getElementById('gh-modal-klasifikasi').style.display = 'none';
+  document.getElementById('gh-klasifikasi-iframe').src = 'about:blank'; // hentikan iframe, jangan biarkan jalan di background
+}
+
+function ghMulaiKlasifikasi(url) {
+  ghKlasifikasiSoalDikirim = (ghBankSoalData || []).filter(ghSoalPerluKlasifikasi);
+  ghKlasifikasiSudahKirim = false;
+  if (!ghKlasifikasiSoalDikirim.length) {
+    document.getElementById('gh-klasifikasi-status').className = 'gh-status-msg';
+    document.getElementById('gh-klasifikasi-status').textContent = '✅ Tidak ada soal yang perlu diklasifikasi.';
+    return;
+  }
+  document.getElementById('gh-btn-ganti-url-klasifikasi').style.display = 'block';
+  document.getElementById('gh-klasifikasi-status').className = 'gh-status-msg';
+  document.getElementById('gh-klasifikasi-status').textContent = '🔌 Menghubungkan ke aplikasi Klasifikasi... (' + ghKlasifikasiSoalDikirim.length + ' soal akan dikirim)';
+  let iframe = document.getElementById('gh-klasifikasi-iframe');
+  iframe.style.display = 'block';
+  iframe.src = url; // memuat ulang -> akan memicu GH_KLASIFIKASI_READY dari sisi classifier (lihat listener di bawah)
+}
+
+// Menerima pesan dari iframe classifier. Ditaruh sebagai listener GLOBAL
+// (bukan cuma saat modal terbuka) supaya tidak ada race condition antara
+// "READY" datang duluan vs modal baru siap -- tapi semua pesan diabaikan
+// kalau modal sedang tertutup, sebagai jaga-jaga.
+window.addEventListener('message', function (ev) {
+  let d = ev.data;
+  if (!d || d._sumber !== 'topik-bloom-classifier') return;
+  if (document.getElementById('gh-modal-klasifikasi').style.display !== 'flex') return;
+
+  if (d.type === 'GH_KLASIFIKASI_READY') {
+    if (ghKlasifikasiSudahKirim) return; // sudah pernah dikirim di sesi buka-modal ini, abaikan READY susulan
+    ghKlasifikasiSudahKirim = true;
+    ghKlasifikasiOrigin = ev.origin;
+    document.getElementById('gh-klasifikasi-status').textContent = '📤 Terhubung. Mengirim ' + ghKlasifikasiSoalDikirim.length + ' soal untuk diklasifikasi...';
+    let payload = ghKlasifikasiSoalDikirim.map(r => ({
+      ref: ghSoalKey(r), mapel: r.Mapel, kelas: r.Kelas, tipe: r.Tipe, pertanyaan: r.Pertanyaan,
+      opsi_a: r.Opsi_A, opsi_b: r.Opsi_B, opsi_c: r.Opsi_C, opsi_d: r.Opsi_D, kunci: r.Kunci,
+      url_gambar: r.URL_Gambar,
+    }));
+    document.getElementById('gh-klasifikasi-iframe').contentWindow.postMessage(
+      { type: 'GH_KLASIFIKASI_REQUEST', soal: payload }, ghKlasifikasiOrigin
+    );
+    document.getElementById('gh-klasifikasi-progress-wrap').style.display = 'block';
+    return;
+  }
+
+  if (d.type === 'GH_KLASIFIKASI_PROGRESS') {
+    let pct = d.total ? Math.round(d.selesai / d.total * 100) : 0;
+    document.getElementById('gh-klasifikasi-progress-fill').style.width = pct + '%';
+    document.getElementById('gh-klasifikasi-progress-label').textContent = (d.label || '') + ' (' + d.selesai + '/' + d.total + ')';
+    return;
+  }
+
+  if (d.type === 'GH_KLASIFIKASI_ERROR') {
+    document.getElementById('gh-klasifikasi-status').className = 'gh-status-msg err';
+    document.getElementById('gh-klasifikasi-status').textContent = '❌ ' + d.pesan;
+    return;
+  }
+
+  if (d.type === 'GH_KLASIFIKASI_HASIL') {
+    ghTerimaHasilKlasifikasi(d.hasil || []);
+    return;
+  }
+});
+
+// FITUR: hasil diterima -> update ghBankSoalData di memori, tulis balik ke
+// sel Topik/Bloom/Kesulitan yang TEPAT di sheet BankSoal (pakai _sheetRow,
+// BUKAN _idx, supaya tidak salah baris -- lihat catatan bug-fix di
+// ghLihatBankSoal), lalu refresh tampilan & tampilkan ringkasan yang jujur
+// (jangan pura-pura semua berhasil kalau ada yang gagal).
+async function ghTerimaHasilKlasifikasi(hasil) {
+  let statusEl = document.getElementById('gh-klasifikasi-status');
+  document.getElementById('gh-klasifikasi-progress-label').textContent = 'Menulis hasil ke Google Sheets...';
+  let petaSoal = {}; ghKlasifikasiSoalDikirim.forEach(r => { petaSoal[ghSoalKey(r)] = r; });
+
+  let berhasil = [], gagal = [];
+  hasil.forEach(h => {
+    let row = petaSoal[h.ref];
+    if (!row) return; // soal tidak dikenali (harusnya tidak terjadi)
+    if (h.error) { gagal.push({ row, alasan: h.error }); ghLogKlasifikasi('err', '✗ Soal (' + row.Sumber + '#' + row.No_Asal + '): ' + h.error); return; }
+    row.Topik = h.topik || row.Topik;
+    row.Bloom = h.bloom || row.Bloom;
+    row.Kesulitan = h.kesulitan || row.Kesulitan;
+    berhasil.push(row);
+    ghLogKlasifikasi('ok', '✓ Soal (' + row.Sumber + '#' + row.No_Asal + '): ' + (h.topik || '').split('|')[0].trim() + ' · ' + h.bloom + ' · ' + h.kesulitan);
+  });
+
+  if (!berhasil.length) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Tidak ada soal yang berhasil diklasifikasi. ' + gagal.length + ' gagal -- lihat rincian di bawah.';
+    return;
+  }
+
+  try {
+    let idxTopik = GH_KOLOM_BANK.indexOf('Topik'), idxKesulitan = GH_KOLOM_BANK.indexOf('Kesulitan');
+    let kolomAwal = ghKolomHuruf(idxTopik + 1), kolomAkhir = ghKolomHuruf(idxKesulitan + 1); // Topik..Kesulitan berurutan (E:G)
+    let data = berhasil.map(r => ({
+      range: 'BankSoal!' + kolomAwal + r._sheetRow + ':' + kolomAkhir + r._sheetRow,
+      values: [[r.Topik, r.Bloom, r.Kesulitan]],
+    }));
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values:batchUpdate', {
+      method: 'POST', headers: ghHeaderAuth(),
+      body: JSON.stringify({ valueInputOption: 'RAW', data }),
+    });
+    let hasilFetch = await resp.json();
+    if (!resp.ok) throw new Error(hasilFetch.error ? hasilFetch.error.message : ('HTTP ' + resp.status));
+
+    statusEl.className = gagal.length ? 'gh-status-msg err' : 'gh-status-msg';
+    statusEl.textContent = '✅ ' + berhasil.length + ' soal berhasil diklasifikasi & tersimpan ke Bank Soal.' + (gagal.length ? ' ❌ ' + gagal.length + ' gagal (lihat rincian di bawah).' : '');
+    document.getElementById('gh-klasifikasi-progress-wrap').style.display = 'none';
+    ghFilterBankSoal();
+    ghRenderTombolKlasifikasi();
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '⚠️ ' + berhasil.length + ' soal berhasil diklasifikasi TAPI GAGAL disimpan ke Google Sheets: ' + e.message + '. Tampilan sudah ter-update sementara, tapi belum tersimpan -- coba lagi.';
+    ghFilterBankSoal();
   }
 }
 
