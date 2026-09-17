@@ -1,29 +1,12 @@
-
-<!-- ================================================
-  WATERMARK DIGITAL
-  Pemilik  : Rapian Hasanuddin
-  Kontak   : rapian0279@gmail.com
-  ID Unik  : WM-MU3X0SEN3CM61
-  Tanggal  : 2026-09-16
-  Hak Cipta: © 2026 Rapian Hasanuddin
-  PERINGATAN: Dilarang menyalin, mendistribusikan ulang,
-  atau menghapus atribusi ini tanpa izin tertulis dari pemilik.
-  Pelanggaran dapat dikenai sanksi hukum sesuai UU Hak Cipta.
-================================================ -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta name="author" content="Rapian Hasanuddin">
-<meta name="copyright" content="© 2026 Rapian Hasanuddin">
-<meta name="protection-id" content="WM-MU3X0SEN3CM61">
-<meta name="_wm" content="WM-MU3X0SEN3CM61"><meta name="_bh" content="11de787d">
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S​‌​mart Bloom & Topic Analyzer</title>
+<title>Smart Bloom & Topic Analyzer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>/* __WM:WM-MU3X0SEN3CM61:312aaf5a */
-:root{--_wm-id:"WM-MU3X0";--_wm-d:"2026-09-16";--bg:#0f1117;--bg2:#181b24;--bg3:#1e2230;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8eaf0;--text2:#8b90a0;--text3:#555c6e;--accent:#6c72f5;--accent2:#4e54d4;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--r:10px;--r2:16px;}
+<style>
+:root{--bg:#0f1117;--bg2:#181b24;--bg3:#1e2230;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8eaf0;--text2:#8b90a0;--text3:#555c6e;--accent:#6c72f5;--accent2:#4e54d4;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--r:10px;--r2:16px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6;min-height:100vh;}
 .app{display:flex;flex-direction:column;min-height:100vh;}
@@ -203,11 +186,9 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
 .panduan-panel.active{display:block;}
 .panduan-panel pre{white-space:pre-wrap;word-break:break-all;}
 
-/* _b:312aaf */</style>
-<script data-wm-rt="1">(function(){var _id="WM-MU3X0SEN3CM61";var _bh="11de787d";var _on="Rapian Hasanuddin";var _id8="WM-MU3X0";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
-<body data-wm="WM-MU3X0SEN3CM61" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
-<!-- OWNER:WM-MU3X0SEN3CM61:Rapian%20Hasanuddin:2026-09-16 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MU3X0SEN3CM61">WM-MU3X0SEN3CM61</span>
-
+</style>
+</head>
+<body>
 <div class="app">
 <header>
   <div class="logo">&#x1F9E0;</div>
@@ -1060,13 +1041,8 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
     <div class="row-btns" style="margin-top:10px">
       <button class="btn-sm" onclick="renderKEStatus()">&#x1F504; Muat Ulang Status</button>
       <button class="btn-sm" onclick="mintaUpdateKEJSON()">&#x1F510; Update JSON dari Lokal</button>
+      <button class="btn-sm" id="keMasterToggleBtn" onclick="toggleKEMasterAktif()">&#x1F7E2; Aktif</button>
       <input type="file" id="keRestoreFile" accept=".json" style="display:none" onchange="restoreKERegistry(this)">
-    </div>
-    <div class="info-box" style="margin-top:10px;background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25)">
-      &#x26A0; <strong>Khusus Owner:</strong> Modul Knowledge Engine sudah ditanam langsung di file ini (tidak
-      bergantung localStorage browser), jadi selalu aktif di perangkat/origin manapun termasuk saat dibuka
-      lewat Guru Hub. Update hanya bisa dilakukan pemilik aplikasi lewat tombol di atas (perlu password),
-      memakai file berformat sama dengan backup registry Knowledge Engine.
     </div>
   </div>
 
@@ -1871,6 +1847,11 @@ var KELoader = {
    * Urutan sesuai LOAD_ORDER — FINAL bisa override modul sebelumnya.
    */
   getRules: function(engine, level) {
+    // Gerbang master aktif/nonaktif — kalau dimatikan, tidak ada rules yang
+    // dikembalikan sama sekali, sehingga engine otomatis fallback ke mode
+    // prototype/tanpa-modul (perilaku yang sama seperti sebelum modul dimuat).
+    if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) return [];
+
     var order = KELoader.LOAD_ORDER[engine] || [];
     var allRules = [];
     var seen = {};
@@ -1898,6 +1879,15 @@ var KELoader = {
 
   // ── Get Status ────────────────────────────────────────────────────────────────
   getStatus: function(engine) {
+    // Gerbang master aktif/nonaktif — kalau dimatikan, semua engine dilaporkan
+    // kosong (seperti belum ada modul dimuat sama sekali), tanpa perlu hapus
+    // data registry-nya. Otomatis berlaku di seluruh app (tab Knowledge Engine,
+    // alur analisis, dan bridge Guru Hub) karena semua baca lewat fungsi ini.
+    if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) {
+      var orderOff = KELoader.LOAD_ORDER[engine] || [];
+      return { engine: engine, loaded: [], missing: orderOff.slice(), invalid: [], ready: false, partial: false, empty: true };
+    }
+
     var order = KELoader.LOAD_ORDER[engine] || [];
     var loaded = [], missing = [], invalid = [];
 
@@ -4407,6 +4397,7 @@ var KnowledgeEngine = {
       return (typeof TKBEngine!=='undefined'&&TKBEngine._getProtoRules)?TKBEngine._getProtoRules(level):[];
     },
     analyze:function(input,ctx){
+      if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) return KnowledgeEngine._noModule('TKB');
       if(typeof tkbValidate==='function') return tkbValidate(input.bloom_gemini,input.pertanyaan,ctx||{});
       return KnowledgeEngine._passthrough('TKB',input.bloom_gemini);
     }
@@ -6337,6 +6328,13 @@ function renderKEStatus() {
   var container = $id('keEngineCards');
   if (!container) return;
 
+  var toggleBtn = $id('keMasterToggleBtn');
+  if (toggleBtn) {
+    var aktif = isKEMasterAktif();
+    toggleBtn.innerHTML = aktif ? '&#x1F7E2; Aktif' : '&#x1F534; Tidak Aktif';
+    toggleBtn.title = aktif ? 'Klik untuk nonaktifkan Knowledge Engine' : 'Klik untuk aktifkan Knowledge Engine';
+  }
+
   var html = '<div class="ke-engine-grid">';
   ['TKB','BKB','DKB','PKB','RKB'].forEach(function(eng) {
     var meta = _keEngineMeta[eng];
@@ -6401,7 +6399,6 @@ function renderKEModuleList() {
     html += '</div>';
     html += '<div style="display:flex;align-items:center;gap:8px">';
     html += '<span class="' + validClass + '" style="font-size:11px;font-weight:600">' + validLabel + '</span>';
-    html += '<button class="btn-sm danger" onclick="removeKEModule(\'' + key + '\')">&#x2715;</button>';
     html += '</div>';
     html += '</div>';
   });
@@ -6409,7 +6406,9 @@ function renderKEModuleList() {
 }
 
 /** Hapus satu modul dari registry (untuk koreksi jika salah upload) */
-function removeKEModule(key) {
+async function removeKEModule(key) {
+  var ok = await _keVerifyPasswordPrompt('hapus modul');
+  if (!ok) return;
   if (!confirm('Hapus modul "' + key + '" dari registry?\nEngine akan kembali ke kondisi sebelum modul ini dimuat.')) return;
   delete KELoader.registry[key];
   renderKEStatus();
@@ -6665,6 +6664,13 @@ function getTKBRulesFromRegistry(level) {
   var combined = [];
   var metaByModule = {};
 
+  // Gerbang master aktif/nonaktif — inilah titik yang BENAR-BENAR dipakai
+  // TKBEngine._reloadRules() untuk memuat rules dari modul resmi (bukan
+  // KELoader.getRules() generik yang tidak dipakai jalur produksi TKB).
+  if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) {
+    return { rules: combined, meta: metaByModule };
+  }
+
   Object.keys(KELoader.registry).forEach(function(key) {
     if (!key.startsWith('TKB/')) return;
     var entry = KELoader.registry[key];
@@ -6742,6 +6748,21 @@ TKBEngine._reloadRules = function() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 var KE_REGISTRY_STORAGE_KEY = 'mts_ke_registry';
+var KE_MASTER_STORAGE_KEY = 'mts_ke_master_aktif';
+
+/** Status aktif/nonaktif Knowledge Engine secara keseluruhan. Default: aktif. */
+function isKEMasterAktif() {
+  var v = localStorage.getItem(KE_MASTER_STORAGE_KEY);
+  return v === null ? true : v === '1';
+}
+function setKEMasterAktif(aktif) {
+  localStorage.setItem(KE_MASTER_STORAGE_KEY, aktif ? '1' : '0');
+}
+function toggleKEMasterAktif() {
+  setKEMasterAktif(!isKEMasterAktif());
+  if (typeof TKBEngine !== 'undefined' && TKBEngine._reloadRules) TKBEngine._reloadRules();
+  renderKEStatus();
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GERBANG PASSWORD — hanya owner yang boleh backup/update registry Knowledge Engine
@@ -7309,6 +7330,7 @@ function rkbCalculateQuality(text, payload, ctx) {
 KnowledgeEngine.BKB.name = 'BKB';
 KnowledgeEngine.BKB.description = 'Boundary Knowledge Base — disambiguasi level Bloom pada batas antar level berdekatan (C1↔C2, C2↔C3, dst)';
 KnowledgeEngine.BKB.analyze = function(input, ctx) {
+  if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) return KnowledgeEngine._noModule('BKB');
   var rules = KELoader.getRules('BKB');
   var hasBoundaryModule = Object.keys(KELoader.registry).some(function(k){ return k.startsWith('BKB/'); });
   if (!hasBoundaryModule) return KnowledgeEngine._noModule('BKB');
@@ -7318,6 +7340,7 @@ KnowledgeEngine.BKB.analyze = function(input, ctx) {
 KnowledgeEngine.DKB.name = 'DKB';
 KnowledgeEngine.DKB.description = 'Difficulty Knowledge Base — skor kesulitan dari 6 faktor berbobot, independen dari level Bloom';
 KnowledgeEngine.DKB.analyze = function(input, ctx) {
+  if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) return KnowledgeEngine._noModule('DKB');
   var hasModule = Object.keys(KELoader.registry).some(function(k){ return k.startsWith('DKB/'); });
   if (!hasModule) return KnowledgeEngine._noModule('DKB');
   return dkbCalculateDifficulty(input.pertanyaan || '', input);
@@ -7326,6 +7349,7 @@ KnowledgeEngine.DKB.analyze = function(input, ctx) {
 KnowledgeEngine.PKB.name = 'PKB';
 KnowledgeEngine.PKB.description = 'Poin Kesulitan Bloom — bobot poin soal dari kombinasi Bloom, kesulitan aktual, dan usaha produksi jawaban';
 KnowledgeEngine.PKB.analyze = function(input, ctx) {
+  if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) return KnowledgeEngine._noModule('PKB');
   var hasModule = Object.keys(KELoader.registry).some(function(k){ return k.startsWith('PKB/'); });
   if (!hasModule) return KnowledgeEngine._noModule('PKB');
   return pkbCalculatePoint(input.bloom || input.bloom_gemini, input.kesulitan || input.kesulitan_gemini, input.tipe);
@@ -7334,6 +7358,7 @@ KnowledgeEngine.PKB.analyze = function(input, ctx) {
 KnowledgeEngine.RKB.name = 'RKB';
 KnowledgeEngine.RKB.description = 'Rubrik Kualitas Butir — penilaian kualitas instrumen dari Validitas, Reliabilitas, Kejelasan, dan Keadilan';
 KnowledgeEngine.RKB.analyze = function(input, ctx) {
+  if (typeof isKEMasterAktif === 'function' && !isKEMasterAktif()) return KnowledgeEngine._noModule('RKB');
   var hasModule = Object.keys(KELoader.registry).some(function(k){ return k.startsWith('RKB/'); });
   if (!hasModule) return KnowledgeEngine._noModule('RKB');
   return rkbCalculateQuality(input.pertanyaan || '', input, ctx);
@@ -7557,7 +7582,8 @@ callGemini = async function(apiKey, model, rows, mapel, kelas, materiList) {
   function ghStatusKnowledgeEngine() {
     try {
       var jumlah = Object.keys(KELoader.registry).length;
-      return { keAktif: jumlah > 0, jumlahModulKE: jumlah };
+      var aktif = (typeof isKEMasterAktif === 'function') ? isKEMasterAktif() : true;
+      return { keAktif: aktif && jumlah > 0, jumlahModulKE: jumlah };
     } catch (e) {
       return { keAktif: false, jumlahModulKE: 0 };
     }
@@ -7701,27 +7727,5 @@ callGemini = async function(apiKey, model, rows, mapel, kelas, materiList) {
   if (window.parent !== window) {
     window.addEventListener('load', ghTungguSiapLaluKirimReady);
   }
-})();
-</script>
-
-<!-- PROTECTED:WM-MU3X0SEN3CM61 | Rapian Hasanuddin | 2026-09-16 -->
-<script data-pid="WM-MU3X0SEN3CM61" data-feature="rightclick">
-(function(){var _a=8552,_b=9667,_c=7335,_d=4053;
-document.addEventListener('contextmenu',function(e){e.preventDefault();});
-})();
-</script>
-<script data-pid="WM-MU3X0SEN3CM61" data-feature="devtools-keys">
-(function(){var _a=6352,_b=8026,_c=8317,_d=9739;
-document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C'].includes(e.key))||(e.ctrlKey&&e.key==='U')){e.preventDefault();}});
-})();
-</script>
-<script data-pid="WM-MU3X0SEN3CM61" data-feature="consolewarn">
-(function(){var _a=9736,_b=717,_c=5982,_d=8856;
-console.log('%c\u26a0 HAK CIPTA\n%c\u00a9 2026 Rapian Hasanuddin | rapian0279@gmail.com\nID: WM-MU3X0SEN3CM61\nDilarang menyalin atau mendistribusikan tanpa izin tertulis pemilik.','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
-})();
-</script>
-<script data-pid="WM-MU3X0SEN3CM61" data-feature="domainlock">
-(function(){var _a=6981,_b=7372,_c=2899,_d=746;
-(function(){var h=window.location.hostname;var ok=['cbtkabutdigital.com','www.cbtkabutdigital.com','localhost',''];if(ok.indexOf(h)===-1){document.body.innerHTML="<div style='font:16px sans-serif;text-align:center;padding:4rem'><h2>Akses Tidak Sah</h2><p>Hubungi pemilik resmi.</p></div>";}})();
 })();
 </script>
