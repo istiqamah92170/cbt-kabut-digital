@@ -5427,8 +5427,12 @@ function renderBankSoal() {
           <div style="font-size:13px;line-height:1.6;">${s.kontenHtml}</div>
           <p style="font-size:11px;color:var(--text-muted);margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
             <span>Kelas: ${s.kelas || '—'} | Materi: ${s.materi || '—'}</span>
-            <span onclick="event.stopPropagation();hapusPaketSoal('${s.id}')" style="color:var(--danger);cursor:pointer;">🗑️ Hapus</span>
+            <span style="display:flex;gap:14px;">
+              <span onclick="event.stopPropagation();bukaKonversiCBT('${s.id}')" style="color:var(--accent);cursor:pointer;">📊 Format CBT</span>
+              <span onclick="event.stopPropagation();hapusPaketSoal('${s.id}')" style="color:var(--danger);cursor:pointer;">🗑️ Hapus</span>
+            </span>
           </p>
+          <div id="cbtPanel-${s.id}" onclick="event.stopPropagation();"></div>
         </div>
       </div>`;
     }
@@ -5478,6 +5482,219 @@ function hapusPaketSoal(id) {
 function toggleSoal(id) {
   const card = document.getElementById('soal-' + id);
   card.classList.toggle('open');
+}
+
+/* ============================================================
+   KONVERSI PAKET SOAL (dari RPPM/impor ChatGPT) -> FORMAT CBT
+   Bekerja dengan cara "meratakan" HTML paket soal jadi baris teks
+   polos dulu (pakai DOMParser asli), baru dipola-cocokkan. Ini
+   dipilih ketimbang membaca struktur <ol>/<ul> secara kaku, karena
+   hasil impor ChatGPT formatnya bebas (kadang <ol><ul>, kadang cuma
+   <p>/<br> dgn "A. ... B. ... C. ... D. ..." polos) — deteksi lewat
+   pola baris "A./B./C./D." lebih tahan banting utk kedua kasus.
+   CATATAN: ini deteksi OTOMATIS BERBASIS POLA, bukan parsing pasti —
+   makanya hasilnya ditampilkan dulu di tabel yg BISA DIEDIT sebelum
+   disalin, supaya guru bisa koreksi kalau ada yg salah tebak.
+   ============================================================ */
+
+/** Ratakan HTML jadi larik baris teks polos (1 elemen blok = 1 baris,
+    baris tabel digabung dgn separator ' | ' per sel) */
+function _linearisasiHtmlCBT(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const baris = [];
+  let buffer = '';
+  const BLOK = new Set(['P','DIV','LI','TR','H1','H2','H3','H4','H5','H6']);
+  function tutupBuffer() {
+    const t = buffer.replace(/\s+/g, ' ').trim();
+    if (t) baris.push(t);
+    buffer = '';
+  }
+  function jalan(node) {
+    if (node.nodeType === 3) { buffer += node.textContent; return; }
+    if (node.nodeName === 'BR') { tutupBuffer(); return; }
+    if (node.nodeName === 'TABLE') {
+      tutupBuffer();
+      node.querySelectorAll('tr').forEach(tr => {
+        const sel = Array.from(tr.querySelectorAll('td,th')).map(c => c.textContent.replace(/\s+/g, ' ').trim());
+        if (sel.length) baris.push(sel.join(' | '));
+      });
+      return;
+    }
+    /* Tutup dulu teks yg sudah terkumpul (mis. teks soal) SEBELUM turun ke
+       daftar bersarang <ul>/<ol> (mis. opsi A/B/C/D) — kalau tidak, teks
+       induk & baris pertama daftar anak akan nyambung jadi satu baris. */
+    if (node.nodeName === 'UL' || node.nodeName === 'OL') tutupBuffer();
+    Array.from(node.childNodes || []).forEach(jalan);
+    if (BLOK.has(node.nodeName)) tutupBuffer();
+  }
+  jalan(doc.body);
+  tutupBuffer();
+  return baris.filter(Boolean);
+}
+
+/** Bangun peta {no_soal: {kunci, skor}} dari baris hasil tabel (dipisah ' | ') */
+function _bangunPetaKunciCBT(baris) {
+  const peta = {};
+  baris.forEach(line => {
+    if (!line.includes('|')) return;
+    const tok = line.split('|').map(t => t.trim()).filter(t => t !== '');
+    if (!tok.length) return;
+    const noMatch = tok[0].match(/^(\d+)/);
+    if (!noMatch) return;
+    const sisa = tok.slice(1);
+    const hurufKunci = sisa.find(t => /^[A-Da-d]$/.test(t));
+    const angkaLain = sisa.filter(t => /^\d+$/.test(t));
+    const teksLain = sisa.find(t => t && !/^[A-Da-d]$/.test(t) && !/^\d+$/.test(t) && t.toLowerCase() !== 'total');
+    peta[noMatch[1]] = { kunci: hurufKunci || teksLain || '', skor: angkaLain[angkaLain.length - 1] || '' };
+  });
+  return peta;
+}
+
+/** Cari blok Pilihan Ganda: 4 baris berurutan berpola A./B./C./D. —
+    baris tepat sebelumnya dianggap teks pertanyaan */
+function _cariBlokPGCBT(baris) {
+  const dipakai = new Set();
+  const hasil = [];
+  for (let i = 0; i < baris.length - 3; i++) {
+    const a = baris[i].match(/^A[.)]\s*(.+)/i);
+    const b = baris[i+1].match(/^B[.)]\s*(.+)/i);
+    const c = baris[i+2].match(/^C[.)]\s*(.+)/i);
+    const d = baris[i+3].match(/^D[.)]\s*(.+)/i);
+    if (a && b && c && d) {
+      const jIdx = i - 1;
+      let pertanyaan = jIdx >= 0 ? baris[jIdx] : '';
+      pertanyaan = pertanyaan.replace(/^\d+[.)]\s*/, '').trim();
+      hasil.push({ pertanyaan, opsi: { A: a[1].trim(), B: b[1].trim(), C: c[1].trim(), D: d[1].trim() } });
+      dipakai.add(jIdx); [i, i+1, i+2, i+3].forEach(k => dipakai.add(k));
+      i += 3;
+    }
+  }
+  return { hasil, dipakai };
+}
+
+/** Ekstrak paket soal (kontenHtml) -> larik baris siap format CBT Kabut Digital */
+function _ekstrakSoalCBT(kontenHtml) {
+  const baris = _linearisasiHtmlCBT(kontenHtml);
+  const peta  = _bangunPetaKunciCBT(baris);
+  const { hasil: blokPG, dipakai } = _cariBlokPGCBT(baris);
+  const rows = [];
+  let no = 0;
+
+  blokPG.forEach((b, idx) => {
+    const skorInline = b.pertanyaan.match(/\(?skor\s*[:=]?\s*(\d+)\)?/i);
+    const pertanyaanBersih = b.pertanyaan.replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
+    const info = peta[String(idx + 1)] || {};
+    rows.push({
+      no: ++no, tipe: 'pg_teks',
+      poin: (skorInline && skorInline[1]) || info.skor || 2,
+      pertanyaan: pertanyaanBersih,
+      opsiA: b.opsi.A, opsiB: b.opsi.B, opsiC: b.opsi.C, opsiD: b.opsi.D,
+      kunci: /^[A-D]$/i.test(info.kunci || '') ? info.kunci.toUpperCase() : '',
+      pembahasan: ''
+    });
+  });
+
+  baris.forEach((line, i) => {
+    if (dipakai.has(i) || line.includes('|') || line.length < 15) return;
+    const skorInline = line.match(/\(?skor\s*[:=]?\s*(\d+)\)?/i);
+    const bersih = line.replace(/^\d+[.)]\s*/, '').replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
+    if (!/[?!]\s*$/.test(bersih)) return;
+    const nomorAsli = (line.match(/^(\d+)[.)]/) || [])[1];
+    const info = nomorAsli ? (peta[nomorAsli] || {}) : {};
+    rows.push({
+      no: ++no, tipe: 'esai',
+      poin: (skorInline && skorInline[1]) || info.skor || 5,
+      pertanyaan: bersih, opsiA: '', opsiB: '', opsiC: '', opsiD: '',
+      kunci: info.kunci || '', pembahasan: ''
+    });
+  });
+
+  return rows.sort((a, b) => a.no - b.no);
+}
+
+function _escHtmlCBT(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+}
+
+/** Tombol "📊 Format CBT" pada kartu paket soal — tampilkan/tutup panel review */
+function bukaKonversiCBT(id) {
+  const panel = document.getElementById('cbtPanel-' + id);
+  if (!panel) return;
+  if (panel.dataset.terisi === '1') {
+    panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
+    return;
+  }
+  const s = DATABASE.soal.find(x => x.id === id);
+  if (!s) return;
+  const rows = _ekstrakSoalCBT(s.kontenHtml || '');
+  if (!rows.length) {
+    panel.innerHTML = `<p style="font-size:12px;color:var(--danger);margin-top:8px;">⚠️ Tidak ada soal yang terdeteksi otomatis dari paket ini. Coba salin manual dari isi di atas.</p>`;
+    panel.dataset.terisi = '1';
+    panel.style.display = 'block';
+    return;
+  }
+  const baris = rows.map(r => `
+    <tr>
+      <td contenteditable style="text-align:center;">${r.no}</td>
+      <td><select style="width:88px;padding:2px;">
+        <option value="pg_teks" ${r.tipe==='pg_teks'?'selected':''}>pg_teks</option>
+        <option value="esai" ${r.tipe==='esai'?'selected':''}>esai</option>
+      </select></td>
+      <td contenteditable style="text-align:center;">${_escHtmlCBT(r.poin)}</td>
+      <td contenteditable style="min-width:180px;">${_escHtmlCBT(r.pertanyaan)}</td>
+      <td contenteditable></td>
+      <td contenteditable>${_escHtmlCBT(r.opsiA)}</td>
+      <td contenteditable>${_escHtmlCBT(r.opsiB)}</td>
+      <td contenteditable>${_escHtmlCBT(r.opsiC)}</td>
+      <td contenteditable>${_escHtmlCBT(r.opsiD)}</td>
+      <td contenteditable>${_escHtmlCBT(r.kunci)}</td>
+      <td contenteditable style="min-width:160px;">${_escHtmlCBT(r.pembahasan)}</td>
+      <td contenteditable></td>
+    </tr>`).join('');
+
+  panel.innerHTML = `
+    <div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:10px;">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+        📊 <strong>Hasil deteksi otomatis (${rows.length} soal)</strong> — cek & perbaiki dulu sel yang keliru sebelum disalin. Deteksi bersifat perkiraan pola teks, terutama untuk soal impor ChatGPT berformat bebas.
+      </p>
+      <div style="overflow-x:auto;">
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:12px;" id="cbtTable-${id}">
+          <thead><tr style="background:var(--bg-elevated);">
+            <th>No</th><th>Tipe</th><th>Poin</th><th>Pertanyaan</th><th>URL_Gambar</th>
+            <th>Opsi_A</th><th>Opsi_B</th><th>Opsi_C</th><th>Opsi_D</th><th>Kunci</th><th>Pembahasan</th><th>URL_Gambar_Pembahasan</th>
+          </tr></thead>
+          <tbody>${baris}</tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-primary btn-sm" onclick="salinTabelCBT('${id}')">📋 Salin untuk Sheet</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('cbtPanel-${id}').style.display='none'">Tutup</button>
+      </div>
+    </div>`;
+  panel.dataset.terisi = '1';
+  panel.style.display = 'block';
+}
+
+/** Salin tabel hasil konversi (versi yg sudah diedit guru) sbg TSV siap tempel ke Google Sheet */
+function salinTabelCBT(id) {
+  const tbl = document.getElementById('cbtTable-' + id);
+  if (!tbl) return;
+  const header = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan'];
+  const baris = [header.join('\t')];
+  tbl.querySelectorAll('tbody tr').forEach(tr => {
+    const sel = tr.querySelector('select');
+    const cells = Array.from(tr.children).map((td, i) => {
+      if (i === 1 && sel) return sel.value;
+      return (td.textContent || '').replace(/\s+/g, ' ').trim();
+    });
+    baris.push(cells.join('\t'));
+  });
+  const tsv = baris.join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    showToast('✅ Tabel disalin — tinggal tempel (Ctrl+V) ke Google Sheet');
+  }).catch(() => {
+    showToast('⚠️ Gagal menyalin otomatis, coba blok tabel lalu salin manual');
+  });
 }
 
 /* ============================================================
