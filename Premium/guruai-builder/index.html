@@ -5546,7 +5546,7 @@ function _simpanResult(historyId, result) {
  *  sebelumnya cgptTerapkan() TIDAK PERNAH memanggil ini, jadi RPPM yang
  *  dibuat lewat ATP tidak pernah masuk riwayat/statistik, dan hilang saat
  *  pindah project karena tidak pernah benar-benar tersimpan permanen. */
-function _catatKeRiwayat(historyId, data, result) {
+function _catatKeRiwayat(historyId, data, result, tabAktif) {
   if (!historyId) return;
   const existing = DATABASE.history.find(h => h.id === historyId);
   if (existing) {
@@ -5564,7 +5564,7 @@ function _catatKeRiwayat(historyId, data, result) {
     DATABASE.stats.lkpd++;
     DATABASE.stats.soal += 5;
     DATABASE.stats.asesmen++;
-    DATABASE.stats.tp += STATE_ANALISIS.tp.length || 1;
+    DATABASE.stats.tp = STATE_ANALISIS.tp.length || 0;
   }
   const payload = { stats: DATABASE.stats, history: DATABASE.history };
   IDB.set('main', payload);
@@ -5577,10 +5577,13 @@ function _catatKeRiwayat(historyId, data, result) {
      di preview saat project dibuka ulang/pindah-balik. */
   IDB.set('last_historyId', historyId);
 
-  /* Setiap kali RPPM dibuat/diperbarui dan tab Soal-nya sudah ada isinya,
-     otomatis simpan sebagai "paket soal" di Bank Soal — supaya soal &
-     kunci yang sudah dibuat tidak perlu dicari lagi di riwayat RPPM */
-  if (result?.soal) _isiKeBankSoal(historyId, data, result.soal);
+  /* Hanya simpan ke Bank Soal kalau tab yang MEMANG sedang dikerjakan
+     saat ini adalah tab Soal — sebelumnya syaratnya cuma "result.soal
+     ada isinya", padahal result.soal SELALU terisi draf lokal bawaan
+     dari GENERATOR.generate() meski guru cuma bikin/impor RPPM atau
+     LKPD saja (belum pernah dilihat/disentuh). Akibatnya kisi-kisi soal
+     asal-asalan ikut ke Bank Soal setiap kali generate RPPM/LKPD. */
+  if (tabAktif === 'soal' && result?.soal) _isiKeBankSoal(historyId, data, result.soal);
 
   RENDER.renderHistory();
   RENDER.updateStats();
@@ -5642,8 +5645,10 @@ function generate() {
     /* Tampilkan preview — sertakan historyId agar bisa di-persist */
     _tampilkanPreview(data, result, 'rppm', historyId);
 
-    /* Catat ke riwayat + statistik + IDB + Bank Soal */
-    _catatKeRiwayat(historyId, data, result);
+    /* Catat ke riwayat + statistik + IDB. Tab aktif = 'rppm' (sesuai yang
+       ditampilkan di preview) — Bank Soal TIDAK ikut otomatis terisi dari
+       sini, cuma dari tab Soal yang benar-benar dikerjakan guru. */
+    _catatKeRiwayat(historyId, data, result, 'rppm');
 
     /* Persist result tab ke IDB — key: result_<historyId> */
     _simpanResult(historyId, result);
@@ -8134,7 +8139,7 @@ function cgptTerapkan() {
      dipanggil di sini, jadi RPPM hasil ATP/ChatGPT tidak pernah muncul di
      riwayat, statistik tidak update, dan hilang permanen saat pindah
      project (karena tidak pernah benar-benar tercatat) */
-  _catatKeRiwayat(currentGenerated.historyId, currentGenerated.data, currentGenerated.result);
+  _catatKeRiwayat(currentGenerated.historyId, currentGenerated.data, currentGenerated.result, cgptActiveTab);
   _simpanResult(currentGenerated.historyId, currentGenerated.result);
 
   /* Pindah ke Modul Ajar dan tampilkan tab */
