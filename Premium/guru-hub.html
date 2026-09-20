@@ -1917,6 +1917,7 @@ function ghRenderBankSoal() {
   let tipeOpt = ghOpsiUnik(rows, 'TipeTampil');
   let topikOpt = [...new Set(rows.map(r => ghTopikUtama(r.Topik)).filter(Boolean))].sort();
   let bloomOpt = ghOpsiUnik(rows, 'Bloom'), kesulitanOpt = ghOpsiUnik(rows, 'Kesulitan');
+  let sumberOpt = ghOpsiUnik(rows, 'Sumber');
   areaEl.innerHTML =
     '<div class="gh-bs-filter-row" style="margin-top:10px;">' +
       '<select id="gh-bs-f-mapel" onchange="ghFilterBankSoal()"><option value="">Semua Mapel</option>' + mapelOpt.map(m => '<option>' + ghEsc(m) + '</option>').join('') + '</select>' +
@@ -1926,7 +1927,9 @@ function ghRenderBankSoal() {
       '<select id="gh-bs-f-topik" onchange="ghFilterBankSoal()"><option value="">Semua Topik</option>' + topikOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
       '<select id="gh-bs-f-bloom" onchange="ghFilterBankSoal()"><option value="">Semua Bloom</option>' + bloomOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
       '<select id="gh-bs-f-kesulitan" onchange="ghFilterBankSoal()"><option value="">Semua Kesulitan</option>' + kesulitanOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
+      '<select id="gh-bs-f-sumber" onchange="ghFilterBankSoal()"><option value="">Semua Asal Soal</option>' + sumberOpt.map(t => '<option>' + ghEsc(t) + '</option>').join('') + '</select>' +
     '</div>' +
+
 
     '<div id="gh-bs-klasifikasi-wrap"></div>' +
     '<button class="gh-btn gh-btn-outline" style="width:100%;margin-top:8px;" onclick="ghMulaiCariDuplikat()">🧬 Cari Soal Duplikat / Mirip</button>' +
@@ -1978,8 +1981,9 @@ function ghFilterBankSoal() {
   let fm = document.getElementById('gh-bs-f-mapel').value, fk = document.getElementById('gh-bs-f-kelas').value;
   let ft = document.getElementById('gh-bs-f-tahun').value, fp = document.getElementById('gh-bs-f-tipe').value;
   let ftp = document.getElementById('gh-bs-f-topik').value, fbl = document.getElementById('gh-bs-f-bloom').value, fks = document.getElementById('gh-bs-f-kesulitan').value;
+  let fsb = document.getElementById('gh-bs-f-sumber').value;
   let list = ghBankSoalData.filter(r => (!fm || r.Mapel === fm) && (!fk || r.Kelas === fk) && (!ft || r.Tahun === ft) && (!fp || r.TipeTampil === fp)
-    && (!ftp || ghTopikUtama(r.Topik) === ftp) && (!fbl || r.Bloom === fbl) && (!fks || r.Kesulitan === fks));
+    && (!ftp || ghTopikUtama(r.Topik) === ftp) && (!fbl || r.Bloom === fbl) && (!fks || r.Kesulitan === fks) && (!fsb || r.Sumber === fsb));
   let idxTerstaging = new Set(ghStaging.map(r => r._idx));
   document.getElementById('gh-bs-list').innerHTML = list.length ? list.map(r => {
     // FITUR (2026-09): lencana status "pernah digenerate" -- status yang
@@ -2893,9 +2897,17 @@ async function ghHapusSoalTunggal(idx) {
 
 // ── Deteksi kelompok soal duplikat/mirip di SELURUH Bank Soal ──────
 function ghCariDuplikatBank() {
+  // FITUR-FIX (2026-09): dulu dikelompokkan per Mapel+Kelas+Tipe dulu SEBELUM
+  // dibandingkan -- tujuannya biar ringan (tidak bandingkan semua soal satu
+  // sama lain), tapi jadi BUG: soal yang Mapel/Kelas-nya masih kosong (belum
+  // diklasifikasi) jatuh ke kelompok berbeda dari kembarannya yang SUDAH
+  // diklasifikasi, jadi tidak pernah dibandingkan & tidak terdeteksi duplikat
+  // sama sekali -- persis kasus yang dilaporkan. Sekarang dikelompokkan
+  // CUMA per Tipe (field yang hampir selalu terisi sejak impor), supaya soal
+  // dengan metadata belum lengkap tetap ikut dibandingkan dengan semuanya.
   let grup = {};
   ghBankSoalData.forEach(r => {
-    let k = (r.Mapel || '') + '||' + (r.Kelas || '') + '||' + (r.Tipe || '').toLowerCase();
+    let k = (r.Tipe || '').toLowerCase();
     (grup[k] = grup[k] || []).push(r);
   });
   let klaster = [];
@@ -2907,7 +2919,13 @@ function ghCariDuplikatBank() {
     function gabung(a, b) { let ra = cari(a), rb = cari(b); if (ra !== rb) parent[ra] = rb; }
     let skorPasangan = {};
     for (let i = 0; i < n; i++) {
+      let panjangI = (daftar[i].Pertanyaan || '').length;
       for (let j = i + 1; j < n; j++) {
+        let panjangJ = (daftar[j].Pertanyaan || '').length;
+        // Pre-filter murah: kalau panjang teks beda jauh, hampir pasti bukan
+        // duplikat -- lewati tanpa hitung Jaccard (jauh lebih cepat untuk
+        // kelompok besar sekarang bahwa Mapel/Kelas tidak lagi memecahnya).
+        if (panjangI && panjangJ && (Math.min(panjangI, panjangJ) / Math.max(panjangI, panjangJ)) < 0.5) continue;
         let skor = ghJaccardKataSoal(daftar[i].Pertanyaan, daftar[j].Pertanyaan);
         if (skor >= 0.7) { gabung(i, j); skorPasangan[i + '-' + j] = skor; }
       }
