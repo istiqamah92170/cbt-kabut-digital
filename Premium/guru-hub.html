@@ -407,16 +407,26 @@
       <span class="gh-sb-chip" style="margin-top:10px;">✦ Aplikasi Premium Berlangganan</span>
     </div>
     <div class="gh-login-body">
-      <div class="gh-fg">
-        <label>Nama Guru</label>
-        <input type="text" id="gh-ui-inp-nama" placeholder="Contoh: Bu Sari Wulandari">
-      </div>
-      <div class="gh-fg">
-        <label>Asal Sekolah (opsional)</label>
-        <input type="text" id="gh-ui-inp-instansi" placeholder="Contoh: SMPN 1 Kabut Digital">
-      </div>
-      <button class="gh-btn gh-btn-primary gh-btn-login" onclick="ghUiLogin()">Masuk ke Guru Hub</button>
-      <p class="gh-hint" style="text-align:center;margin-top:12px;">Nama ini hanya tersimpan di perangkat ini untuk sapaan — bukan akun/password.</p>
+      <!-- FITUR (2026-09): login SUNGGUHAN -- guru sign-in pakai akun Google,
+           lalu emailnya dicek ke daftar pelanggan (Google Sheet Lisensi yang
+           dikelola DIK sendiri, lewat Apps Script -- lihat GH_URL_LISENSI).
+           Fitur aplikasi TIDAK BISA diakses tanpa lolos pengecekan ini. -->
+      <p class="gh-hint" style="text-align:center;margin:0 0 14px;">Masuk pakai akun Google yang terdaftar sebagai pelanggan Guru Hub.</p>
+      <!-- FITUR (2026-09): markup DEKLARATIF resmi Google Identity Services --
+           sengaja BUKAN dipanggil manual lewat JS (google.accounts.id.init...),
+           supaya tidak ada race condition dengan <script src=".../gsi/client"
+           async defer> yang belum tentu selesai dimuat saat skrip utama jalan.
+           Library GSI sendiri yang mendeteksi elemen ini begitu siap, kapan
+           pun itu. data-client_id HARUS SAMA PERSIS dengan GH_CLIENT_ID di
+           script bawah -- kalau GH_CLIENT_ID diganti, ganti juga di sini. -->
+      <div id="g_id_onload"
+           data-client_id="822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com"
+           data-callback="ghProsesLoginGoogle"
+           data-auto_prompt="false"></div>
+      <div id="gh-google-signin-btn" class="g_id_signin" style="display:flex;justify-content:center;min-height:44px;" data-type="standard" data-size="large" data-theme="outline" data-width="300"></div>
+      <div class="gh-status-msg" id="gh-login-status" style="margin-top:14px;"></div>
+      <button class="gh-btn gh-btn-ghost" id="gh-btn-login-coba-lagi" style="width:100%;margin-top:6px;display:none;" onclick="ghUiCobaAkunLain()">Coba akun Google lain</button>
+      <p class="gh-hint" style="text-align:center;margin-top:14px;">Belum berlangganan? Hubungi CBT Kabut Digital untuk mendaftar.</p>
     </div>
   </div>
 </div>
@@ -3428,7 +3438,18 @@ ghRenderSekolah();
 //  mengatur tampil/sembunyi elemen -- TIDAK mengubah satu pun
 //  fungsi atau alur data di atas.
 // ═══════════════════════════════════════════════
-const GH_UI_KEY_PROFIL = 'guruhub_profil_tampilan_v1'; // {nama, instansi} -- cuma sapaan, BUKAN akun
+// FITUR (2026-09): login SUNGGUHAN -- gerbang akses NYATA berbasis Google
+// Sign-In + pengecekan email ke Google Sheet Lisensi yang DIK kelola sendiri
+// (lewat Apps Script, lihat file terpisah "Lisensi_GuruHub.gs"). Ini
+// MENGGANTI sistem lama yang cuma sapaan (tidak menggerbangi apa pun).
+//
+// ⚠️ WAJIB DIISI sebelum dipakai: ganti GH_URL_LISENSI di bawah dengan URL
+// Web App hasil deploy "Lisensi_GuruHub.gs" (lihat instruksi di file itu).
+// Sebelum diisi, layar login akan menampilkan pesan error yang jelas,
+// BUKAN diam-diam meloloskan siapa saja.
+const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec';
+const GH_KEY_SESI_LISENSI = 'guruhub_sesi_lisensi_v1'; // {email, nama, sekolah, diverifikasiPada}
+const GH_UMUR_SESI_MS = 24 * 60 * 60 * 1000; // sesi tersimpan dianggap segar 24 jam -- lewat itu, dicek ulang ke Lisensi (jaga-jaga langganan berhenti)
 
 // FITUR (2026-09): Mode Gelap/Terang untuk SEMUA halaman (login, dashboard,
 // sidebar, Bank Soal, modal, dst). Cukup timpa atribut data-theme di <html>
@@ -3497,38 +3518,84 @@ function ghUiCloseSidebar() {
 function ghUiTampilkanApp(profil) {
   document.getElementById('gh-screen-login').style.display = 'none';
   document.getElementById('gh-screen-app').style.display = '';
-  let nama = (profil.nama || '').trim() || 'Guru';
+  let nama = (profil.nama || '').trim() || profil.email || 'Guru';
   document.getElementById('gh-ui-sb-nama').textContent = nama;
-  document.getElementById('gh-ui-sb-instansi').textContent = (profil.instansi || '').trim() || 'CBT Kabut Digital';
+  document.getElementById('gh-ui-sb-instansi').textContent = (profil.sekolah || '').trim() || 'CBT Kabut Digital';
   document.getElementById('gh-ui-sapaan').textContent = ghUiSapaanWaktu() + ', ' + nama;
   ghUiUpdateDashboardStats();
 }
 
-function ghUiLogin() {
-  let nama = document.getElementById('gh-ui-inp-nama').value.trim();
-  if (!nama) { ghToast('Isi nama dulu, ya.'); return; }
-  let instansi = document.getElementById('gh-ui-inp-instansi').value.trim();
-  let profil = { nama, instansi };
-  localStorage.setItem(GH_UI_KEY_PROFIL, JSON.stringify(profil));
-  ghUiTampilkanApp(profil);
+// ── Verifikasi ke Lisensi (Apps Script) ─────────────────────────────
+async function ghProsesLoginGoogle(response) {
+  let statusEl = document.getElementById('gh-login-status');
+  let btnWrap = document.getElementById('gh-google-signin-btn');
+  if (GH_URL_LISENSI.startsWith('GANTI_DENGAN_URL')) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ GH_URL_LISENSI di kode masih placeholder -- pasang dulu Apps Script Lisensi_GuruHub.gs & tempel URL Web App-nya sebelum aplikasi ini bisa dipakai siapa pun.';
+    return;
+  }
+  btnWrap.style.display = 'none';
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = '🔎 Memverifikasi akses Anda...';
+  try {
+    let resp = await fetch(GH_URL_LISENSI, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // hindari preflight CORS -- Apps Script Web App membaca ini via e.postData.contents
+      body: JSON.stringify({ idToken: response.credential }),
+    });
+    let hasil = await resp.json();
+    if (!hasil.valid) {
+      statusEl.className = 'gh-status-msg err';
+      statusEl.textContent = '❌ Akun ini belum terdaftar sebagai pelanggan aktif' + (hasil.alasan ? ' (' + hasil.alasan + ')' : '') + '. Hubungi CBT Kabut Digital untuk berlangganan.';
+      document.getElementById('gh-btn-login-coba-lagi').style.display = 'block';
+      return;
+    }
+    let profil = { email: hasil.email, nama: hasil.nama, sekolah: hasil.sekolah, diverifikasiPada: Date.now() };
+    localStorage.setItem(GH_KEY_SESI_LISENSI, JSON.stringify(profil));
+    statusEl.textContent = '';
+    ghUiTampilkanApp(profil);
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal menghubungi server Lisensi: ' + e.message + '. Coba lagi.';
+    btnWrap.style.display = 'flex';
+  }
+}
+
+function ghUiCobaAkunLain() {
+  try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+  document.getElementById('gh-login-status').textContent = '';
+  document.getElementById('gh-btn-login-coba-lagi').style.display = 'none';
+  document.getElementById('gh-google-signin-btn').style.display = 'flex';
 }
 
 function ghUiLogout() {
-  if (!confirm('Keluar dari Guru Hub? (Data Link Ujian / Soal / Bank Soal yang tersimpan TIDAK terhapus -- cuma sapaan nama yang di-reset)')) return;
-  localStorage.removeItem(GH_UI_KEY_PROFIL);
+  if (!confirm('Keluar dari Guru Hub?')) return;
+  try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+  localStorage.removeItem(GH_KEY_SESI_LISENSI);
   document.getElementById('gh-screen-app').style.display = 'none';
   document.getElementById('gh-screen-login').style.display = '';
-  document.getElementById('gh-ui-inp-nama').value = '';
-  document.getElementById('gh-ui-inp-instansi').value = '';
+  document.getElementById('gh-login-status').textContent = '';
+  document.getElementById('gh-btn-login-coba-lagi').style.display = 'none';
+  document.getElementById('gh-google-signin-btn').style.display = 'flex';
 }
 
-// Login TIDAK menggerbangi fitur -- ini cuma cek apakah nama profil
-// sudah pernah diisi sebelumnya di perangkat ini ("ingat saya").
+// FITUR (2026-09): login SEKARANG BENAR-BENAR menggerbangi akses -- tanpa
+// sesi tersimpan yang masih segar (<24 jam) DAN lolos verifikasi Lisensi,
+// guru tetap di layar login. Sesi lama otomatis dicek ulang biar langganan
+// yang sudah berhenti tidak terus dapat akses cuma karena pernah login.
+// (Tombol Google Sign-In sendiri tidak perlu diinisialisasi manual di sini
+// -- sudah otomatis lewat markup deklaratif #g_id_onload/.g_id_signin di
+// layar login, ditangani library GSI begitu selesai dimuat.)
 (function ghUiInit() {
   try {
-    let raw = localStorage.getItem(GH_UI_KEY_PROFIL);
-    if (raw) ghUiTampilkanApp(JSON.parse(raw));
-  } catch (e) { /* data profil rusak -> biarkan tampil di layar login */ }
+    let raw = localStorage.getItem(GH_KEY_SESI_LISENSI);
+    if (raw) {
+      let profil = JSON.parse(raw);
+      if (profil.diverifikasiPada && (Date.now() - profil.diverifikasiPada) < GH_UMUR_SESI_MS) {
+        ghUiTampilkanApp(profil); // sesi masih segar, langsung masuk tanpa cek ulang
+      }
+    }
+  } catch (e) { /* data sesi rusak -> biarkan tampil di layar login */ }
 })();
 </script>
 
