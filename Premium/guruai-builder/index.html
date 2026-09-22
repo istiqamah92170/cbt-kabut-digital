@@ -1866,6 +1866,30 @@ B. Sub-poin...
         </div>
 
         <div class="settings-group">
+          <div class="settings-group-title">☁️ Cadangan Cloud (Google Drive)</div>
+          <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Simpan salinan project ke Google Drive lewat Google Apps Script milik sendiri — data tidak cuma bergantung pada penyimpanan HP. Riwayat lama juga baru diringkas di HP SETELAH cadangan cloud ini berhasil.</p>
+          <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px;">
+            <div class="form-group">
+              <label>URL Web App GAS</label>
+              <input type="text" id="set-cloudUrl" placeholder="https://script.google.com/macros/s/xxx/exec" oninput="saveSettings()">
+            </div>
+            <div class="form-group">
+              <label>Kunci Rahasia</label>
+              <input type="text" id="set-cloudSecret" placeholder="Harus sama dengan SECRET_KEY di skrip GAS" oninput="saveSettings()">
+            </div>
+            <div class="form-group">
+              <label>ID Guru</label>
+              <input type="text" id="set-idGuru" placeholder="Bebas & unik per guru (nanti otomatis terisi dari Guru Hub)" oninput="saveSettings()">
+            </div>
+            <p id="statusCadanganCloud" style="font-size:12px;color:var(--text-muted);margin:0;">Belum pernah dicadangkan</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-primary btn-sm" style="width:auto;" onclick="_cadangkanKeCloud(false)">☁️ Cadangkan Sekarang</button>
+              <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="bukaPulihkanCloud()">📥 Pulihkan dari Cloud</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
           <div class="settings-group-title">📲 Penyimpanan &amp; Instalasi</div>
           <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Supaya data tidak perlu diunggah ulang tiap buka aplikasi — install sebagai aplikasi di HP supaya browser tidak menghapus datanya.</p>
           <div class="settings-row">
@@ -2825,6 +2849,9 @@ const PROJECT = {
     a.download    = name + CONFIG.PROJECT_EXT;
     a.click();
     showToast(`💾 Project disimpan: ${name}${CONFIG.PROJECT_EXT}`);
+    /* Ikut cadangkan ke cloud diam-diam (kalau sudah disetel) — tidak
+       menghalangi/menunda unduhan .gaib di atas kalau gagal/offline */
+    _cadangkanKeCloud(true);
   },
 
   /** Buka file .gaib dan restore semua state */
@@ -3159,6 +3186,10 @@ async function _reloadAppState() {
   if (saved?.stats)   Object.assign(DATABASE.stats, saved.stats);
   if (saved?.history) DATABASE.history = saved.history;
   await _muatBankSoal();
+
+  /* Bereskan project yang sudah kadung menumpuk banyak riwayat lengkap
+     (dari sebelum fitur ini ada) — aman, lihat _rampingkanRiwayatAman() */
+  await _rampingkanRiwayatAman();
 
   let lastForm = await IDB.get('form', null);
   if (lastForm) {
@@ -5339,7 +5370,7 @@ const RENDER = {
           <p>${h.materi || '—'} | ${h.model || '—'} | ${h.sekolah || '—'}</p>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-          <span class="badge badge-teal" style="font-size:10px;">📂 Buka</span>
+          <span class="badge ${h.arsip ? 'badge-amber' : 'badge-teal'}" style="font-size:10px;">${h.arsip ? '🗄️ Arsip' : '📂 Buka'}</span>
           <span class="history-time">${UTIL.timeAgo(h.ts)}</span>
           <span onclick="event.stopPropagation();hapusRiwayat('${h.id}')"
             style="font-size:10px;color:var(--danger);cursor:pointer;padding:2px 6px;" title="Hapus riwayat ini">🗑️ Hapus</span>
@@ -5787,6 +5818,10 @@ function _catatKeRiwayat(historyId, data, result, tabAktif) {
   IDB.set('main', payload);
   STORAGE.save(_lsKeyProject(), payload);
 
+  /* Ringankan riwayat lama SETELAH ada riwayat baru — lihat _rampingkanRiwayatAman()
+     utk aturan keamanannya (tidak pernah menghapus lokal tanpa cadangan cloud dulu) */
+  _rampingkanRiwayatAman();
+
   /* PENTING: tandai riwayat ini sebagai yang "terakhir dikerjakan" —
      sebelumnya last_historyId HANYA diset saat guru buka riwayat manual
      dari dashboard (loadHistory), sehingga RPPM yang baru dibuat lewat
@@ -5916,6 +5951,143 @@ async function hapusRiwayat(id) {
   showToast('🗑️ Riwayat dihapus');
 }
 
+/* ============================================================
+   RIWAYAT LOKAL — pengecilan otomatis (aman)
+   Isi dokumen LENGKAP (result_<id>, bisa puluhan KB per riwayat)
+   cuma disimpan penuh utk BATAS_RIWAYAT_LENGKAP riwayat TERBARU
+   per project. Riwayat yang lebih lama tetap MUNCUL di daftar
+   riwayat (nama/tanggal) tapi isi lengkapnya dihapus dari IDB.
+   ATURAN KESELAMATAN: penghapusan lokal HANYA boleh terjadi
+   SETELAH cadangan cloud project ini berhasil — kalau cadangan
+   cloud belum disetel/gagal, riwayat TIDAK dipangkas sama sekali.
+   ============================================================ */
+const BATAS_RIWAYAT_LENGKAP = 3;
+
+async function _rampingkanRiwayatAman() {
+  const urut = DATABASE.history.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  const kandidatArsip = urut.slice(BATAS_RIWAYAT_LENGKAP).filter(h => !h.arsip);
+  if (!kandidatArsip.length) return; /* tidak ada yang perlu diringkas */
+
+  const s = DATABASE.settings;
+  if (!s.cloudUrl || !s.idGuru) return; /* cadangan cloud belum disetel -> JANGAN hapus apa pun */
+
+  const berhasil = await _cadangkanKeCloud(true /* diam, jangan ganggu guru dgn toast */);
+  if (!berhasil) return; /* cadangan gagal -> JANGAN hapus lokal, cegah kehilangan data permanen */
+
+  let adaPerubahan = false;
+  for (const h of kandidatArsip) {
+    const ada = await IDB.get('result_' + h.id, null);
+    if (ada !== null) { await IDB.del('result_' + h.id); adaPerubahan = true; }
+    h.arsip = true;
+  }
+  if (adaPerubahan) {
+    await IDB.set('main', { stats: DATABASE.stats, history: DATABASE.history });
+    RENDER.renderHistory();
+  }
+}
+
+/* ============================================================
+   CADANGAN CLOUD — via Google Apps Script Web App milik guru sendiri
+   (lihat file Code.gs terpisah utk skrip backend yang perlu di-deploy)
+   ============================================================ */
+function _idAplikasiCloud() { return 'guruai-builder'; }
+
+function _perbaruiStatusCloud() {
+  const el = document.getElementById('statusCadanganCloud');
+  if (!el) return;
+  const t = DATABASE.settings.cloudLastBackup;
+  el.textContent = t ? ('Cadangan terakhir: ' + new Date(t).toLocaleString('id-ID')) : 'Belum pernah dicadangkan';
+}
+
+/** Kirim seluruh isi project aktif (via PROJECT.collect(), sama seperti .gaib)
+ *  ke Web App GAS yang dikonfigurasi. diam=true -> tanpa toast (dipakai proses latar). */
+async function _cadangkanKeCloud(diam) {
+  const s = DATABASE.settings;
+  if (!s.cloudUrl || !s.idGuru) {
+    if (!diam) showToast('⚠️ Isi dulu URL Web App & ID Guru di Pengaturan', 'warning');
+    return false;
+  }
+  try {
+    const idProject = await PROJECT_MANAGER.getActiveId();
+    const list = await PROJECT_MANAGER.listAll();
+    const proj = list.find(p => p.id === idProject);
+    const namaProject = proj?.nama || 'Project';
+    const data = await PROJECT.collect();
+    const payload = {
+      secret: s.cloudSecret || '',
+      idGuru: s.idGuru,
+      appId: _idAplikasiCloud(),
+      idProject, namaProject, data,
+    };
+    /* PENTING: body dikirim sbg string TANPA header Content-Type eksplisit
+       (default text/plain) supaya browser TIDAK mengirim preflight OPTIONS —
+       Google Apps Script Web App tidak menangani preflight, jadi kalau pakai
+       header 'application/json' permintaan akan gagal kena CORS. */
+    const res  = await fetch(s.cloudUrl, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    if (json.ok) {
+      DATABASE.settings.cloudLastBackup = Date.now();
+      STORAGE.save(CONFIG.LS_SETTINGS, DATABASE.settings);
+      _perbaruiStatusCloud();
+      if (!diam) showToast('☁️ Cadangan cloud berhasil disimpan');
+      return true;
+    }
+    if (!diam) showToast('⚠️ Cadangan cloud gagal: ' + (json.error || '?'), 'warning');
+    return false;
+  } catch (err) {
+    if (!diam) showToast('⚠️ Tidak bisa menghubungi cadangan cloud (offline / URL salah?)', 'warning');
+    return false;
+  }
+}
+
+/** Ambil daftar project yang sudah dicadangkan utk ID Guru ini */
+async function _daftarCadanganCloud() {
+  const s = DATABASE.settings;
+  if (!s.cloudUrl || !s.idGuru) { showToast('⚠️ Isi dulu URL Web App & ID Guru di Pengaturan', 'warning'); return null; }
+  try {
+    const url = `${s.cloudUrl}?aksi=daftar&idGuru=${encodeURIComponent(s.idGuru)}&appId=${encodeURIComponent(_idAplikasiCloud())}&secret=${encodeURIComponent(s.cloudSecret || '')}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (!json.ok) { showToast('⚠️ Gagal ambil daftar cadangan: ' + (json.error || '?'), 'warning'); return null; }
+    return json.daftar || [];
+  } catch (err) {
+    showToast('⚠️ Tidak bisa menghubungi cadangan cloud (offline / URL salah?)', 'warning');
+    return null;
+  }
+}
+
+/** Tombol "Pulihkan dari Cloud" — pilih salah satu project yg sudah dicadangkan,
+ *  lalu TIMPAKAN isinya ke project yg SEDANG AKTIF (sama persis spt PROJECT.open()
+ *  utk file .gaib — tidak otomatis membuat/pindah project baru). */
+async function bukaPulihkanCloud() {
+  const daftar = await _daftarCadanganCloud();
+  if (!daftar) return;
+  if (!daftar.length) { showToast('Belum ada cadangan cloud untuk ID Guru ini'); return; }
+  const pilihan = daftar.map((d, i) => `${i + 1}. ${d.namaProject || d.idProject} (${d.savedAt ? new Date(d.savedAt).toLocaleString('id-ID') : '?'})`).join('\n');
+  const jawab = prompt(`Pilih NOMOR project yang mau dipulihkan ke project yang sedang aktif saat ini:\n\n${pilihan}`);
+  if (jawab === null) return;
+  const idx = parseInt(jawab, 10) - 1;
+  if (isNaN(idx) || !daftar[idx]) { showToast('⚠️ Nomor tidak valid'); return; }
+  const target = daftar[idx];
+  if (!confirm(`Pulihkan "${target.namaProject || target.idProject}" dari cadangan cloud?\n\nIsi PROJECT YANG SEDANG AKTIF SAAT INI akan DITIMPA oleh isi cadangan tsb. Lanjutkan?`)) return;
+  await _pulihkanDariCloud(target.idProject);
+}
+
+async function _pulihkanDariCloud(idProject) {
+  const s = DATABASE.settings;
+  try {
+    showToast('☁️ Memulihkan dari cadangan cloud...', 'info');
+    const url = `${s.cloudUrl}?aksi=pulihkan&idGuru=${encodeURIComponent(s.idGuru)}&appId=${encodeURIComponent(_idAplikasiCloud())}&idProject=${encodeURIComponent(idProject)}&secret=${encodeURIComponent(s.cloudSecret || '')}`;
+    const res  = await fetch(url);
+    const json = await res.json();
+    if (!json.ok || !json.hasil) { showToast('⚠️ Gagal memulihkan: ' + (json.error || '?'), 'warning'); return; }
+    await PROJECT._restore(json.hasil.data);
+    showToast('✅ Berhasil dipulihkan dari cadangan cloud');
+  } catch (err) {
+    showToast('⚠️ Tidak bisa menghubungi cadangan cloud (offline / URL salah?)', 'warning');
+  }
+}
+
 function loadHistory(id) {
   const h = DATABASE.history.find(x => x.id === id);
   if (!h) return;
@@ -5990,7 +6162,9 @@ function loadHistory(id) {
 
   /* Pindah ke halaman Modul Ajar */
   goPage('modul');
-  showToast('📂 Modul dimuat — termasuk hasil edit AI sebelumnya');
+  showToast(h.arsip
+    ? '🗄️ Riwayat ini sudah diarsipkan (isi lengkap ada di cadangan cloud/.gaib) — tampilan kembali ke draf dasar'
+    : '📂 Modul dimuat — termasuk hasil edit AI sebelumnya');
 }
 
 /* ============================================================
@@ -6024,6 +6198,9 @@ function saveSettings() {
     sekolah: document.getElementById('set-sekolah').value,
     guru:    document.getElementById('set-guru').value,
     nip:     document.getElementById('set-nip').value,
+    cloudUrl:    document.getElementById('set-cloudUrl')?.value    || '',
+    cloudSecret: document.getElementById('set-cloudSecret')?.value || '',
+    idGuru:      document.getElementById('set-idGuru')?.value      || '',
   };
   DATABASE.settings = { ...DATABASE.settings, ...s };
   STORAGE.save(CONFIG.LS_SETTINGS, DATABASE.settings);
@@ -9545,6 +9722,17 @@ async function init() {
   const settings = STORAGE.load(CONFIG.LS_SETTINGS, {});
   Object.assign(DATABASE.settings, settings);
 
+  /* 1b. Kalau aplikasi ini dibuka lewat Guru Hub (atau tautan lain) yang
+     menyertakan ?guru_id=... di URL, pakai itu sbg ID Guru utk cadangan
+     cloud secara otomatis — guru tidak perlu isi manual lagi. */
+  try {
+    const guruIdUrl = new URLSearchParams(location.search).get('guru_id');
+    if (guruIdUrl) {
+      DATABASE.settings.idGuru = guruIdUrl;
+      STORAGE.save(CONFIG.LS_SETTINGS, DATABASE.settings);
+    }
+  } catch (e) { /* URLSearchParams tdk tersedia — abaikan, isi manual saja */ }
+
   /* 2. Terapkan dark mode segera */
   if (DATABASE.settings.dark) {
     document.documentElement.setAttribute('data-theme', 'dark');
@@ -9561,6 +9749,10 @@ async function init() {
   if (DATABASE.settings.sekolah) document.getElementById('set-sekolah').value = DATABASE.settings.sekolah;
   if (DATABASE.settings.guru)    document.getElementById('set-guru').value    = DATABASE.settings.guru;
   if (DATABASE.settings.nip)     document.getElementById('set-nip').value     = DATABASE.settings.nip;
+  if (DATABASE.settings.cloudUrl)    document.getElementById('set-cloudUrl').value    = DATABASE.settings.cloudUrl;
+  if (DATABASE.settings.cloudSecret) document.getElementById('set-cloudSecret').value = DATABASE.settings.cloudSecret;
+  if (DATABASE.settings.idGuru)      document.getElementById('set-idGuru').value      = DATABASE.settings.idGuru;
+  _perbaruiStatusCloud();
 
   /* 4. Siapkan Manajemen Project — migrasi data lama kalau ada, tentukan project aktif */
   await _initProjectManager();
