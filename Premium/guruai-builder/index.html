@@ -5209,13 +5209,13 @@ const GENERATOR = {
       </ol>
       <h4>🔑 Kunci Jawaban</h4>
       <table>
-        <tr><th>No</th><th>Kunci</th><th>Skor</th></tr>
-        <tr><td>1</td><td>A</td><td>5</td></tr>
-        <tr><td>2</td><td>B</td><td>5</td></tr>
-        <tr><td>3</td><td>C</td><td>5</td></tr>
-        <tr><td>4</td><td>Lihat pedoman penskoran</td><td>20</td></tr>
-        <tr><td>5</td><td>Lihat pedoman penskoran</td><td>30</td></tr>
-        <tr><td colspan="2"><strong>Total</strong></td><td><strong>65</strong></td></tr>
+        <tr><th>No</th><th>Kunci</th><th>Skor</th><th>Pembahasan</th></tr>
+        <tr><td>1</td><td>A</td><td>5</td><td>Tambahkan penjelasan singkat kenapa A benar</td></tr>
+        <tr><td>2</td><td>B</td><td>5</td><td>Tambahkan penjelasan singkat kenapa B benar</td></tr>
+        <tr><td>3</td><td>C</td><td>5</td><td>Tambahkan penjelasan singkat kenapa C benar</td></tr>
+        <tr><td>4</td><td>Lihat pedoman penskoran</td><td>20</td><td>Tambahkan poin-poin kunci jawaban uraian di sini</td></tr>
+        <tr><td>5</td><td>Lihat pedoman penskoran</td><td>30</td><td>Tambahkan poin-poin kunci jawaban uraian di sini</td></tr>
+        <tr><td colspan="2"><strong>Total</strong></td><td><strong>65</strong></td><td></td></tr>
       </table>
       <p class="text-muted" style="margin-top:8px;">*Tambahkan soal spesifik sesuai materi yang diajarkan</p>
     `;
@@ -5563,21 +5563,50 @@ function _linearisasiHtmlCBT(html) {
   return baris.filter(Boolean);
 }
 
-/** Bangun peta {no_soal: {kunci, skor}} dari baris hasil tabel (dipisah ' | ') */
+/** Bangun peta {no_soal: {kunci, skor, pembahasan}} dari baris hasil tabel
+    (dipisah ' | ') MAUPUN baris prosa "N. Pembahasan: ..." di luar tabel */
 function _bangunPetaKunciCBT(baris) {
   const peta = {};
+
+  /* Bagian 1: baris tabel — cocok utk tabel "Kunci Jawaban" No|Kunci|Skor
+     ATAU No|Kunci|Skor|Pembahasan. Kolom huruf A-D dianggap Kunci (PG);
+     kalau tidak ada huruf, token teks PERTAMA dianggap Kunci esai (mis.
+     "Lihat pedoman penskoran" / model jawaban singkat), token teks
+     SISANYA (kalau ada) dianggap Pembahasan. */
   baris.forEach(line => {
     if (!line.includes('|')) return;
     const tok = line.split('|').map(t => t.trim()).filter(t => t !== '');
     if (!tok.length) return;
     const noMatch = tok[0].match(/^(\d+)/);
     if (!noMatch) return;
+    const no = noMatch[1];
     const sisa = tok.slice(1);
     const hurufKunci = sisa.find(t => /^[A-Da-d]$/.test(t));
-    const angkaLain = sisa.filter(t => /^\d+$/.test(t));
-    const teksLain = sisa.find(t => t && !/^[A-Da-d]$/.test(t) && !/^\d+$/.test(t) && t.toLowerCase() !== 'total');
-    peta[noMatch[1]] = { kunci: hurufKunci || teksLain || '', skor: angkaLain[angkaLain.length - 1] || '' };
+    const angkaLain  = sisa.filter(t => /^\d+$/.test(t));
+    const teksLain    = sisa.filter(t => t && !/^[A-Da-d]$/.test(t) && !/^\d+$/.test(t) && t.toLowerCase() !== 'total');
+    if (!peta[no]) peta[no] = {};
+    if (hurufKunci) {
+      peta[no].kunci = hurufKunci.toUpperCase();
+      if (teksLain.length) peta[no].pembahasan = teksLain.join(' — ');
+    } else if (teksLain.length) {
+      peta[no].kunci = teksLain[0];
+      if (teksLain.length > 1) peta[no].pembahasan = teksLain.slice(1).join(' — ');
+    }
+    if (angkaLain.length) peta[no].skor = angkaLain[angkaLain.length - 1];
   });
+
+  /* Bagian 2: baris prosa bernomor yg eksplisit menyebut "pembahasan"
+     (format bebas ala ChatGPT: "1. Pembahasan: karena ...") — dipakai
+     kalau belum ada pembahasan dari tabel di atas */
+  baris.forEach(line => {
+    if (line.includes('|')) return;
+    const m = line.match(/^(\d+)[.)]\s*(.+)$/);
+    if (!m || !/pembahasan/i.test(m[2])) return;
+    const no = m[1];
+    if (!peta[no]) peta[no] = {};
+    if (!peta[no].pembahasan) peta[no].pembahasan = m[2].replace(/^pembahasan\s*[:\-]\s*/i, '').trim();
+  });
+
   return peta;
 }
 
@@ -5608,39 +5637,51 @@ function _ekstrakSoalCBT(kontenHtml) {
   const baris = _linearisasiHtmlCBT(kontenHtml);
   const peta  = _bangunPetaKunciCBT(baris);
   const { hasil: blokPG, dipakai } = _cariBlokPGCBT(baris);
-  const rows = [];
-  let no = 0;
 
-  blokPG.forEach((b, idx) => {
-    const skorInline = b.pertanyaan.match(/\(?skor\s*[:=]?\s*(\d+)\)?/i);
-    const pertanyaanBersih = b.pertanyaan.replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
-    const info = peta[String(idx + 1)] || {};
-    rows.push({
-      no: ++no, tipe: 'pg_teks',
-      poin: (skorInline && skorInline[1]) || info.skor || 2,
-      pertanyaan: pertanyaanBersih,
-      opsiA: b.opsi.A, opsiB: b.opsi.B, opsiC: b.opsi.C, opsiD: b.opsi.D,
-      kunci: /^[A-D]$/i.test(info.kunci || '') ? info.kunci.toUpperCase() : '',
-      pembahasan: ''
-    });
-  });
-
+  /* Gabungkan kandidat PG & esai, URUTKAN sesuai posisi baris ASLI di
+     dokumen (bukan dihitung terpisah per jenis) — supaya nomor soal yg
+     dipakai utk mencari Kunci/Skor/Pembahasan di peta KONSISTEN dgn
+     urutan No pada tabel Kunci Jawaban, termasuk utk soal esai yg
+     teksnya sendiri sering tidak menyertakan angka nomor eksplisit. */
+  const kandidat = [];
+  blokPG.forEach(b => kandidat.push({ jenis: 'pg', urutBaris: b.pertanyaanIdx, data: b }));
   baris.forEach((line, i) => {
     if (dipakai.has(i) || line.includes('|') || line.length < 15) return;
-    const skorInline = line.match(/\(?skor\s*[:=]?\s*(\d+)\)?/i);
-    const bersih = line.replace(/^\d+[.)]\s*/, '').replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
-    if (!/[?!]\s*$/.test(bersih)) return;
-    const nomorAsli = (line.match(/^(\d+)[.)]/) || [])[1];
-    const info = nomorAsli ? (peta[nomorAsli] || {}) : {};
-    rows.push({
-      no: ++no, tipe: 'esai',
-      poin: (skorInline && skorInline[1]) || info.skor || 5,
-      pertanyaan: bersih, opsiA: '', opsiB: '', opsiC: '', opsiD: '',
-      kunci: info.kunci || '', pembahasan: ''
-    });
+    const bersihCek = line.replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
+    if (!/[?!]\s*$/.test(bersihCek)) return;
+    kandidat.push({ jenis: 'esai', urutBaris: i, data: line });
+  });
+  kandidat.sort((a, b) => a.urutBaris - b.urutBaris);
+
+  const rows = [];
+  kandidat.forEach((k, i) => {
+    const noUrut = i + 1;
+    const info = peta[String(noUrut)] || {};
+    if (k.jenis === 'pg') {
+      const skorInline = k.data.pertanyaan.match(/\(?skor\s*[:=]?\s*(\d+)\)?/i);
+      const pertanyaanBersih = k.data.pertanyaan.replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
+      rows.push({
+        no: noUrut, tipe: 'pg_teks',
+        poin: (skorInline && skorInline[1]) || info.skor || 2,
+        pertanyaan: pertanyaanBersih,
+        opsiA: k.data.opsi.A, opsiB: k.data.opsi.B, opsiC: k.data.opsi.C, opsiD: k.data.opsi.D,
+        kunci: /^[A-D]$/i.test(info.kunci || '') ? info.kunci.toUpperCase() : '',
+        pembahasan: info.pembahasan || ''
+      });
+    } else {
+      const skorInline = k.data.match(/\(?skor\s*[:=]?\s*(\d+)\)?/i);
+      const bersih = k.data.replace(/^\d+[.)]\s*/, '').replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
+      rows.push({
+        no: noUrut, tipe: 'esai',
+        poin: (skorInline && skorInline[1]) || info.skor || 5,
+        pertanyaan: bersih, opsiA: '', opsiB: '', opsiC: '', opsiD: '',
+        kunci: info.kunci || '',
+        pembahasan: info.pembahasan || ''
+      });
+    }
   });
 
-  return rows.sort((a, b) => a.no - b.no);
+  return rows;
 }
 
 function _escHtmlCBT(s) {
