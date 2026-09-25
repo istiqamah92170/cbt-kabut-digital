@@ -3764,13 +3764,19 @@ ATURAN PENOMORAN — WAJIB DIIKUTI PERSIS, jangan sampai keliru:
 - Bagian D (Kunci Jawaban) dan E (Pembahasan) WAJIB mencakup SEMUA nomor 1 sampai 8 — nomor 1-5 mengacu ke soal PG di atas (jangan sampai kosong/terlewat), nomor 6-8 ke soal Uraian yang baru dibuat
 
 FORMAT — HTML saja (h4 ol ul li table). Tanpa Markdown. Tanpa teks di luar HTML.
-Buat PERSIS tiga bagian ini (jangan ulangi bagian A/B di atas):
+Buat PERSIS empat bagian ini (jangan ulangi bagian A/B di atas):
 
 <h4>C. Soal Uraian</h4> — 3 soal bernomor 6-8 (level C4-C6), terbuka, mendalam, spesifik materi, tiap soal ada ruang jawaban (minimal: "Jawaban:_______________")
 <h4>D. Kunci Jawaban</h4> — tabel: No Soal (1-8) | Kunci/Jawaban Ideal | Skor. Nomor 1-5: tulis huruf jawaban PG yang benar (A/B/C/D) dari soal di atas, 4 poin/nomor. Nomor 6-8: tulis jawaban ideal Uraian, 10 poin/nomor.
-<h4>E. Pembahasan</h4> — Nomor 1-5: jelaskan singkat kenapa jawaban PG itu benar dan kenapa pilihan lain salah. Nomor 6-8: jelaskan kaitan jawaban Uraian dengan materi pembelajaran.`;
+<h4>E. Pembahasan</h4> — Nomor 1-5: jelaskan singkat kenapa jawaban PG itu benar dan kenapa pilihan lain salah. Nomor 6-8: jelaskan kaitan jawaban Uraian dengan materi pembelajaran.
+<h4>F. Tabel Siap Impor</h4> — WAJIB ADA, tabel HTML <table> dgn <thead><tr> berisi PERSIS 12 kolom ini (urutan sama): No, Tipe, Poin, Pertanyaan, URL_Gambar, Opsi_A, Opsi_B, Opsi_C, Opsi_D, Kunci, Pembahasan, URL_Gambar_Pembahasan. Isi SEMUA 8 baris (<tbody><tr>...):
+  - Tipe: PERSIS "pg_teks" (no 1-5) atau "esai" (no 6-8), huruf kecil
+  - Opsi_A-D: isi HANYA utk pg_teks, kosongkan utk esai
+  - Kunci: huruf A/B/C/D utk pg_teks (dari soal PG di atas), jawaban ideal lengkap utk esai
+  - URL_Gambar & URL_Gambar_Pembahasan: SELALU kosongkan
+  - Isi Pertanyaan/Opsi/Kunci HARUS SAMA PERSIS dgn bagian B (di atas)/C/D/E, cuma format ulang jadi tabel, bukan versi ringkas`;
 
-      const rs2 = await kirim(s2, 4096);
+      const rs2 = await kirim(s2, 8192);
       if (!rs2.html) throw new Error('Gagal membuat uraian & kunci. Coba lagi.');
 
       return {
@@ -5219,6 +5225,15 @@ const GENERATOR = {
         <tr><td colspan="2"><strong>Total</strong></td><td><strong>65</strong></td><td></td></tr>
       </table>
       <p class="text-muted" style="margin-top:8px;">*Tambahkan soal spesifik sesuai materi yang diajarkan</p>
+      <h4>📊 Tabel Siap Impor</h4>
+      <table>
+        <tr><th>No</th><th>Tipe</th><th>Poin</th><th>Pertanyaan</th><th>URL_Gambar</th><th>Opsi_A</th><th>Opsi_B</th><th>Opsi_C</th><th>Opsi_D</th><th>Kunci</th><th>Pembahasan</th><th>URL_Gambar_Pembahasan</th></tr>
+        <tr><td>1</td><td>pg_teks</td><td>5</td><td>Pernyataan berikut yang paling tepat berkaitan dengan ${d.materi} adalah ...</td><td></td><td>Pernyataan pilihan A</td><td>Pernyataan pilihan B</td><td>Pernyataan pilihan C</td><td>Pernyataan pilihan D</td><td>A</td><td>Tambahkan penjelasan singkat kenapa A benar</td><td></td></tr>
+        <tr><td>2</td><td>pg_teks</td><td>5</td><td>Dalam kehidupan sehari-hari, contoh penerapan ${d.materi} adalah ...</td><td></td><td>Pilihan A</td><td>Pilihan B</td><td>Pilihan C</td><td>Pilihan D</td><td>B</td><td>Tambahkan penjelasan singkat kenapa B benar</td><td></td></tr>
+        <tr><td>3</td><td>pg_teks</td><td>5</td><td>Jika diketahui data berikut, maka kesimpulan yang tepat adalah ...</td><td></td><td>Pilihan A</td><td>Pilihan B</td><td>Pilihan C</td><td>Pilihan D</td><td>C</td><td>Tambahkan penjelasan singkat kenapa C benar</td><td></td></tr>
+        <tr><td>4</td><td>esai</td><td>20</td><td>Jelaskan pengertian ${d.materi} dengan kata-katamu sendiri dan berikan 2 contoh nyata!</td><td></td><td></td><td></td><td></td><td></td><td>Lihat pedoman penskoran</td><td>Tambahkan poin-poin kunci jawaban uraian di sini</td><td></td></tr>
+        <tr><td>5</td><td>esai</td><td>30</td><td>Selesaikan permasalahan berikut yang berkaitan dengan ${d.materi} secara sistematis!</td><td></td><td></td><td></td><td></td><td></td><td>Lihat pedoman penskoran</td><td>Tambahkan poin-poin kunci jawaban uraian di sini</td><td></td></tr>
+      </table>
     `;
   },
 
@@ -5732,6 +5747,54 @@ function _escHtmlCBT(s) {
 }
 
 /** Tombol "📊 Format CBT" pada kartu paket soal — tampilkan/tutup panel review */
+/** JALUR UTAMA (baru): cari tabel yang HEADER-nya sudah PERSIS kolom
+    format CBT (No, Tipe, Poin, Pertanyaan, ..., Kunci, ...) dan baca
+    LANGSUNG isinya apa adanya — TIDAK ada tebak-tebakan/heuristik sama
+    sekali. Berlaku kalau prompt/generator sudah diminta taat membuat
+    bagian "F. Tabel Siap Impor" (lihat cgptBuatPrompt/AI_ENGINE/
+    GENERATOR.buatSoal — ketiganya sudah diminta hasilkan tabel ini).
+    Return null kalau tabel semacam itu tidak ditemukan (paket lama). */
+function _bacaTabelSiapCBT(kontenHtml) {
+  const doc = new DOMParser().parseFromString(kontenHtml, 'text/html');
+  const normal = s => s.toLowerCase().replace(/[^a-z]+/g, '_').replace(/^_+|_+$/g, '');
+
+  let tabelCocok = null, headerCocok = null;
+  Array.from(doc.querySelectorAll('table')).forEach(t => {
+    const trPertama = t.querySelector('tr');
+    if (!trPertama) return;
+    const sel = Array.from(trPertama.querySelectorAll('th,td')).map(c => normal(c.textContent));
+    if (sel.includes('no') && sel.includes('tipe') && sel.includes('pertanyaan') && sel.includes('kunci')) {
+      tabelCocok = t; headerCocok = sel;
+    }
+  });
+  if (!tabelCocok) return null;
+
+  const idx = {};
+  headerCocok.forEach((h, i) => { if (idx[h] === undefined) idx[h] = i; });
+  const ambilDariBaris = (sel, kunci) => (idx[kunci] !== undefined ? (sel[idx[kunci]] || '') : '');
+
+  const rows = [];
+  Array.from(tabelCocok.querySelectorAll('tr')).slice(1).forEach(tr => {
+    const sel = Array.from(tr.querySelectorAll('td,th')).map(c => c.textContent.replace(/\s+/g, ' ').trim());
+    if (!sel.length) return;
+    const no = ambilDariBaris(sel, 'no');
+    if (!/^\d+$/.test(no)) return; /* lewati baris kosong/judul ulang/dll */
+    const tipeMentah = ambilDariBaris(sel, 'tipe').toLowerCase();
+    const tipe = tipeMentah.includes('esai') ? 'esai' : 'pg_teks';
+    rows.push({
+      no: parseInt(no, 10),
+      tipe,
+      poin: ambilDariBaris(sel, 'poin') || (tipe === 'esai' ? 5 : 2),
+      pertanyaan: ambilDariBaris(sel, 'pertanyaan'),
+      opsiA: ambilDariBaris(sel, 'opsi_a'), opsiB: ambilDariBaris(sel, 'opsi_b'),
+      opsiC: ambilDariBaris(sel, 'opsi_c'), opsiD: ambilDariBaris(sel, 'opsi_d'),
+      kunci: ambilDariBaris(sel, 'kunci'),
+      pembahasan: ambilDariBaris(sel, 'pembahasan'),
+    });
+  });
+  return rows.length ? rows.sort((a, b) => a.no - b.no) : null;
+}
+
 function bukaKonversiCBT(id) {
   const panel = document.getElementById('cbtPanel-' + id);
   if (!panel) return;
@@ -5741,7 +5804,9 @@ function bukaKonversiCBT(id) {
   }
   const s = DATABASE.soal.find(x => x.id === id);
   if (!s) return;
-  const rows = _ekstrakSoalCBT(s.kontenHtml || '');
+  /* Coba baca tabel siap-pakai dulu (paket baru, sudah taat format) —
+     kalau tidak ada (paket lama), baru pakai parser heuristik lama */
+  const rows = _bacaTabelSiapCBT(s.kontenHtml || '') || _ekstrakSoalCBT(s.kontenHtml || '');
   if (!rows.length) {
     panel.innerHTML = `<p style="font-size:12px;color:var(--danger);margin-top:8px;">⚠️ Tidak ada soal yang terdeteksi otomatis dari paket ini. Coba salin manual dari isi di atas.</p>`;
     panel.dataset.terisi = '1';
@@ -7935,7 +8000,22 @@ E. PEMBAHASAN — WAJIB LENGKAP NOMOR 1-8 (jangan cuma Uraian)
    - Nomor 1-5 (PG): jelaskan singkat kenapa jawaban itu benar dan kenapa pilihan lain salah
    - Nomor 6-8 (Uraian): jelaskan kaitan jawaban ideal dengan materi pembelajaran
 
-Tulis semua bagian, semua nomor 1 sampai 8, jangan potong dan jangan ada yang terlewat.`;
+F. TABEL SIAP IMPOR — WAJIB ADA, format tabel Markdown PERSIS seperti contoh, JANGAN diringkas/dipotong, isi SEMUA 8 baris data:
+
+| No | Tipe | Poin | Pertanyaan | URL_Gambar | Opsi_A | Opsi_B | Opsi_C | Opsi_D | Kunci | Pembahasan | URL_Gambar_Pembahasan |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | pg_teks | 4 | (isi teks soal nomor 1 lengkap) | | (opsi A) | (opsi B) | (opsi C) | (opsi D) | (huruf jawaban benar) | (pembahasan singkat) | |
+| ... | ... | ... | ... | | ... | ... | ... | ... | ... | ... | |
+| 8 | esai | 10 | (isi teks soal nomor 8 lengkap) | | | | | | (jawaban ideal lengkap) | (pembahasan singkat) | |
+
+Aturan kolom F:
+- Kolom "Tipe" tulis PERSIS "pg_teks" (nomor 1-5) atau "esai" (nomor 6-8), huruf kecil semua
+- Kolom Opsi_A-D HANYA diisi utk pg_teks, kosongkan (sel kosong) utk esai
+- Kolom "Kunci" utk pg_teks isi HANYA satu huruf (A/B/C/D), utk esai isi jawaban ideal lengkap
+- Kolom URL_Gambar dan URL_Gambar_Pembahasan SELALU dikosongkan (sel kosong)
+- Isi teks Pertanyaan/Opsi/Kunci di tabel F HARUS SAMA PERSIS dengan bagian B/C/D/E di atas — tabel F cuma format ulang, bukan versi ringkas/berbeda
+
+Tulis semua bagian A sampai F, semua nomor 1 sampai 8, jangan potong dan jangan ada yang terlewat.`;
 
   if (tabId === 'pengayaan') return `Kamu pakar Kurikulum Merdeka Indonesia. Buat PROGRAM PENGAYAAN lengkap.
 
