@@ -2549,10 +2549,11 @@ function _simpanBankSoalPaket() {
   IDB.set('bank_soal_paket', DATABASE.soal.filter(s => s.tipe === 'paket'));
 }
 
-/** Muat paket soal tersimpan (project aktif) + gabung dengan soal bawaan */
+/** Muat paket soal tersimpan (project aktif) — soal contoh bawaan
+    SUDAH TIDAK ditampilkan lagi (dihapus atas permintaan Rapian) */
 async function _muatBankSoal() {
   const paket = await IDB.get('bank_soal_paket', []);
-  DATABASE.soal = [..._SOAL_CONTOH_BAWAAN.map(s => ({ ...s })), ...(paket || [])];
+  DATABASE.soal = [...(paket || [])];
 }
 
 /* ============================================================
@@ -3174,7 +3175,7 @@ async function _reloadAppState() {
     ATP_STATE = ATP_ALL_KELAS[ATP_KELAS_AKTIF];
   }
   currentGenerated = null;
-  DATABASE.soal = _SOAL_CONTOH_BAWAAN.map(s => ({ ...s })); /* reset ke bawaan dulu, sebelum muat punya project ini */
+  DATABASE.soal = []; /* reset dulu, sebelum muat punya project ini (soal contoh bawaan sudah dihapus) */
 
   /* 2. Reset TAMPILAN semua halaman yang datanya spesifik per-project.
      Tanpa ini, field/preview lama masih terlihat di layar walau
@@ -5565,46 +5566,79 @@ function _linearisasiHtmlCBT(html) {
 
 /** Bangun peta {no_soal: {kunci, skor, pembahasan}} dari baris hasil tabel
     (dipisah ' | ') MAUPUN baris prosa "N. Pembahasan: ..." di luar tabel */
-function _bangunPetaKunciCBT(baris) {
-  const peta = {};
-
-  /* Bagian 1: baris tabel — cocok utk tabel "Kunci Jawaban" No|Kunci|Skor
-     ATAU No|Kunci|Skor|Pembahasan. Kolom huruf A-D dianggap Kunci (PG);
-     kalau tidak ada huruf, token teks PERTAMA dianggap Kunci esai (mis.
-     "Lihat pedoman penskoran" / model jawaban singkat), token teks
-     SISANYA (kalau ada) dianggap Pembahasan. */
-  baris.forEach(line => {
-    if (!line.includes('|')) return;
-    const tok = line.split('|').map(t => t.trim()).filter(t => t !== '');
-    if (!tok.length) return;
-    const noMatch = tok[0].match(/^(\d+)/);
-    if (!noMatch) return;
-    const no = noMatch[1];
-    const sisa = tok.slice(1);
-    const hurufKunci = sisa.find(t => /^[A-Da-d]$/.test(t));
-    const angkaLain  = sisa.filter(t => /^\d+$/.test(t));
-    const teksLain    = sisa.filter(t => t && !/^[A-Da-d]$/.test(t) && !/^\d+$/.test(t) && t.toLowerCase() !== 'total');
-    if (!peta[no]) peta[no] = {};
-    if (hurufKunci) {
-      peta[no].kunci = hurufKunci.toUpperCase();
-      if (teksLain.length) peta[no].pembahasan = teksLain.join(' — ');
-    } else if (teksLain.length) {
-      peta[no].kunci = teksLain[0];
-      if (teksLain.length > 1) peta[no].pembahasan = teksLain.slice(1).join(' — ');
+/** Tandai setiap baris masuk BAGIAN dokumen yang mana (kisi-kisi/soal/
+    kunci/pembahasan), berdasarkan baris judul yang paling terakhir
+    dilewati. Dipakai bersama oleh _bangunPetaKunciCBT & _ekstrakSoalCBT
+    supaya keduanya konsisten & tidak salah pakai isi Kisi-kisi/Soal
+    sbg sumber Kunci/Pembahasan (atau sebaliknya). */
+function _tandaiBagianCBT(baris) {
+  let bagian = null;
+  return baris.map(line => {
+    /* Baris judul: TIDAK diawali angka (bukan baris soal/kunci bernomor)
+       & tidak terlalu panjang (baris isi/penjelasan biasanya panjang) */
+    if (!/^\d/.test(line.trim()) && line.length < 80) {
+      const lower = line.toLowerCase();
+      if (/kunci\s*jawaban/.test(lower))              bagian = 'kunci';
+      else if (/pembahasan/.test(lower))              bagian = 'pembahasan';
+      else if (/kisi[\s-]*kisi/.test(lower))           bagian = 'kisikisi';
+      else if (/\bsoal\b/.test(lower))                 bagian = 'soal';
     }
-    if (angkaLain.length) peta[no].skor = angkaLain[angkaLain.length - 1];
+    return bagian;
   });
+}
 
-  /* Bagian 2: baris prosa bernomor yg eksplisit menyebut "pembahasan"
-     (format bebas ala ChatGPT: "1. Pembahasan: karena ...") — dipakai
-     kalau belum ada pembahasan dari tabel di atas */
-  baris.forEach(line => {
-    if (line.includes('|')) return;
-    const m = line.match(/^(\d+)[.)]\s*(.+)$/);
-    if (!m || !/pembahasan/i.test(m[2])) return;
-    const no = m[1];
+/** Bangun peta {no_soal: {kunci, skor, pembahasan}} — baca tabel MAUPUN
+    prosa bernomor, berpedoman pada bagian dokumen (lihat _tandaiBagianCBT)
+    supaya isi tabel Kisi-kisi tidak ikut disalahartikan sbg Kunci. */
+function _bangunPetaKunciCBT(baris, bagianTag) {
+  const peta = {};
+  const set = (no, field, val) => {
+    if (!no || val === undefined || val === null || val === '') return;
     if (!peta[no]) peta[no] = {};
-    if (!peta[no].pembahasan) peta[no].pembahasan = m[2].replace(/^pembahasan\s*[:\-]\s*/i, '').trim();
+    if (!peta[no][field]) peta[no][field] = val;
+  };
+
+  baris.forEach((line, i) => {
+    const bagian = bagianTag[i];
+
+    /* ── Baris tabel (No | ... dipisah ' | ') ── */
+    if (line.includes('|')) {
+      if (bagian === 'kisikisi' || bagian === 'soal') return; /* bukan sumber kunci/pembahasan */
+      const tok = line.split('|').map(t => t.trim()).filter(t => t !== '');
+      if (!tok.length) return;
+      const noMatch = tok[0].match(/^(\d+)/);
+      if (!noMatch) return;
+      const no = noMatch[1];
+      const sisa = tok.slice(1);
+      const hurufKunci = sisa.find(t => /^[A-Da-d]$/.test(t));
+      const angkaLain  = sisa.filter(t => /^\d+$/.test(t));
+      const teksLain    = sisa.filter(t => t && !/^[A-Da-d]$/.test(t) && !/^\d+$/.test(t) && t.toLowerCase() !== 'total');
+      if (hurufKunci) {
+        set(no, 'kunci', hurufKunci.toUpperCase());
+        if (teksLain.length) set(no, 'pembahasan', teksLain.join(' — '));
+      } else if (teksLain.length) {
+        set(no, 'kunci', teksLain[0]);
+        if (teksLain.length > 1) set(no, 'pembahasan', teksLain.slice(1).join(' — '));
+      }
+      if (angkaLain.length) set(no, 'skor', angkaLain[angkaLain.length - 1]);
+      return;
+    }
+
+    /* ── Baris prosa bernomor "N. ..." — hanya dipakai kalau memang
+       berada di bagian Kunci Jawaban atau Pembahasan (format bebas
+       ChatGPT yg menulis daftar, bukan tabel, utk bagian ini) ── */
+    if (bagian !== 'kunci' && bagian !== 'pembahasan') return;
+    const m = line.match(/^(\d+)[.)]\s*(.+)$/);
+    if (!m) return;
+    const no = m[1];
+    let teks = m[2].trim();
+    if (bagian === 'kunci') {
+      const skorM = teks.match(/\(?(\d+)\s*(?:poin|point)?\)?\s*$/i);
+      if (skorM) { set(no, 'skor', skorM[1]); teks = teks.slice(0, skorM.index).trim(); }
+      set(no, 'kunci', teks.replace(/^kunci(?:\s*jawaban)?\s*[:\-]\s*/i, ''));
+    } else {
+      set(no, 'pembahasan', teks.replace(/^pembahasan\s*[:\-]\s*/i, ''));
+    }
   });
 
   return peta;
@@ -5634,8 +5668,9 @@ function _cariBlokPGCBT(baris) {
 
 /** Ekstrak paket soal (kontenHtml) -> larik baris siap format CBT Kabut Digital */
 function _ekstrakSoalCBT(kontenHtml) {
-  const baris = _linearisasiHtmlCBT(kontenHtml);
-  const peta  = _bangunPetaKunciCBT(baris);
+  const baris     = _linearisasiHtmlCBT(kontenHtml);
+  const bagianTag = _tandaiBagianCBT(baris);
+  const peta      = _bangunPetaKunciCBT(baris, bagianTag);
   const { hasil: blokPG, dipakai } = _cariBlokPGCBT(baris);
 
   /* Gabungkan kandidat PG & esai, URUTKAN sesuai posisi baris ASLI di
@@ -5647,8 +5682,16 @@ function _ekstrakSoalCBT(kontenHtml) {
   blokPG.forEach(b => kandidat.push({ jenis: 'pg', urutBaris: b.pertanyaanIdx, data: b }));
   baris.forEach((line, i) => {
     if (dipakai.has(i) || line.includes('|') || line.length < 15) return;
+    /* Jangan ambil baris dari bagian Kunci/Pembahasan/Kisi-kisi sbg soal
+       esai — itu isi jawaban/rubrik, bukan teks pertanyaan */
+    if (bagianTag[i] === 'kunci' || bagianTag[i] === 'pembahasan' || bagianTag[i] === 'kisikisi') return;
     const bersihCek = line.replace(/\(?skor\s*[:=]?\s*\d+\)?/i, '').trim();
-    if (!/[?!]\s*$/.test(bersihCek)) return;
+    /* Diterima kalau diakhiri tanda baca kalimat (?/!/.) ATAU diawali
+       nomor eksplisit "N." — cakupan lebih luas dari sebelumnya (dulu
+       cuma ?/! sehingga soal uraian yg diakhiri titik biasa, spt gaya
+       bahasa Indonesia formal "Jelaskan ....", tidak pernah terdeteksi) */
+    const berpolaSoal = /[?!.]\s*$/.test(bersihCek) || /^\d+[.)]\s+\S/.test(line);
+    if (!berpolaSoal) return;
     kandidat.push({ jenis: 'esai', urutBaris: i, data: line });
   });
   kandidat.sort((a, b) => a.urutBaris - b.urutBaris);
@@ -6123,6 +6166,13 @@ async function _pulihkanDariCloud(idProject) {
     const json = await res.json();
     if (!json.ok || !json.hasil) { showToast('⚠️ Gagal memulihkan: ' + (json.error || '?'), 'warning'); return; }
     await PROJECT._restore(json.hasil.data);
+    /* Samakan nama project aktif dgn nama yg tersimpan di cadangan cloud
+       (dulu harus ganti nama manual sendiri setelah pulih) */
+    if (json.hasil.namaProject) {
+      const activeId = await PROJECT_MANAGER.getActiveId();
+      await PROJECT_MANAGER.rename(activeId, json.hasil.namaProject);
+      await renderProjectSwitcher();
+    }
     showToast('✅ Berhasil dipulihkan dari cadangan cloud');
   } catch (err) {
     showToast('⚠️ Tidak bisa menghubungi cadangan cloud (offline / URL salah?)', 'warning');
