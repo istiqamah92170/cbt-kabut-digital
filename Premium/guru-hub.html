@@ -119,6 +119,7 @@
   .gh-poin-row span { font-size:12px; color:var(--gray-soft); }
   .gh-status-msg { font-size:12px; text-align:center; margin-top:10px; min-height:16px; color:var(--blue-main); font-weight:600; }
   .gh-status-msg.err { color:var(--red); }
+  .gh-status-msg.ok { color:var(--blue-main); }
   /* FITUR (2026-09): tampilan hasil Buat & Lihat Analisis */
   .gh-an-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 0; }
   .gh-an-box { background:var(--blue-pale); border:1px solid var(--blue-light); border-radius:var(--r-md); padding:10px 12px; text-align:center; }
@@ -542,6 +543,10 @@
         <label>Link / Kode CBT</label>
         <input type="text" id="gh-inp-url" placeholder="URL GAS atau alamat server offline">
       </div>
+      <div class="gh-fg">
+        <label>Token Admin <span style="font-weight:400;color:var(--gray-soft);">(opsional -- isi kalau mau dipakai untuk Sesi Ujian Aktif)</span></label>
+        <input type="text" id="gh-inp-tokenadmin" placeholder="reset_token_pel ujian ini">
+      </div>
       <button class="gh-btn gh-btn-primary" onclick="ghTambahEntri()">+ Tambah</button>
     </div>
 
@@ -565,6 +570,45 @@
         <p class="gh-hint">Siswa yang membuka link ini akan melihat dropdown pilihan ujian di Portal — tidak perlu ketik apa pun. Link lama (tanpa daftar ini) tetap berfungsi seperti biasa.</p>
       </div>
     </div>
+
+    <hr style="border:none;border-top:1px solid var(--gray-line);margin:22px 0;">
+
+    <!-- FITUR (2026-09): Sesi Ujian Aktif -- lihat catatan lengkap di
+         ghBuatSesiAktif()/ghMuatSesiSaya(). Guru bikin jadwal token
+         sementara untuk ujian yang dicentang di atas, siswa cukup cari
+         pakai ID Premium (bukan link satu-satu). -->
+    <h2 style="margin-bottom:2px;">🕒 Sesi Ujian Aktif</h2>
+    <p class="gh-sub">Jadwalkan ujian yang dicentang di atas untuk jendela waktu tertentu — token otomatis dibuat khusus untuk sesi ini &amp; kembali ke token default sekolah begitu waktunya habis. Siswa menemukan sesi ini lewat ID Premium, bukan link satu-satu.</p>
+
+    <div class="gh-fg" style="max-width:480px;">
+      <label>ID Premium Anda <span style="font-weight:400;color:var(--gray-soft);">(nama+gelar yang diketik siswa, bebas dimodifikasi)</span></label>
+      <div class="gh-out">
+        <input type="text" id="gh-inp-kodepremium" placeholder="Contoh: Anto Gajlek, S.Pd.">
+        <button class="gh-btn gh-btn-outline" onclick="ghSimpanKodePremium()">Simpan</button>
+      </div>
+      <div class="gh-status-msg" id="gh-kodepremium-status"></div>
+    </div>
+
+    <div class="gh-row" style="margin-top:14px;">
+      <div class="gh-fg">
+        <label>Tanggal</label>
+        <input type="date" id="gh-inp-sesi-tanggal">
+      </div>
+      <div class="gh-fg">
+        <label>Jam Mulai</label>
+        <input type="time" id="gh-inp-sesi-jam">
+      </div>
+      <div class="gh-fg">
+        <label>Durasi (menit)</label>
+        <input type="number" id="gh-inp-sesi-durasi" min="1" value="90">
+      </div>
+      <button class="gh-btn gh-btn-primary" onclick="ghBuatSesiAktif()">🕒 Buat Sesi</button>
+    </div>
+    <div class="gh-status-msg" id="gh-sesi-buat-status"></div>
+    <div id="gh-sesi-hasil-wrap" style="display:none;margin-top:10px;"></div>
+
+    <h3 style="margin:20px 0 6px;font-size:14px;">Sesi yang Sudah Dibuat</h3>
+    <div id="gh-sesi-list">Memuat...</div>
   </div>
   </div><!-- /gh-page-linkujian -->
 
@@ -818,6 +862,18 @@
 // ═══════════════════════════════════════════════
 const GH_KEY_ENTRI = 'guruhub_daftar_link_v1';
 let ghEntri = [];
+// FITUR (2026-09): profil guru yang sedang login (email/nama/sekolah +
+// kunciGuru/kodePremium dari Lisensi) -- diisi ghUiTampilkanApp(), dipakai
+// semua fungsi Sesi Ujian Aktif untuk otentikasi ke server Lisensi pusat.
+let ghProfilAktif = null;
+// FITUR (2026-09): cache LOKAL token per sesi yang guru buat dari
+// perangkat ini -- dipakai supaya guru bisa lihat/salin token lagi, dan
+// supaya ghBatalkanSesi() tahu token_admin sekolah mana yang perlu
+// dihapus. Kalau guru pindah perangkat, sesi tetap ada & tetap berfungsi
+// (disimpan di server Lisensi pusat + di tiap sekolah), tapi salinan token
+// di cache ini TIDAK ikut pindah -- itu keterbatasan yang disengaja demi
+// kesederhanaan (lihat catatan di ghMuatSesiSaya()).
+const GH_KEY_SESI_DIBUAT = 'guruhub_sesi_dibuat_v1';
 
 function ghMuatEntri() {
   try {
@@ -875,13 +931,28 @@ function ghToast(msg) {
 function ghTambahEntri() {
   let inpLabel = document.getElementById('gh-inp-label');
   let inpUrl   = document.getElementById('gh-inp-url');
+  let inpTokenAdmin = document.getElementById('gh-inp-tokenadmin');
   let label = inpLabel.value.trim();
   let url   = inpUrl.value.trim();
+  let tokenAdmin = inpTokenAdmin.value.trim();
   if (!label || !url) { ghToast('Isi label dan link/kode dulu.'); return; }
-  ghEntri.push({ label, url });
+  ghEntri.push({ label, url, tokenAdmin });
   ghSimpanEntri();
-  inpLabel.value = ''; inpUrl.value = '';
+  inpLabel.value = ''; inpUrl.value = ''; inpTokenAdmin.value = '';
   inpLabel.focus();
+  ghRenderList();
+}
+
+// FITUR (2026-09): entri lama (sebelum fitur Sesi Ujian Aktif) belum punya
+// tokenAdmin -- diedit lewat prompt() sederhana di sini, bukan form
+// terpisah, supaya tidak menambah kerumitan UI untuk aksi yang jarang
+// dipakai (isi sekali saja per ujian).
+function ghEditTokenAdminEntri(idx) {
+  let skrg = ghEntri[idx].tokenAdmin || '';
+  let baru = prompt('Token Admin untuk "' + ghEntri[idx].label + '" (reset_token_pel ujian ini -- dipakai untuk Sesi Ujian Aktif):', skrg);
+  if (baru === null) return; // batal
+  ghEntri[idx].tokenAdmin = baru.trim();
+  ghSimpanEntri();
   ghRenderList();
 }
 
@@ -919,7 +990,9 @@ function ghRenderList() {
       <div class="gh-item-info">
         <div class="gh-item-label">${ghEsc(x.label)}</div>
         <div class="gh-item-url">${ghEsc(x.url)}</div>
+        <div style="font-size:11px;margin-top:2px;${x.tokenAdmin ? 'color:var(--blue-main);' : 'color:var(--red);'}">${x.tokenAdmin ? '🔑 Token admin diatur' : '⚠️ Token admin belum diatur (perlu untuk Sesi Ujian Aktif)'}</div>
       </div>
+      <button class="gh-btn gh-btn-ghost" onclick="ghEditTokenAdminEntri(${i})" title="Atur/ubah Token Admin">🔑</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
     </div>
   `).join('');
@@ -992,6 +1065,230 @@ function ghSalinFallback() {
     ghToast(ok ? 'Link disalin!' : 'Gagal menyalin otomatis -- salin manual dari kolom di atas (sudah ter-blok).');
   } catch (e) {
     ghToast('Gagal menyalin otomatis -- salin manual dari kolom di atas (sudah ter-blok).');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SESI UJIAN AKTIF (2026-09)
+//  Alur: (1) guru atur ID Premium sekali di server Lisensi pusat,
+//  (2) guru pilih ujian (checkbox di atas) + jadwalkan waktu, guru-hub
+//  mengirim token sementara ke TIAP backend sekolah yang dipilih
+//  (action tambahSesiToken di CBTKD_MasterLib.js), lalu mendaftarkan
+//  METADATA-nya saja (bukan token) ke server Lisensi pusat supaya siswa
+//  bisa menemukannya lewat ID Premium. Autentikasi ke server pusat pakai
+//  {email, kunciGuru} (bukan idToken Google) karena idToken cuma hidup
+//  ~1 jam sedangkan sesi login Guru Hub tersimpan sampai 24 jam -- lihat
+//  penjelasan lengkap di Lisensi_GuruHub.gs.
+// ═══════════════════════════════════════════════
+
+function ghMuatSesiDibuatLokal() {
+  try { return JSON.parse(localStorage.getItem(GH_KEY_SESI_DIBUAT)) || []; } catch (e) { return []; }
+}
+function ghSimpanSesiDibuatLokal(list) {
+  try { localStorage.setItem(GH_KEY_SESI_DIBUAT, JSON.stringify(list)); } catch (e) {}
+}
+
+async function ghSimpanKodePremium() {
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { ghToast('Sesi login bermasalah -- coba logout & login ulang.'); return; }
+  let inp = document.getElementById('gh-inp-kodepremium');
+  let statusEl = document.getElementById('gh-kodepremium-status');
+  let kode = inp.value.trim();
+  if (!kode) { ghToast('Isi ID Premium dulu.'); return; }
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = '🔄 Menyimpan...';
+  try {
+    let resp = await fetch(GH_URL_LISENSI, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'setKodePremium', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, kodePremium: kode })
+    });
+    let hasil = await resp.json();
+    if (hasil.status === 'ok') {
+      ghProfilAktif.kodePremium = hasil.kodePremium;
+      localStorage.setItem(GH_KEY_SESI_LISENSI, JSON.stringify(ghProfilAktif));
+      statusEl.className = 'gh-status-msg ok';
+      statusEl.textContent = '✅ ID Premium tersimpan: "' + hasil.kodePremium + '" -- ini yang diketik siswa.';
+    } else {
+      statusEl.className = 'gh-status-msg err';
+      statusEl.textContent = '❌ ' + (hasil.msg || 'Gagal menyimpan.');
+    }
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Gagal terhubung ke server Lisensi: ' + e.message;
+  }
+}
+
+async function ghBuatSesiAktif() {
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { ghToast('Sesi login bermasalah -- coba logout & login ulang.'); return; }
+  let statusEl = document.getElementById('gh-sesi-buat-status');
+  let hasilWrap = document.getElementById('gh-sesi-hasil-wrap');
+  hasilWrap.style.display = 'none';
+
+  if (!ghProfilAktif.kodePremium) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Atur dulu ID Premium Anda di atas sebelum membuat sesi.';
+    return;
+  }
+  let terpilih = ghEntri.filter(x => x.centang !== false);
+  if (!terpilih.length) { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Centang minimal 1 ujian dulu (di daftar atas).'; return; }
+  let tanpaToken = terpilih.filter(x => !x.tokenAdmin);
+  if (tanpaToken.length) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Token Admin belum diatur untuk: ' + tanpaToken.map(x => x.label).join(', ') + '. Klik 🔑 di sampingnya dulu.';
+    return;
+  }
+  let tanggal = document.getElementById('gh-inp-sesi-tanggal').value;
+  let jam = document.getElementById('gh-inp-sesi-jam').value;
+  let durasi = parseInt(document.getElementById('gh-inp-sesi-durasi').value) || 0;
+  if (!tanggal || !jam || durasi < 1) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Isi tanggal, jam mulai, dan durasi (menit) dulu.';
+    return;
+  }
+  let mulai = new Date(tanggal + 'T' + jam + ':00');
+  let selesai = new Date(mulai.getTime() + durasi * 60000);
+  if (isNaN(mulai.getTime())) { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Tanggal/jam tidak valid.'; return; }
+
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = '🔄 Membuat token sesi di ' + terpilih.length + ' ujian...';
+
+  let berhasil = [], gagal = [];
+  for (let x of terpilih) {
+    try {
+      let resp = await fetch(x.url, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'tambahSesiToken', token_admin: x.tokenAdmin, mulai: mulai.toISOString(), selesai: selesai.toISOString(), durasi_menit: durasi })
+      });
+      let hasil = await resp.json();
+      if (hasil.status === 'ok') berhasil.push({ label: x.label, url: x.url, tokenAdmin: x.tokenAdmin, token: hasil.token });
+      else gagal.push({ label: x.label, msg: hasil.msg || 'Gagal tidak diketahui' });
+    } catch (e) {
+      gagal.push({ label: x.label, msg: 'Gagal terhubung: ' + e.message });
+    }
+  }
+
+  if (!berhasil.length) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ Semua gagal -- ' + gagal.map(g => g.label + ' (' + g.msg + ')').join('; ');
+    return;
+  }
+
+  // Daftarkan METADATA (bukan token) ke server Lisensi pusat supaya siswa
+  // bisa menemukannya lewat ID Premium.
+  let sesiId = null;
+  try {
+    let respPusat = await fetch(GH_URL_LISENSI, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'simpanSesiAktif', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru,
+        sesi: berhasil.map(b => ({ label: b.label, url: b.url, mulai: mulai.toISOString(), selesai: selesai.toISOString() }))
+      })
+    });
+    let hasilPusat = await respPusat.json();
+    if (hasilPusat.status === 'ok') sesiId = hasilPusat.sesiId;
+    else {
+      statusEl.className = 'gh-status-msg err';
+      statusEl.textContent = '⚠️ Token sudah dibuat di sekolah, TAPI gagal didaftarkan ke direktori pusat (siswa tidak akan melihatnya lewat ID Premium): ' + (hasilPusat.msg || '');
+    }
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '⚠️ Token sudah dibuat di sekolah, TAPI gagal terhubung ke direktori pusat: ' + e.message;
+  }
+
+  // Simpan ke cache lokal supaya token bisa dilihat lagi nanti (lihat
+  // catatan GH_KEY_SESI_DIBUAT di atas).
+  if (sesiId) {
+    let listLokal = ghMuatSesiDibuatLokal();
+    listLokal.push({ sesiId, mulai: mulai.toISOString(), selesai: selesai.toISOString(), durasiMenit: durasi, ujian: berhasil });
+    ghSimpanSesiDibuatLokal(listLokal);
+  }
+
+  statusEl.className = 'gh-status-msg ok';
+  statusEl.textContent = '✅ Sesi dibuat untuk ' + berhasil.length + ' ujian' + (gagal.length ? (', ' + gagal.length + ' GAGAL (lihat di bawah)') : '') + '.';
+  hasilWrap.style.display = 'block';
+  hasilWrap.innerHTML =
+    berhasil.map(b => '<div class="gh-dup-item" style="cursor:default;"><span style="flex:1;">' + ghEsc(b.label) + '</span><b style="font-family:monospace;letter-spacing:1px;">' + ghEsc(b.token) + '</b></div>').join('') +
+    (gagal.length ? '<div style="margin-top:8px;color:var(--red);font-size:12.5px;">Gagal: ' + gagal.map(g => ghEsc(g.label) + ' (' + ghEsc(g.msg) + ')').join('; ') + '</div>' : '') +
+    '<p class="gh-hint" style="margin-top:8px;">Bagikan token di atas ke siswa (mis. lewat grup WA) -- token ini HANYA berlaku selama jendela waktu yang baru saja diatur.</p>';
+
+  ghMuatSesiSaya();
+}
+
+async function ghMuatSesiSaya() {
+  let wrap = document.getElementById('gh-sesi-list');
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { wrap.innerHTML = '<div class="gh-empty">Sesi login bermasalah.</div>'; return; }
+  wrap.innerHTML = 'Memuat...';
+  try {
+    let url = GH_URL_LISENSI + '?action=getSesiSaya&email=' + encodeURIComponent(ghProfilAktif.email) + '&kunciGuru=' + encodeURIComponent(ghProfilAktif.kunciGuru);
+    let resp = await fetch(url);
+    let hasil = await resp.json();
+    if (hasil.status !== 'ok') { wrap.innerHTML = '<div class="gh-empty">❌ ' + ghEsc(hasil.msg || 'Gagal memuat.') + '</div>'; return; }
+    if (!hasil.sesi.length) { wrap.innerHTML = '<div class="gh-empty">Belum ada sesi ujian aktif dibuat.</div>'; return; }
+
+    let cacheLokal = ghMuatSesiDibuatLokal();
+    let now = Date.now();
+    wrap.innerHTML = hasil.sesi.map(s => {
+      let mulaiMs = new Date(s.mulai).getTime(), selesaiMs = new Date(s.selesai).getTime();
+      let statusLabel = now < mulaiMs ? '🕒 Akan datang' : (now < selesaiMs ? '🟢 Sedang berlangsung' : '⚪ Selesai');
+      let cocokLokal = cacheLokal.find(c => c.sesiId === s.sesiId);
+      let daftarUjianHtml = s.ujian.map(u => {
+        let tokenInfo = cocokLokal ? (cocokLokal.ujian.find(x => x.url === u.url) || {}).token : null;
+        return '<div style="font-size:12.5px;padding:3px 0;">• ' + ghEsc(u.label) + (tokenInfo ? ' — <b style="font-family:monospace;">' + ghEsc(tokenInfo) + '</b>' : ' <span style="color:var(--gray-soft);">(token tersimpan di perangkat lain)</span>') + '</div>';
+      }).join('');
+      return '<div class="gh-dup-group">' +
+        '<div class="gh-dup-group-head"><span>' + statusLabel + '</span><span style="flex:1;"></span>' +
+        '<button class="gh-btn gh-btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--red);" onclick="ghBatalkanSesi(\'' + s.sesiId + '\')">🗑️ Batalkan</button></div>' +
+        '<div style="font-size:12px;color:var(--gray-mid);margin-bottom:6px;">' + ghUiFormatWaktu(s.mulai) + ' — ' + ghUiFormatWaktu(s.selesai) + '</div>' +
+        daftarUjianHtml +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    wrap.innerHTML = '<div class="gh-empty">❌ Gagal terhubung: ' + ghEsc(e.message) + '</div>';
+  }
+}
+
+function ghUiFormatWaktu(iso) {
+  try {
+    let d = new Date(iso);
+    return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  } catch (e) { return iso; }
+}
+
+async function ghBatalkanSesi(sesiId) {
+  if (!confirm('Batalkan sesi ini? Token sesi akan langsung dicabut (walau belum lewat jam selesainya).')) return;
+  let cacheLokal = ghMuatSesiDibuatLokal();
+  let cocokLokal = cacheLokal.find(c => c.sesiId === sesiId);
+
+  // Cabut token di tiap sekolah yang terlibat -- HANYA bisa dilakukan kalau
+  // token_admin-nya diketahui dari cache LOKAL perangkat ini (server pusat
+  // sengaja tidak menyimpan token_admin, lihat catatan keamanan di atas).
+  if (cocokLokal) {
+    for (let u of cocokLokal.ujian) {
+      try {
+        await fetch(u.url, {
+          method: 'POST', headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'hapusSesiToken', token_admin: u.tokenAdmin, token: u.token })
+        });
+      } catch (e) { /* tetap lanjut batalkan metadata pusat meski satu sekolah gagal dihubungi */ }
+    }
+  } else {
+    ghToast('⚠️ Token dibuat dari perangkat lain -- akan otomatis nonaktif sendiri setelah jam selesai. Metadata sesi tetap dihapus sekarang.');
+  }
+
+  try {
+    let resp = await fetch(GH_URL_LISENSI, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'hapusSesiSaya', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, sesiId })
+    });
+    let hasil = await resp.json();
+    if (hasil.status === 'ok') {
+      ghSimpanSesiDibuatLokal(cacheLokal.filter(c => c.sesiId !== sesiId));
+      ghToast('🗑️ Sesi dibatalkan.');
+      ghMuatSesiSaya();
+    } else {
+      ghToast('❌ Gagal membatalkan: ' + (hasil.msg || ''));
+    }
+  } catch (e) {
+    ghToast('❌ Gagal terhubung: ' + e.message);
   }
 }
 
@@ -3661,6 +3958,11 @@ function ghUiGotoPage(nama) {
     if (nav) nav.classList.toggle('active', p === nama);
   });
   if (nama === 'dashboard') ghUiUpdateDashboardStats();
+  if (nama === 'linkujian') {
+    let inpKP = document.getElementById('gh-inp-kodepremium');
+    if (inpKP) inpKP.value = (ghProfilAktif && ghProfilAktif.kodePremium) || '';
+    ghMuatSesiSaya();
+  }
   ghUiCloseSidebar();
   window.scrollTo(0, 0);
 }
@@ -3675,6 +3977,7 @@ function ghUiCloseSidebar() {
 }
 
 function ghUiTampilkanApp(profil) {
+  ghProfilAktif = profil;
   document.getElementById('gh-screen-login').style.display = 'none';
   document.getElementById('gh-screen-app').style.display = '';
   let nama = (profil.nama || '').trim() || profil.email || 'Guru';
@@ -3709,7 +4012,7 @@ async function ghProsesLoginGoogle(response) {
       document.getElementById('gh-btn-login-coba-lagi').style.display = 'block';
       return;
     }
-    let profil = { email: hasil.email, nama: hasil.nama, sekolah: hasil.sekolah, diverifikasiPada: Date.now() };
+    let profil = { email: hasil.email, nama: hasil.nama, sekolah: hasil.sekolah, kodePremium: hasil.kodePremium || '', kunciGuru: hasil.kunciGuru || '', diverifikasiPada: Date.now() };
     localStorage.setItem(GH_KEY_SESI_LISENSI, JSON.stringify(profil));
     statusEl.textContent = '';
     ghUiTampilkanApp(profil);
