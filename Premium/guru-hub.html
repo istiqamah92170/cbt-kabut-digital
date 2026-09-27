@@ -582,6 +582,14 @@
       <button class="gh-btn gh-btn-ghost" id="gh-btn-hapus-sekolah" onclick="ghHapusSekolahAktif()" title="Hapus soal ini dari daftar" style="display:none;">✕</button>
     </div>
 
+    <!-- FITUR (2026-09): toggle buka/tutup pembahasan untuk ujian yang
+         sedang dipilih -- terhubung ke field buka_pembahasan di sheet
+         Konfigurasi sekolah itu (lihat setBukaPembahasan/getBukaPembahasan
+         di CBTKD_MasterLib.js). Label & status tombol selalu mengikuti
+         nilai TERBARU dari server (bukan diasumsikan), supaya tidak
+         menampilkan status yang salah kalau ada perubahan dari tempat lain. -->
+    <button class="gh-btn gh-btn-outline" id="gh-btn-toggle-pembahasan" onclick="ghToggleBukaPembahasan()" style="width:100%;margin-top:8px;display:none;" disabled>📖 Memuat status pembahasan...</button>
+
     <div id="gh-form-sekolah" style="display:none;">
       <p class="gh-hint" style="margin-top:0;">ℹ️ Nama diambil <b>otomatis</b> dari judul di Konfigurasi ujian itu sendiri — tidak perlu diketik manual.</p>
       <div class="gh-fg">
@@ -782,6 +790,7 @@
   <div class="gh-modal-klasifikasi-box" style="max-width:720px;">
     <div class="gh-modal-klasifikasi-head">
       <span>🧬 Soal Duplikat / Mirip</span>
+      <button class="gh-btn gh-btn-ghost" style="margin-right:8px;font-size:12px;" onclick="ghLihatDikecualikan()">🚫 Lihat/reset dikecualikan</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghTutupDuplikat()">✕ Tutup</button>
     </div>
     <div class="gh-status-msg" id="gh-duplikat-status"></div>
@@ -794,6 +803,7 @@
   <div class="gh-modal-klasifikasi-box" style="max-width:940px;">
     <div class="gh-modal-klasifikasi-head">
       <span id="gh-modal-banding-judul">⚖️ Bandingkan Soal</span>
+      <button class="gh-btn gh-btn-outline" style="margin-right:8px;" onclick="ghKecualikanKelompokAktif()">🚫 Bukan Duplikat (Kecualikan)</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghTutupBanding()">✕ Tutup</button>
     </div>
     <div id="gh-banding-konten" class="gh-banding-grid"></div>
@@ -1083,6 +1093,7 @@ function ghPilihSekolah(idx) {
     ghSekolahAktif = null;
     document.getElementById('gh-esai-area').style.display = 'none';
     document.getElementById('gh-btn-hapus-sekolah').style.display = 'none';
+    document.getElementById('gh-btn-toggle-pembahasan').style.display = 'none';
     return;
   }
   ghSekolahIdxAktif = parseInt(idx);
@@ -1092,6 +1103,67 @@ function ghPilihSekolah(idx) {
   document.getElementById('gh-btn-hapus-sekolah').style.display = 'inline-flex';
   ghMuatEsai(0);
   ghCekAnalisisTersimpan();
+  ghCekBukaPembahasan();
+}
+
+// FITUR (2026-09): toggle buka/tutup pembahasan -- baca status TERBARU
+// dari server setiap kali soal dipilih (jangan diasumsikan dari state lokal
+// yang mungkin sudah basi), lalu render label tombol sesuai status itu.
+async function ghCekBukaPembahasan() {
+  if (!ghSekolahAktif) return;
+  let btn = document.getElementById('gh-btn-toggle-pembahasan');
+  btn.style.display = 'block';
+  btn.disabled = true;
+  btn.textContent = '📖 Memuat status pembahasan...';
+  delete btn.dataset.status;
+  try {
+    let url = ghSekolahAktif.urlGas + '?action=getBukaPembahasan&token_admin=' + encodeURIComponent(ghSekolahAktif.tokenAdmin);
+    let resp = await fetch(url);
+    let hasil = await resp.json();
+    if (hasil && hasil.status === 'ok') {
+      ghRenderTombolPembahasan(hasil.buka_pembahasan === 'ya');
+    } else {
+      btn.textContent = '📖 Pembahasan: gagal memuat status (' + (hasil && hasil.msg ? hasil.msg : 'error') + ')';
+    }
+  } catch (e) {
+    btn.textContent = '📖 Pembahasan: gagal memuat status (cek koneksi)';
+  }
+}
+function ghRenderTombolPembahasan(terbuka) {
+  let btn = document.getElementById('gh-btn-toggle-pembahasan');
+  btn.disabled = false;
+  btn.dataset.status = terbuka ? 'ya' : 'tidak';
+  btn.textContent = terbuka ? '📖 Pembahasan: Terbuka (klik untuk tutup)' : '📕 Pembahasan: Tertutup (klik untuk buka)';
+}
+async function ghToggleBukaPembahasan() {
+  if (!ghSekolahAktif) return;
+  let btn = document.getElementById('gh-btn-toggle-pembahasan');
+  if (!btn.dataset.status) return; // status belum berhasil dimuat -- jangan tebak
+  let nilaiBaru = btn.dataset.status === 'ya' ? 'tidak' : 'ya';
+  if (!confirm((nilaiBaru === 'ya' ? 'MEMBUKA' : 'MENUTUP') + ' pembahasan untuk SEMUA peserta ujian ini?')) return;
+  let teksAsli = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Menyimpan...';
+  try {
+    let resp = await fetch(ghSekolahAktif.urlGas, {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'setBukaPembahasan', token_admin: ghSekolahAktif.tokenAdmin, nilai: nilaiBaru })
+    });
+    let hasil = await resp.json();
+    if (hasil && hasil.status === 'ok') {
+      ghRenderTombolPembahasan(hasil.buka_pembahasan === 'ya');
+      ghToast(nilaiBaru === 'ya' ? '📖 Pembahasan dibuka untuk peserta.' : '📕 Pembahasan ditutup.');
+    } else {
+      btn.textContent = teksAsli;
+      btn.disabled = false;
+      ghToast('❌ Gagal: ' + (hasil && hasil.msg ? hasil.msg : 'Error tidak diketahui'));
+    }
+  } catch (e) {
+    btn.textContent = teksAsli;
+    btn.disabled = false;
+    ghToast('❌ Gagal terhubung: ' + e.message);
+  }
 }
 
 // FITUR (2026-09): begitu soal dipilih, langsung cek apakah analisis
@@ -1136,6 +1208,7 @@ function ghHapusSekolahAktif() {
   ghSekolahAktif = null; ghSekolahIdxAktif = null;
   document.getElementById('gh-esai-area').style.display = 'none';
   document.getElementById('gh-btn-hapus-sekolah').style.display = 'none';
+  document.getElementById('gh-btn-toggle-pembahasan').style.display = 'none';
   ghRenderSekolah();
   ghToast('Soal dihapus dari daftar.');
 }
@@ -1315,9 +1388,14 @@ function ghRenderAnalisis(d) {
   html += '<div class="gh-an-box"><div class="gh-an-num">' + d.tidak_tuntas + '</div><div class="gh-an-lbl">Belum Tuntas</div></div>';
   html += '</div>';
 
+  // PERUBAHAN (2026-09): kolom "Benar" diganti "Poin PG", ditambah "Durasi".
+  // Field poin_pg BARU (lihat CBTKD_MasterLib.js sidebarMulaiAnalisis) --
+  // analisis LAMA yang sudah tersimpan di cache (_analisis_cache) sebelum
+  // perubahan ini TIDAK punya field ini (undefined), jadi ditampilkan "-"
+  // supaya tidak muncul NaN/undefined. Ini konsekuensi wajar, bukan bug.
   html += '<div class="gh-an-sect"><h4>Ranking Peserta</h4><div class="gh-an-scroll"><table class="gh-an-table">' +
-    '<thead><tr><th>#</th><th>Nama</th><th>Nilai</th><th>Benar</th><th>Esai</th></tr></thead><tbody>' +
-    (d.ranking || []).map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + ghEsc(r.nama) + '</td><td>' + r.nilai + '</td><td>' + r.benar + '</td><td>' + r.esai_poin + '</td></tr>').join('') +
+    '<thead><tr><th>#</th><th>Nama</th><th>Nilai</th><th>Poin PG</th><th>Poin Esai</th><th>Durasi</th></tr></thead><tbody>' +
+    (d.ranking || []).map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + ghEsc(r.nama) + '</td><td>' + r.nilai + '</td><td>' + (r.poin_pg !== undefined && r.poin_pg !== null ? r.poin_pg : '-') + '</td><td>' + r.esai_poin + '</td><td>' + (r.durasi !== undefined && r.durasi !== null ? r.durasi : '-') + '</td></tr>').join('') +
     '</tbody></table></div></div>';
 
   if (d.soal_stats && d.soal_stats.length) {
@@ -2656,6 +2734,29 @@ function ghDeteksiMiripDalamStaging(staging, ambang) {
 //    mengerjakan" karena aplikasi ini tidak punya event untuk itu). ──
 function ghSoalKey(r) { return (r.Sumber || '') + '__' + (r.No_Asal || ''); }
 function ghKeyTerpakai() { return 'guruhub_soal_terpakai_' + (ghBankSoalId || 'default'); }
+
+// ── Pengecualian duplikat: guru bisa menandai satu kelompok sebagai
+//    "bukan duplikat" secara permanen (per Bank Soal), supaya tidak terus
+//    muncul lagi tiap kali Cari Duplikat dijalankan (§30). Disimpan sebagai
+//    pasangan ghSoalKey(a)+'|'+ghSoalKey(b) -- SELURUH kombinasi anggota
+//    kelompok yang sedang dibandingkan saat tombol diklik, bukan per-pasangan
+//    manual, karena guru menilai satu kelompok sekaligus. Key kedua sisi
+//    diurutkan dulu supaya satu entri cukup untuk lookup dua arah. ──
+function ghKeyDikecualikan() { return 'guruhub_dup_dikecualikan_' + (ghBankSoalId || 'default'); }
+function ghMuatDikecualikan() {
+  try { return new Set(JSON.parse(localStorage.getItem(ghKeyDikecualikan()) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function ghSimpanDikecualikan(set) { localStorage.setItem(ghKeyDikecualikan(), JSON.stringify([...set])); }
+function ghPasanganKey(a, b) { let ka = ghSoalKey(a), kb = ghSoalKey(b); return ka < kb ? (ka + '|' + kb) : (kb + '|' + ka); }
+function ghPasanganDikecualikan(set, a, b) { return set.has(ghPasanganKey(a, b)); }
+function ghKecualikanKelompok(anggota) {
+  let set = ghMuatDikecualikan();
+  for (let i = 0; i < anggota.length; i++) {
+    for (let j = i + 1; j < anggota.length; j++) set.add(ghPasanganKey(anggota[i], anggota[j]));
+  }
+  ghSimpanDikecualikan(set);
+}
 function ghMuatSoalTerpakai() {
   try { return new Set(JSON.parse(localStorage.getItem(ghKeyTerpakai()) || '[]')); }
   catch (e) { return new Set(); }
@@ -2920,6 +3021,7 @@ function ghCariDuplikatBank() {
     let k = (r.Tipe || '').toLowerCase();
     (grup[k] = grup[k] || []).push(r);
   });
+  let dikecualikan = ghMuatDikecualikan();
   let klaster = [];
   Object.values(grup).forEach(daftar => {
     if (daftar.length < 2) return;
@@ -2936,6 +3038,10 @@ function ghCariDuplikatBank() {
         // duplikat -- lewati tanpa hitung Jaccard (jauh lebih cepat untuk
         // kelompok besar sekarang bahwa Mapel/Kelas tidak lagi memecahnya).
         if (panjangI && panjangJ && (Math.min(panjangI, panjangJ) / Math.max(panjangI, panjangJ)) < 0.5) continue;
+        // FITUR (2026-09): pasangan yang sudah pernah ditandai "Bukan
+        // Duplikat" oleh guru dilewati -- tidak digabung jadi klaster lagi,
+        // meski skornya masih di atas ambang (lihat ghKecualikanKelompok).
+        if (ghPasanganDikecualikan(dikecualikan, daftar[i], daftar[j])) continue;
         let skor = ghJaccardKataSoal(daftar[i].Pertanyaan, daftar[j].Pertanyaan);
         if (skor >= 0.7) { gabung(i, j); skorPasangan[i + '-' + j] = skor; }
       }
@@ -2977,6 +3083,42 @@ async function ghMulaiCariDuplikat() {
   ghRenderHasilDuplikat();
 }
 function ghTutupDuplikat() { document.getElementById('gh-modal-duplikat').style.display = 'none'; }
+
+// FITUR (2026-09): guru yang tidak sengaja klik "Kecualikan" (atau berubah
+// pikiran) perlu cara untuk melihat & membatalkan pengecualian -- daftar ini
+// dicocokkan balik ke Bank Soal saat ini untuk ditampilkan sebagai teks soal
+// (bukan cuma key mentah), tapi tetap berfungsi walau soalnya sudah dihapus
+// (fallback tampilkan key-nya).
+function ghLihatDikecualikan() {
+  let set = ghMuatDikecualikan();
+  let statusEl = document.getElementById('gh-duplikat-status');
+  let el = document.getElementById('gh-duplikat-hasil');
+  statusEl.className = 'gh-status-msg';
+  let tombolKembali = '<button class="gh-btn gh-btn-outline" style="margin-bottom:10px;" onclick="ghRenderHasilDuplikat()">← Kembali ke hasil pemindaian</button>';
+  if (!set.size) {
+    statusEl.textContent = 'Belum ada pasangan soal yang ditandai bukan duplikat.';
+    el.innerHTML = tombolKembali;
+    return;
+  }
+  statusEl.textContent = '🚫 ' + set.size + ' pasangan ditandai bukan duplikat (tidak akan terdeteksi lagi di pemindaian).';
+  let cariSoal = (key) => (ghBankSoalData || []).find(r => ghSoalKey(r) === key);
+  el.innerHTML = tombolKembali + [...set].map(pasangan => {
+    let [ka, kb] = pasangan.split('|');
+    let ra = cariSoal(ka), rb = cariSoal(kb);
+    let labelA = ra ? ghEsc((ra.Pertanyaan || '').slice(0, 55)) + '…' : ghEsc(ka) + ' (soal sudah dihapus)';
+    let labelB = rb ? ghEsc((rb.Pertanyaan || '').slice(0, 55)) + '…' : ghEsc(kb) + ' (soal sudah dihapus)';
+    return '<div class="gh-dup-item" style="cursor:default;">' +
+      '<span style="flex:1;">' + labelA + '<br><span style="color:var(--gray-soft);">⇄</span> ' + labelB + '</span>' +
+      '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="ghBatalkanPengecualian(\'' + pasangan.replace(/'/g, "\\'") + '\')">↩️ Batalkan</button>' +
+    '</div>';
+  }).join('');
+}
+function ghBatalkanPengecualian(pasangan) {
+  let set = ghMuatDikecualikan();
+  set.delete(pasangan);
+  ghSimpanDikecualikan(set);
+  ghLihatDikecualikan();
+}
 
 function ghRenderHasilDuplikat() {
   let el = document.getElementById('gh-duplikat-hasil');
@@ -3022,14 +3164,31 @@ async function ghHapusDicentangDiGrup(gi) {
 // jadi tetap tersisa & masih terdeteksi mirip sesudahnya (tampak seperti
 // "duplikat yang sudah dihapus kok masih ada"). Sekarang SEMUA anggota
 // kelompok selalu ditampilkan sekaligus, supaya tidak ada yang terlewat.
+let ghGrupBandingAktif = -1;
 function ghMulaiBandingkan(gi) {
   let k = ghKlasterDuplikatAktif[gi];
   if (!k || k.anggota.length < 2) { ghToast('Kelompok ini sudah tidak punya cukup soal untuk dibandingkan.'); return; }
+  ghGrupBandingAktif = gi;
   document.getElementById('gh-banding-konten').innerHTML = k.anggota.map(r => ghBangunKolomBanding(r, gi)).join('');
   document.getElementById('gh-modal-banding-judul').textContent = '⚖️ Bandingkan ' + k.anggota.length + ' Soal Mirip';
   document.getElementById('gh-modal-banding').style.display = 'flex';
 }
 function ghTutupBanding() { document.getElementById('gh-modal-banding').style.display = 'none'; }
+
+// FITUR (2026-09): "Bukan Duplikat" -- guru menandai SELURUH kelompok yang
+// sedang dibandingkan sebagai bukan duplikat (bukan per-pasangan, lebih
+// sesuai kebutuhan nyata). Ditandai permanen di localStorage (per Bank
+// Soal) supaya kelompok ini tidak terdeteksi lagi di pemindaian berikutnya,
+// lalu modal ditutup & pemindaian diulang supaya kelompok langsung hilang.
+function ghKecualikanKelompokAktif() {
+  let k = ghKlasterDuplikatAktif[ghGrupBandingAktif];
+  if (!k || k.anggota.length < 2) return;
+  if (!confirm('Tandai ' + k.anggota.length + ' soal ini sebagai BUKAN duplikat? Kelompok ini tidak akan terdeteksi lagi di pemindaian berikutnya (bisa direset lewat "Lihat/reset daftar dikecualikan").')) return;
+  ghKecualikanKelompok(k.anggota);
+  ghTutupBanding();
+  ghToast('🚫 Kelompok ditandai bukan duplikat -- tidak akan muncul lagi.');
+  ghMulaiCariDuplikat();
+}
 
 function ghBangunKolomBanding(r, gi) {
   let opsiKeys = [['A', r.Opsi_A], ['B', r.Opsi_B], ['C', r.Opsi_C], ['D', r.Opsi_D]];
