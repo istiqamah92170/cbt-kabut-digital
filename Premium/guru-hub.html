@@ -57,6 +57,29 @@
   .gh-fg input:focus, .gh-fg select:focus { outline:none; border-color:var(--blue-main); }
   .gh-row { display:flex; gap:10px; align-items:flex-end; }
   .gh-row .gh-fg { flex:1; margin-bottom:0; }
+  /* PERBAIKAN (2026-09): semua kolom isian (termasuk date/time/number yang
+     dulu tidak ikut distyle & bisa melebihi kartu) seragam, tidak pernah
+     keluar batas: box-sizing + min-width:0 di grid/flex. */
+  .gh-fg { min-width:0; }
+  .gh-fg input[type=date], .gh-fg input[type=time], .gh-fg input[type=number] {
+    width:100%; box-sizing:border-box; padding:10px 12px; border:1.5px solid var(--gray-line);
+    border-radius:var(--r-md); font-size:14px; color:var(--gray-dark); background:var(--white);
+    font-family:inherit; min-height:42px; min-width:0;
+  }
+  .gh-fg input[type=text], .gh-fg input[type=url], .gh-fg input[type=password], .gh-fg select { box-sizing:border-box; }
+  .gh-fg input:focus { outline:none; border-color:var(--blue-main); }
+  .gh-form-grid { display:grid; gap:12px; margin-bottom:12px; }
+  .gh-form-grid .gh-fg { margin-bottom:0; }
+  .gh-form-grid.g2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .gh-form-grid.g3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .gh-form-grid .gh-span { grid-column:1 / -1; }
+  .gh-btn-block { width:100%; padding:12px 16px; }
+  .gh-section-sep { border:none; border-top:1px solid var(--gray-line); margin:24px 0 20px; }
+  @media (max-width:560px) {
+    .gh-form-grid.g2 { grid-template-columns:minmax(0,1fr); }
+    .gh-form-grid.g3 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .gh-form-grid.g3 > .gh-fg:first-child { grid-column:1 / -1; }
+  }
   .gh-btn {
     display:inline-flex; align-items:center; justify-content:center; gap:6px;
     padding:10px 16px; border:none; border-radius:var(--r-md); font-size:13.5px; font-weight:700;
@@ -79,7 +102,7 @@
   .gh-empty { text-align:center; color:var(--gray-soft); font-size:13px; padding:20px 10px; }
   .gh-out-wrap { margin-top:16px; }
   .gh-out { display:flex; gap:8px; }
-  .gh-out input { flex:1; background:var(--gray-bg); }
+  .gh-out input { flex:1; min-width:0; background:var(--gray-bg); }
   .gh-hint { font-size:11.5px; color:var(--gray-soft); margin-top:6px; }
   .gh-toast {
     position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
@@ -515,7 +538,7 @@
         <div class="gh-dash-quick">
           <div class="gh-quick-card" onclick="ghUiGotoPage('linkujian')">
             <div class="gh-quick-ico">🔗</div>
-            <div><div class="gh-quick-title">Link Ujian</div><div class="gh-quick-sub">Gabung beberapa link jadi satu</div></div>
+            <div><div class="gh-quick-title">Link Ujian</div><div class="gh-quick-sub">Daftar ujian &amp; jadwalkan sesi</div></div>
           </div>
           <div class="gh-quick-card" onclick="ghUiGotoPage('esai')">
             <div class="gh-quick-ico">📝</div>
@@ -532,9 +555,9 @@
       <div class="gh-page" id="gh-page-linkujian" style="display:none;">
   <div class="gh-card">
     <h2>Link Ujian untuk Siswa</h2>
-    <p class="gh-sub">Kumpulkan beberapa link/kode ujian, lalu buat SATU link gabungan — siswa tinggal memilih dari daftar, tidak perlu ketik atau tempel link satu-satu.</p>
+    <p class="gh-sub">Daftarkan ujian Anda di sini, lalu jadwalkan lewat <b>Sesi Ujian Aktif</b> di bawah — siswa cukup mengetik ID Premium Anda di Portal untuk menemukan ujian yang sedang/akan berlangsung.</p>
 
-    <div class="gh-row">
+    <div class="gh-form-grid g2">
       <div class="gh-fg">
         <label>Label Ujian</label>
         <input type="text" id="gh-inp-label" placeholder="Contoh: Matematika VII">
@@ -543,53 +566,36 @@
         <label>Link / Kode CBT</label>
         <input type="text" id="gh-inp-url" placeholder="URL GAS atau alamat server offline">
       </div>
-      <div class="gh-fg">
-        <label>Token Admin <span style="font-weight:400;color:var(--gray-soft);">(opsional -- isi kalau mau dipakai untuk Sesi Ujian Aktif)</span></label>
+      <div class="gh-fg gh-span">
+        <label>Token Admin</label>
         <input type="text" id="gh-inp-tokenadmin" placeholder="reset_token_pel ujian ini">
+        <div class="gh-hint">Opsional — wajib diisi kalau ujian ini mau dijadwalkan di Sesi Ujian Aktif.</div>
       </div>
-      <button class="gh-btn gh-btn-primary" onclick="ghTambahEntri()">+ Tambah</button>
+      <button class="gh-btn gh-btn-primary gh-btn-block gh-span" onclick="ghTambahEntri()">+ Tambah Ujian</button>
     </div>
 
     <div class="gh-list" id="gh-list"></div>
 
-    <div class="gh-out-wrap" id="gh-out-wrap" style="display:none;">
-      <div class="gh-fg">
-        <label>Alamat Portal (untuk offline, ganti dengan alamat server, mis. http://192.168.x.x:8080/)</label>
-        <input type="text" id="gh-inp-basePortal" value="https://cbtkabutdigital.com/app/index.html">
-      </div>
-      <button class="gh-btn gh-btn-outline" onclick="ghBuatLinkGabungan()" style="width:100%;margin-top:4px;">🔗 Buat Link Gabungan</button>
-
-      <div class="gh-out-wrap" id="gh-hasil-wrap" style="display:none;">
-        <div class="gh-fg" style="margin-top:14px;">
-          <label>Link Gabungan — bagikan ini ke siswa</label>
-          <div class="gh-out">
-            <input type="text" id="gh-hasil-link" readonly>
-            <button class="gh-btn gh-btn-primary" onclick="ghSalinLink()">Salin</button>
-          </div>
-        </div>
-        <p class="gh-hint">Siswa yang membuka link ini akan melihat dropdown pilihan ujian di Portal — tidak perlu ketik apa pun. Link lama (tanpa daftar ini) tetap berfungsi seperti biasa.</p>
-      </div>
-    </div>
-
-    <hr style="border:none;border-top:1px solid var(--gray-line);margin:22px 0;">
+    <hr class="gh-section-sep">
 
     <!-- FITUR (2026-09): Sesi Ujian Aktif -- lihat catatan lengkap di
          ghBuatSesiAktif()/ghMuatSesiSaya(). Guru bikin jadwal token
          sementara untuk ujian yang dicentang di atas, siswa cukup cari
          pakai ID Premium (bukan link satu-satu). -->
     <h2 style="margin-bottom:2px;">🕒 Sesi Ujian Aktif</h2>
-    <p class="gh-sub">Jadwalkan ujian yang dicentang di atas untuk jendela waktu tertentu — token otomatis dibuat khusus untuk sesi ini &amp; kembali ke token default sekolah begitu waktunya habis. Siswa menemukan sesi ini lewat ID Premium, bukan link satu-satu.</p>
+    <p class="gh-sub">Jadwalkan ujian yang dicentang di atas untuk jendela waktu tertentu — token otomatis dibuat khusus untuk sesi ini &amp; kembali ke token default begitu waktunya habis. Siswa yang masuk terlambat hanya mendapat sisa waktu sesi.</p>
 
-    <div class="gh-fg" style="max-width:480px;">
-      <label>ID Premium Anda <span style="font-weight:400;color:var(--gray-soft);">(nama+gelar yang diketik siswa, bebas dimodifikasi)</span></label>
+    <div class="gh-fg">
+      <label>ID Premium Anda</label>
       <div class="gh-out">
-        <input type="text" id="gh-inp-kodepremium" placeholder="Contoh: Anto Gajlek, S.Pd.">
+        <input type="text" id="gh-inp-kodepremium" placeholder="Contoh: Anto Gajlek, S.Pd." style="min-width:0;">
         <button class="gh-btn gh-btn-outline" onclick="ghSimpanKodePremium()">Simpan</button>
       </div>
+      <div class="gh-hint">Nama + gelar yang diketik siswa di Portal — bebas Anda modifikasi.</div>
       <div class="gh-status-msg" id="gh-kodepremium-status"></div>
     </div>
 
-    <div class="gh-row" style="margin-top:14px;">
+    <div class="gh-form-grid g3" style="margin-top:14px;">
       <div class="gh-fg">
         <label>Tanggal</label>
         <input type="date" id="gh-inp-sesi-tanggal">
@@ -600,14 +606,14 @@
       </div>
       <div class="gh-fg">
         <label>Durasi (menit)</label>
-        <input type="number" id="gh-inp-sesi-durasi" min="1" value="90">
+        <input type="number" id="gh-inp-sesi-durasi" min="1" value="90" inputmode="numeric">
       </div>
-      <button class="gh-btn gh-btn-primary" onclick="ghBuatSesiAktif()">🕒 Buat Sesi</button>
     </div>
+    <button class="gh-btn gh-btn-primary gh-btn-block" onclick="ghBuatSesiAktif()">🕒 Buat Sesi</button>
     <div class="gh-status-msg" id="gh-sesi-buat-status"></div>
     <div id="gh-sesi-hasil-wrap" style="display:none;margin-top:10px;"></div>
 
-    <h3 style="margin:20px 0 6px;font-size:14px;">Sesi yang Sudah Dibuat</h3>
+    <h3 style="margin:22px 0 8px;font-size:14px;">Sesi yang Sudah Dibuat</h3>
     <div id="gh-sesi-list">Memuat...</div>
   </div>
   </div><!-- /gh-page-linkujian -->
@@ -887,36 +893,6 @@ function ghSimpanEntri() {
   try { localStorage.setItem(GH_KEY_ENTRI, JSON.stringify(ghEntri)); } catch (e) {}
 }
 
-// ═══════════════════════════════════════════════
-//  ENCODE — HARUS SAMA PERSIS dengan _b64urlDecode di Portal
-//  (cbt_v3_8_4_portal_tanpa_wizard.html, fungsi _pInitDaftarUjianDariLink)
-// ═══════════════════════════════════════════════
-function ghB64urlEncode(str) {
-  let bytes = new TextEncoder().encode(str);
-  let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-// FITUR (2026-09): pemadatan link -- kalau beberapa URL berbagi AWALAN yang
-// sama persis (umum terjadi di mode offline: semua diawali
-// "http://<ip>:<port>/" yang sama), awalan itu disimpan SEKALI SAJA di
-// field "p", tiap entri cuma simpan sisanya di "u" (bukan URL penuh
-// berulang-ulang). Key JSON juga dipendekkan (l/u bukan label/url). Kalau
-// tidak ada kesamaan sama sekali, "p" jadi string kosong dan setiap "u"
-// tetap URL penuh -- tidak lebih buruk dari sebelumnya, cuma tidak dapat
-// penghematan tambahan. HARUS disepadankan dengan decoder di Portal
-// (_pInitDaftarUjianDariLink).
-function ghCariAwalanSama(strs) {
-  if (strs.length === 0) return '';
-  let awalan = strs[0];
-  for (let i = 1; i < strs.length && awalan; i++) {
-    let s = strs[i], j = 0;
-    while (j < awalan.length && j < s.length && awalan[j] === s[j]) j++;
-    awalan = awalan.slice(0, j);
-  }
-  return awalan;
-}
-
 function ghEsc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -964,19 +940,14 @@ function ghHapusEntri(idx) {
 
 function ghRenderList() {
   let wrap = document.getElementById('gh-list');
-  let outWrap = document.getElementById('gh-out-wrap');
   if (ghEntri.length === 0) {
     wrap.innerHTML = '<div class="gh-empty">Belum ada ujian ditambahkan.</div>';
-    outWrap.style.display = 'none';
     return;
   }
-  // FITUR (2026-09): checkbox pilih per entri (atas permintaan DIK) --
-  // guru bisa pilih SEBAGIAN entri untuk digabung jadi satu link, atau
-  // cuma 1 entri saja (tetap dalam format ?d= yang sama, dropdown-nya
-  // di Portal cuma berisi 1 pilihan) -- hasilnya konsisten, siswa selalu
-  // pilih dari dropdown apa pun jumlah entrinya. Status centang disimpan
-  // per-entri (field `centang`, default true) supaya tidak reset tiap
-  // render ulang.
+  // Checkbox pilih per entri: menentukan ujian mana yang ikut dijadwalkan
+  // di Sesi Ujian Aktif. Status centang disimpan per-entri (field `centang`,
+  // default true) supaya tidak reset tiap render ulang. (Fitur Link Gabungan
+  // ?d= dihapus 2026-09 -- digantikan ID Premium + Sesi Ujian Aktif.)
   wrap.innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
       '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--blue-main);" onclick="ghPilihSemuaEntri()">Pilih Semua</button>' +
@@ -996,7 +967,6 @@ function ghRenderList() {
       <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
     </div>
   `).join('');
-  outWrap.style.display = 'block';
   ghUpdateHitungEntriCentang();
 }
 
@@ -1017,55 +987,7 @@ function ghUpdateHitungEntriCentang() {
   let el = document.getElementById('gh-hitung-entri-centang');
   if (!el) return;
   let n = ghEntri.filter(x => x.centang !== false).length;
-  el.textContent = n + ' dipilih untuk digabung';
-}
-
-function ghBuatLinkGabungan() {
-  let terpilih = ghEntri.filter(x => x.centang !== false);
-  if (terpilih.length === 0) { ghToast('Centang minimal 1 ujian dulu.'); return; }
-  let basePortal = document.getElementById('gh-inp-basePortal').value.trim();
-  if (!basePortal) { ghToast('Isi alamat Portal dulu.'); return; }
-  let awalan = ghCariAwalanSama(terpilih.map(x => x.url));
-  let payload = {
-    p: awalan,
-    e: terpilih.map(x => ({ l: x.label, u: x.url.slice(awalan.length) }))
-  };
-  let encoded = ghB64urlEncode(JSON.stringify(payload));
-  let pemisah = basePortal.includes('?') ? '&' : '?';
-  let linkGabungan = basePortal + pemisah + 'd=' + encoded;
-  document.getElementById('gh-hasil-link').value = linkGabungan;
-  document.getElementById('gh-hasil-wrap').style.display = 'block';
-}
-
-function ghSalinLink() {
-  let inp = document.getElementById('gh-hasil-link');
-  inp.select();
-  inp.setSelectionRange(0, 99999);
-  // BUG-FIX (2026-09): navigator.clipboard.writeText() itu ASYNC (Promise) --
-  // kalau ditolak (sering terjadi kalau file dibuka langsung dari disk tanpa
-  // HTTPS, atau browser minta izin dulu), penolakannya TIDAK tertangkap oleh
-  // try/catch biasa (itu cuma menangkap error SINKRON). Akibatnya dulu cuma
-  // .select() yang kejadian (teks ke-blok/ter-highlight) tanpa benar-benar
-  // tersalin, dan tidak ada pesan error sama sekali -- kelihatan seperti
-  // "diam saja". Sekarang ditangani lewat .then(sukses, gagal) supaya jalur
-  // gagal SELALU dicoba fallback-nya, bukan cuma diam.
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(inp.value).then(
-      () => ghToast('Link disalin!'),
-      () => ghSalinFallback()
-    );
-  } else {
-    ghSalinFallback();
-  }
-}
-
-function ghSalinFallback() {
-  try {
-    let ok = document.execCommand('copy');
-    ghToast(ok ? 'Link disalin!' : 'Gagal menyalin otomatis -- salin manual dari kolom di atas (sudah ter-blok).');
-  } catch (e) {
-    ghToast('Gagal menyalin otomatis -- salin manual dari kolom di atas (sudah ter-blok).');
-  }
+  el.textContent = n + ' dipilih untuk sesi';
 }
 
 // ═══════════════════════════════════════════════
