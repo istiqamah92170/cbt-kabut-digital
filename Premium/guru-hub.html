@@ -80,6 +80,14 @@
     .gh-form-grid.g3 { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .gh-form-grid.g3 > .gh-fg:first-child { grid-column:1 / -1; }
   }
+  /* FITUR (2026-09): kartu paket Langganan */
+  .gh-paket-card { border:1.5px solid var(--gray-line); border-radius:var(--r-md); padding:16px 14px; text-align:center; display:flex; flex-direction:column; gap:6px; }
+  .gh-paket-card.hemat { border-color:var(--blue-main); background:var(--blue-pale); position:relative; }
+  .gh-paket-card .gh-paket-hemat-badge { position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--blue-main); color:#fff; font-size:10px; font-weight:800; padding:2px 10px; border-radius:999px; white-space:nowrap; }
+  .gh-paket-card .gh-paket-label { font-size:13px; font-weight:700; color:var(--gray-mid); }
+  .gh-paket-card .gh-paket-harga { font-size:20px; font-weight:800; color:var(--heading); }
+  .gh-paket-card .gh-paket-per-bulan { font-size:11px; color:var(--gray-soft); margin-bottom:4px; }
+  @media (max-width:560px) { #gh-langganan-paket-wrap.gh-form-grid.g3 { grid-template-columns:minmax(0,1fr); } }
   .gh-btn {
     display:inline-flex; align-items:center; justify-content:center; gap:6px;
     padding:10px 16px; border:none; border-radius:var(--r-md); font-size:13.5px; font-weight:700;
@@ -491,6 +499,9 @@
       <button class="gh-nav-item" id="gh-nav-banksoal" onclick="ghUiGotoPage('banksoal')">
         <span class="gh-nav-ico">📚</span><span class="gh-nav-lbl">Bank Soal</span>
       </button>
+      <button class="gh-nav-item" id="gh-nav-langganan" onclick="ghUiGotoPage('langganan')">
+        <span class="gh-nav-ico">💳</span><span class="gh-nav-lbl">Langganan</span>
+      </button>
     </nav>
 
     <div class="gh-sb-foot">
@@ -670,6 +681,8 @@
         <button class="gh-btn gh-btn-outline" id="gh-btn-buat-analisis" onclick="ghKonfirmasiAnalisis()" style="width:100%;margin-top:16px;">📊 Buat &amp; Lihat Analisis</button>
         <div class="gh-status-msg" id="gh-analisis-status"></div>
         <div id="gh-analisis-hasil"></div>
+        <button class="gh-btn gh-btn-outline" id="gh-btn-bagikan-analisis" onclick="ghBagikanAnalisisGambar()" style="width:100%;margin-top:10px;display:none;">📸 Bagikan sebagai Gambar</button>
+        <div class="gh-status-msg" id="gh-bagikan-status"></div>
 
         <!-- FITUR (2026-09): overlay buram saat memuat -- sebelumnya
              keterangan "Memuat..." ada di gh-esai-status (paling bawah,
@@ -729,6 +742,22 @@
     </div>
   </div>
   </div><!-- /gh-page-banksoal -->
+
+  <!-- FITUR (2026-09): halaman Langganan -- lihat ghMuatStatusLangganan()/
+       ghBayarPaket() untuk alurnya. -->
+  <div class="gh-page" id="gh-page-langganan" style="display:none;">
+  <div class="gh-card">
+    <h2>Langganan Guru Hub</h2>
+    <p class="gh-sub">Perpanjang langganan Anda kapan saja lewat QRIS, VA, atau GoPay — aktif otomatis begitu pembayaran diterima, tidak perlu konfirmasi manual.</p>
+
+    <div id="gh-langganan-status-box" class="gh-an-box" style="text-align:left;padding:14px 16px;margin-bottom:18px;">Memuat status langganan...</div>
+
+    <div id="gh-langganan-paket-wrap" class="gh-form-grid g3"></div>
+    <div class="gh-status-msg" id="gh-langganan-bayar-status"></div>
+
+    <p class="gh-hint" style="margin-top:16px;">Langganan bisa dibatalkan kapan saja — cukup tidak memperpanjang saat masa aktif berakhir, akses akan berhenti otomatis tanpa tagihan lanjutan.</p>
+  </div>
+  </div><!-- /gh-page-langganan -->
 
     </div><!-- /gh-pagewrap -->
   </div><!-- /gh-main -->
@@ -1102,7 +1131,7 @@ async function ghBuatSesiAktif() {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'simpanSesiAktif', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru,
-        sesi: berhasil.map(b => ({ label: b.label, url: b.url, mulai: mulai.toISOString(), selesai: selesai.toISOString() }))
+        sesi: berhasil.map(b => ({ label: b.label, url: b.url, mulai: mulai.toISOString(), selesai: selesai.toISOString(), token: b.token }))
       })
     });
     let hasilPusat = await respPusat.json();
@@ -1153,8 +1182,11 @@ async function ghMuatSesiSaya() {
       let statusLabel = now < mulaiMs ? '🕒 Akan datang' : (now < selesaiMs ? '🟢 Sedang berlangsung' : '⚪ Selesai');
       let cocokLokal = cacheLokal.find(c => c.sesiId === s.sesiId);
       let daftarUjianHtml = s.ujian.map(u => {
-        let tokenInfo = cocokLokal ? (cocokLokal.ujian.find(x => x.url === u.url) || {}).token : null;
-        return '<div style="font-size:12.5px;padding:3px 0;">• ' + ghEsc(u.label) + (tokenInfo ? ' — <b style="font-family:monospace;">' + ghEsc(tokenInfo) + '</b>' : ' <span style="color:var(--gray-soft);">(token tersimpan di perangkat lain)</span>') + '</div>';
+        // PERBAIKAN (2026-09): token dibaca dari server pusat dulu (berlaku
+        // di perangkat manapun) -- cache lokal cuma fallback untuk sesi lama
+        // yang dibuat sebelum server pusat ikut menyimpan token.
+        let tokenInfo = u.token || (cocokLokal ? (cocokLokal.ujian.find(x => x.url === u.url) || {}).token : null);
+        return '<div style="font-size:12.5px;padding:3px 0;">• ' + ghEsc(u.label) + (tokenInfo ? ' — <b style="font-family:monospace;">' + ghEsc(tokenInfo) + '</b>' : ' <span style="color:var(--gray-soft);">(token lama, tidak tersimpan)</span>') + '</div>';
       }).join('');
       return '<div class="gh-dup-group">' +
         '<div class="gh-dup-group-head"><span>' + statusLabel + '</span><span style="flex:1;"></span>' +
@@ -1215,11 +1247,121 @@ async function ghBatalkanSesi(sesiId) {
 }
 
 // ═══════════════════════════════════════════════
+//  LANGGANAN & PEMBAYARAN MIDTRANS (2026-09)
+// ═══════════════════════════════════════════════
+let _ghSnapPromise = null;
+function _ghMuatSnapJs() {
+  if (window.snap) return Promise.resolve();
+  if (_ghSnapPromise) return _ghSnapPromise;
+  _ghSnapPromise = new Promise((resolve, reject) => {
+    let s = document.createElement('script');
+    s.src = (MIDTRANS_PRODUCTION ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com') + '/snap/snap.js';
+    s.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Gagal memuat modul pembayaran (cek koneksi internet).'));
+    document.head.appendChild(s);
+  });
+  return _ghSnapPromise;
+}
+
+async function ghMuatStatusLangganan() {
+  let box = document.getElementById('gh-langganan-status-box');
+  let wrap = document.getElementById('gh-langganan-paket-wrap');
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { box.textContent = 'Sesi login bermasalah -- coba logout & login ulang.'; return; }
+  box.textContent = 'Memuat status langganan...';
+  try {
+    let url = GH_URL_LISENSI + '?action=cekStatusLangganan&email=' + encodeURIComponent(ghProfilAktif.email) + '&kunciGuru=' + encodeURIComponent(ghProfilAktif.kunciGuru);
+    let resp = await fetch(url);
+    let hasil = await resp.json();
+    if (hasil.status !== 'ok') { box.textContent = '❌ ' + (hasil.msg || 'Gagal memuat status.'); return; }
+
+    if (!hasil.pembayaranAktif) {
+      box.innerHTML = 'Status: <b>' + ghEsc(hasil.statusLangganan || '-') + '</b><br><span style="font-size:12px;color:var(--gray-soft);">Pembayaran online belum diaktifkan -- hubungi CBT Kabut Digital untuk perpanjangan.</span>';
+      wrap.innerHTML = '';
+      return;
+    }
+
+    if (hasil.masaBerlaku) {
+      let habis = hasil.sisaHari !== null && hasil.sisaHari < 0;
+      box.innerHTML = habis
+        ? ('⚠️ Langganan <b>berakhir</b> pada ' + ghEsc(hasil.masaBerlaku) + '. Perpanjang di bawah supaya akses aktif lagi.')
+        : ('✅ Langganan <b>' + ghEsc(hasil.statusLangganan) + '</b> sampai <b>' + ghEsc(hasil.masaBerlaku) + '</b> (' + hasil.sisaHari + ' hari lagi).');
+    } else {
+      box.innerHTML = 'Status: <b>' + ghEsc(hasil.statusLangganan || '-') + '</b><br><span style="font-size:12px;color:var(--gray-soft);">Dikelola manual oleh CBT Kabut Digital.</span>';
+    }
+
+    ghRenderPaketLangganan(hasil.paket || []);
+  } catch (e) {
+    box.textContent = '❌ Gagal terhubung: ' + e.message;
+  }
+}
+
+function ghRenderPaketLangganan(daftarPaket) {
+  let wrap = document.getElementById('gh-langganan-paket-wrap');
+  let hargaBulan = (daftarPaket.find(p => p.key === 'bulan') || {}).harga || 35000;
+  wrap.innerHTML = daftarPaket.map(p => {
+    let bulanSetara = p.key === 'enam_bulan' ? p.harga / 6 : (p.key === 'tahun' ? p.harga / 12 : p.harga);
+    let hemat = p.key !== 'bulan' ? Math.round((1 - bulanSetara / hargaBulan) * 100) : 0;
+    return '<div class="gh-paket-card' + (hemat > 0 ? ' hemat' : '') + '">' +
+      (hemat > 0 ? '<div class="gh-paket-hemat-badge">HEMAT ' + hemat + '%</div>' : '') +
+      '<div class="gh-paket-label">' + ghEsc(p.label) + '</div>' +
+      '<div class="gh-paket-harga">Rp' + p.harga.toLocaleString('id-ID') + '</div>' +
+      (p.key !== 'bulan' ? '<div class="gh-paket-per-bulan">≈ Rp' + Math.round(bulanSetara).toLocaleString('id-ID') + '/bulan</div>' : '<div class="gh-paket-per-bulan">&nbsp;</div>') +
+      '<button class="gh-btn gh-btn-primary" onclick="ghBayarPaket(\'' + p.key + '\')">Bayar</button>' +
+    '</div>';
+  }).join('');
+}
+
+async function ghBayarPaket(paketKey) {
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { ghToast('Sesi login bermasalah -- coba logout & login ulang.'); return; }
+  let statusEl = document.getElementById('gh-langganan-bayar-status');
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = '🔄 Menyiapkan pembayaran...';
+  try {
+    let resp = await fetch(GH_URL_LISENSI, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'buatTagihan', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, paket: paketKey })
+    });
+    let hasil = await resp.json();
+    if (hasil.status !== 'ok') { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ ' + (hasil.msg || 'Gagal membuat tagihan.'); return; }
+
+    await _ghMuatSnapJs();
+    statusEl.textContent = '';
+    window.snap.pay(hasil.snap_token, {
+      onSuccess: () => { statusEl.className = 'gh-status-msg ok'; statusEl.textContent = '✅ Pembayaran diterima, memperbarui status...'; _ghPollingStatusLangganan(); },
+      onPending: () => { statusEl.className = 'gh-status-msg'; statusEl.textContent = '⏳ Menunggu pembayaran Anda selesai (mis. transfer VA) -- status akan diperbarui otomatis begitu diterima.'; _ghPollingStatusLangganan(); },
+      onError: () => { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Pembayaran gagal. Coba lagi atau pilih metode lain.'; },
+      onClose: () => { if (!statusEl.textContent) statusEl.textContent = 'Dibatalkan -- belum ada pembayaran diproses.'; }
+    });
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ ' + e.message;
+  }
+}
+
+// FITUR (2026-09): webhook Midtrans biasanya masuk dalam beberapa detik
+// (QRIS/GoPay nyaris instan), tapi guru sudah menutup popup Snap duluan --
+// cek ulang status beberapa kali supaya halaman ikut ter-update tanpa guru
+// perlu me-refresh manual.
+function _ghPollingStatusLangganan() {
+  let sisaPercobaan = 6;
+  let interval = setInterval(async () => {
+    sisaPercobaan--;
+    await ghMuatStatusLangganan();
+    if (sisaPercobaan <= 0) clearInterval(interval);
+  }, 5000);
+}
+
+// ═══════════════════════════════════════════════
 //  NILAI & KOREKSI ESAI (Fase 6)
 // ═══════════════════════════════════════════════
 const GH_KEY_SEKOLAH = 'guruhub_sekolah_v1';
 let ghSekolah = [];       // [{nama, urlGas, tokenAdmin}, ...]
 let ghSekolahAktif = null;
+// FITUR (2026-09): hasil analisis terakhir disimpan di sini (dipakai
+// ghBagikanAnalisisGambar untuk bikin gambar tanpa perlu minta ulang ke
+// server -- guru sudah lihat datanya di layar, tinggal dijadikan gambar).
+let ghAnalisisDataAktif = null;
 let ghSekolahIdxAktif = null;
 let ghEsaiIdx = 0;
 let ghEsaiData = null;    // respons terakhir dari getEsaiUntukKoreksi
@@ -1595,6 +1737,8 @@ async function ghJalankanAnalisis() {
 }
 
 function ghRenderAnalisis(d) {
+  ghAnalisisDataAktif = d;
+  document.getElementById('gh-btn-bagikan-analisis').style.display = 'block';
   let el = document.getElementById('gh-analisis-hasil');
   let html = '';
 
@@ -1639,6 +1783,142 @@ function ghRenderAnalisis(d) {
   }
 
   el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+//  BAGIKAN ANALISIS SEBAGAI GAMBAR (2026-09)
+// ═══════════════════════════════════════════════
+// Membuat SATU gambar PNG dari hasil analisis (semua bagian KECUALI Analisis
+// Butir Soal, sesuai permintaan) -- dirender di kontainer TERPISAH (bukan
+// #gh-analisis-hasil yang tampil di layar) supaya tabel Ranking Peserta
+// TIDAK dibatasi tinggi/scroll (.gh-an-scroll di layar sengaja dibatasi
+// 280px + overflow-y:auto -- kalau dipakai apa adanya, peserta yang
+// panjang akan terpotong di gambar). html2canvas dimuat sekali saja saat
+// tombol ini pertama diklik (lazy-load, tidak membebani load awal halaman).
+let _ghH2CPromise = null;
+function _ghMuatHtml2Canvas() {
+  if (window.html2canvas) return Promise.resolve();
+  if (_ghH2CPromise) return _ghH2CPromise;
+  _ghH2CPromise = new Promise((resolve, reject) => {
+    let s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Gagal memuat pustaka pembuat gambar (cek koneksi internet).'));
+    document.head.appendChild(s);
+  });
+  return _ghH2CPromise;
+}
+
+function _ghBangunKontenGambar(d) {
+  let judul = (ghSekolahAktif && ghSekolahAktif.nama) ? ghSekolahAktif.nama : 'Hasil Ujian';
+  let tanggal = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  let wrap = document.createElement('div');
+  // Lebar tetap 760px (jelas dibaca di layar HP mana pun setelah di-zoom/
+  // dibagikan, tapi tidak berlebihan) -- TIDAK ada batas tinggi di mana pun
+  // di dalam sini, supaya html2canvas menangkap seluruh isi apa adanya.
+  wrap.style.cssText = 'position:fixed;left:-99999px;top:0;width:760px;background:#ffffff;padding:28px 30px;font-family:Poppins,Arial,sans-serif;color:var(--gray-dark);box-sizing:border-box;';
+
+  let html = '<div style="text-align:center;margin-bottom:18px;">' +
+    '<div style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--blue-main);text-transform:uppercase;">Hasil Analisis Ujian</div>' +
+    '<div style="font-size:20px;font-weight:800;color:var(--heading);margin-top:4px;">' + ghEsc(judul) + '</div>' +
+    '<div style="font-size:11.5px;color:var(--gray-soft);margin-top:2px;">Dibuat ' + tanggal + '</div></div>';
+
+  html += '<div class="gh-an-grid">';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.jumlah_peserta + '</div><div class="gh-an-lbl">Peserta</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.rata_nilai + '</div><div class="gh-an-lbl">Rata-rata</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.tertinggi + '</div><div class="gh-an-lbl">Tertinggi</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.terendah + '</div><div class="gh-an-lbl">Terendah</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.tuntas + '</div><div class="gh-an-lbl">Tuntas (KKM ' + d.kkm + ')</div></div>';
+  html += '<div class="gh-an-box"><div class="gh-an-num">' + d.tidak_tuntas + '</div><div class="gh-an-lbl">Belum Tuntas</div></div>';
+  html += '</div>';
+
+  // Ranking Peserta -- TANPA .gh-an-scroll supaya tidak terpotong walau
+  // daftarnya panjang (poin utama dari permintaan perbaikan ini).
+  html += '<div class="gh-an-sect"><h4>Ranking Peserta</h4><table class="gh-an-table" style="table-layout:fixed;width:100%;">' +
+    '<colgroup><col style="width:8%"><col style="width:40%"><col style="width:13%"><col style="width:13%"><col style="width:13%"><col style="width:13%"></colgroup>' +
+    '<thead><tr><th>#</th><th>Nama</th><th>Nilai</th><th>Poin PG</th><th>Poin Esai</th><th>Durasi</th></tr></thead><tbody>' +
+    (d.ranking || []).map((r, i) => '<tr><td>' + (i + 1) + '</td><td style="word-break:break-word;">' + ghEsc(r.nama) + '</td><td>' + r.nilai + '</td><td>' + (r.poin_pg !== undefined && r.poin_pg !== null ? r.poin_pg : '-') + '</td><td>' + r.esai_poin + '</td><td>' + (r.durasi !== undefined && r.durasi !== null ? r.durasi : '-') + '</td></tr>').join('') +
+    '</tbody></table></div>';
+
+  // Analisis Butir Soal SENGAJA DILEWATI di sini (permintaan eksplisit).
+
+  if (d.pelanggar && d.pelanggar.length) {
+    html += '<div class="gh-an-sect"><h4>Peserta dengan Pelanggaran</h4><table class="gh-an-table" style="table-layout:fixed;width:100%;">' +
+      '<colgroup><col style="width:60%"><col style="width:20%"><col style="width:20%"></colgroup>' +
+      '<thead><tr><th>Nama</th><th>Jml Pelanggaran</th><th>Nilai</th></tr></thead><tbody>' +
+      d.pelanggar.map(p => '<tr class="gh-an-warn-row"><td style="word-break:break-word;">' + ghEsc(p.nama) + '</td><td>' + p.pel + '</td><td>' + p.nilai + '</td></tr>').join('') +
+      '</tbody></table></div>';
+  }
+
+  if (d.anomali && d.anomali.length) {
+    html += '<div class="gh-an-sect"><h4>⚠️ Deteksi Anomali (nilai tinggi, durasi janggal cepat)</h4><table class="gh-an-table" style="table-layout:fixed;width:100%;">' +
+      '<colgroup><col style="width:55%"><col style="width:22%"><col style="width:23%"></colgroup>' +
+      '<thead><tr><th>Nama</th><th>Nilai</th><th>Durasi (menit)</th></tr></thead><tbody>' +
+      d.anomali.map(a => '<tr class="gh-an-warn-row"><td style="word-break:break-word;">' + ghEsc(a.nama) + '</td><td>' + a.nilai + '</td><td>' + a.dur + '</td></tr>').join('') +
+      '</tbody></table></div>';
+  }
+
+  html += '<div style="text-align:center;margin-top:20px;font-size:10.5px;color:var(--gray-soft);">Dibuat dengan Guru Hub — CBT Kabut Digital</div>';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
+async function ghBagikanAnalisisGambar() {
+  if (!ghAnalisisDataAktif) return;
+  let btn = document.getElementById('gh-btn-bagikan-analisis');
+  let statusEl = document.getElementById('gh-bagikan-status');
+  btn.disabled = true;
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = '🔄 Menyiapkan gambar...';
+  let wrap = null;
+  try {
+    await _ghMuatHtml2Canvas();
+    wrap = _ghBangunKontenGambar(ghAnalisisDataAktif);
+    // Beri browser satu frame untuk melayout kontainer sebelum ditangkap.
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    let canvas = await html2canvas(wrap, { backgroundColor: '#ffffff', scale: 2, useCORS: true, windowWidth: 760 });
+    let blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if (!blob) throw new Error('Gagal membuat file gambar.');
+
+    let namaFile = 'analisis-' + ((ghSekolahAktif && ghSekolahAktif.nama) || 'ujian').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40) + '.png';
+    let file = new File([blob], namaFile, { type: 'image/png' });
+
+    // FITUR (2026-09): "ramah Android" -- pakai Web Share API (Level 2) kalau
+    // didukung, supaya guru bisa langsung kirim ke WhatsApp/Telegram dari
+    // sheet share bawaan Android tanpa lewat folder Download dulu. Kalau
+    // tidak didukung (mis. desktop) atau dibatalkan pengguna, turun ke unduh
+    // biasa.
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: namaFile });
+        statusEl.textContent = '✅ Gambar siap dibagikan.';
+      } catch (errShare) {
+        if (errShare.name !== 'AbortError') { // AbortError = guru batal pilih tujuan, bukan error
+          _ghUnduhGambar(blob, namaFile);
+          statusEl.textContent = '✅ Gambar diunduh (berbagi langsung tidak tersedia).';
+        } else {
+          statusEl.textContent = '';
+        }
+      }
+    } else {
+      _ghUnduhGambar(blob, namaFile);
+      statusEl.textContent = '✅ Gambar diunduh ke perangkat.';
+    }
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ ' + e.message;
+  } finally {
+    if (wrap) wrap.remove();
+    btn.disabled = false;
+  }
+}
+function _ghUnduhGambar(blob, namaFile) {
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url; a.download = namaFile;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 // ═══════════════════════════════════════════════
@@ -3826,6 +4106,15 @@ ghRenderSekolah();
 // Sebelum diisi, layar login akan menampilkan pesan error yang jelas,
 // BUKAN diam-diam meloloskan siapa saja.
 const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec';
+
+// FITUR (2026-09): PEMBAYARAN MIDTRANS -- ganti dengan Client Key Midtrans
+// Anda (Settings > Access Keys di Midtrans Dashboard, yang "Client Key",
+// BUKAN "Server Key" yang rahasia -- Client Key memang aman ditaruh di
+// kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
+// nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
+// tidak boleh dicampur).
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
+const MIDTRANS_PRODUCTION = false;
 const GH_KEY_SESI_LISENSI = 'guruhub_sesi_lisensi_v1'; // {email, nama, sekolah, diverifikasiPada}
 const GH_UMUR_SESI_MS = 24 * 60 * 60 * 1000; // sesi tersimpan dianggap segar 24 jam -- lewat itu, dicek ulang ke Lisensi (jaga-jaga langganan berhenti)
 
@@ -3873,7 +4162,7 @@ function ghUiUpdateDashboardStats() {
 }
 
 function ghUiGotoPage(nama) {
-  ['dashboard', 'linkujian', 'esai', 'banksoal'].forEach(p => {
+  ['dashboard', 'linkujian', 'esai', 'banksoal', 'langganan'].forEach(p => {
     let el = document.getElementById('gh-page-' + p);
     if (el) el.style.display = (p === nama) ? '' : 'none';
     let nav = document.getElementById('gh-nav-' + p);
@@ -3885,6 +4174,7 @@ function ghUiGotoPage(nama) {
     if (inpKP) inpKP.value = (ghProfilAktif && ghProfilAktif.kodePremium) || '';
     ghMuatSesiSaya();
   }
+  if (nama === 'langganan') ghMuatStatusLangganan();
   ghUiCloseSidebar();
   window.scrollTo(0, 0);
 }
