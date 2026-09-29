@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guru Hub — Alat Bantu Ujian Online untuk Guru</title>
+<meta name="description" content="Guru Hub: kelola ujian online, bank soal, koreksi esai, dan sesi ujian terjadwal — semua dalam satu tempat.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
+    --blue-light:#D1FAE5; --blue-pale:#ECFDF5;
+    --gray-dark:#1E2B3A; --gray-mid:#4A5568; --gray-soft:#8896A5;
+    --gray-line:#DDE3EC; --gray-bg:#F3F6FA; --white:#FFFFFF;
+    --gold:#C9A227; --gold-light:#E9C566; --gold-dark:#8B6B14;
+    --gold-grad:linear-gradient(135deg,#F5E29A,#C9A227 55%,#8B6B14);
+    --r-md:12px; --r-lg:20px;
+    --sh-md:0 8px 28px rgba(6,78,59,.10);
+    --font-display:'Fraunces','Georgia',serif;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; scroll-padding-top:70px; }
+  body {
+    margin:0; font-family:'Poppins',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    color:var(--gray-dark); background:var(--white); line-height:1.55;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  img,svg { max-width:100%; }
+  a { color:inherit; }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 20px; }
+
+  /* Top bar */
+  .topbar { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--gray-line); }
+  .topbar .wrap { display:flex; align-items:center; justify-content:space-between; padding-top:12px; padding-bottom:12px; }
+  .brand { font-family:var(--font-display); font-weight:700; font-size:19px; color:var(--blue-deep); }
+  .brand span { color:var(--gold-dark); }
+  .topbar-cta { background:var(--blue-main); color:#fff; border:none; padding:9px 18px; border-radius:999px; font-weight:700; font-size:13.5px; text-decoration:none; }
+
+  /* Hero */
+  .hero { background:linear-gradient(160deg,var(--blue-deep),var(--blue-main) 70%); color:#fff; padding:56px 0 70px; text-align:center; }
+  .hero .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 14px; border-radius:999px; font-size:12px; font-weight:800; background:var(--gold-grad); color:#3E2E05; margin-bottom:18px; }
+  .hero h1 { font-family:var(--font-display); font-size:clamp(28px,5vw,44px); font-weight:700; margin:0 0 14px; line-height:1.15; }
+  .hero p { font-size:16px; color:#D1FAE5; max-width:560px; margin:0 auto 28px; }
+  .hero-ctas { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .btn { display:inline-block; padding:13px 26px; border-radius:999px; font-weight:700; font-size:14.5px; text-decoration:none; border:none; cursor:pointer; }
+  .btn-primary { background:#fff; color:var(--blue-deep); }
+  .btn-ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,.55); }
+
+  /* Sections */
+  section { padding:64px 0; }
+  .section-hd { text-align:center; max-width:600px; margin:0 auto 40px; }
+  .section-hd .eyebrow { font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--blue-main); }
+  .section-hd h2 { font-family:var(--font-display); font-size:clamp(22px,3.4vw,32px); font-weight:700; color:var(--blue-deep); margin:6px 0 10px; }
+  .section-hd p { color:var(--gray-mid); font-size:15px; }
+
+  /* Feature grid */
+  .feat-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+  .feat-card { background:var(--gray-bg); border:1px solid var(--gray-line); border-radius:var(--r-lg); padding:24px 20px; }
+  .feat-ico { width:46px; height:46px; border-radius:12px; background:var(--blue-pale); display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:14px; }
+  .feat-card h3 { font-size:15.5px; font-weight:700; color:var(--gray-dark); margin:0 0 6px; }
+  .feat-card p { font-size:13.5px; color:var(--gray-mid); margin:0; }
+
+  /* How it works */
+  .steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; counter-reset:step; }
+  .step { text-align:center; }
+  .step .num { counter-increment:step; width:38px; height:38px; border-radius:50%; background:var(--blue-main); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-family:var(--font-display); }
+  .step .num::before { content:counter(step); }
+  .step h4 { font-size:14.5px; font-weight:700; margin:0 0 6px; color:var(--gray-dark); }
+  .step p { font-size:13px; color:var(--gray-mid); margin:0; }
+
+  /* Pricing */
+  .pricing-bg { background:var(--gray-bg); }
+  .price-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; align-items:stretch; }
+  .price-card { background:#fff; border:1.5px solid var(--gray-line); border-radius:var(--r-lg); padding:26px 22px; text-align:center; display:flex; flex-direction:column; position:relative; }
+  .price-card.hemat { border-color:var(--blue-main); box-shadow:var(--sh-md); }
+  .badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--blue-main); color:#fff; font-size:10.5px; font-weight:800; padding:3px 12px; border-radius:999px; white-space:nowrap; }
+  .price-label { font-size:13.5px; font-weight:700; color:var(--gray-mid); margin-bottom:6px; }
+  .price-num { font-family:var(--font-display); font-size:30px; font-weight:700; color:var(--blue-deep); }
+  .price-per { font-size:12px; color:var(--gray-soft); margin-bottom:18px; }
+  .price-feats { list-style:none; padding:0; margin:0 0 22px; text-align:left; font-size:13px; color:var(--gray-mid); flex:1; }
+  .price-feats li { padding:5px 0 5px 22px; position:relative; }
+  .price-feats li::before { content:'✓'; position:absolute; left:0; color:var(--blue-main); font-weight:800; }
+  .price-cta { background:var(--blue-main); color:#fff; padding:11px; border-radius:10px; font-weight:700; font-size:13.5px; text-decoration:none; display:block; }
+  .price-card:not(.hemat) .price-cta { background:var(--gray-dark); }
+  .price-note { text-align:center; font-size:12.5px; color:var(--gray-soft); margin-top:24px; }
+
+  /* FAQ */
+  .faq-item { border-bottom:1px solid var(--gray-line); padding:16px 0; }
+  .faq-item h4 { font-size:14.5px; font-weight:700; margin:0 0 6px; color:var(--gray-dark); }
+  .faq-item p { font-size:13.5px; color:var(--gray-mid); margin:0; }
+
+  /* Footer CTA */
+  .footer-cta { background:linear-gradient(160deg,var(--blue-deep),var(--blue-main) 70%); color:#fff; text-align:center; }
+  .footer-cta h2 { font-family:var(--font-display); font-size:clamp(22px,3.4vw,30px); margin:0 0 14px; }
+  .footer-cta p { color:#D1FAE5; margin:0 0 24px; }
+
+  footer { padding:28px 0; text-align:center; font-size:12px; color:var(--gray-soft); }
+
+  @media (max-width:760px) {
+    .feat-grid, .steps, .price-grid { grid-template-columns:1fr; }
+    section { padding:44px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">Guru <span>Hub</span></div>
+    <a class="topbar-cta" href="guru-hub.html">Masuk</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap">
+    <span class="chip">✦ Aplikasi Premium Berlangganan</span>
+    <h1>Semua urusan ujian online guru,<br>beres dari satu tempat.</h1>
+    <p>Bank soal, sesi ujian terjadwal, koreksi esai, dan analisis hasil — Guru Hub mengurus bagian repetitifnya supaya Anda fokus mengajar.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="#harga">Lihat Harga Langganan</a>
+      <a class="btn btn-ghost" href="guru-hub.html">Sudah Berlangganan? Masuk</a>
+    </div>
+  </div>
+</div>
+
+<section id="fitur">
+  <div class="wrap">
+    <div class="section-hd">
+      <div class="eyebrow">Fitur</div>
+      <h2>Dibuat untuk ritme kerja guru sehari-hari</h2>
+      <p>Bukan sekadar platform ujian — Guru Hub menangani hal-hal yang biasanya menyita waktu Anda di luar mengajar.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-ico">🕒</div>
+        <h3>Sesi Ujian Aktif</h3>
+        <p>Jadwalkan ujian untuk jendela waktu tertentu — token dibuat otomatis khusus sesi itu, dan kembali ke token default begitu waktunya habis. Siswa yang terlambat cuma dapat sisa waktu, bukan durasi penuh.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">🪪</div>
+        <h3>ID Premium untuk Siswa</h3>
+        <p>Siswa cukup mengetik nama/ID Anda di Portal — sistem otomatis menampilkan ujian yang sedang atau akan berlangsung. Tidak perlu lagi membagikan link satu per satu.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">📚</div>
+        <h3>Bank Soal &amp; Deteksi Duplikat</h3>
+        <p>Kumpulkan soal dari berbagai sumber, lalu susun ujian dari bank soal itu. Soal yang mirip/duplikat terdeteksi otomatis sebelum jadi masalah.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">📝</div>
+        <h3>Nilai &amp; Koreksi Esai</h3>
+        <p>Koreksi jawaban esai langsung dari Guru Hub, lengkap dengan analisis nilai, peringkat peserta, dan deteksi kejanggalan pengerjaan.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">📸</div>
+        <h3>Bagikan Analisis sebagai Gambar</h3>
+        <p>Hasil analisis ujian — termasuk peringkat peserta yang panjang sekalipun — bisa langsung dibagikan sebagai satu gambar rapi ke grup WhatsApp orang tua/kepala sekolah.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico">🔒</div>
+        <h3>Anti-Kecurangan Bawaan</h3>
+        <p>Mode layar penuh, deteksi keluar layar/split-screen, dan token unik per sesi — semua berjalan otomatis tanpa pengaturan tambahan.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--blue-pale);">
+  <div class="wrap">
+    <div class="section-hd">
+      <div class="eyebrow">Cara Kerja</div>
+      <h2>Siap pakai dalam tiga langkah</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num"></div><h4>Siapkan ujian</h4><p>Tambahkan bank soal atau link ujian yang sudah Anda punya ke Guru Hub.</p></div>
+      <div class="step"><div class="num"></div><h4>Jadwalkan sesi</h4><p>Pilih ujian, atur tanggal &amp; durasi — token dibuat otomatis untuk jendela waktu itu.</p></div>
+      <div class="step"><div class="num"></div><h4>Bagikan ID Anda</h4><p>Siswa cukup ketik ID Premium Anda di Portal untuk menemukan ujian yang aktif.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="harga" class="pricing-bg">
+  <div class="wrap">
+    <div class="section-hd">
+      <div class="eyebrow">Harga</div>
+      <h2>Satu paket, semua fitur Guru Hub</h2>
+      <p>Tidak ada fitur yang dikunci di paket tertentu — pilih saja jangka waktu yang paling cocok. Bisa dibatalkan kapan saja.</p>
+    </div>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-label">1 Bulan</div>
+        <div class="price-num">Rp35.000</div>
+        <div class="price-per">per bulan</div>
+        <ul class="price-feats">
+          <li>Semua fitur Guru Hub</li>
+          <li>Sesi Ujian Aktif tanpa batas</li>
+          <li>Bank Soal &amp; deteksi duplikat</li>
+          <li>Cocok untuk coba dulu</li>
+        </ul>
+        <a class="price-cta" href="guru-hub.html?halaman=langganan">Pilih Paket</a>
+      </div>
+      <div class="price-card hemat">
+        <span class="badge">HEMAT 29%</span>
+        <div class="price-label">6 Bulan</div>
+        <div class="price-num">Rp150.000</div>
+        <div class="price-per">≈ Rp25.000/bulan</div>
+        <ul class="price-feats">
+          <li>Semua fitur Guru Hub</li>
+          <li>Sesi Ujian Aktif tanpa batas</li>
+          <li>Bank Soal &amp; deteksi duplikat</li>
+          <li>Cocok untuk satu semester</li>
+        </ul>
+        <a class="price-cta" href="guru-hub.html?halaman=langganan">Pilih Paket</a>
+      </div>
+      <div class="price-card">
+        <div class="price-label">1 Tahun</div>
+        <div class="price-num">Rp240.000</div>
+        <div class="price-per">≈ Rp20.000/bulan</div>
+        <ul class="price-feats">
+          <li>Semua fitur Guru Hub</li>
+          <li>Sesi Ujian Aktif tanpa batas</li>
+          <li>Bank Soal &amp; deteksi duplikat</li>
+          <li>Paling hemat untuk setahun ajaran</li>
+        </ul>
+        <a class="price-cta" href="guru-hub.html?halaman=langganan">Pilih Paket</a>
+      </div>
+    </div>
+    <p class="price-note">Pembayaran lewat QRIS, transfer VA, atau GoPay. Masuk dengan akun Google Anda dulu untuk memilih paket.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap" style="max-width:680px;">
+    <div class="section-hd">
+      <div class="eyebrow">Tanya Jawab</div>
+      <h2>Yang sering ditanyakan</h2>
+    </div>
+    <div class="faq-item">
+      <h4>Apakah saya perlu akun Google untuk masuk?</h4>
+      <p>Ya — Guru Hub memakai login Google supaya lebih aman dan tidak perlu mengingat sandi baru.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Bisakah berlangganan dibatalkan kapan saja?</h4>
+      <p>Bisa. Cukup tidak memperpanjang saat masa aktif berakhir — akses berhenti otomatis, tanpa tagihan lanjutan.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Bagaimana siswa mengakses ujian?</h4>
+      <p>Siswa membuka Portal CBT lalu cukup mengetik ID Premium Anda (nama/gelar yang Anda tentukan sendiri) — semua sesi ujian aktif Anda akan muncul di sana.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Apakah data soal &amp; nilai aman?</h4>
+      <p>Data tersimpan di Google Spreadsheet milik Anda sendiri — Guru Hub tidak menyimpan salinan terpisah di server pihak ketiga.</p>
+    </div>
+  </div>
+</section>
+
+<section class="footer-cta">
+  <div class="wrap">
+    <h2>Siap mencoba Guru Hub?</h2>
+    <p>Masuk dengan akun Google Anda dan mulai jadwalkan sesi ujian pertama hari ini.</p>
+    <a class="btn btn-primary" href="guru-hub.html">Masuk ke Guru Hub →</a>
+  </div>
+</section>
+
+<footer>
+  © 2026 CBT Kabut Digital — Guru Hub
+</footer>
+
+</body>
+</html>

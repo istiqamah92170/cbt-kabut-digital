@@ -458,7 +458,7 @@
       <div id="gh-google-signin-btn" class="g_id_signin" style="display:flex;justify-content:center;min-height:44px;" data-type="standard" data-size="large" data-theme="outline" data-width="300"></div>
       <div class="gh-status-msg" id="gh-login-status" style="margin-top:14px;"></div>
       <button class="gh-btn gh-btn-ghost" id="gh-btn-login-coba-lagi" style="width:100%;margin-top:6px;display:none;" onclick="ghUiCobaAkunLain()">Coba akun Google lain</button>
-      <p class="gh-hint" style="text-align:center;margin-top:14px;">Belum berlangganan? Hubungi CBT Kabut Digital untuk mendaftar.</p>
+      <p class="gh-hint" style="text-align:center;margin-top:14px;">Belum berlangganan? <a href="landing.html" style="color:var(--blue-main);font-weight:700;text-decoration:none;">Lihat fitur &amp; harga Guru Hub →</a></p>
     </div>
   </div>
 </div>
@@ -499,14 +499,14 @@
       <button class="gh-nav-item" id="gh-nav-banksoal" onclick="ghUiGotoPage('banksoal')">
         <span class="gh-nav-ico">📚</span><span class="gh-nav-lbl">Bank Soal</span>
       </button>
-      <button class="gh-nav-item" id="gh-nav-langganan" onclick="ghUiGotoPage('langganan')">
-        <span class="gh-nav-ico">💳</span><span class="gh-nav-lbl">Langganan</span>
-      </button>
     </nav>
 
     <div class="gh-sb-foot">
       <button class="gh-theme-toggle" onclick="ghToggleTema()" id="gh-theme-toggle-btn">
         <span id="gh-theme-toggle-icon">🌙</span> <span id="gh-theme-toggle-label">Mode Gelap</span>
+      </button>
+      <button class="gh-theme-toggle" onclick="ghUiGotoPage('langganan')" id="gh-nav-langganan">
+        <span>💳</span> <span>Langganan</span>
       </button>
       <button class="gh-btn-out" onclick="ghUiLogout()">Keluar</button>
     </div>
@@ -544,6 +544,15 @@
             <div class="gh-stat-num" id="gh-ui-stat-banksoal">Belum</div>
             <div class="gh-stat-lbl">Bank Soal</div>
           </div>
+        </div>
+
+        <!-- FITUR (2026-09): ringkasan Sesi Ujian Aktif di Dashboard --
+             read-only (kelola/batalkan tetap di halaman Link Ujian), supaya
+             begitu buka Guru Hub guru langsung tahu ujian apa yang sedang/
+             akan berlangsung tanpa perlu masuk ke menu lain dulu. -->
+        <div class="gh-card" style="margin-bottom:20px;">
+          <h3 style="margin:0 0 10px;font-size:15px;">🕒 Sesi Ujian Aktif</h3>
+          <div id="gh-dash-sesi-list">Memuat...</div>
         </div>
 
         <div class="gh-dash-quick">
@@ -1164,6 +1173,12 @@ async function ghBuatSesiAktif() {
   ghMuatSesiSaya();
 }
 
+// FITUR (2026-09): daftar sesi TERAKHIR yang berhasil dimuat -- disimpan di
+// sini (bukan cuma dirender) supaya ghBuatTokenBaru() tahu persis jam
+// mulai/selesai & label ujian yang perlu di-generate ulang tokennya, tanpa
+// perlu fetch ulang / menaruh banyak data di atribut onclick HTML.
+let ghSesiSayaTerakhir = [];
+
 async function ghMuatSesiSaya() {
   let wrap = document.getElementById('gh-sesi-list');
   if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { wrap.innerHTML = '<div class="gh-empty">Sesi login bermasalah.</div>'; return; }
@@ -1173,20 +1188,24 @@ async function ghMuatSesiSaya() {
     let resp = await fetch(url);
     let hasil = await resp.json();
     if (hasil.status !== 'ok') { wrap.innerHTML = '<div class="gh-empty">❌ ' + ghEsc(hasil.msg || 'Gagal memuat.') + '</div>'; return; }
+    ghSesiSayaTerakhir = hasil.sesi || [];
     if (!hasil.sesi.length) { wrap.innerHTML = '<div class="gh-empty">Belum ada sesi ujian aktif dibuat.</div>'; return; }
 
     let cacheLokal = ghMuatSesiDibuatLokal();
     let now = Date.now();
-    wrap.innerHTML = hasil.sesi.map(s => {
+    wrap.innerHTML = hasil.sesi.map((s, si) => {
       let mulaiMs = new Date(s.mulai).getTime(), selesaiMs = new Date(s.selesai).getTime();
       let statusLabel = now < mulaiMs ? '🕒 Akan datang' : (now < selesaiMs ? '🟢 Sedang berlangsung' : '⚪ Selesai');
       let cocokLokal = cacheLokal.find(c => c.sesiId === s.sesiId);
-      let daftarUjianHtml = s.ujian.map(u => {
+      let daftarUjianHtml = s.ujian.map((u, ui) => {
         // PERBAIKAN (2026-09): token dibaca dari server pusat dulu (berlaku
         // di perangkat manapun) -- cache lokal cuma fallback untuk sesi lama
         // yang dibuat sebelum server pusat ikut menyimpan token.
         let tokenInfo = u.token || (cocokLokal ? (cocokLokal.ujian.find(x => x.url === u.url) || {}).token : null);
-        return '<div style="font-size:12.5px;padding:3px 0;">• ' + ghEsc(u.label) + (tokenInfo ? ' — <b style="font-family:monospace;">' + ghEsc(tokenInfo) + '</b>' : ' <span style="color:var(--gray-soft);">(token lama, tidak tersimpan)</span>') + '</div>';
+        return '<div style="font-size:12.5px;padding:3px 0;display:flex;align-items:center;gap:8px;">' +
+          '<span style="flex:1;">• ' + ghEsc(u.label) + (tokenInfo ? ' — <b style="font-family:monospace;">' + ghEsc(tokenInfo) + '</b>' : '') + '</span>' +
+          (tokenInfo ? '' : '<button class="gh-btn gh-btn-outline" style="padding:2px 10px;font-size:11px;flex-shrink:0;" onclick="ghBuatTokenBaru(' + si + ',' + ui + ')">🔄 Token baru</button>') +
+        '</div>';
       }).join('');
       return '<div class="gh-dup-group">' +
         '<div class="gh-dup-group-head"><span>' + statusLabel + '</span><span style="flex:1;"></span>' +
@@ -1197,6 +1216,54 @@ async function ghMuatSesiSaya() {
     }).join('');
   } catch (e) {
     wrap.innerHTML = '<div class="gh-empty">❌ Gagal terhubung: ' + ghEsc(e.message) + '</div>';
+  }
+}
+
+// FITUR (2026-09): jaring pengaman kalau token tetap tidak diketahui (mis.
+// sheet lama sebelum migrasi kolom Token, atau kasus lain yang belum
+// ketahuan) -- guru cukup klik sekali, token BARU dibuat langsung di
+// backend sekolah (token lama otomatis tidak berlaku lagi karena diganti,
+// jendela waktu sesi TIDAK berubah), lalu disimpan ke server pusat supaya
+// konsisten terlihat dari perangkat manapun sesudahnya.
+async function ghBuatTokenBaru(si, ui) {
+  let s = ghSesiSayaTerakhir[si], u = s && s.ujian[ui];
+  if (!u) { ghToast('Data sesi sudah tidak sinkron -- muat ulang halaman.'); return; }
+  let entri = ghEntri.find(x => x.url === u.url);
+  if (!entri || !entri.tokenAdmin) {
+    ghToast('❌ Token Admin untuk "' + u.label + '" tidak ditemukan di daftar Link Ujian -- tambahkan dulu (klik 🔑 di daftar atas) baru coba lagi.');
+    return;
+  }
+  let durasiMenit = Math.max(1, Math.round((new Date(s.selesai) - new Date(s.mulai)) / 60000));
+  try {
+    let resp = await fetch(entri.url, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'tambahSesiToken', token_admin: entri.tokenAdmin, mulai: s.mulai, selesai: s.selesai, durasi_menit: durasiMenit })
+    });
+    let hasil = await resp.json();
+    if (hasil.status !== 'ok') { ghToast('❌ Gagal membuat token di sekolah: ' + (hasil.msg || '')); return; }
+
+    let respPusat = await fetch(GH_URL_LISENSI, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'perbaruiTokenSesi', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, sesiId: s.sesiId, url: u.url, token: hasil.token })
+    });
+    let hasilPusat = await respPusat.json();
+    if (hasilPusat.status !== 'ok') {
+      ghToast('⚠️ Token baru dibuat (' + hasil.token + ') tapi gagal disimpan ke server pusat: ' + (hasilPusat.msg || '') + ' -- catat token ini manual.');
+    }
+
+    // Simpan juga ke cache lokal supaya konsisten walau server pusat gagal.
+    let cacheLokal = ghMuatSesiDibuatLokal();
+    let cocok = cacheLokal.find(c => c.sesiId === s.sesiId);
+    if (!cocok) { cocok = { sesiId: s.sesiId, mulai: s.mulai, selesai: s.selesai, ujian: [] }; cacheLokal.push(cocok); }
+    let itemUjian = cocok.ujian.find(x => x.url === u.url);
+    if (!itemUjian) { itemUjian = { label: u.label, url: u.url }; cocok.ujian.push(itemUjian); }
+    itemUjian.token = hasil.token; itemUjian.tokenAdmin = entri.tokenAdmin;
+    ghSimpanSesiDibuatLokal(cacheLokal);
+
+    ghToast('✅ Token baru: ' + hasil.token);
+    ghMuatSesiSaya();
+  } catch (e) {
+    ghToast('❌ Gagal terhubung: ' + e.message);
   }
 }
 
@@ -4113,7 +4180,7 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
-const MIDTRANS_CLIENT_KEY = 'Mid-client-M0YhnqNbhFWgr7e2';
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
 const MIDTRANS_PRODUCTION = false;
 const GH_KEY_SESI_LISENSI = 'guruhub_sesi_lisensi_v1'; // {email, nama, sekolah, diverifikasiPada}
 const GH_UMUR_SESI_MS = 24 * 60 * 60 * 1000; // sesi tersimpan dianggap segar 24 jam -- lewat itu, dicek ulang ke Lisensi (jaga-jaga langganan berhenti)
@@ -4159,6 +4226,42 @@ function ghUiUpdateDashboardStats() {
   if (elLink) elLink.textContent = ghEntri.length;
   if (elSekolah) elSekolah.textContent = ghSekolah.length;
   if (elBank) elBank.textContent = localStorage.getItem(GH_KEY_BANKSOAL_ID) ? 'Siap' : 'Belum';
+  ghMuatDashboardSesi();
+}
+
+// FITUR (2026-09): versi ringkas daftar Sesi Ujian Aktif untuk Dashboard --
+// beda dari ghMuatSesiSaya() di halaman Link Ujian (yang lengkap dengan
+// token & tombol kelola), di sini cuma status+waktu+jumlah ujian per sesi,
+// supaya ringan dilihat sekilas begitu Guru Hub dibuka.
+async function ghMuatDashboardSesi() {
+  let wrap = document.getElementById('gh-dash-sesi-list');
+  if (!wrap) return;
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { wrap.innerHTML = '<div class="gh-empty">-</div>'; return; }
+  wrap.innerHTML = 'Memuat...';
+  try {
+    let url = GH_URL_LISENSI + '?action=getSesiSaya&email=' + encodeURIComponent(ghProfilAktif.email) + '&kunciGuru=' + encodeURIComponent(ghProfilAktif.kunciGuru);
+    let resp = await fetch(url);
+    let hasil = await resp.json();
+    if (hasil.status !== 'ok') { wrap.innerHTML = '<div class="gh-empty">Gagal memuat sesi.</div>'; return; }
+    let now = Date.now();
+    // Selesai disembunyikan dari ringkasan dashboard (sudah tidak relevan
+    // untuk dilihat sekilas) -- tetap ada di daftar lengkap Link Ujian.
+    let sesiRelevan = (hasil.sesi || []).filter(s => new Date(s.selesai).getTime() > now)
+      .sort((a, b) => new Date(a.mulai) - new Date(b.mulai));
+    if (!sesiRelevan.length) { wrap.innerHTML = '<div class="gh-empty">Belum ada sesi ujian aktif. <a href="javascript:void(0)" onclick="ghUiGotoPage(\'linkujian\')" style="color:var(--blue-main);font-weight:700;">Buat sesi →</a></div>'; return; }
+
+    wrap.innerHTML = sesiRelevan.map(s => {
+      let mulaiMs = new Date(s.mulai).getTime(), selesaiMs = new Date(s.selesai).getTime();
+      let statusLabel = now < mulaiMs ? '🕒 Akan datang' : '🟢 Sedang berlangsung';
+      let daftarLabel = s.ujian.map(u => u.label).join(', ');
+      return '<div class="gh-dup-item" style="cursor:pointer;" onclick="ghUiGotoPage(\'linkujian\')">' +
+        '<span style="flex:1;"><b>' + statusLabel + '</b> · ' + ghUiFormatWaktu(s.mulai) + ' – ' + ghUiFormatWaktu(s.selesai) +
+        '<br><span style="font-size:12px;color:var(--gray-soft);">' + ghEsc(daftarLabel) + '</span></span>' +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    wrap.innerHTML = '<div class="gh-empty">Gagal terhubung.</div>';
+  }
 }
 
 function ghUiGotoPage(nama) {
@@ -4196,7 +4299,8 @@ function ghUiTampilkanApp(profil) {
   document.getElementById('gh-ui-sb-nama').textContent = nama;
   document.getElementById('gh-ui-sb-instansi').textContent = (profil.sekolah || '').trim() || 'CBT Kabut Digital';
   document.getElementById('gh-ui-sapaan').textContent = ghUiSapaanWaktu() + ', ' + nama;
-  ghUiUpdateDashboardStats();
+  let halamanDiminta = new URLSearchParams(location.search).get('halaman');
+  ghUiGotoPage((halamanDiminta === 'langganan') ? 'langganan' : 'dashboard');
 }
 
 // ── Verifikasi ke Lisensi (Apps Script) ─────────────────────────────
