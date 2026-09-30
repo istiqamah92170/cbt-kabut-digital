@@ -360,6 +360,7 @@
   .gh-sb-user-sub { font-size:11px; opacity:.65; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .gh-sb-chip { display:inline-flex; align-items:center; gap:4px; margin-top:7px; padding:2px 10px; border-radius:20px; font-size:10px; font-weight:800; background:var(--gold-grad); color:#3E2E05; }
   .gh-sb-nav { flex:1; overflow-y:auto; padding:10px; }
+  .gh-nav-item.gh-locked { opacity:.42; cursor:not-allowed; }
   .gh-nav-item {
     display:flex; align-items:center; gap:10px; width:100%; text-align:left;
     padding:10px 12px; border-radius:10px; border:none; background:none; color:rgba(255,255,255,.78);
@@ -759,6 +760,11 @@
     <h2>Langganan Guru Hub</h2>
     <p class="gh-sub">Perpanjang langganan Anda kapan saja lewat QRIS, VA, atau GoPay — aktif otomatis begitu pembayaran diterima, tidak perlu konfirmasi manual.</p>
 
+    <!-- FITUR (2026-09): tampil HANYA untuk guru yang baru login tapi belum
+         aktif (lihat ghUiTampilkanBelumAktif) -- pesan sambutan/alasan yang
+         jelas, supaya terasa "alur pendaftaran", bukan halaman error. -->
+    <div id="gh-langganan-welcome-box" style="display:none;background:var(--blue-pale);border:1.5px solid var(--blue-main);border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px;font-size:13.5px;"></div>
+
     <div id="gh-langganan-status-box" class="gh-an-box" style="text-align:left;padding:14px 16px;margin-bottom:18px;">Memuat status langganan...</div>
 
     <div id="gh-langganan-paket-wrap" class="gh-form-grid g3"></div>
@@ -910,6 +916,11 @@ let ghEntri = [];
 // kunciGuru/kodePremium dari Lisensi) -- diisi ghUiTampilkanApp(), dipakai
 // semua fungsi Sesi Ujian Aktif untuk otentikasi ke server Lisensi pusat.
 let ghProfilAktif = null;
+// FITUR (2026-09): true kalau guru yang login TERVERIFIKASI identitasnya
+// (Google) tapi langganannya belum/tidak aktif -- dikunci ke halaman
+// Langganan saja (lihat ghUiGotoPage) sampai dia membayar, supaya alurnya
+// jelas/satu arah, bukan muter balik ke error login.
+let ghModeBelumAktif = false;
 // FITUR (2026-09): cache LOKAL token per sesi yang guru buat dari
 // perangkat ini -- dipakai supaya guru bisa lihat/salin token lagi, dan
 // supaya ghBatalkanSesi() tahu token_admin sekolah mana yang perlu
@@ -1341,6 +1352,21 @@ async function ghMuatStatusLangganan() {
     let resp = await fetch(url);
     let hasil = await resp.json();
     if (hasil.status !== 'ok') { box.textContent = '❌ ' + (hasil.msg || 'Gagal memuat status.'); return; }
+
+    // FITUR (2026-09): kalau tadinya masuk dalam mode "belum aktif" (lihat
+    // ghUiTampilkanBelumAktif) dan sekarang TERNYATA sudah aktif (baru saja
+    // bayar, atau ternyata sudah diaktifkan manual) -- buka kunci semua
+    // fitur & simpan sesi supaya tidak perlu login ulang tiap buka Guru Hub.
+    let aktifSekarang = String(hasil.statusLangganan || '').toLowerCase() === 'aktif' && !(hasil.sisaHari !== null && hasil.sisaHari < 0);
+    if (ghModeBelumAktif && aktifSekarang) {
+      ghModeBelumAktif = false;
+      document.querySelectorAll('.gh-nav-item.gh-locked').forEach(el => el.classList.remove('gh-locked'));
+      let profilPenuh = Object.assign({}, ghProfilAktif, { diverifikasiPada: Date.now() });
+      ghProfilAktif = profilPenuh;
+      localStorage.setItem(GH_KEY_SESI_LISENSI, JSON.stringify(profilPenuh));
+      document.getElementById('gh-langganan-welcome-box').style.display = 'none';
+      ghToast('🎉 Langganan aktif! Semua fitur Guru Hub sudah terbuka.');
+    }
 
     if (!hasil.pembayaranAktif) {
       box.innerHTML = 'Status: <b>' + ghEsc(hasil.statusLangganan || '-') + '</b><br><span style="font-size:12px;color:var(--gray-soft);">Pembayaran online belum diaktifkan -- hubungi CBT Kabut Digital untuk perpanjangan.</span>';
@@ -4180,8 +4206,8 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
-const MIDTRANS_CLIENT_KEY = 'Mid-client-M0YhnqNbhFWgr7e2';
-const MIDTRANS_PRODUCTION = true;
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
+const MIDTRANS_PRODUCTION = false;
 const GH_KEY_SESI_LISENSI = 'guruhub_sesi_lisensi_v1'; // {email, nama, sekolah, diverifikasiPada}
 const GH_UMUR_SESI_MS = 24 * 60 * 60 * 1000; // sesi tersimpan dianggap segar 24 jam -- lewat itu, dicek ulang ke Lisensi (jaga-jaga langganan berhenti)
 
@@ -4265,6 +4291,10 @@ async function ghMuatDashboardSesi() {
 }
 
 function ghUiGotoPage(nama) {
+  if (ghModeBelumAktif && nama !== 'langganan') {
+    ghToast('🔒 Aktifkan langganan dulu untuk membuka fitur ini.');
+    nama = 'langganan';
+  }
   ['dashboard', 'linkujian', 'esai', 'banksoal', 'langganan'].forEach(p => {
     let el = document.getElementById('gh-page-' + p);
     if (el) el.style.display = (p === nama) ? '' : 'none';
@@ -4303,6 +4333,43 @@ function ghUiTampilkanApp(profil) {
   ghUiGotoPage((halamanDiminta === 'langganan') ? 'langganan' : 'dashboard');
 }
 
+// FITUR (2026-09): PENDAFTARAN MANDIRI -- dipanggil saat identitas Google
+// berhasil diverifikasi TAPI langganan belum/tidak aktif (akun baru
+// otomatis dibuat, atau langganan lama sudah habis). Guru diarahkan
+// LANGSUNG & SATU ARAH ke halaman Langganan (fitur lain dikunci sementara,
+// lihat ghUiGotoPage) -- tidak ada jalan memutar balik ke pesan error
+// login. Begitu pembayaran terkonfirmasi, ghMuatStatusLangganan() otomatis
+// membuka kunci & menyimpan sesi (lihat di sana).
+// CATATAN: profil di sini SENGAJA TIDAK disimpan ke localStorage -- kalau
+// guru menutup halaman sebelum bayar, dia login ulang lagi lain kali
+// (murah, dan memastikan status yang dilihat selalu segar dari server,
+// bukan status "belum aktif" basi yang keliru tersimpan).
+function ghUiTampilkanBelumAktif(profil, alasan, akunBaru) {
+  ghModeBelumAktif = true;
+  ghProfilAktif = profil;
+  document.getElementById('gh-screen-login').style.display = 'none';
+  document.getElementById('gh-screen-app').style.display = '';
+  let nama = (profil.nama || '').trim() || profil.email || 'Guru';
+  document.getElementById('gh-ui-sb-nama').textContent = nama;
+  document.getElementById('gh-ui-sb-instansi').textContent = (profil.sekolah || '').trim() || 'CBT Kabut Digital';
+  document.getElementById('gh-ui-sapaan').textContent = ghUiSapaanWaktu() + ', ' + nama;
+
+  ['linkujian', 'esai', 'banksoal'].forEach(p => {
+    let nav = document.getElementById('gh-nav-' + p);
+    if (nav) nav.classList.add('gh-locked');
+  });
+  let navDash = document.getElementById('gh-nav-dashboard');
+  if (navDash) navDash.classList.add('gh-locked');
+
+  ghUiGotoPage('langganan');
+
+  let welcome = document.getElementById('gh-langganan-welcome-box');
+  welcome.style.display = 'block';
+  welcome.innerHTML = akunBaru
+    ? ('👋 <b>Selamat datang di Guru Hub, ' + ghEsc(nama) + '!</b><br>Akun Anda baru saja dibuat. Pilih paket di bawah untuk mulai memakai semua fitur.')
+    : ('🔑 Halo lagi, <b>' + ghEsc(nama) + '</b>. ' + ghEsc(alasan || 'Langganan Anda belum aktif.') + ' Pilih paket di bawah untuk melanjutkan.');
+}
+
 // ── Verifikasi ke Lisensi (Apps Script) ─────────────────────────────
 async function ghProsesLoginGoogle(response) {
   let statusEl = document.getElementById('gh-login-status');
@@ -4323,8 +4390,23 @@ async function ghProsesLoginGoogle(response) {
     });
     let hasil = await resp.json();
     if (!hasil.valid) {
+      // FITUR (2026-09): DULU ini jalan buntu total ("hubungi CBT Kabut
+      // Digital") -- baik untuk akun yang benar-benar baru maupun yang
+      // langganannya habis. Sekarang, SELAMA server berhasil mengenali
+      // identitas Google-nya (dapat kunciGuru), guru diarahkan LANGSUNG
+      // ke halaman Langganan untuk mengaktifkan sendiri -- termasuk akun
+      // yang baru dibuat otomatis saat ini juga (lihat ghCekLisensi ->
+      // pendaftaran mandiri di server). Cuma kegagalan teknis (server
+      // salah konfigurasi dsb, TIDAK ada kunciGuru sama sekali) yang masih
+      // ditampilkan sebagai error murni.
+      if (hasil.bisaBerlangganan && hasil.kunciGuru) {
+        let profilSementara = { email: hasil.email, nama: hasil.nama, sekolah: hasil.sekolah || '', kodePremium: hasil.kodePremium || '', kunciGuru: hasil.kunciGuru };
+        statusEl.textContent = '';
+        ghUiTampilkanBelumAktif(profilSementara, hasil.alasan, !!hasil.akunBaru);
+        return;
+      }
       statusEl.className = 'gh-status-msg err';
-      statusEl.textContent = '❌ Akun ini belum terdaftar sebagai pelanggan aktif' + (hasil.alasan ? ' (' + hasil.alasan + ')' : '') + '. Hubungi CBT Kabut Digital untuk berlangganan.';
+      statusEl.textContent = '❌ ' + (hasil.alasan || 'Gagal memverifikasi akun.') + ' Hubungi CBT Kabut Digital kalau ini terus terjadi.';
       document.getElementById('gh-btn-login-coba-lagi').style.display = 'block';
       return;
     }
