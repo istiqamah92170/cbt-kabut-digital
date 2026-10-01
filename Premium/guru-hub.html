@@ -771,6 +771,15 @@
     <div class="gh-status-msg" id="gh-langganan-bayar-status"></div>
 
     <p class="gh-hint" style="margin-top:16px;">Langganan bisa dibatalkan kapan saja — cukup tidak memperpanjang saat masa aktif berakhir, akses akan berhenti otomatis tanpa tagihan lanjutan.</p>
+
+    <hr class="gh-section-sep">
+
+    <!-- FITUR (2026-10): Reset Kunci Perangkat -- lihat ghResetKunciGuru(). -->
+    <h3 style="margin:0 0 6px;font-size:14px;">🔐 Keamanan Akun</h3>
+    <p class="gh-hint">Akses Guru Hub di tiap perangkat disimpan lewat satu kunci rahasia yang dibuat otomatis saat Anda pertama login — kunci ini tidak pernah kedaluwarsa sendiri. Kalau Anda pernah login di HP/laptop lain yang sekarang hilang, dipinjam orang, atau dijual, pakai tombol ini untuk memutus akses semua perangkat itu sekaligus.</p>
+    <button class="gh-btn gh-btn-outline" style="width:100%;color:var(--red);border-color:var(--red);" onclick="ghResetKunciPerangkat()">🔄 Reset Kunci Perangkat (keluarkan perangkat lain)</button>
+    <p class="gh-hint" style="margin-top:6px;">Setelah ini, perangkat LAIN (bukan yang Anda pakai sekarang) perlu login ulang pakai Google untuk bisa masuk lagi. Perangkat ini sendiri tetap aktif seperti biasa.</p>
+    <div class="gh-status-msg" id="gh-reset-kunci-status"></div>
   </div>
   </div><!-- /gh-page-langganan -->
 
@@ -1068,11 +1077,10 @@ async function ghSimpanKodePremium() {
   statusEl.className = 'gh-status-msg';
   statusEl.textContent = '🔄 Menyimpan...';
   try {
-    let resp = await fetch(GH_URL_LISENSI, {
+    let hasil = await ghFetchLisensi(GH_URL_LISENSI, {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'setKodePremium', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, kodePremium: kode })
     });
-    let hasil = await resp.json();
     if (hasil.status === 'ok') {
       ghProfilAktif.kodePremium = hasil.kodePremium;
       localStorage.setItem(GH_KEY_SESI_LISENSI, JSON.stringify(ghProfilAktif));
@@ -1147,14 +1155,13 @@ async function ghBuatSesiAktif() {
   // bisa menemukannya lewat ID Premium.
   let sesiId = null;
   try {
-    let respPusat = await fetch(GH_URL_LISENSI, {
+    let hasilPusat = await ghFetchLisensi(GH_URL_LISENSI, {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'simpanSesiAktif', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru,
         sesi: berhasil.map(b => ({ label: b.label, url: b.url, mulai: mulai.toISOString(), selesai: selesai.toISOString(), token: b.token }))
       })
     });
-    let hasilPusat = await respPusat.json();
     if (hasilPusat.status === 'ok') sesiId = hasilPusat.sesiId;
     else {
       statusEl.className = 'gh-status-msg err';
@@ -1196,8 +1203,7 @@ async function ghMuatSesiSaya() {
   wrap.innerHTML = 'Memuat...';
   try {
     let url = GH_URL_LISENSI + '?action=getSesiSaya&email=' + encodeURIComponent(ghProfilAktif.email) + '&kunciGuru=' + encodeURIComponent(ghProfilAktif.kunciGuru);
-    let resp = await fetch(url);
-    let hasil = await resp.json();
+    let hasil = await ghFetchLisensi(url);
     if (hasil.status !== 'ok') { wrap.innerHTML = '<div class="gh-empty">❌ ' + ghEsc(hasil.msg || 'Gagal memuat.') + '</div>'; return; }
     ghSesiSayaTerakhir = hasil.sesi || [];
     if (!hasil.sesi.length) { wrap.innerHTML = '<div class="gh-empty">Belum ada sesi ujian aktif dibuat.</div>'; return; }
@@ -1253,11 +1259,10 @@ async function ghBuatTokenBaru(si, ui) {
     let hasil = await resp.json();
     if (hasil.status !== 'ok') { ghToast('❌ Gagal membuat token di sekolah: ' + (hasil.msg || '')); return; }
 
-    let respPusat = await fetch(GH_URL_LISENSI, {
+    let hasilPusat = await ghFetchLisensi(GH_URL_LISENSI, {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'perbaruiTokenSesi', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, sesiId: s.sesiId, url: u.url, token: hasil.token })
     });
-    let hasilPusat = await respPusat.json();
     if (hasilPusat.status !== 'ok') {
       ghToast('⚠️ Token baru dibuat (' + hasil.token + ') tapi gagal disimpan ke server pusat: ' + (hasilPusat.msg || '') + ' -- catat token ini manual.');
     }
@@ -1307,11 +1312,10 @@ async function ghBatalkanSesi(sesiId) {
   }
 
   try {
-    let resp = await fetch(GH_URL_LISENSI, {
+    let hasil = await ghFetchLisensi(GH_URL_LISENSI, {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'hapusSesiSaya', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, sesiId })
     });
-    let hasil = await resp.json();
     if (hasil.status === 'ok') {
       ghSimpanSesiDibuatLokal(cacheLokal.filter(c => c.sesiId !== sesiId));
       ghToast('🗑️ Sesi dibatalkan.');
@@ -1349,8 +1353,7 @@ async function ghMuatStatusLangganan() {
   box.textContent = 'Memuat status langganan...';
   try {
     let url = GH_URL_LISENSI + '?action=cekStatusLangganan&email=' + encodeURIComponent(ghProfilAktif.email) + '&kunciGuru=' + encodeURIComponent(ghProfilAktif.kunciGuru);
-    let resp = await fetch(url);
-    let hasil = await resp.json();
+    let hasil = await ghFetchLisensi(url);
     if (hasil.status !== 'ok') { box.textContent = '❌ ' + (hasil.msg || 'Gagal memuat status.'); return; }
 
     // FITUR (2026-09): kalau tadinya masuk dalam mode "belum aktif" (lihat
@@ -1411,11 +1414,10 @@ async function ghBayarPaket(paketKey) {
   statusEl.className = 'gh-status-msg';
   statusEl.textContent = '🔄 Menyiapkan pembayaran...';
   try {
-    let resp = await fetch(GH_URL_LISENSI, {
+    let hasil = await ghFetchLisensi(GH_URL_LISENSI, {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'buatTagihan', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, paket: paketKey })
     });
-    let hasil = await resp.json();
     if (hasil.status !== 'ok') { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ ' + (hasil.msg || 'Gagal membuat tagihan.'); return; }
 
     await _ghMuatSnapJs();
@@ -1443,6 +1445,36 @@ function _ghPollingStatusLangganan() {
     await ghMuatStatusLangganan();
     if (sisaPercobaan <= 0) clearInterval(interval);
   }, 5000);
+}
+
+// FITUR (2026-10): Reset Kunci Perangkat -- lihat penjelasan lengkap di
+// ghResetKunciGuru() (Lisensi_GuruHub.gs). Setelah berhasil, kunci baru
+// LANGSUNG dipakai & disimpan ulang di perangkat INI juga (supaya tidak
+// ikut ter-logout oleh aksinya sendiri) -- yang ter-logout cuma perangkat
+// LAIN yang masih menyimpan kunci lama.
+async function ghResetKunciPerangkat() {
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { ghToast('Sesi login bermasalah -- coba logout & login ulang.'); return; }
+  if (!confirm('Yakin? Semua perangkat LAIN yang pernah login dengan akun ini akan diminta login ulang. Perangkat ini sendiri tidak terpengaruh.')) return;
+  let statusEl = document.getElementById('gh-reset-kunci-status');
+  statusEl.className = 'gh-status-msg';
+  statusEl.textContent = '🔄 Memproses...';
+  try {
+    let hasil = await ghFetchLisensi(GH_URL_LISENSI, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'resetKunciGuru', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru })
+    });
+    if (hasil.status !== 'ok') { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ ' + (hasil.msg || 'Gagal mereset.'); return; }
+    ghProfilAktif.kunciGuru = hasil.kunciGuru;
+    if (!ghModeBelumAktif) {
+      let profilPenuh = Object.assign({}, ghProfilAktif, { diverifikasiPada: Date.now() });
+      localStorage.setItem(GH_KEY_SESI_LISENSI, JSON.stringify(profilPenuh));
+    }
+    statusEl.className = 'gh-status-msg ok';
+    statusEl.textContent = '✅ Berhasil. Perangkat lain sudah tidak bisa akses tanpa login ulang.';
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err';
+    statusEl.textContent = '❌ ' + e.message;
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -4206,8 +4238,31 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
-const MIDTRANS_CLIENT_KEY = 'Mid-client-M0YhnqNbhFWgr7e2';
-const MIDTRANS_PRODUCTION = true;
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
+const MIDTRANS_PRODUCTION = false;
+
+// FITUR (2026-09): pembungkus fetch+parse KHUSUS untuk server Lisensi
+// pusat (GH_URL_LISENSI) -- supaya SEMUA pemanggilnya memberi pesan yang
+// sama jelasnya saat respons server BUKAN JSON. Penyebab paling umum:
+// skrip Apps Script BELUM DIOTORISASI ULANG setelah menambah layanan baru
+// (mis. MailApp/ScriptApp untuk pengingat email & trigger), atau setelan
+// deployment "Who has access" berubah -- keduanya membuat Apps Script
+// mengembalikan HALAMAN HTML (mulai dengan "<!DOCTYPE") alih-alih JSON,
+// yang kalau dibiarkan cuma muncul sebagai "Unexpected token '<'" yang
+// membingungkan guru. Dideteksi di sini sekali, ditunjukkan solusinya
+// langsung, bukan pesan parse-error mentah.
+async function ghFetchLisensi(url, opt) {
+  let resp = await fetch(url, opt);
+  let teks = await resp.text();
+  try {
+    return JSON.parse(teks);
+  } catch (e) {
+    if (teks.trim().toLowerCase().indexOf('<') === 0) {
+      throw new Error('Server Lisensi mengembalikan halaman, bukan data (kemungkinan besar skrip BELUM DIOTORISASI ULANG setelah update terakhir, atau setelan deployment berubah). Perbaikan: buka Apps Script Editor project Lisensi_GuruHub.gs → pilih fungsi apa saja di dropdown atas → klik ▶ Run sekali → Izinkan semua izin yang diminta → lalu Deploy ulang (Manage deployments → New version).');
+    }
+    throw new Error('Respons server tidak bisa dibaca (' + e.message + ').');
+  }
+}
 const GH_KEY_SESI_LISENSI = 'guruhub_sesi_lisensi_v1'; // {email, nama, sekolah, diverifikasiPada}
 const GH_UMUR_SESI_MS = 24 * 60 * 60 * 1000; // sesi tersimpan dianggap segar 24 jam -- lewat itu, dicek ulang ke Lisensi (jaga-jaga langganan berhenti)
 
@@ -4266,8 +4321,7 @@ async function ghMuatDashboardSesi() {
   wrap.innerHTML = 'Memuat...';
   try {
     let url = GH_URL_LISENSI + '?action=getSesiSaya&email=' + encodeURIComponent(ghProfilAktif.email) + '&kunciGuru=' + encodeURIComponent(ghProfilAktif.kunciGuru);
-    let resp = await fetch(url);
-    let hasil = await resp.json();
+    let hasil = await ghFetchLisensi(url);
     if (hasil.status !== 'ok') { wrap.innerHTML = '<div class="gh-empty">Gagal memuat sesi.</div>'; return; }
     let now = Date.now();
     // Selesai disembunyikan dari ringkasan dashboard (sudah tidak relevan
@@ -4383,12 +4437,11 @@ async function ghProsesLoginGoogle(response) {
   statusEl.className = 'gh-status-msg';
   statusEl.textContent = '🔎 Memverifikasi akses Anda...';
   try {
-    let resp = await fetch(GH_URL_LISENSI, {
+    let hasil = await ghFetchLisensi(GH_URL_LISENSI, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, // hindari preflight CORS -- Apps Script Web App membaca ini via e.postData.contents
       body: JSON.stringify({ idToken: response.credential }),
     });
-    let hasil = await resp.json();
     if (!hasil.valid) {
       // FITUR (2026-09): DULU ini jalan buntu total ("hubungi CBT Kabut
       // Digital") -- baik untuk akun yang benar-benar baru maupun yang
