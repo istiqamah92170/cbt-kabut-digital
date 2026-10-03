@@ -650,6 +650,7 @@
         <option value="">-- Pilih soal --</option>
       </select>
       <button class="gh-btn gh-btn-outline" onclick="ghToggleFormSekolah()">+ Soal</button>
+      <button class="gh-btn gh-btn-ghost" id="gh-btn-buka-sheet-sekolah" onclick="ghBukaSpreadsheetSekolah()" title="Buka Spreadsheet ujian ini" style="display:none;">📊</button>
       <button class="gh-btn gh-btn-ghost" id="gh-btn-hapus-sekolah" onclick="ghHapusSekolahAktif()" title="Hapus soal ini dari daftar" style="display:none;">✕</button>
     </div>
 
@@ -947,8 +948,12 @@ function ghMuatEntri() {
   } catch (e) { ghEntri = []; }
 }
 
-function ghSimpanEntri() {
+function ghSimpanEntriLokalSaja() {
   try { localStorage.setItem(GH_KEY_ENTRI, JSON.stringify(ghEntri)); } catch (e) {}
+}
+function ghSimpanEntri() {
+  ghSimpanEntriLokalSaja();
+  ghSinkronJadwalkanSimpan();
 }
 
 function ghEsc(s) {
@@ -996,6 +1001,31 @@ function ghHapusEntri(idx) {
   ghRenderList();
 }
 
+// FITUR (2026-10): buka Spreadsheet ujian langsung dari Guru Hub, tanpa
+// cari manual di Google Drive. URL-nya di-cache di entri (`sheetUrl`) --
+// sekali diambil, tidak perlu panggil server lagi tiap klik, dan ikut
+// tersinkron ke perangkat lain lewat ghSimpanEntri().
+async function ghBukaSpreadsheetEntri(idx) {
+  let entri = ghEntri[idx];
+  if (!entri) return;
+  if (entri.sheetUrl) { window.open(entri.sheetUrl, '_blank'); return; }
+  if (!entri.tokenAdmin) {
+    ghToast('❌ Atur dulu Token Admin untuk "' + entri.label + '" (klik 🔑) -- dipakai juga untuk mengambil link Spreadsheet-nya.');
+    return;
+  }
+  ghToast('🔄 Mengambil link Spreadsheet...');
+  try {
+    let resp = await fetch(entri.url + '?action=getSpreadsheetUrl&token_admin=' + encodeURIComponent(entri.tokenAdmin));
+    let hasil = await resp.json();
+    if (hasil.status !== 'ok' || !hasil.url) { ghToast('❌ Gagal mengambil link Spreadsheet: ' + (hasil.msg || 'tidak diketahui')); return; }
+    entri.sheetUrl = hasil.url;
+    ghSimpanEntri();
+    window.open(hasil.url, '_blank');
+  } catch (e) {
+    ghToast('❌ Gagal terhubung: ' + e.message);
+  }
+}
+
 function ghRenderList() {
   let wrap = document.getElementById('gh-list');
   if (ghEntri.length === 0) {
@@ -1021,6 +1051,7 @@ function ghRenderList() {
         <div class="gh-item-url">${ghEsc(x.url)}</div>
         <div style="font-size:11px;margin-top:2px;${x.tokenAdmin ? 'color:var(--blue-main);' : 'color:var(--red);'}">${x.tokenAdmin ? '🔑 Token admin diatur' : '⚠️ Token admin belum diatur (perlu untuk Sesi Ujian Aktif)'}</div>
       </div>
+      <button class="gh-btn gh-btn-ghost" onclick="ghBukaSpreadsheetEntri(${i})" title="Buka Spreadsheet ujian ini">📊</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghEditTokenAdminEntri(${i})" title="Atur/ubah Token Admin">🔑</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
     </div>
@@ -1478,6 +1509,66 @@ async function ghResetKunciPerangkat() {
 }
 
 // ═══════════════════════════════════════════════
+//  SINKRONISASI DATA LINTAS PERANGKAT (2026-10)
+// ═══════════════════════════════════════════════
+// Daftar Link Ujian (ghEntri) & Sekolah (ghSekolah) dulu CUMA di
+// localStorage -- buka Guru Hub dari HP/browser lain = daftar kosong.
+// Sekarang disalin juga ke server pusat (satu blob JSON per guru, lihat
+// ghSimpanDataGuru/ghMuatDataGuru di Lisensi_GuruHub.gs). localStorage
+// TETAP dipakai sebagai cache cepat (render pertama tidak perlu tunggu
+// jaringan) -- server cuma dibaca SEKALI saat login untuk menimpa cache
+// lokal itu kalau sudah ada data lebih baru dari perangkat lain.
+// KETERBATASAN YANG DISADARI: kalau guru mengedit dalam ~1.5 detik
+// pertama setelah login (sebelum ghSinkronMuat selesai), ada kemungkinan
+// kecil perubahan itu tertimpa oleh data lama dari server. Tidak ditangani
+// (butuh versioning penuh untuk benar-benar aman) -- risikonya kecil &低.
+let _ghSinkronTimer = null;
+function ghSinkronJadwalkanSimpan() {
+  // Belum login penuh (kunciGuru belum ada) atau masih mode "belum aktif"
+  // (halaman Link Ujian/Sekolah tidak bisa diakses di mode itu, jadi
+  // fungsi ini seharusnya tidak pernah terpanggil di sana -- jaga-jaga).
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru || ghModeBelumAktif) return;
+  clearTimeout(_ghSinkronTimer);
+  _ghSinkronTimer = setTimeout(ghSinkronSimpanSekarang, 1500);
+}
+async function ghSinkronSimpanSekarang() {
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) return;
+  try {
+    await ghFetchLisensi(GH_URL_LISENSI, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'simpanDataGuru', email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru, data: { ghEntri, ghSekolah } })
+    });
+  } catch (e) { console.warn('Gagal menyinkronkan data ke server:', e.message); }
+}
+// Dipanggil SEKALI tiap login penuh berhasil (lihat ghUiTampilkanApp).
+// Tidak di-await oleh pemanggilnya -- jalan di background, tidak menunda
+// tampilan aplikasi.
+async function ghSinkronMuat() {
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) return;
+  try {
+    let url = GH_URL_LISENSI + '?action=muatDataGuru&email=' + encodeURIComponent(ghProfilAktif.email) + '&kunciGuru=' + encodeURIComponent(ghProfilAktif.kunciGuru);
+    let hasil = await ghFetchLisensi(url);
+    if (hasil.status !== 'ok') { console.warn('Sinkronisasi gagal dimuat:', hasil.msg); return; }
+
+    if (hasil.data && (Array.isArray(hasil.data.ghEntri) || Array.isArray(hasil.data.ghSekolah))) {
+      // Server sudah punya data dari sinkronisasi sebelumnya -- itu yang
+      // dipakai (menimpa cache lokal perangkat ini).
+      let adaPerubahan = false;
+      if (Array.isArray(hasil.data.ghEntri)) { ghEntri = hasil.data.ghEntri; ghSimpanEntriLokalSaja(); adaPerubahan = true; }
+      if (Array.isArray(hasil.data.ghSekolah)) { ghSekolah = hasil.data.ghSekolah; ghSimpanSekolahLokalSaja(); adaPerubahan = true; }
+      if (adaPerubahan) {
+        ghRenderList(); ghRenderSekolah(); ghUiUpdateDashboardStats();
+        ghToast('🔄 Data Link Ujian & Sekolah disinkronkan dari perangkat lain.');
+      }
+    } else {
+      // Belum pernah sinkron sama sekali -- kirim data LOKAL yang ada
+      // sekarang sebagai titik awal, supaya perangkat lain nanti dapat ini.
+      ghSinkronSimpanSekarang();
+    }
+  } catch (e) { console.warn('Sinkronisasi gagal:', e.message); }
+}
+
+// ═══════════════════════════════════════════════
 //  NILAI & KOREKSI ESAI (Fase 6)
 // ═══════════════════════════════════════════════
 const GH_KEY_SEKOLAH = 'guruhub_sekolah_v1';
@@ -1498,8 +1589,12 @@ function ghMuatSekolah() {
     if (!Array.isArray(ghSekolah)) ghSekolah = [];
   } catch (e) { ghSekolah = []; }
 }
-function ghSimpanDaftarSekolah() {
+function ghSimpanSekolahLokalSaja() {
   try { localStorage.setItem(GH_KEY_SEKOLAH, JSON.stringify(ghSekolah)); } catch (e) {}
+}
+function ghSimpanDaftarSekolah() {
+  ghSimpanSekolahLokalSaja();
+  ghSinkronJadwalkanSimpan();
 }
 
 function ghRenderSekolah() {
@@ -1579,6 +1674,7 @@ function ghPilihSekolah(idx) {
     ghSekolahAktif = null;
     document.getElementById('gh-esai-area').style.display = 'none';
     document.getElementById('gh-btn-hapus-sekolah').style.display = 'none';
+    document.getElementById('gh-btn-buka-sheet-sekolah').style.display = 'none';
     document.getElementById('gh-btn-toggle-pembahasan').style.display = 'none';
     return;
   }
@@ -1587,9 +1683,30 @@ function ghPilihSekolah(idx) {
   if (!ghSekolahAktif) return;
   document.getElementById('gh-esai-area').style.display = 'block';
   document.getElementById('gh-btn-hapus-sekolah').style.display = 'inline-flex';
+  document.getElementById('gh-btn-buka-sheet-sekolah').style.display = 'inline-flex';
   ghMuatEsai(0);
   ghCekAnalisisTersimpan();
   ghCekBukaPembahasan();
+}
+
+// FITUR (2026-10): sama seperti ghBukaSpreadsheetEntri() di Link Ujian,
+// tapi untuk entri "Sekolah" di halaman Nilai & Koreksi Esai.
+async function ghBukaSpreadsheetSekolah() {
+  let s = ghSekolahAktif;
+  if (!s) return;
+  if (s.sheetUrl) { window.open(s.sheetUrl, '_blank'); return; }
+  if (!s.tokenAdmin) { ghToast('❌ Soal ini belum punya Token Admin tersimpan.'); return; }
+  ghToast('🔄 Mengambil link Spreadsheet...');
+  try {
+    let resp = await fetch(s.urlGas + '?action=getSpreadsheetUrl&token_admin=' + encodeURIComponent(s.tokenAdmin));
+    let hasil = await resp.json();
+    if (hasil.status !== 'ok' || !hasil.url) { ghToast('❌ Gagal mengambil link Spreadsheet: ' + (hasil.msg || 'tidak diketahui')); return; }
+    s.sheetUrl = hasil.url;
+    ghSimpanDaftarSekolah();
+    window.open(hasil.url, '_blank');
+  } catch (e) {
+    ghToast('❌ Gagal terhubung: ' + e.message);
+  }
 }
 
 // FITUR (2026-09): toggle buka/tutup pembahasan -- baca status TERBARU
@@ -1694,6 +1811,7 @@ function ghHapusSekolahAktif() {
   ghSekolahAktif = null; ghSekolahIdxAktif = null;
   document.getElementById('gh-esai-area').style.display = 'none';
   document.getElementById('gh-btn-hapus-sekolah').style.display = 'none';
+  document.getElementById('gh-btn-buka-sheet-sekolah').style.display = 'none';
   document.getElementById('gh-btn-toggle-pembahasan').style.display = 'none';
   ghRenderSekolah();
   ghToast('Soal dihapus dari daftar.');
@@ -4238,8 +4356,8 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
-const MIDTRANS_CLIENT_KEY = 'Mid-client-M0YhnqNbhFWgr7e2';
-const MIDTRANS_PRODUCTION = true;
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
+const MIDTRANS_PRODUCTION = false;
 
 // FITUR (2026-09): pembungkus fetch+parse KHUSUS untuk server Lisensi
 // pusat (GH_URL_LISENSI) -- supaya SEMUA pemanggilnya memberi pesan yang
@@ -4385,6 +4503,7 @@ function ghUiTampilkanApp(profil) {
   document.getElementById('gh-ui-sapaan').textContent = ghUiSapaanWaktu() + ', ' + nama;
   let halamanDiminta = new URLSearchParams(location.search).get('halaman');
   ghUiGotoPage((halamanDiminta === 'langganan') ? 'langganan' : 'dashboard');
+  ghSinkronMuat(); // tidak di-await -- jalan di background, lihat definisinya
 }
 
 // FITUR (2026-09): PENDAFTARAN MANDIRI -- dipanggil saat identitas Google
