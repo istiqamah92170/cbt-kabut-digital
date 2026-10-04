@@ -314,6 +314,13 @@
     --red:#F87171; --red-light:#3A211D;
     --heading:#6EE7B7;
     --sh-sm:0 1px 4px rgba(0,0,0,.35); --sh-md:0 6px 24px rgba(0,0,0,.5);
+    /* BUG-FIX (2026-10): tanpa ini, ikon kalender/jam BAWAAN BROWSER di
+       input type=date/time tetap digambar gelap (asumsi browser: latar
+       terang) walau kotaknya sendiri sudah kita buat gelap lewat variabel
+       di atas -- jadi ikonnya nyaris tak kelihatan. color-scheme memberi
+       tahu browser utk menggambar seluruh chrome bawaan form (termasuk
+       ikon itu) dengan palet gelap. */
+    color-scheme: dark;
   }
 
   .gh-emblem { display:inline-flex; flex-shrink:0; }
@@ -650,7 +657,7 @@
         <option value="">-- Pilih soal --</option>
       </select>
       <button class="gh-btn gh-btn-outline" onclick="ghToggleFormSekolah()">+ Soal</button>
-      <button class="gh-btn gh-btn-ghost" id="gh-btn-buka-sheet-sekolah" onclick="ghBukaSpreadsheetSekolah()" title="Buka Spreadsheet ujian ini" style="display:none;">📊</button>
+      <button class="gh-btn gh-btn-ghost" id="gh-btn-buka-sheet-sekolah" onclick="ghBukaSpreadsheetSekolah()" title="Buka Spreadsheet ujian ini" style="display:none;">📗</button>
       <button class="gh-btn gh-btn-ghost" id="gh-btn-hapus-sekolah" onclick="ghHapusSekolahAktif()" title="Hapus soal ini dari daftar" style="display:none;">✕</button>
     </div>
 
@@ -1051,7 +1058,7 @@ function ghRenderList() {
         <div class="gh-item-url">${ghEsc(x.url)}</div>
         <div style="font-size:11px;margin-top:2px;${x.tokenAdmin ? 'color:var(--blue-main);' : 'color:var(--red);'}">${x.tokenAdmin ? '🔑 Token admin diatur' : '⚠️ Token admin belum diatur (perlu untuk Sesi Ujian Aktif)'}</div>
       </div>
-      <button class="gh-btn gh-btn-ghost" onclick="ghBukaSpreadsheetEntri(${i})" title="Buka Spreadsheet ujian ini">📊</button>
+      <button class="gh-btn gh-btn-ghost" onclick="ghBukaSpreadsheetEntri(${i})" title="Buka Spreadsheet ujian ini">📗</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghEditTokenAdminEntri(${i})" title="Atur/ubah Token Admin">🔑</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
     </div>
@@ -4356,8 +4363,8 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
-const MIDTRANS_CLIENT_KEY = 'Mid-client-M0YhnqNbhFWgr7e2';
-const MIDTRANS_PRODUCTION = true;
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
+const MIDTRANS_PRODUCTION = false;
 
 // FITUR (2026-09): pembungkus fetch+parse KHUSUS untuk server Lisensi
 // pusat (GH_URL_LISENSI) -- supaya SEMUA pemanggilnya memberi pesan yang
