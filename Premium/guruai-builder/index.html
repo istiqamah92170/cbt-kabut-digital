@@ -656,8 +656,13 @@ h1,h2,h3,h4 { color: var(--text-primary); }
   table{ border-collapse: collapse !important; }
   td, th { border: 1px solid #999 !important; padding: 4pt 6pt !important; font-size: 10pt !important; }
 
-  /* Margin halaman — disamakan dgn export .docx (0.5 inci) */
-  @page { margin: 0.5in; size: A4; }
+  /* Margin halaman — disamakan dgn export .docx (0.5 inci). SENGAJA
+     TIDAK pakai "size: A4" di sini — kalau dipaksa A4, ukuran kertas yg
+     dipilih guru di dialog print/Simpan-sbg-PDF (mis. Folio/Legal) akan
+     DIABAIKAN browser, isinya tetap ditata utk A4 lalu "dipaksa muat" ke
+     kertas lain (hasilnya halaman kosong/tata letak berantakan, spt
+     dilaporkan Rapian). Tanpa "size", ukuran kertas ikut pilihan guru. */
+  @page { margin: 0.5in; }
 
   /* Spasi rapat — SEBELUMNYA line-height:1.6 bawaan (dari body utama) dan
      margin <p>/<li> default browser ikut kebawa ke print/PDF, bikin hasil
