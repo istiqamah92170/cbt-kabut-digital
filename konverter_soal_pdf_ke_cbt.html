@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konverter Soal PDF ke CBT — Kabut Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fog: #eef2f6; --mist: #dfe7ef; --paper: #ffffff; --ink: #16222e; --muted: #5a6a7a;
+  --brand: #1058b0; --brand-deep: #0a3d7d; --line: #cbd6e2;
+  --ok: #1f7a4d; --ok-bg: #e4f3ea; --warn: #8a5600; --warn-bg: #fff1cf; --bad: #b3261e; --bad-bg: #fde7e5;
+  --radius: 10px;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fog: #0f1620; --mist: #19232f; --paper: #16202b; --ink: #e6edf4; --muted: #94a5b6;
+    --brand: #5aa0f0; --brand-deep: #8dbcf6; --line: #2a3a4b;
+    --ok: #6fd3a0; --ok-bg: #123325; --warn: #f0c36a; --warn-bg: #3a2c0c; --bad: #ff9a92; --bad-bg: #3d1713;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 90px; }
+body {
+  margin: 0; color: var(--ink); font: 15px/1.5 var(--font-body);
+  background:
+    radial-gradient(1200px 500px at 85% -10%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 70%),
+    radial-gradient(900px 420px at -10% 10%, color-mix(in srgb, var(--brand) 8%, transparent), transparent 70%),
+    var(--fog);
+  min-height: 100vh;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 80px; }
+header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.brand { font: 600 13px/1 var(--font-body); color: var(--brand); letter-spacing: .02em; }
+h1 { font: 700 clamp(26px, 4.2vw, 40px)/1.08 var(--font-display); margin: 6px 0 0; letter-spacing: -.02em; }
+.lede { color: var(--muted); max-width: 62ch; margin: 10px 0 0; }
+
+/* unggah */
+.drop {
+  display: block; border: 2px dashed color-mix(in srgb, var(--brand) 45%, var(--line)); border-radius: 16px;
+  background: color-mix(in srgb, var(--paper) 78%, transparent); padding: 38px 24px; text-align: center; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.drop:hover, .drop.over { background: var(--paper); border-color: var(--brand); }
+.drop:focus-within { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 3px; }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop strong { font: 600 20px/1.2 var(--font-display); display: block; }
+.drop span { color: var(--muted); display: block; margin-top: 6px; }
+.drop .file { margin-top: 12px; color: var(--brand-deep); font-weight: 600; }
+
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); margin-top: 14px; }
+.panel > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.panel > summary::-webkit-details-marker { display: none; }
+.panel > summary::after { content: "+"; font-size: 20px; color: var(--muted); line-height: 1; }
+.panel[open] > summary::after { content: "–"; }
+.panel .inner { padding: 4px 16px 16px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+label.f { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+label.f.check { display: flex; gap: 8px; align-items: flex-start; color: var(--ink); font-size: 14px; }
+label.f.check input { margin-top: 3px; }
+label.f small { color: var(--muted); font-size: 12px; }
+input[type=text], input[type=number], select, textarea {
+  font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; width: 100%;
+}
+textarea { resize: vertical; min-height: 38px; line-height: 1.45; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 1px;
+}
+
+button, .btn {
+  font: 600 14px/1 var(--font-body); border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  padding: 10px 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+}
+button:hover { border-color: var(--brand); }
+button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+button.primary:hover { background: var(--brand-deep); }
+button.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 6px 8px; font-weight: 500; font-size: 13px; }
+button.ghost:hover { color: var(--ink); background: var(--mist); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* progres */
+.busy { margin-top: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.bar { height: 6px; background: var(--mist); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--brand); transition: width .2s; }
+
+/* hasil */
+#result[hidden] { display: none; }
+.summary {
+  position: sticky; top: 0; z-index: 5; margin: 22px -20px 0; padding: 12px 20px;
+  background: color-mix(in srgb, var(--fog) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+  display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+}
+.stats { display: flex; gap: 6px 18px; flex-wrap: wrap; }
+.stat b { font: 700 20px/1 var(--font-display); display: block; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat.attn b { color: var(--warn); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.notes { display: grid; gap: 8px; margin-top: 14px; }
+.note { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 10px 14px; font-size: 14px; }
+.note.info { background: var(--mist); color: var(--ink); }
+
+.toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 18px 0 10px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--paper); border-radius: 99px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+/* kartu soal */
+#list { display: grid; gap: 12px; }
+.q { background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--ok); border-radius: var(--radius); padding: 14px 16px 12px; }
+.q.warn { border-left-color: #d99a1b; }
+.q.bad { border-left-color: var(--bad); }
+.q-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.no { font: 700 22px/1 var(--font-display); min-width: 2ch; }
+.q-head .tipe { width: 124px; } .q-head .poin { width: 74px; }
+.q-head .sp { flex: 1; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: var(--mist); color: var(--muted); }
+.warns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.warns:empty { display: none; }
+.warns .w { font-size: 12.5px; padding: 3px 9px; border-radius: 6px; background: var(--warn-bg); color: var(--warn); }
+.q.bad .warns .w { background: var(--bad-bg); color: var(--bad); }
+.grid { display: grid; gap: 10px 12px; grid-template-columns: 1fr 1fr; margin-top: 10px; }
+.grid .full { grid-column: 1 / -1; }
+.fl { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+.opt { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: center; }
+.opt > span { font-weight: 700; color: var(--brand); text-align: center; }
+.opt.key > span { background: var(--brand); color: #fff; border-radius: 6px; padding: 5px 0; }
+.imgs { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.img { position: relative; border: 1px solid var(--line); border-radius: 8px; padding: 6px; background: var(--fog); }
+.img img { display: block; max-height: 120px; max-width: 220px; border-radius: 4px; }
+.img small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 4px; }
+.img button { position: absolute; top: 4px; right: 4px; padding: 3px 7px; font-size: 12px; background: var(--paper); }
+details.raw { margin-top: 10px; }
+details.raw summary { cursor: pointer; font-size: 12.5px; color: var(--muted); }
+details.raw pre { white-space: pre-wrap; background: var(--fog); border-radius: 8px; padding: 10px 12px; font: 12.5px/1.5 ui-monospace, Menlo, Consolas, monospace; margin: 8px 0 0; max-height: 220px; overflow: auto; }
+.rowtools { display: flex; gap: 2px; justify-content: flex-end; margin-top: 4px; }
+.empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 8px; font-size: 14px; max-width: 90vw; z-index: 20; }
+.toast[hidden] { display: none; }
+footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
+
+@media (max-width: 720px) {
+  .grid { grid-template-columns: 1fr; }
+  .q-head .tipe { width: 112px; }
+  .summary { margin-left: -20px; margin-right: -20px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand">Kabut Digital · CBT</div>
+      <h1>Konverter soal PDF ke spreadsheet CBT</h1>
+      <p class="lede">Unggah PDF soal. Aplikasi mengenali nomor soal, pilihan ganda, kunci, pembahasan, dan esai, lalu menyusunnya ke format spreadsheet CBT. Semua diproses di peramban Anda; berkas tidak dikirim ke server.</p>
+    </div>
+  </header>
+
+  <label class="drop" id="drop">
+    <input type="file" id="file" accept="application/pdf,.pdf">
+    <strong>Seret PDF soal ke sini, atau klik untuk memilih berkas</strong>
+    <span>Mendukung PDF dari Word/Google Docs (teks asli) dan PDF hasil scan (dengan OCR).</span>
+    <div class="file" id="fileName"></div>
+  </label>
+
+  <details class="panel">
+    <summary>Pengaturan deteksi</summary>
+    <div class="inner">
+      <label class="f">Poin default pilihan ganda<input type="number" id="setPgPoin" min="0" step="0.5" value="2"></label>
+      <label class="f">Poin default esai<input type="number" id="setEsaiPoin" min="0" step="0.5" value="5"></label>
+      <label class="f">Pembacaan teks
+        <select id="setOcr">
+          <option value="auto" selected>Otomatis (OCR hanya bila halaman tanpa teks)</option>
+          <option value="always">Selalu OCR (PDF scan atau teks rusak)</option>
+          <option value="off">Tanpa OCR</option>
+        </select>
+        <small>OCR memuat mesin tambahan dan lebih lambat.</small>
+      </label>
+      <label class="f">Awalan URL gambar (opsional)
+        <input type="text" id="setPrefix" placeholder="https://pengguna.github.io/bank-soal/img/">
+        <small>Jika diisi, kolom URL_Gambar diisi awalan + nama berkas (soal_003.png).</small>
+      </label>
+      <label class="f check"><input type="checkbox" id="setImages" checked><span>Ambil gambar dari PDF<br><small>Dipotong per soal dan dikemas dalam ZIP.</small></span></label>
+      <label class="f check"><input type="checkbox" id="setFormatKey" checked><span>Baca kunci dari opsi yang tebal atau bergaris bawah<br><small>Dipakai hanya bila kunci tidak tertulis.</small></span></label>
+      <div><button type="button" id="btnRedetect">Deteksi ulang</button></div>
+    </div>
+  </details>
+
+  <div class="busy" id="busy" hidden role="status" aria-live="polite">
+    <div id="busyText"></div>
+    <div class="bar"><i id="busyBar"></i></div>
+  </div>
+
+  <section id="result" hidden>
+    <div class="summary">
+      <div class="stats" id="stats"></div>
+      <div class="actions">
+        <button type="button" id="btnZip" hidden>Unduh gambar</button>
+        <button type="button" class="primary" id="btnXlsx">Unduh Excel (.xlsx)</button>
+      </div>
+    </div>
+    <div class="notes" id="notes"></div>
+
+    <details class="panel">
+      <summary>Tempel kunci jawaban</summary>
+      <div class="inner" style="grid-template-columns:1fr">
+        <label class="f">Kunci dari sumber lain
+          <textarea id="pasteKeys" rows="2" placeholder="1.A 2.B 3.C 4.D   atau   ABCDABCD"></textarea>
+          <small>Format bernomor diterapkan sesuai nomor soal; deretan huruf diterapkan berurutan ke soal pilihan ganda.</small>
+        </label>
+        <div><button type="button" id="btnPaste">Terapkan kunci</button></div>
+      </div>
+    </details>
+
+    <div class="toolbar">
+      <div class="chips" role="group" aria-label="Filter soal">
+        <button type="button" class="chip" data-filter="all" aria-pressed="true">Semua <i></i></button>
+        <button type="button" class="chip" data-filter="review" aria-pressed="false">Perlu dicek <i></i></button>
+        <button type="button" class="chip" data-filter="pg" aria-pressed="false">Pilihan ganda <i></i></button>
+        <button type="button" class="chip" data-filter="esai" aria-pressed="false">Esai <i></i></button>
+      </div>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <footer>Periksa hasil sebelum diunduh: rumus, simbol matematika, dan tabel di PDF sering terbaca tidak sempurna. Opsi E tidak dimasukkan karena template CBT hanya mendukung A–D.</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ==========================================================================
+   CBTParser — mengubah baris teks hasil baca PDF menjadi soal berformat CBT.
+   Murni logika (tanpa DOM), sehingga bisa diuji di Node maupun dipakai browser.
+
+   Model baris (line):
+     { text, bold:[bool/char], ul:[bool/char], page, y (atas→bawah, pt), h, ph }
+   ========================================================================== */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CBTParser = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const LETTERS = 'ABCDE';
+
+  /* ---------- util ---------- */
+  const clone = (L, from, to) => Object.assign({}, L, {
+    text: L.text.slice(from, to), bold: L.bold.slice(from, to), ul: L.ul.slice(from, to)
+  });
+  const norm = s => s.replace(/\s+/g, ' ').trim();
+  const orderOf = L => L.page * 1e5 + L.y;
+  function fracFlag(arr, text, from, to) {
+    let n = 0, f = 0;
+    for (let i = from; i < to; i++) {
+      if (/\s/.test(text[i])) continue;
+      n++; if (arr[i]) f++;
+    }
+    return n ? f / n : 0;
+  }
+
+  /* ---------- pola ---------- */
+  const RE_START = /^\s*(?:(soal|no|nomor)\.?\s*)?(\()?(\d{1,3})(?:\s{0,2}([.)\]:]))?(\s+|$)/i;
+  const RE_PAGENUM = /^\W*(?:halaman|hal\.?|page)?\s*\d{1,3}(?:\s*(?:\/|dari|of)\s*\d{1,3})?\W*$/i;
+  const RE_TAIL_HEAD = /^\s*(kunci\s+jawaban(?:\s+dan\s+pembahasan)?|kunci\s+dan\s+pembahasan|kunci|jawaban|answer\s*key|pembahasan(?:\s+soal)?|kunci\s+pg)\s*[:：]?\s*$/i;
+  const RE_TAIL_INLINE = /^\s*(kunci\s+jawaban|kunci|jawaban|answer\s*key)\s*[:：]\s*(.+)$/i;
+  const RE_PEMB = /^\s*(pembahasan|penjelasan|penyelesaian|uraian\s+jawaban|jawaban\s+lengkap|solusi|alasan)\s*(?:[:\-–]\s*(.*)|)$/i;
+  const RE_KEY_SEP = /^\s*(?:kunci(?:\s+jawaban)?|jawaban(?:\s+(?:yang\s+)?(?:benar|tepat))?|answer|key|jwb|ans)\s*[:=\-–]\s*(.*)$/i;
+  const RE_KEY_NOSEP = /^\s*(?:kunci(?:\s+jawaban)?|jawaban\s+yang\s+benar)\s+\(?([A-Ea-e])\)?\s*\.?\s*$/i;
+  const RE_END_JUNK = /selamat\s+(mengerjakan|bekerja|belajar)|semoga\s+sukses|[-~=*\s]*selesai[-~=*\s]*$|good\s+luck/i;
+  const RE_DRAW = /(gambar(?:lah|kan)|menggambar|sketsa(?:kan|lah)?|buat(?:lah)?\s+(?:sketsa|diagram|grafik|bagan|skema|tabel|model|gambar)|lukis(?:lah|kan)?|ilustrasikan)/i;
+
+  function isSectionHeading(t) {
+    t = t.trim();
+    if (!t || t.length > 80 || /[?]$/.test(t)) return false;
+    if (matchStart(t)) return false;
+    if (/^(bagian|part|paket|babak)\s+\S+/i.test(t)) return true;
+    if (/^[A-Za-z]{1,4}\s*[.)]\s*(?:soal\s+)?(pilihan\s+ganda|uraian|esai|essay|isian|benar\s*[-/]?\s*salah)\b/i.test(t) && t.length < 50) return true;
+    if (/^(?:soal\s+)?(pilihan\s+ganda|uraian|esai|essay|isian\s+singkat|benar\s*[-/]?\s*salah)\b/i.test(t) && t.length < 60) return true;
+    return false;
+  }
+
+  function matchStart(text) {
+    const m = RE_START.exec(text);
+    if (!m) return null;
+    const prefix = m[1], open = m[2], punct = m[4];
+    if (!prefix && !punct) return null;
+    if (open && punct !== ')') return null;
+    const style = (prefix ? 'p' : '') + (open ? '(' : '') + (punct || '');
+    return { num: +m[3], offset: m[0].length, style };
+  }
+
+  /* ---------- bersihkan header / footer / nomor halaman ---------- */
+  function cleanLines(lines, pageCount) {
+    const margin = 0.09;
+    const inMargin = L => L.ph && (L.y < L.ph * margin || L.y > L.ph * (1 - margin));
+    const keyOf = t => t.toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim();
+    const counts = new Map();
+    for (const L of lines) {
+      if (!inMargin(L)) continue;
+      const k = keyOf(L.text); if (!k) continue;
+      let s = counts.get(k); if (!s) counts.set(k, s = new Set());
+      s.add(L.page);
+    }
+    const minPages = Math.max(2, Math.ceil(pageCount * 0.5));
+    return lines.filter(L => {
+      if (!L.text.trim()) return false;
+      if (!inMargin(L)) return true;
+      if (RE_PAGENUM.test(L.text.trim())) return false;
+      const s = counts.get(keyOf(L.text));
+      if (pageCount >= 2 && s && s.size >= minPages) return false;
+      return true;
+    });
+  }
+
+  /* ---------- rantai nomor soal ---------- */
+  function chainFrom(cands, s, mustStartAt1) {
+    if (mustStartAt1 && cands[s].num !== 1) return [];
+    const ch = [cands[s]]; let last = s, exp = cands[s].num + 1;
+    for (;;) {
+      let found = -1;
+      for (let k = 0; k <= 2 && found < 0; k++) {
+        for (let j = last + 1; j < cands.length; j++) {
+          if (cands[j].num === exp + k) { found = j; break; }
+        }
+      }
+      if (found < 0) break;
+      ch.push(cands[found]); last = found; exp = cands[found].num + 1;
+    }
+    return ch;
+  }
+  // rantai terpanjang; hanya kandidat bergaya sama yang saling disambung
+  function bestChain(allCands, opt) {
+    opt = opt || {};
+    const pool = allCands.filter(c => c.i > (opt.afterI == null ? -1 : opt.afterI) && (!opt.startOk || opt.startOk(c)));
+    const styles = [...new Set(allCands.map(c => c.style))];
+    let best = [];
+    for (const st of styles) {
+      const cands = allCands.filter(c => c.style === st && c.i > (opt.afterI == null ? -1 : opt.afterI));
+      for (let s = 0; s < cands.length; s++) {
+        if (opt.startOk && !opt.startOk(cands[s])) continue;
+        const ch = chainFrom(cands, s, opt.mustStartAt1);
+        if (ch.length > best.length) best = ch;
+        else if (ch.length === best.length && ch.length && (st === best[0].style || st === '.')) best = ch;  // seri: yang mulai belakangan menang
+      }
+    }
+    void pool;
+    return best;
+  }
+
+  /* ---------- kunci / pembahasan di bagian akhir dokumen ---------- */
+  function parsePairs(textLines) {
+    const text = textLines.join('\n');
+    const re = /(?:^|[\s,;(])(\d{1,3})\s*[.)\-–:=]?\s*([A-Ea-e])(?=$|[\s,;.)])/g;
+    const map = new Map(); let m, matched = 0;
+    while ((m = re.exec(text))) {
+      if (!map.has(+m[1])) map.set(+m[1], m[2].toUpperCase());
+      matched += m[0].replace(/\s/g, '').length;
+    }
+    const total = text.replace(/\s/g, '').length || 1;
+    // tabel mendatar: baris angka lalu baris huruf
+    if (map.size < 3) {
+      for (let i = 0; i + 1 < textLines.length; i++) {
+        const nums = textLines[i].match(/\b\d{1,3}\b/g);
+        const lets = textLines[i + 1].match(/\b[A-Ea-e]\b/g);
+        const onlyNums = /^[\s\d,;.|\-–]+$/.test(textLines[i].replace(/\b(no|nomor)\b\.?/ig, ''));
+        const onlyLets = /^[\sA-Ea-e,;.|\-–]+$/.test(textLines[i + 1].replace(/\b(jawaban|kunci)\b\.?/ig, ''));
+        if (nums && lets && onlyNums && onlyLets && nums.length === lets.length && nums.length >= 3) {
+          nums.forEach((n, k) => { if (!map.has(+n)) map.set(+n, lets[k].toUpperCase()); });
+          matched += total;
+        }
+      }
+    }
+    return { map, coverage: Math.min(1, matched / total) };
+  }
+  function parseSeqLetters(textLines) {
+    const text = textLines.join(' ');
+    if (!/^[A-Ea-e\s,;.\-–|]+$/.test(text)) return [];
+    return (text.match(/[A-Ea-e]/g) || []).map(x => x.toUpperCase());
+  }
+  function parseEntries(subLines, withKey) {
+    const cands = [];
+    subLines.forEach((L, i) => {
+      const m = matchStart(L.text);
+      if (m) cands.push({ i, num: m.num, offset: m.offset, style: m.style });
+    });
+    const ch = bestChain(cands, { mustStartAt1: true });
+    const out = [];
+    ch.forEach((c, k) => {
+      const endI = k + 1 < ch.length ? ch[k + 1].i : subLines.length;
+      const parts = [subLines[c.i].text.slice(c.offset)];
+      for (let j = c.i + 1; j < endI; j++) parts.push(subLines[j].text);
+      let text = norm(parts.join(' ')), key = null;
+      const km = /(?:jawaban|kunci)\s*(?:yang\s+benar|benar|tepat)?\s*[:=]\s*\(?([A-Ea-e])\)?(?=[\s.,;)]|$)/i.exec(text);
+      if (km) key = km[1].toUpperCase();
+      else if (withKey) {
+        const lm = /^\(?([A-Ea-e])\)?(?:[.:)\s\-–]+|$)(.*)$/.exec(text);
+        if (lm) { key = lm[1].toUpperCase(); text = norm(lm[2]); }
+      }
+      out.push({ num: c.num, text, key });
+    });
+    return out;
+  }
+
+  function detectTail(lines, N) {
+    const need = Math.max(3, Math.ceil(N * 0.5));
+    const heads = [];
+    lines.forEach((L, i) => {
+      const t = L.text.trim();
+      let m = RE_TAIL_HEAD.exec(t);
+      if (m) return heads.push({ i, title: m[1].toLowerCase(), first: null });
+      m = RE_TAIL_INLINE.exec(t);
+      if (m && (parsePairs([m[2]]).map.size >= 3 || parseSeqLetters([m[2]]).length >= 3))
+        heads.push({ i, title: m[1].toLowerCase(), first: m[2] });
+    });
+    const sections = [];
+    for (let a = 0; a < heads.length; a++) {
+      const h = heads[a];
+      const end = a + 1 < heads.length ? heads[a + 1].i : lines.length;
+      const sub = lines.slice(h.i + 1, end);
+      const bodyText = (h.first ? [h.first] : []).concat(sub.map(l => l.text));
+      const isPemb = /pembahasan/.test(h.title);
+      const hasKeyWord = /kunci|jawaban|answer/.test(h.title);
+      let sec = null;
+      const pr = parsePairs(bodyText);
+      if (!isPemb && pr.map.size >= need && pr.coverage >= 0.45) sec = { kind: 'key', i: h.i, map: pr.map };
+      if (!sec && !isPemb) {
+        const sq = parseSeqLetters(bodyText);
+        if (sq.length >= need) sec = { kind: 'seq', i: h.i, seq: sq };
+      }
+      if (!sec) {
+        const ents = parseEntries(h.first ? [{ text: '1. ' + h.first }].concat(sub) : sub, hasKeyWord && !isPemb || /kunci/.test(h.title));
+        if (ents.length >= need) sec = { kind: 'entries', i: h.i, ents };
+      }
+      if (sec) sections.push(sec);
+    }
+    return sections;
+  }
+
+  /* ---------- gabung baris menjadi teks soal ---------- */
+  const RE_LISTMARK = /^\s*(?:[A-Ea-e][.)]|\d{1,2}[.)]|[•●▪◦\-–*])\s/;
+  function joinLines(arr) {
+    let out = '';
+    for (let k = 0; k < arr.length; k++) {
+      const L = arr[k], t = norm(L.text);
+      if (!t) continue;
+      if (!out) { out = t; continue; }
+      const prev = arr[k - 1];
+      let sep = ' ';
+      if (RE_LISTMARK.test(L.text)) sep = '\n';
+      else if (prev && prev.page === L.page && RE_LISTMARK.test(prev.text) && L.x != null && prev.x != null && L.x <= prev.x + 1) sep = '\n';
+      else if (prev && prev.page === L.page && prev.h) {
+        const ratio = (L.y - prev.y) / prev.h;
+        if (ratio > 1.9) sep = '\n';
+      }
+      if (sep === ' ' && /[A-Za-zÀ-ÿ]-$/.test(out) && /^[a-zà-ÿ]/.test(t)) { out = out.slice(0, -1) + t; continue; }
+      out += sep + t;
+    }
+    return out.trim();
+  }
+
+  /* ---------- parse satu blok soal ---------- */
+  function parseBlock(blk, scan) {
+    const R = { stem: [], opts: [], keyLetter: null, keyText: [], pemb: [], pembI: -1 };
+    let mode = 'stem', cur = null, expected = 0;
+
+    const startOpt = (L, from, letterIdx) => {
+      cur = { L: LETTERS[letterIdx], parts: [], spans: [], lines: [] };
+      R.opts.push(cur);
+    };
+    const addToTarget = (L, from, to) => {
+      const piece = L.text.slice(from, to);
+      if (!piece.trim()) return;
+      if (cur) { cur.parts.push(piece); cur.spans.push({ L, from, to }); cur.lines.push(L); }
+      else R.stem.push(clone(L, from, to));
+    };
+
+    for (let li = 0; li < blk.length; li++) {
+      const L = blk[li], t = L.text.trim();
+      if (!t) continue;
+
+      if (mode !== 'pemb') {
+        const pm = RE_PEMB.exec(t);
+        if (pm) { mode = 'pemb'; R.pembI = li; if (pm[2]) R.pemb.push(pm[2]); continue; }
+      }
+      if (mode === 'pemb') { R.pemb.push(t); continue; }
+
+      let km = RE_KEY_SEP.exec(t), kl = null, krest = null;
+      if (km) krest = km[1].trim();
+      else { const k2 = RE_KEY_NOSEP.exec(t); if (k2) krest = k2[1]; }
+      if (krest != null) {
+        const lm = /^\(?([A-Ea-e])\)?(?=[\s.,;:)]|$)/.exec(krest);
+        if (lm && (R.opts.length > 0 || krest.length <= 3)) { kl = lm[1].toUpperCase(); R.keyLetter = kl; }
+        else if (krest) R.keyText.push(krest);
+        mode = 'key';
+        continue;
+      }
+      if (mode === 'key') { R.keyText.push(t); continue; }
+
+      if (!scan) { addToTarget(L, 0, L.text.length); continue; }
+
+      // ---- cari penanda opsi ----
+      let pos = 0;
+      const text = L.text;
+      while (pos < text.length) {
+        if (expected >= LETTERS.length) { addToTarget(L, pos, text.length); pos = text.length; break; }
+        const ch = LETTERS[expected];
+        const re = new RegExp('(^|\\s)\\(?([' + ch + ch.toLowerCase() + '])[.)](?=\\s|$)', 'g');
+        re.lastIndex = pos;
+        let m, hit = null;
+        while ((m = re.exec(text))) {
+          const mkStart = m.index + m[1].length;
+          if (expected === 0 && mkStart > 0) {
+            // opsi A di tengah baris hanya sah bila disusul penanda B di baris yang sama
+            if (!/(^|\s)\(?[Bb][.)](?=\s|$)/.test(text.slice(m.index + m[0].length))) continue;
+          } else if (expected > 0 && !cur) continue;
+          hit = { s: mkStart, e: m.index + m[0].length };
+          break;
+        }
+        if (!hit) { addToTarget(L, pos, text.length); pos = text.length; break; }
+        addToTarget(L, pos, hit.s);
+        startOpt(L, hit.e, expected);
+        expected++;
+        pos = hit.e;
+      }
+    }
+    return R;
+  }
+
+
+  /* ---------- validasi satu baris (dipakai parser dan UI saat diedit) ---------- */
+  function validateRow(r, anyKey) {
+    const w = []; let bad = false;
+    const q = norm(r.q || '');
+    const hasImg = !!(r.hasImg);
+    if (r.tipe !== 'esai') {
+      if (r.tipe === 'pg_teks') {
+        const filled = r.opts.filter(o => norm(String(o == null ? '' : o))).length;
+        if (filled === 0) { w.push('Opsi jawaban tidak terdeteksi — periksa teks asli'); bad = true; }
+        else if (filled === 3 && !norm(String(r.opts[3] || ''))) w.push('Hanya 3 opsi terdeteksi (A–C)');
+        else if (filled < 4) w.push('Ada opsi yang kosong');
+      }
+      if (r.hasE) w.push('Ada opsi E — template CBT hanya A–D, opsi E diabaikan');
+      if (r.kunci === 'E') w.push('Kunci E tidak tersedia di template (A–D)');
+      else if (r.kunci && !/^[A-D]$/.test(r.kunci)) w.push('Kunci harus berupa huruf A–D');
+      else if (!r.kunci && anyKey) w.push('Kunci belum terdeteksi');
+    } else if (hasImg && !/(jelaskan|uraikan|sebutkan|tuliskan|hitung|tentukan|mengapa|bagaimana|buatlah|analisis)/i.test(q)) {
+      w.push('Ada gambar tanpa opsi teks — jika pilihan ada di dalam gambar, ubah tipe ke pg_gambar');
+    }
+    if (q.length < 6 && !hasImg) w.push('Teks soal sangat pendek');
+    if (q.length > 1500) w.push('Teks sangat panjang — mungkin dua soal menyatu');
+    (r.fixed || []).forEach(x => w.push(x));
+    return { warns: w, status: bad ? 'bad' : (w.length ? 'warn' : 'ok') };
+  }
+
+  /* ---------- parser utama ---------- */
+  function parse(rawLines, images, cfgIn) {
+    const cfg = Object.assign({ pgPoin: 2, esaiPoin: 5, formatKey: true, pageCount: 1 }, cfgIn || {});
+    const notes = [];
+    images = images || [];
+    const pageCount = cfg.pageCount || Math.max(1, ...rawLines.map(l => l.page + 1));
+    let lines = cleanLines(rawLines, pageCount);
+
+    const cands = [];
+    lines.forEach((L, i) => {
+      const m = matchStart(L.text);
+      if (m) cands.push({ i, num: m.num, offset: m.offset, style: m.style });
+    });
+    const prelim = bestChain(cands, { mustStartAt1: true });
+    const fallback = prelim.length ? prelim : bestChain(cands, {});
+    const N = fallback.length;
+    if (!N) return { rows: [], notes: ['Penomoran soal tidak ditemukan. Pastikan soal diawali nomor seperti "1." atau "1)".'], stats: {}, lines };
+
+    /* bagian kunci / pembahasan di akhir */
+    const sections = detectTail(lines, N);
+    const tailStart = sections.length ? Math.min(...sections.map(s => s.i)) : lines.length;
+    const tail = { keys: new Map(), seq: [], pemb: new Map() };
+    for (const s of sections) {
+      if (s.kind === 'key') s.map.forEach((v, k) => { if (!tail.keys.has(k)) tail.keys.set(k, v); });
+      else if (s.kind === 'seq') { if (!tail.seq.length) tail.seq = s.seq; }
+      else s.ents.forEach(e => {
+        if (!tail.pemb.has(e.num)) tail.pemb.set(e.num, e.text);
+        if (e.key && !tail.keys.has(e.num)) tail.keys.set(e.num, e.key);
+      });
+    }
+    const main = lines.slice(0, tailStart);
+    const mainCands = cands.filter(c => c.i < tailStart);
+
+    /* rantai soal: bagian utama + bagian berikutnya (setelah judul "Bagian II", "Uraian", dst) */
+    const headingIdx = [];
+    main.forEach((L, i) => { if (isSectionHeading(L.text)) headingIdx.push(i); });
+    let chains = [];
+    let first = bestChain(mainCands, { mustStartAt1: true });
+    if (!first.length) first = bestChain(mainCands, {});
+    if (first.length) chains.push(first);
+    for (let guard = 0; guard < 6 && chains.length; guard++) {
+      const lastI = chains[chains.length - 1].slice(-1)[0].i;
+      const nxt = bestChain(mainCands, {
+        afterI: lastI, mustStartAt1: true,
+        startOk: c => headingIdx.some(h => h > lastI && h < c.i)
+      });
+      if (!nxt.length) break;
+      chains.push(nxt);
+    }
+    const starts = [].concat(...chains);
+
+    /* potong blok */
+    const blocks = starts.map((s, k) => {
+      const endI = k + 1 < starts.length ? starts[k + 1].i : main.length;
+      let blk = [clone(main[s.i], s.offset)];
+      for (let j = s.i + 1; j < endI; j++) {
+        if (isSectionHeading(main[j].text)) break;
+        if (RE_END_JUNK.test(main[j].text) && j > s.i + 0) { if (/selesai|selamat|sukses|luck/i.test(main[j].text) && main[j].text.length < 60) break; }
+        blk.push(main[j]);
+      }
+      return { start: s, lines: blk, startLine: main[s.i] };
+    });
+
+    const rows = [];
+    const imgByRow = new Map();
+    blocks.forEach((b, k) => {
+      let P = parseBlock(b.lines, true);
+      const nOpt = P.opts.length;
+      const optText = o => norm(o.parts.join(' '));
+      const avg = nOpt ? P.opts.reduce((a, o) => a + optText(o).length, 0) / nOpt : 0;
+      const stemLen = norm(P.stem.map(l => l.text).join(' ')).length;
+      let isPG = nOpt >= 4 || (nOpt === 3 && avg <= 80 && stemLen > 0);
+      if (!isPG && nOpt > 0) P = parseBlock(b.lines, false);
+
+      const row = {
+        num: b.start.num, tipe: 'esai', poin: cfg.esaiPoin, q: '', opts: ['', '', '', ''],
+        kunci: '', pemb: '', izin: '', warns: [], status: 'ok',
+        raw: b.lines.map(l => l.text).join('\n'),
+        startOrder: orderOf(b.startLine),
+        pembOrder: P.pembI >= 0 ? orderOf(b.lines[P.pembI]) : Infinity,
+        imgsE: [], imgsL: [], keySrc: '', fixed: [], hasE: false, hasImg: false
+      };
+      row.q = joinLines(P.stem);
+      row.pemb = norm(P.pemb.join(' '));
+
+      if (isPG) {
+        row.tipe = 'pg_teks'; row.poin = cfg.pgPoin;
+        for (let i = 0; i < 4; i++) row.opts[i] = P.opts[i] ? optText(P.opts[i]) : '';
+        row.hasE = nOpt >= 5;
+        if (P.keyLetter) { row.kunci = P.keyLetter; row.keySrc = 'soal'; }
+        else if (cfg.formatKey) {
+          // opsi yang ditebalkan / digarisbawahi sendirian
+          for (const flag of ['bold', 'ul']) {
+            const fr = P.opts.map(o => {
+              let n = 0, f = 0;
+              o.spans.forEach(sp => {
+                const arr = sp.L[flag];
+                for (let i = sp.from; i < sp.to; i++) { if (/\s/.test(sp.L.text[i])) continue; n++; if (arr[i]) f++; }
+              });
+              return n ? f / n : 0;
+            });
+            const hi = fr.map((v, i) => v >= 0.6 ? i : -1).filter(i => i >= 0);
+            if (hi.length === 1 && fr.every((v, i) => i === hi[0] || v <= 0.3)) {
+              row.kunci = LETTERS[hi[0]]; row.keySrc = flag === 'bold' ? 'tebal' : 'garis bawah'; break;
+            }
+          }
+        }
+      } else if (P.keyLetter && !P.opts.length) {
+        row.kunciHint = P.keyLetter;   // huruf kunci tapi tanpa opsi
+      }
+      if (!isPG) {
+        const kt = norm(P.keyText.join(' '));
+        if (kt) { row.kunci = kt; row.keySrc = 'soal'; }
+      }
+      row.stemLen = norm(row.q).length;
+      row.pgLetterNoOpts = P.keyLetter && !isPG ? P.keyLetter : null;
+      rows.push(row);
+    });
+
+    /* gambar → soal */
+    const startOrders = rows.map(r => r.startOrder);
+    for (const im of images) {
+      const key = im.page * 1e5 + im.y0;
+      let idx = -1;
+      for (let i = 0; i < startOrders.length; i++) if (startOrders[i] <= key + 2) idx = i;
+      if (idx < 0) continue;   // sebelum soal pertama: logo / kop
+      const r = rows[idx];
+      if (key >= r.pembOrder - 2) r.imgsL.push(im); else r.imgsE.push(im);
+    }
+
+    /* kunci dari daftar di akhir dokumen */
+    const usedKey = new Set();
+    rows.forEach(r => {
+      if (r.tipe === 'esai' && r.imgsE.length && !r.q && !r.kunci) { /* kemungkinan pg_gambar, diputuskan di bawah */ }
+    });
+    let seqPtr = 0;
+    rows.forEach(r => {
+      const textShort = r.stemLen < 12;
+      const hasImg = r.imgsE.length > 0;
+      if (r.tipe === 'esai' && textShort && hasImg && !r.kunci) { r.tipe = 'pg_gambar'; r.poin = cfg.pgPoin; }
+    });
+    rows.forEach(r => {
+      const isChoice = r.tipe !== 'esai';
+      if (isChoice) {
+        let tk = null;
+        if (tail.keys.size && !usedKey.has(r.num) && tail.keys.has(r.num)) { tk = tail.keys.get(r.num); usedKey.add(r.num); }
+        else if (!tail.keys.size && tail.seq.length) { tk = tail.seq[seqPtr]; }
+        if (isChoice) seqPtr++;
+        if (tk) {
+          if (r.kunci && r.keySrc === 'soal' && r.kunci !== tk) r.fixed.push('Kunci di soal (' + r.kunci + ') berbeda dengan daftar kunci (' + tk + ')');
+          else if (!r.kunci || r.keySrc !== 'soal') {
+            if (r.kunci && r.keySrc && r.kunci !== tk) r.fixed.push('Penanda ' + r.keySrc + ' (' + r.kunci + ') berbeda dengan daftar kunci (' + tk + ')');
+            r.kunci = tk; r.keySrc = 'daftar kunci';
+          }
+        }
+      }
+    });
+    // soal tanpa opsi tapi ada kunci huruf: kemungkinan PG yang opsinya gagal dibaca
+    const seenNum = new Set();
+    rows.forEach(r => {
+      const first = !seenNum.has(r.num); seenNum.add(r.num);
+      if (r.tipe === 'esai' && !r.opts.some(Boolean)) {
+        const letter = r.pgLetterNoOpts || (first && !usedKey.has(r.num) && tail.keys.get(r.num));
+        if (letter && r.imgsE.length) {
+          r.tipe = 'pg_gambar'; r.poin = cfg.pgPoin; r.kunci = letter; r.keySrc = 'kunci';
+          if (r.pgLetterNoOpts == null) usedKey.add(r.num);
+        } else if (letter && r.stemLen > 0) {
+          r.tipe = 'pg_teks'; r.poin = cfg.pgPoin; r.kunci = letter; r.keySrc = 'kunci';
+        }
+      }
+    });
+    rows.forEach(r => {
+      if (!r.pemb && tail.pemb.has(r.num)) r.pemb = tail.pemb.get(r.num);
+    });
+
+    /* finalisasi */
+    const anyKey = rows.some(r => r.tipe !== 'esai' && r.kunci);
+    rows.forEach((r, i) => {
+      r.no = i + 1;
+      r.hasImg = r.imgsE.length > 0;
+      if (r.tipe === 'esai' && RE_DRAW.test(r.q)) r.izin = 'Ya';
+      const v = validateRow(r, anyKey);
+      r.warns = v.warns; r.status = v.status;
+      r.id = 'r' + i + '_' + Math.random().toString(36).slice(2, 7);
+    });
+    cfg.anyKey = anyKey;
+
+    /* catatan global */
+    const pgRows = rows.filter(r => r.tipe !== 'esai');
+    if (pgRows.length && !anyKey) notes.push('PDF ini tidak memuat kunci jawaban yang bisa dibaca. Kolom Kunci dikosongkan — isi manual atau tempel daftar kunci.');
+    if (tail.pemb.size) notes.push('Pembahasan di akhir dokumen dipasangkan ke ' + rows.filter(r => r.pemb).length + ' soal.');
+    const gaps = [];
+    for (let i = 1; i < starts.length; i++) {
+      const d = starts[i].num - starts[i - 1].num;
+      if (d > 1) gaps.push(starts[i - 1].num + 1 + (d > 2 ? '–' + (starts[i].num - 1) : ''));
+    }
+    if (gaps.length) notes.push('Nomor soal yang tidak ditemukan di PDF: ' + gaps.join(', ') + '.');
+    const stats = {
+      total: rows.length,
+      pg: rows.filter(r => r.tipe === 'pg_teks').length,
+      pgGambar: rows.filter(r => r.tipe === 'pg_gambar').length,
+      esai: rows.filter(r => r.tipe === 'esai').length,
+      withKey: pgRows.filter(r => r.kunci).length,
+      pgTotal: pgRows.length,
+      review: rows.filter(r => r.status !== 'ok').length
+    };
+    return { rows, notes, stats, lines };
+  }
+
+  /* ---------- tempel kunci manual ---------- */
+  function parsePastedKeys(text) {
+    const pr = parsePairs(text.split(/\n/));
+    if (pr.map.size >= 2) return { byNum: pr.map };
+    const seq = parseSeqLetters([text]);
+    if (seq.length) return { seq };
+    return null;
+  }
+
+  return { parse, validateRow, parsePastedKeys, cleanLines, matchStart, isSectionHeading, joinLines, LETTERS };
+});
+
+</script>
+<script>
+/* ==========================================================================
+   CBTReader — membaca PDF via pdf.js menjadi baris teks + penanda gaya + posisi gambar.
+   Tidak menyentuh DOM, supaya bisa diuji di Node.
+   ========================================================================== */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CBTReader = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const LIG = { '\ufb00': 'ff', '\ufb01': 'fi', '\ufb02': 'fl', '\ufb03': 'ffi', '\ufb04': 'ffl', '\u00a0': ' ', '\u2009': ' ', '\u202f': ' ' };
+  function cleanStr(s) {
+    let out = '';
+    for (const ch of s) {
+      if (/[\u200b-\u200d\ufeff\u00ad]/.test(ch)) continue;
+      out += LIG[ch] != null ? LIG[ch] : ch;
+    }
+    return out;
+  }
+
+  const mul = (m, n) => [
+    m[0] * n[0] + m[1] * n[2], m[0] * n[1] + m[1] * n[3],
+    m[2] * n[0] + m[3] * n[2], m[2] * n[1] + m[3] * n[3],
+    m[4] * n[0] + m[5] * n[2] + n[4], m[4] * n[1] + m[5] * n[3] + n[5]
+  ];
+  const apply = (m, x, y) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+
+  /* Telusuri operator list: garis tipis horizontal (kandidat garis bawah) dan gambar */
+  function scanOperators(opList, OPS) {
+    const segs = [], imgs = [];
+    let ctm = [1, 0, 0, 1, 0, 0]; const stack = [];
+    const addSeg = (x0, y0, x1, y1) => {
+      const a = apply(ctm, x0, y0), b = apply(ctm, x1, y1);
+      if (Math.abs(a[1] - b[1]) < 1.2 && Math.abs(a[0] - b[0]) > 4) segs.push({ x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), y: (a[1] + b[1]) / 2 });
+    };
+    for (let i = 0; i < opList.fnArray.length; i++) {
+      const fn = opList.fnArray[i], args = opList.argsArray[i];
+      switch (fn) {
+        case OPS.save: stack.push(ctm.slice()); break;
+        case OPS.restore: if (stack.length) ctm = stack.pop(); break;
+        case OPS.transform: ctm = mul(args, ctm); break;
+        case OPS.paintFormXObjectBegin:
+          stack.push(ctm.slice()); if (args && args[0]) ctm = mul(args[0], ctm); break;
+        case OPS.paintFormXObjectEnd: if (stack.length) ctm = stack.pop(); break;
+        case OPS.constructPath: {
+          const ops = args[0], co = args[1]; let p = 0, cx = 0, cy = 0;
+          for (const op of ops) {
+            if (op === OPS.moveTo) { cx = co[p]; cy = co[p + 1]; p += 2; }
+            else if (op === OPS.lineTo) { addSeg(cx, cy, co[p], co[p + 1]); cx = co[p]; cy = co[p + 1]; p += 2; }
+            else if (op === OPS.curveTo) p += 6;
+            else if (op === OPS.curveTo2 || op === OPS.curveTo3) p += 4;
+            else if (op === OPS.rectangle) {
+              const x = co[p], y = co[p + 1], w = co[p + 2], h = co[p + 3]; p += 4;
+              const a = apply(ctm, x, y), b = apply(ctm, x + w, y + h);
+              if (Math.abs(a[1] - b[1]) < 1.6 && Math.abs(a[0] - b[0]) > 4) segs.push({ x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), y: (a[1] + b[1]) / 2 });
+            }
+          }
+          break;
+        }
+        case OPS.paintImageXObject: case OPS.paintInlineImageXObject:
+        case OPS.paintImageMaskXObject: case OPS.paintJpegXObject: {
+          const pts = [apply(ctm, 0, 0), apply(ctm, 1, 0), apply(ctm, 0, 1), apply(ctm, 1, 1)];
+          const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+          let pw = 0, ph = 0;
+          if (fn === OPS.paintImageXObject) { pw = args[1] || 0; ph = args[2] || 0; }
+          else if (args && args[0]) { pw = args[0].width || 0; ph = args[0].height || 0; }
+          imgs.push({ x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), pw, ph });
+          break;
+        }
+        default: break;
+      }
+    }
+    return { segs, imgs };
+  }
+
+  async function readPage(page, pageIndex, pdfjsLib, opts) {
+    const vp = page.getViewport({ scale: 1 });
+    const W = vp.width, H = vp.height;
+    const tc = await page.getTextContent();
+    let opList = null;
+    try { opList = await page.getOperatorList(); } catch (e) { opList = null; }
+
+    // font tebal?
+    const boldCache = {};
+    const isBold = fontId => {
+      if (fontId in boldCache) return boldCache[fontId];
+      let b = false;
+      try {
+        const f = page.commonObjs.get(fontId);
+        const nm = (f && (f.name || f.loadedName)) || '';
+        b = !!(f && (f.bold || f.black)) || /bold|black|heavy|semibold|demi|extrabold/i.test(nm);
+      } catch (e) { /* font belum termuat */ }
+      if (!b && tc.styles && tc.styles[fontId]) b = /bold|black|heavy/i.test(tc.styles[fontId].fontFamily || '');
+      return (boldCache[fontId] = b);
+    };
+
+    const scan = opList ? scanOperators(opList, pdfjsLib.OPS) : { segs: [], imgs: [] };
+
+    const items = [];
+    for (const it of tc.items) {
+      if (typeof it.str !== 'string') continue;
+      const str = cleanStr(it.str);
+      if (!str) continue;
+      const tr = it.transform;
+      if (Math.abs(tr[1]) > 0.5 && Math.abs(tr[0]) < 0.5) continue; // teks vertikal
+      const h = Math.hypot(tr[2], tr[3]) || it.height || 10;
+      const x = tr[4], y = tr[5], w = it.width;
+      const bold = isBold(it.fontName);
+      // garis bawah: segmen tipis tepat di bawah baseline dengan lebar mirip teks
+      const ulMask = new Array(str.length).fill(false);
+      if (w > 0 && str.trim()) {
+        for (const sg of scan.segs) {
+          if (sg.y > y + 0.6 || sg.y < y - 0.38 * h - 1) continue;
+          const ox0 = Math.max(sg.x0, x), ox1 = Math.min(sg.x1, x + w);
+          if (ox1 - ox0 < 0.5 * w * 0.5) continue;
+          if (sg.x1 - sg.x0 > w * 1.35 + 6) continue; // garis tabel/penyekat, bukan garis bawah
+          const a = Math.floor((ox0 - x) / w * str.length), b = Math.ceil((ox1 - x) / w * str.length);
+          for (let k = Math.max(0, a); k < Math.min(str.length, b); k++) ulMask[k] = true;
+        }
+      }
+      items.push({ str, x, y, w, h, bold, ulMask });
+    }
+
+    // kelompokkan jadi baris
+    items.sort((a, b) => (b.y - a.y) || (a.x - b.x));
+    const groups = [];
+    for (const it of items) {
+      const g = groups[groups.length - 1];
+      if (g && Math.abs(g.y - it.y) <= 0.55 * Math.max(g.h, it.h)) { g.items.push(it); g.h = Math.max(g.h, it.h); }
+      else groups.push({ y: it.y, h: it.h, items: [it] });
+    }
+    const lines = [];
+    for (const g of groups) {
+      g.items.sort((a, b) => a.x - b.x);
+      let text = '', bold = [], ul = [], prev = null;
+      for (const it of g.items) {
+        if (prev) {
+          const gap = it.x - (prev.x + prev.w);
+          if (gap > 2.4 * it.h) { text += '  '; bold.push(false, false); ul.push(false, false); }
+          else if (gap > 0.12 * it.h && !/\s$/.test(text) && !/^\s/.test(it.str)) { text += ' '; bold.push(false); ul.push(false); }
+        }
+        for (let k = 0; k < it.str.length; k++) { bold.push(it.bold); ul.push(it.ulMask[k] || false); }
+        text += it.str; prev = it;
+      }
+      if (!text.trim()) continue;
+      lines.push({ text, bold, ul, page: pageIndex, y: H - g.y, x: g.items[0].x, h: g.h, ph: H, pw: W });
+    }
+
+    // gambar (koordinat atas→bawah)
+    const images = [];
+    for (const im of scan.imgs) {
+      const w = im.x1 - im.x0, h = im.y1 - im.y0;
+      if (w < 28 || h < 28) continue;
+      if (im.pw && im.ph && (im.pw < 24 || im.ph < 24)) continue;
+      if (w * h > 0.85 * W * H) continue; // latar penuh halaman
+      const dup = images.find(o => overlapRatio(o, { x0: im.x0, x1: im.x1, y0: H - im.y1, y1: H - im.y0 }) > 0.8);
+      if (dup) continue;
+      images.push({ page: pageIndex, x0: im.x0, x1: im.x1, y0: H - im.y1, y1: H - im.y0, pageW: W, pageH: H });
+    }
+    const textChars = lines.reduce((a, l) => a + l.text.trim().length, 0);
+    return { lines, images, W, H, textChars };
+  }
+
+  function overlapRatio(a, b) {
+    const ix = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0));
+    const iy = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+    const inter = ix * iy, ua = (a.x1 - a.x0) * (a.y1 - a.y0), ub = (b.x1 - b.x0) * (b.y1 - b.y0);
+    return inter / Math.max(1e-6, Math.min(ua, ub));
+  }
+
+  return { readPage, cleanStr };
+});
+
+</script>
+<script>
+/* ==========================================================================
+   Aplikasi — Konverter soal PDF → spreadsheet CBT Kabut Digital
+   ========================================================================== */
+(function () {
+  'use strict';
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pad3 = n => String(n).padStart(3, '0');
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const S = {
+    name: '', doc: null, lines: [], images: [], rows: [], notes: [], filter: 'all',
+    dirty: false, readCfg: null, anyKey: false, scanned: []
+  };
+
+  /* ---------- UI helpers ---------- */
+  let toastTimer;
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 4200);
+  }
+  function busy(on, text, pct) {
+    const b = $('#busy'); b.hidden = !on;
+    if (!on) return;
+    $('#busyText').textContent = text || '';
+    $('#busyBar').style.width = (pct == null ? 0 : Math.round(pct * 100)) + '%';
+  }
+  function readSettings() {
+    return {
+      pgPoin: Math.max(0, +$('#setPgPoin').value || 0),
+      esaiPoin: Math.max(0, +$('#setEsaiPoin').value || 0),
+      ocr: $('#setOcr').value,
+      images: $('#setImages').checked,
+      formatKey: $('#setFormatKey').checked,
+      prefix: $('#setPrefix').value.trim()
+    };
+  }
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Gagal memuat ' + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  /* ---------- OCR (hanya dimuat bila diperlukan) ---------- */
+  let ocrWorker = null;
+  async function getOcr(onProgress) {
+    if (!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+    if (!ocrWorker) ocrWorker = await Tesseract.createWorker('ind+eng', 1, { logger: m => onProgress && onProgress(m) });
+    return ocrWorker;
+  }
+  async function ocrPage(page, idx, onProgress) {
+    const scale = 2.5, vp = page.getViewport({ scale });
+    const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    const w = await getOcr(onProgress);
+    const { data } = await w.recognize(cv);
+    const ph = vp.height / scale, pw = vp.width / scale;
+    let lines = [];
+    if (data.lines && data.lines.length) {
+      lines = data.lines.map(l => {
+        const text = l.text.replace(/\s+$/, '');
+        return { text, bold: new Array(text.length).fill(false), ul: new Array(text.length).fill(false), page: idx,
+          y: l.bbox.y0 / scale, x: l.bbox.x0 / scale, h: Math.max(8, (l.bbox.y1 - l.bbox.y0) / scale), ph, pw };
+      }).filter(l => l.text.trim());
+    } else {
+      lines = (data.text || '').split('\n').filter(t => t.trim()).map((text, i) => ({
+        text, bold: new Array(text.length).fill(false), ul: new Array(text.length).fill(false), page: idx, y: 40 + i * 14, x: 40, h: 11, ph, pw }));
+    }
+    return lines;
+  }
+
+  /* ---------- gambar: potong dari halaman yang dirender ---------- */
+  function canvasToBlob(cv) { return new Promise(res => cv.toBlob(res, 'image/png')); }
+  async function cropImages(doc, imgs, scale) {
+    const byPage = new Map();
+    imgs.forEach(im => { if (!byPage.has(im.page)) byPage.set(im.page, []); byPage.get(im.page).push(im); });
+    for (const [p, list] of byPage) {
+      const page = await doc.getPage(p + 1);
+      const vp = page.getViewport({ scale });
+      const cv = document.createElement('canvas'); cv.width = Math.ceil(vp.width); cv.height = Math.ceil(vp.height);
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      for (const im of list) {
+        const padPx = 3;
+        const sx = Math.max(0, Math.floor(im.x0 * scale) - padPx), sy = Math.max(0, Math.floor(im.y0 * scale) - padPx);
+        const sw = Math.min(cv.width - sx, Math.ceil((im.x1 - im.x0) * scale) + 2 * padPx);
+        const sh = Math.min(cv.height - sy, Math.ceil((im.y1 - im.y0) * scale) + 2 * padPx);
+        const out = document.createElement('canvas'); out.width = sw; out.height = sh;
+        out.getContext('2d').drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
+        im.canvas = out;
+      }
+    }
+  }
+  async function makeImage(list) {
+    if (!list.length) return null;
+    let cv;
+    if (list.length === 1) cv = list[0].canvas;
+    else {   // beberapa gambar pada satu soal → disusun ke bawah jadi satu
+      const w = Math.max(...list.map(i => i.canvas.width)), gap = 10;
+      const h = list.reduce((a, i) => a + i.canvas.height, 0) + gap * (list.length - 1);
+      cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+      let y = 0; list.forEach(i => { ctx.drawImage(i.canvas, Math.round((w - i.canvas.width) / 2), y); y += i.canvas.height + gap; });
+    }
+    const blob = await canvasToBlob(cv);
+    return { blob, url: URL.createObjectURL(blob), w: cv.width, h: cv.height };
+  }
+
+  /* ---------- baca PDF ---------- */
+  async function readPdf(file) {
+    const cfg = readSettings();
+    busy(true, 'Membuka PDF…', 0.02);
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const doc = await pdfjsLib.getDocument({ data: buf }).promise;
+    S.doc = doc; S.name = file.name.replace(/\.pdf$/i, ''); S.scanned = [];
+    const lines = [], images = [];
+    for (let p = 0; p < doc.numPages; p++) {
+      busy(true, 'Membaca halaman ' + (p + 1) + ' dari ' + doc.numPages + '…', 0.05 + 0.65 * (p / doc.numPages));
+      const page = await doc.getPage(p + 1);
+      const r = await CBTReader.readPage(page, p, pdfjsLib, {});
+      const needOcr = cfg.ocr === 'always' || (cfg.ocr === 'auto' && r.textChars < 15);
+      if (needOcr) {
+        try {
+          const l2 = await ocrPage(page, p, m => {
+            if (m && m.status) busy(true, 'OCR halaman ' + (p + 1) + ' — ' + m.status + '…', 0.05 + 0.65 * ((p + (m.progress || 0)) / doc.numPages));
+          });
+          lines.push(...l2); S.scanned.push(p + 1);
+        } catch (e) {
+          console.error(e); toast('OCR gagal pada halaman ' + (p + 1) + '. Periksa koneksi internet.');
+          lines.push(...r.lines);
+        }
+      } else {
+        lines.push(...r.lines);
+        if (cfg.images) images.push(...r.images);
+      }
+    }
+    if (images.length) { busy(true, 'Memotong ' + images.length + ' gambar…', 0.8); await cropImages(doc, images, 2.2); }
+    S.lines = lines; S.images = images; S.readCfg = { ocr: cfg.ocr, images: cfg.images };
+  }
+
+  /* ---------- deteksi ---------- */
+  async function detect() {
+    const cfg = readSettings();
+    busy(true, 'Mendeteksi soal…', 0.9);
+    const res = CBTParser.parse(S.lines, S.images, { pgPoin: cfg.pgPoin, esaiPoin: cfg.esaiPoin, formatKey: cfg.formatKey, pageCount: S.doc ? S.doc.numPages : 1 });
+    for (const r of res.rows) {
+      r.imgE = await makeImage(r.imgsE); r.imgL = await makeImage(r.imgsL);
+    }
+    S.rows = res.rows; S.notes = res.notes.slice(); S.anyKey = res.rows.some(r => r.tipe !== 'esai' && r.kunci); S.dirty = false;
+    if (S.scanned.length) S.notes.unshift('Halaman ' + S.scanned.join(', ') + ' dibaca dengan OCR. Periksa teksnya lebih teliti; gambar pada halaman hasil scan tidak dipotong otomatis.');
+    busy(false); render();
+  }
+
+  async function handleFile(file) {
+    if (!file) return;
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { toast('Pilih berkas berformat PDF.'); return; }
+    $('#fileName').textContent = file.name;
+    try { await readPdf(file); await detect(); }
+    catch (e) { console.error(e); busy(false); toast('PDF tidak bisa dibaca: ' + (e && e.message ? e.message : e)); }
+  }
+
+  /* ---------- tampilan ---------- */
+  function renumber() { S.rows.forEach((r, i) => { r.no = i + 1; }); }
+  function revalidate(r) {
+    r.hasImg = !!r.imgE;
+    const v = CBTParser.validateRow(r, S.anyKey);
+    r.warns = v.warns; r.status = v.status;
+  }
+  function stats() {
+    const rows = S.rows, ch = rows.filter(r => r.tipe !== 'esai');
+    return {
+      total: rows.length, pg: rows.filter(r => r.tipe === 'pg_teks').length, pgg: rows.filter(r => r.tipe === 'pg_gambar').length,
+      esai: rows.filter(r => r.tipe === 'esai').length, keyed: ch.filter(r => r.kunci).length, ch: ch.length,
+      review: rows.filter(r => r.status !== 'ok').length, imgs: rows.reduce((a, r) => a + (r.imgE ? 1 : 0) + (r.imgL ? 1 : 0), 0)
+    };
+  }
+  function renderStats() {
+    const s = stats();
+    $('#stats').innerHTML =
+      `<div class="stat"><b>${s.total}</b><span>soal</span></div>` +
+      `<div class="stat"><b>${s.pg}${s.pgg ? ' + ' + s.pgg : ''}</b><span>pilihan ganda${s.pgg ? ' (teks + gambar)' : ''}</span></div>` +
+      `<div class="stat"><b>${s.esai}</b><span>esai</span></div>` +
+      `<div class="stat"><b>${s.keyed}/${s.ch}</b><span>kunci terisi</span></div>` +
+      `<div class="stat ${s.review ? 'attn' : ''}"><b>${s.review}</b><span>perlu dicek</span></div>`;
+    $('#btnZip').hidden = s.imgs === 0; $('#btnZip').textContent = 'Unduh gambar (' + s.imgs + ')';
+    const f = { all: s.total, review: s.review, pg: s.pg + s.pgg, esai: s.esai };
+    document.querySelectorAll('.chip').forEach(c => { c.querySelector('i').textContent = f[c.dataset.filter]; c.setAttribute('aria-pressed', String(S.filter === c.dataset.filter)); });
+  }
+  function warnHTML(r) { return r.warns.map(w => `<span class="w">${esc(w)}</span>`).join(''); }
+  function imgBox(im, label, act) {
+    return im ? `<div class="img"><img src="${im.url}" alt="${label}"><small>${label} · ${im.w}×${im.h}px</small><button type="button" class="ghost" data-act="${act}" aria-label="Hapus ${label}">Hapus</button></div>` : '';
+  }
+  function cardHTML(r) {
+    const choice = r.tipe !== 'esai', pg = r.tipe === 'pg_teks';
+    const opts = ['A', 'B', 'C', 'D'].map((L, i) =>
+      `<label class="opt ${r.kunci === L ? 'key' : ''}"><span>${L}</span><input type="text" data-f="o${i}" value="${esc(r.opts[i])}" aria-label="Opsi ${L}"></label>`).join('');
+    const keyField = choice
+      ? `<label class="fl">Kunci<select data-f="kunci"><option value=""></option>${['A', 'B', 'C', 'D'].map(L => `<option ${r.kunci === L ? 'selected' : ''}>${L}</option>`).join('')}${r.kunci === 'E' ? '<option selected>E</option>' : ''}</select></label>`
+      : `<label class="fl full">Kunci (jawaban acuan esai)<textarea data-f="kunci" rows="1">${esc(r.kunci)}</textarea></label>`;
+    return `<article class="q ${r.status}" data-id="${r.id}">
+      <div class="q-head">
+        <span class="no">${r.no}</span>
+        <select class="tipe" data-f="tipe" aria-label="Tipe soal">${['pg_teks', 'pg_gambar', 'esai'].map(t => `<option ${r.tipe === t ? 'selected' : ''}>${t}</option>`).join('')}</select>
+        <label class="fl" style="grid-auto-flow:column;align-items:center;gap:6px">Poin <input class="poin" type="number" min="0" step="0.5" data-f="poin" value="${esc(r.poin)}"></label>
+        ${r.keySrc && choice && r.kunci ? `<span class="pill" title="Dari mana kunci ini dibaca">kunci: ${esc(r.keySrc)}</span>` : ''}
+        <span class="sp"></span>
+        <span class="rowtools"><button type="button" class="ghost" data-act="merge" ${r.no === 1 ? 'disabled' : ''}>Gabung ke atas</button><button type="button" class="ghost" data-act="add">Tambah di bawah</button><button type="button" class="ghost" data-act="del">Hapus</button></span>
+      </div>
+      <div class="warns">${warnHTML(r)}</div>
+      <div class="grid">
+        <label class="fl full">Pertanyaan<textarea data-f="q" rows="2">${esc(r.q)}</textarea></label>
+        ${pg ? `<div class="full" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 12px">${opts}</div>` : ''}
+        ${keyField}
+        <label class="fl">Izin_Gambar<select data-f="izin"><option value=""></option><option ${r.izin === 'Ya' ? 'selected' : ''}>Ya</option></select></label>
+        <label class="fl full">Pembahasan<textarea data-f="pemb" rows="1">${esc(r.pemb)}</textarea></label>
+      </div>
+      <div class="imgs">${imgBox(r.imgE, 'Gambar soal', 'rmE')}${imgBox(r.imgL, 'Gambar pembahasan', 'rmL')}</div>
+      <details class="raw"><summary>Teks asli dari PDF</summary><pre>${esc(r.raw)}</pre></details>
+    </article>`;
+  }
+  function autosize(el) { el.style.height = 'auto'; el.style.height = Math.min(520, el.scrollHeight + 2) + 'px'; }
+  function render() {
+    $('#result').hidden = false;
+    $('#notes').innerHTML = S.notes.map(n => `<div class="note ${/^Pembahasan di akhir|^Halaman/.test(n) ? 'info' : ''}">${esc(n)}</div>`).join('');
+    renderStats();
+    const f = S.filter;
+    const rows = S.rows.filter(r => f === 'all' || (f === 'review' && r.status !== 'ok') || (f === 'pg' && r.tipe !== 'esai') || (f === 'esai' && r.tipe === 'esai'));
+    const list = $('#list');
+    list.innerHTML = rows.length ? rows.map(cardHTML).join('') : `<div class="empty">${S.rows.length ? 'Tidak ada soal pada filter ini.' : 'Belum ada soal terdeteksi. Pastikan soal diawali nomor seperti "1." atau "1)".'}</div>`;
+    list.querySelectorAll('textarea').forEach(autosize);
+  }
+  function refreshCard(card, r) {
+    revalidate(r);
+    card.className = 'q ' + r.status;
+    card.querySelector('.warns').innerHTML = warnHTML(r);
+    card.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('key', r.kunci === 'ABCD'[i]));
+    renderStats();
+  }
+  const byId = id => S.rows.find(r => r.id === id);
+
+  function applyField(r, f, v) {
+    if (f === 'q' || f === 'pemb' || f === 'izin') r[f] = v;
+    else if (f === 'poin') r.poin = v === '' ? '' : +v;
+    else if (/^o[0-3]$/.test(f)) r.opts[+f[1]] = v;
+    else if (f === 'kunci') { r.kunci = r.tipe === 'esai' ? v : v.toUpperCase(); r.keySrc = 'manual'; }
+    else if (f === 'tipe') {
+      const cfg = readSettings(), oldDef = r.tipe === 'esai' ? cfg.esaiPoin : cfg.pgPoin;
+      r.tipe = v;
+      if (+r.poin === oldDef) r.poin = v === 'esai' ? cfg.esaiPoin : cfg.pgPoin;   // ikut poin default tipe baru
+      if (v !== 'esai' && !/^[A-E]$/.test(r.kunci || '')) r.kunci = '';
+      if (v === 'esai') { r.opts = ['', '', '', '']; }
+    }
+  }
+  function bindList() {
+    const list = $('#list');
+    list.addEventListener('input', e => {
+      const el = e.target, card = el.closest('.q'); if (!card || !el.dataset.f) return;
+      const r = byId(card.dataset.id); if (!r || el.tagName === 'SELECT') return;
+      applyField(r, el.dataset.f, el.value); S.dirty = true;
+      if (el.tagName === 'TEXTAREA') autosize(el);
+      refreshCard(card, r);
+    });
+    list.addEventListener('change', e => {
+      const el = e.target, card = el.closest('.q'); if (!card || el.tagName !== 'SELECT') return;
+      const r = byId(card.dataset.id); if (!r) return;
+      applyField(r, el.dataset.f, el.value); S.dirty = true;
+      S.anyKey = S.anyKey || !!(r.tipe !== 'esai' && r.kunci);
+      if (el.dataset.f === 'tipe') { revalidate(r); card.outerHTML = cardHTML(r); const nc = list.querySelector(`[data-id="${r.id}"]`); nc.querySelectorAll('textarea').forEach(autosize); renderStats(); }
+      else refreshCard(card, r);
+    });
+    list.addEventListener('click', e => {
+      const b = e.target.closest('[data-act]'); if (!b) return;
+      const card = b.closest('.q'), r = byId(card.dataset.id), i = S.rows.indexOf(r), act = b.dataset.act;
+      if (act === 'rmE') { r.imgE = null; S.dirty = true; revalidate(r); card.outerHTML = cardHTML(r); renderStats(); return; }
+      if (act === 'rmL') { r.imgL = null; S.dirty = true; revalidate(r); card.outerHTML = cardHTML(r); renderStats(); return; }
+      S.dirty = true;
+      if (act === 'del') { S.rows.splice(i, 1); }
+      else if (act === 'merge' && i > 0) {
+        const p = S.rows[i - 1];
+        p.q = [p.q, r.q].filter(Boolean).join(' ');
+        for (let k = 0; k < 4; k++) if (!p.opts[k] && r.opts[k]) p.opts[k] = r.opts[k];
+        if (!p.kunci && r.kunci) p.kunci = r.kunci;
+        if (!p.pemb && r.pemb) p.pemb = r.pemb;
+        if (!p.imgE && r.imgE) p.imgE = r.imgE;
+        revalidate(p); S.rows.splice(i, 1);
+      } else if (act === 'add') {
+        const cfg = readSettings();
+        const n = { id: 'n' + Date.now(), no: 0, num: 0, tipe: 'pg_teks', poin: cfg.pgPoin, q: '', opts: ['', '', '', ''], kunci: '', pemb: '', izin: '', warns: [], status: 'warn', raw: '(soal ditambahkan manual)', fixed: [], imgE: null, imgL: null };
+        S.rows.splice(i + 1, 0, n); revalidate(n);
+      }
+      renumber(); S.rows.forEach(revalidate); render();
+    });
+    document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { S.filter = c.dataset.filter; render(); }));
+  }
+
+  /* ---------- tempel kunci ---------- */
+  function applyPastedKeys() {
+    const txt = $('#pasteKeys').value.trim();
+    if (!txt) { toast('Tempel dulu daftar kuncinya.'); return; }
+    const k = CBTParser.parsePastedKeys(txt);
+    if (!k) { toast('Format tidak dikenali. Contoh: "1.A 2.B 3.C" atau "ABCDABCD".'); return; }
+    let n = 0;
+    const choice = S.rows.filter(r => r.tipe !== 'esai');
+    if (k.byNum) {
+      const used = new Set();
+      choice.forEach(r => { if (k.byNum.has(r.num) && !used.has(r.num)) { r.kunci = k.byNum.get(r.num); r.keySrc = 'tempel'; used.add(r.num); n++; } });
+    } else {
+      choice.forEach((r, i) => { if (k.seq[i]) { r.kunci = k.seq[i]; r.keySrc = 'tempel'; n++; } });
+    }
+    S.anyKey = true; S.dirty = true; S.rows.forEach(revalidate); render();
+    toast(n + ' kunci diterapkan.');
+  }
+
+  /* ---------- ekspor ---------- */
+  function download(blob, name) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  const imgName = (kind, r) => (kind === 'E' ? 'soal_' : 'pembahasan_') + pad3(r.no) + '.png';
+  function urlFor(kind, r, prefix) {
+    const has = kind === 'E' ? r.imgE : r.imgL; if (!has || !prefix) return '';
+    return prefix + (/\/$/.test(prefix) ? '' : '/') + imgName(kind, r);
+  }
+  const asCell = s => { s = String(s == null ? '' : s); if (/^-?(0|[1-9]\d{0,14})(\.\d+)?$/.test(s.trim())) return Number(s.trim()); return s.length > 32000 ? s.slice(0, 32000) : s; };
+
+  async function exportXlsx() {
+    if (!S.rows.length) return;
+    const cfg = readSettings();
+    const wb = new ExcelJS.Workbook(); wb.creator = 'Kabut Digital';
+    const ws = wb.addWorksheet('Soal', { views: [{ state: 'frozen', xSplit: 1, ySplit: 1 }] });
+    const heads = ['No', 'Tipe', 'Poin', 'Pertanyaan', 'URL_Gambar', 'Opsi_A', 'Opsi_B', 'Opsi_C', 'Opsi_D', 'Kunci', 'Pembahasan', 'URL_Gambar_Pembahasan', 'Izin_Gambar'];
+    const widths = [8.9, 11.3, 6.3, 40.2, 25.1, 17.7, 17.7, 17.7, 17.7, 7.7, 30.1, 25.1, 14];
+    ws.columns = heads.map((h, i) => ({ header: h, key: 'c' + i, width: widths[i] }));
+    const hr = ws.getRow(1);
+    hr.eachCell(c => {
+      c.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1058B0' } };
+    });
+    S.rows.forEach(r => {
+      const choice = r.tipe !== 'esai', pg = r.tipe === 'pg_teks';
+      const row = ws.addRow([
+        r.no, r.tipe, r.poin === '' ? null : r.poin, r.q || '', urlFor('E', r, cfg.prefix),
+        pg ? asCell(r.opts[0]) : '', pg ? asCell(r.opts[1]) : '', pg ? asCell(r.opts[2]) : '', pg ? asCell(r.opts[3]) : '',
+        choice ? (r.kunci || '') : (r.kunci || ''), r.pemb || '', urlFor('L', r, cfg.prefix), r.izin || ''
+      ]);
+      row.eachCell({ includeEmpty: true }, (c, col) => {
+        c.font = { name: 'Arial', size: 10 };
+        c.alignment = { vertical: 'top', wrapText: [4, 6, 7, 8, 9, 10, 11].includes(col) };
+      });
+    });
+    const last = Math.max(55, S.rows.length + 21);
+    // satu rentang utuh per kolom (rentang bertumpuk membuat Excel meminta perbaikan berkas)
+    ws.dataValidations.add('B2:B' + last, { type: 'list', allowBlank: true, formulae: ['"pg_teks,pg_gambar,esai"'] });
+    ws.dataValidations.add('J2:J' + last, { type: 'list', allowBlank: true, showErrorMessage: false, formulae: ['"A,B,C,D"'] });
+    const buf = await wb.xlsx.writeBuffer();
+    download(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), S.name + '_CBT.xlsx');
+    const withImg = S.rows.filter(r => r.imgE || r.imgL).length;
+    toast(withImg && !cfg.prefix ? 'Excel diunduh. Kolom URL gambar masih kosong — unggah gambar lalu isi tautannya.' : 'Excel diunduh.');
+  }
+  async function exportZip() {
+    const zip = new JSZip(), f = zip.folder('gambar'); const csv = ['No,Kolom,Berkas'];
+    S.rows.forEach(r => {
+      if (r.imgE) { f.file(imgName('E', r), r.imgE.blob); csv.push(`${r.no},URL_Gambar,${imgName('E', r)}`); }
+      if (r.imgL) { f.file(imgName('L', r), r.imgL.blob); csv.push(`${r.no},URL_Gambar_Pembahasan,${imgName('L', r)}`); }
+    });
+    zip.file('daftar_gambar.csv', csv.join('\n'));
+    download(await zip.generateAsync({ type: 'blob' }), S.name + '_gambar.zip');
+  }
+
+  /* ---------- deteksi ulang ---------- */
+  async function redetect() {
+    if (!S.doc) return;
+    if (S.dirty && !confirm('Deteksi ulang akan menimpa semua suntingan Anda. Lanjutkan?')) return;
+    const cfg = readSettings();
+    try {
+      if (!S.readCfg || S.readCfg.ocr !== cfg.ocr || S.readCfg.images !== cfg.images) {
+        const bytes = await S.doc.getData();
+        await readPdf(new File([bytes], S.name + '.pdf', { type: 'application/pdf' }));
+      }
+      await detect();
+    } catch (e) { console.error(e); busy(false); toast('Gagal mendeteksi ulang: ' + e.message); }
+  }
+
+  /* ---------- init ---------- */
+  function init() {
+    const drop = $('#drop'), input = $('#file');
+    input.addEventListener('change', () => handleFile(input.files[0]));
+    ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+    drop.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+    $('#btnXlsx').addEventListener('click', () => exportXlsx().catch(e => { console.error(e); toast('Gagal membuat Excel: ' + e.message); }));
+    $('#btnZip').addEventListener('click', () => exportZip().catch(e => { console.error(e); toast('Gagal membuat ZIP: ' + e.message); }));
+    $('#btnRedetect').addEventListener('click', redetect);
+    $('#btnPaste').addEventListener('click', applyPastedKeys);
+    bindList();
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
+
+</script>
+</body>
+</html>
