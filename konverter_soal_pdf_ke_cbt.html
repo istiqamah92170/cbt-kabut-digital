@@ -229,7 +229,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     <div id="list"></div>
   </section>
 
-  <footer>Periksa hasil sebelum diunduh: rumus, simbol matematika, dan tabel di PDF sering terbaca tidak sempurna. Opsi E tidak dimasukkan karena template CBT hanya mendukung A–D.</footer>
+  <footer>Periksa hasil sebelum diunduh: rumus, simbol matematika, dan tabel di PDF sering terbaca tidak sempurna. Opsi E, bila ada, ditulis apa adanya di kolom Opsi_E setelah Izin_Gambar.</footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -268,7 +268,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   }
 
   /* ---------- pola ---------- */
-  const RE_START = /^\s*(?:(soal|no|nomor)\.?\s*)?(\()?(\d{1,3})(?:\s{0,2}([.)\]:]))?(\s+|$)/i;
+  const RE_START = /^\s*(?:(soal|no|nomor)\.?\s*)?(\()?(\d{1,3})(?:\s{0,2}([.)\]:]))?(\s*)/i;
   const RE_PAGENUM = /^\W*(?:halaman|hal\.?|page)?\s*\d{1,3}(?:\s*(?:\/|dari|of)\s*\d{1,3})?\W*$/i;
   const RE_TAIL_HEAD = /^\s*(kunci\s+jawaban(?:\s+dan\s+pembahasan)?|kunci\s+dan\s+pembahasan|kunci|jawaban|answer\s*key|pembahasan(?:\s+soal)?|kunci\s+pg)\s*[:：]?\s*$/i;
   const RE_TAIL_INLINE = /^\s*(kunci\s+jawaban|kunci|jawaban|answer\s*key)\s*[:：]\s*(.+)$/i;
@@ -294,6 +294,8 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     const prefix = m[1], open = m[2], punct = m[4];
     if (!prefix && !punct) return null;
     if (open && punct !== ')') return null;
+    const nextCh = text.charAt(m[0].length);
+    if (!m[5].length && nextCh && !/[A-Za-zÀ-ÿ"“(]/.test(nextCh)) return null;   // "3.5", "2.000" bukan awal soal
     const style = (prefix ? 'p' : '') + (open ? '(' : '') + (punct || '');
     return { num: +m[3], offset: m[0].length, style };
   }
@@ -472,9 +474,18 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     const R = { stem: [], opts: [], keyLetter: null, keyText: [], pemb: [], pembI: -1 };
     let mode = 'stem', cur = null, expected = 0;
 
-    const startOpt = (L, from, letterIdx) => {
-      cur = { L: LETTERS[letterIdx], parts: [], spans: [], lines: [] };
+    const startOpt = (L, mk, letterIdx) => {
+      cur = { L: LETTERS[letterIdx], mk, parts: [], spans: [], lines: [] };
       R.opts.push(cur);
+    };
+    // kelompok a)–e) yang ternyata pernyataan (disusul kelompok A.–E. berikutnya) dikembalikan ke teks soal
+    const demote = () => {
+      R.opts.forEach(o => o.spans.forEach((sp, k) => {
+        const piece = norm(sp.L.text.slice(sp.from, sp.to)); if (!piece) return;
+        const txt = (k === 0 ? o.mk + ' ' : '') + piece;
+        R.stem.push(Object.assign({}, sp.L, { text: txt, bold: new Array(txt.length).fill(false), ul: new Array(txt.length).fill(false) }));
+      }));
+      R.opts = []; cur = null; expected = 0;
     };
     const addToTarget = (L, from, to) => {
       const piece = L.text.slice(from, to);
@@ -511,6 +522,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       let pos = 0;
       const text = L.text;
       while (pos < text.length) {
+        if (pos === 0 && expected >= 2 && R.opts.length >= 2 && /^\s*\(?[Aa][.)](?=\s|$)/.test(text)) demote();
         if (expected >= LETTERS.length) { addToTarget(L, pos, text.length); pos = text.length; break; }
         const ch = LETTERS[expected];
         const re = new RegExp('(^|\\s)\\(?([' + ch + ch.toLowerCase() + '])[.)](?=\\s|$)', 'g');
@@ -527,7 +539,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
         }
         if (!hit) { addToTarget(L, pos, text.length); pos = text.length; break; }
         addToTarget(L, pos, hit.s);
-        startOpt(L, hit.e, expected);
+        startOpt(L, text.slice(hit.s, hit.e).trim(), expected);
         expected++;
         pos = hit.e;
       }
@@ -543,14 +555,13 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     const hasImg = !!(r.hasImg);
     if (r.tipe !== 'esai') {
       if (r.tipe === 'pg_teks') {
-        const filled = r.opts.filter(o => norm(String(o == null ? '' : o))).length;
+        const filled = r.opts.slice(0, 4).filter(o => norm(String(o == null ? '' : o))).length;
         if (filled === 0) { w.push('Opsi jawaban tidak terdeteksi — periksa teks asli'); bad = true; }
         else if (filled === 3 && !norm(String(r.opts[3] || ''))) w.push('Hanya 3 opsi terdeteksi (A–C)');
         else if (filled < 4) w.push('Ada opsi yang kosong');
       }
-      if (r.hasE) w.push('Ada opsi E — template CBT hanya A–D, opsi E diabaikan');
-      if (r.kunci === 'E') w.push('Kunci E tidak tersedia di template (A–D)');
-      else if (r.kunci && !/^[A-D]$/.test(r.kunci)) w.push('Kunci harus berupa huruf A–D');
+      if (r.kunci && !/^[A-E]$/.test(r.kunci)) w.push('Kunci harus berupa huruf A–E');
+      else if (r.kunci === 'E' && !norm(String(r.opts[4] || '')) && r.tipe === 'pg_teks') w.push('Kunci E tetapi Opsi_E kosong');
       else if (!r.kunci && anyKey) w.push('Kunci belum terdeteksi');
     } else if (hasImg && !/(jelaskan|uraikan|sebutkan|tuliskan|hitung|tentukan|mengapa|bagaimana|buatlah|analisis)/i.test(q)) {
       w.push('Ada gambar tanpa opsi teks — jika pilihan ada di dalam gambar, ubah tipe ke pg_gambar');
@@ -636,7 +647,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       if (!isPG && nOpt > 0) P = parseBlock(b.lines, false);
 
       const row = {
-        num: b.start.num, tipe: 'esai', poin: cfg.esaiPoin, q: '', opts: ['', '', '', ''],
+        num: b.start.num, tipe: 'esai', poin: cfg.esaiPoin, q: '', opts: ['', '', '', '', ''],
         kunci: '', pemb: '', izin: '', warns: [], status: 'ok',
         raw: b.lines.map(l => l.text).join('\n'),
         startOrder: orderOf(b.startLine),
@@ -648,8 +659,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 
       if (isPG) {
         row.tipe = 'pg_teks'; row.poin = cfg.pgPoin;
-        for (let i = 0; i < 4; i++) row.opts[i] = P.opts[i] ? optText(P.opts[i]) : '';
-        row.hasE = nOpt >= 5;
+        for (let i = 0; i < 5; i++) row.opts[i] = P.opts[i] ? optText(P.opts[i]) : '';
         if (P.keyLetter) { row.kunci = P.keyLetter; row.keySrc = 'soal'; }
         else if (cfg.formatKey) {
           // opsi yang ditebalkan / digarisbawahi sendirian
@@ -1155,10 +1165,10 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   }
   function cardHTML(r) {
     const choice = r.tipe !== 'esai', pg = r.tipe === 'pg_teks';
-    const opts = ['A', 'B', 'C', 'D'].map((L, i) =>
+    const opts = ['A', 'B', 'C', 'D', 'E'].map((L, i) =>
       `<label class="opt ${r.kunci === L ? 'key' : ''}"><span>${L}</span><input type="text" data-f="o${i}" value="${esc(r.opts[i])}" aria-label="Opsi ${L}"></label>`).join('');
     const keyField = choice
-      ? `<label class="fl">Kunci<select data-f="kunci"><option value=""></option>${['A', 'B', 'C', 'D'].map(L => `<option ${r.kunci === L ? 'selected' : ''}>${L}</option>`).join('')}${r.kunci === 'E' ? '<option selected>E</option>' : ''}</select></label>`
+      ? `<label class="fl">Kunci<select data-f="kunci"><option value=""></option>${['A', 'B', 'C', 'D', 'E'].map(L => `<option ${r.kunci === L ? 'selected' : ''}>${L}</option>`).join('')}</select></label>`
       : `<label class="fl full">Kunci (jawaban acuan esai)<textarea data-f="kunci" rows="1">${esc(r.kunci)}</textarea></label>`;
     return `<article class="q ${r.status}" data-id="${r.id}">
       <div class="q-head">
@@ -1196,7 +1206,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     revalidate(r);
     card.className = 'q ' + r.status;
     card.querySelector('.warns').innerHTML = warnHTML(r);
-    card.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('key', r.kunci === 'ABCD'[i]));
+    card.querySelectorAll('.opt').forEach((el, i) => el.classList.toggle('key', r.kunci === 'ABCDE'[i]));
     renderStats();
   }
   const byId = id => S.rows.find(r => r.id === id);
@@ -1204,14 +1214,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   function applyField(r, f, v) {
     if (f === 'q' || f === 'pemb' || f === 'izin') r[f] = v;
     else if (f === 'poin') r.poin = v === '' ? '' : +v;
-    else if (/^o[0-3]$/.test(f)) r.opts[+f[1]] = v;
+    else if (/^o[0-4]$/.test(f)) r.opts[+f[1]] = v;
     else if (f === 'kunci') { r.kunci = r.tipe === 'esai' ? v : v.toUpperCase(); r.keySrc = 'manual'; }
     else if (f === 'tipe') {
       const cfg = readSettings(), oldDef = r.tipe === 'esai' ? cfg.esaiPoin : cfg.pgPoin;
       r.tipe = v;
       if (+r.poin === oldDef) r.poin = v === 'esai' ? cfg.esaiPoin : cfg.pgPoin;   // ikut poin default tipe baru
       if (v !== 'esai' && !/^[A-E]$/.test(r.kunci || '')) r.kunci = '';
-      if (v === 'esai') { r.opts = ['', '', '', '']; }
+      if (v === 'esai') { r.opts = ['', '', '', '', '']; }
     }
   }
   function bindList() {
@@ -1241,14 +1251,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       else if (act === 'merge' && i > 0) {
         const p = S.rows[i - 1];
         p.q = [p.q, r.q].filter(Boolean).join(' ');
-        for (let k = 0; k < 4; k++) if (!p.opts[k] && r.opts[k]) p.opts[k] = r.opts[k];
+        for (let k = 0; k < 5; k++) if (!p.opts[k] && r.opts[k]) p.opts[k] = r.opts[k];
         if (!p.kunci && r.kunci) p.kunci = r.kunci;
         if (!p.pemb && r.pemb) p.pemb = r.pemb;
         if (!p.imgE && r.imgE) p.imgE = r.imgE;
         revalidate(p); S.rows.splice(i, 1);
       } else if (act === 'add') {
         const cfg = readSettings();
-        const n = { id: 'n' + Date.now(), no: 0, num: 0, tipe: 'pg_teks', poin: cfg.pgPoin, q: '', opts: ['', '', '', ''], kunci: '', pemb: '', izin: '', warns: [], status: 'warn', raw: '(soal ditambahkan manual)', fixed: [], imgE: null, imgL: null };
+        const n = { id: 'n' + Date.now(), no: 0, num: 0, tipe: 'pg_teks', poin: cfg.pgPoin, q: '', opts: ['', '', '', '', ''], kunci: '', pemb: '', izin: '', warns: [], status: 'warn', raw: '(soal ditambahkan manual)', fixed: [], imgE: null, imgL: null };
         S.rows.splice(i + 1, 0, n); revalidate(n);
       }
       renumber(); S.rows.forEach(revalidate); render();
@@ -1291,8 +1301,8 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     const cfg = readSettings();
     const wb = new ExcelJS.Workbook(); wb.creator = 'Kabut Digital';
     const ws = wb.addWorksheet('Soal', { views: [{ state: 'frozen', xSplit: 1, ySplit: 1 }] });
-    const heads = ['No', 'Tipe', 'Poin', 'Pertanyaan', 'URL_Gambar', 'Opsi_A', 'Opsi_B', 'Opsi_C', 'Opsi_D', 'Kunci', 'Pembahasan', 'URL_Gambar_Pembahasan', 'Izin_Gambar'];
-    const widths = [8.9, 11.3, 6.3, 40.2, 25.1, 17.7, 17.7, 17.7, 17.7, 7.7, 30.1, 25.1, 14];
+    const heads = ['No', 'Tipe', 'Poin', 'Pertanyaan', 'URL_Gambar', 'Opsi_A', 'Opsi_B', 'Opsi_C', 'Opsi_D', 'Kunci', 'Pembahasan', 'URL_Gambar_Pembahasan', 'Izin_Gambar', 'Opsi_E'];
+    const widths = [8.9, 11.3, 6.3, 40.2, 25.1, 17.7, 17.7, 17.7, 17.7, 7.7, 30.1, 25.1, 14, 17.7];
     ws.columns = heads.map((h, i) => ({ header: h, key: 'c' + i, width: widths[i] }));
     const hr = ws.getRow(1);
     hr.eachCell(c => {
@@ -1304,17 +1314,18 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       const row = ws.addRow([
         r.no, r.tipe, r.poin === '' ? null : r.poin, r.q || '', urlFor('E', r, cfg.prefix),
         pg ? asCell(r.opts[0]) : '', pg ? asCell(r.opts[1]) : '', pg ? asCell(r.opts[2]) : '', pg ? asCell(r.opts[3]) : '',
-        choice ? (r.kunci || '') : (r.kunci || ''), r.pemb || '', urlFor('L', r, cfg.prefix), r.izin || ''
+        choice ? (r.kunci || '') : (r.kunci || ''), r.pemb || '', urlFor('L', r, cfg.prefix), r.izin || '',
+        pg ? asCell(r.opts[4]) : ''
       ]);
       row.eachCell({ includeEmpty: true }, (c, col) => {
         c.font = { name: 'Arial', size: 10 };
-        c.alignment = { vertical: 'top', wrapText: [4, 6, 7, 8, 9, 10, 11].includes(col) };
+        c.alignment = { vertical: 'top', wrapText: [4, 6, 7, 8, 9, 10, 11, 14].includes(col) };
       });
     });
     const last = Math.max(55, S.rows.length + 21);
     // satu rentang utuh per kolom (rentang bertumpuk membuat Excel meminta perbaikan berkas)
     ws.dataValidations.add('B2:B' + last, { type: 'list', allowBlank: true, formulae: ['"pg_teks,pg_gambar,esai"'] });
-    ws.dataValidations.add('J2:J' + last, { type: 'list', allowBlank: true, showErrorMessage: false, formulae: ['"A,B,C,D"'] });
+    ws.dataValidations.add('J2:J' + last, { type: 'list', allowBlank: true, showErrorMessage: false, formulae: ['"A,B,C,D,E"'] });
     const buf = await wb.xlsx.writeBuffer();
     download(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), S.name + '_CBT.xlsx');
     const withImg = S.rows.filter(r => r.imgE || r.imgL).length;
