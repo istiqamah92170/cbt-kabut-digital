@@ -225,7 +225,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
   </div>
   <div class="card">
     <div class="card-title"><span class="step-dot">2</span> Upload File Excel</div>
-    <div class="info-box" style="margin-bottom:12px;font-size:11px">Kolom AI: <strong>tipe, pertanyaan, vrl_gambar, opsi_a&ndash;d, kunci</strong>. Header bersifat dinamis &mdash; urutan boleh berubah. Kolom lain dipertahankan di output.</div>
+    <div class="info-box" style="margin-bottom:12px;font-size:11px">Kolom AI: <strong>tipe, pertanyaan, vrl_gambar, opsi_a&ndash;e, kunci</strong>. Header bersifat dinamis &mdash; urutan boleh berubah. Kolom lain dipertahankan di output.</div>
     <div class="upload-zone" id="aUploadZone"><input type="file" id="aFileInput" accept=".xlsx,.xls"><div class="upload-icon">&#x1F4CA;</div><h3>Klik atau seret file Excel ke sini</h3><p>.xlsx / .xls</p></div>
     <div class="file-info" id="aFileInfo"><div class="file-icon">&#x1F4D7;</div><div class="file-meta"><span id="aFileName">-</span><small id="aFileStats">-</small></div><button class="btn-remove" onclick="resetAFile()">&#x2715;</button></div>
     <div class="vbox" id="aVbox"></div>
@@ -282,8 +282,8 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
     <div class="tipe-toggle"><button class="tipe-btn active" onclick="setTipe('pg_teks')">&#x1F4CB; PG Teks</button><button class="tipe-btn" onclick="setTipe('pg_gambar')">&#x1F5BC; PG Gambar</button><button class="tipe-btn" onclick="setTipe('esai')">&#x270F;&#xFE0F; Esai</button></div>
     <div id="sPertField"><label class="lbl" style="margin-top:0">Pertanyaan</label><textarea id="sPert" rows="3"></textarea></div>
     <div id="sGambarField" style="margin-top:10px"><label class="lbl" style="margin-top:0">URL Gambar (opsional)</label><input type="text" id="sGambar" placeholder="https://..."></div>
-    <div id="sPgFields" style="margin-top:10px"><div class="g2"><div><label class="lbl" style="margin-top:0">Opsi A</label><input type="text" id="sA"></div><div><label class="lbl" style="margin-top:0">Opsi B</label><input type="text" id="sB"></div><div><label class="lbl" style="margin-top:0">Opsi C</label><input type="text" id="sC"></div><div><label class="lbl" style="margin-top:0">Opsi D</label><input type="text" id="sD"></div></div><label class="lbl">Kunci</label><div class="sw" style="max-width:180px"><select id="sKunci"><option value="">-- Opsional --</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div></div>
-    <div id="sPgGambarField" style="display:none;margin-top:10px"><label class="lbl" style="margin-top:0">URL Gambar Soal (wajib)</label><input type="text" id="sPgGambar" placeholder="https://..."><label class="lbl">Kunci</label><div class="sw" style="max-width:180px"><select id="sPgKunci"><option value="">-- Opsional --</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div></div>
+    <div id="sPgFields" style="margin-top:10px"><div class="g2"><div><label class="lbl" style="margin-top:0">Opsi A</label><input type="text" id="sA"></div><div><label class="lbl" style="margin-top:0">Opsi B</label><input type="text" id="sB"></div><div><label class="lbl" style="margin-top:0">Opsi C</label><input type="text" id="sC"></div><div><label class="lbl" style="margin-top:0">Opsi D</label><input type="text" id="sD"></div><div><label class="lbl" style="margin-top:0">Opsi E (opsional)</label><input type="text" id="sE"></div></div><label class="lbl">Kunci</label><div class="sw" style="max-width:180px"><select id="sKunci"><option value="">-- Opsional --</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select></div></div>
+    <div id="sPgGambarField" style="display:none;margin-top:10px"><label class="lbl" style="margin-top:0">URL Gambar Soal (wajib)</label><input type="text" id="sPgGambar" placeholder="https://..."><label class="lbl">Kunci</label><div class="sw" style="max-width:180px"><select id="sPgKunci"><option value="">-- Opsional --</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></select></div></div>
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn-run" id="btnAnalyze" style="margin-top:0;flex:1">&#x1F50D; Analisis Soal</button>
       <button class="btn-sec" id="btnSingleReset" style="flex-shrink:0;padding:12px 16px">&#x21BA; Reset</button>
@@ -860,7 +860,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
         <div class="kur-entity-narasi">
           Kolom wajib: <code>tipe</code>, <code>pertanyaan</code><br>
           Kolom opsional: <code>vrl_gambar</code>, <code>opsi_a</code>, <code>opsi_b</code>,
-          <code>opsi_c</code>, <code>opsi_d</code>, <code>kunci</code><br><br>
+          <code>opsi_c</code>, <code>opsi_d</code>, <code>opsi_e</code> (opsional; kosong = soal 4 opsi), <code>kunci</code><br><br>
           Nilai kolom <code>tipe</code>: <code>pg_teks</code>, <code>pg_gambar</code>, <code>esai</code>, <code>esai_gambar</code><br>
           Urutan kolom boleh berubah — sistem membaca berdasarkan nama header, bukan posisi.
         </div>
@@ -869,7 +869,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
         <div class="kur-entity-title">&#x1F5BC;&#xFE0F; Format Gambar / Link Soal</div>
         <div class="kur-entity-narasi">
           Kolom <code>vrl_gambar</code> diisi URL gambar soal (https://...).<br>
-          Untuk tipe <code>pg_gambar</code> atau <code>esai_gambar</code>: seluruh soal (dan opsi, jika PG) ada di dalam gambar — kolom <code>pertanyaan</code> boleh dikosongkan, sistem tetap akan memprosesnya.<br>
+          Untuk tipe <code>pg_gambar</code> atau <code>esai_gambar</code>: seluruh soal (dan opsi, jika PG) ada di dalam gambar — kolom <code>pertanyaan</code> boleh dikosongkan, sistem tetap akan memprosesnya. Kolom <code>kunci</code> boleh A&ndash;E (E bila gambar menampilkan 5 pilihan).<br>
           Gunakan Google Drive (share link publik) atau hosting gambar lainnya yang dapat diakses langsung.
         </div>
       </div>
@@ -2212,7 +2212,7 @@ var TKBEngine = {
     var parts = [
       payload.pertanyaan || '',
       payload.opsi_a || '', payload.opsi_b || '',
-      payload.opsi_c || '', payload.opsi_d || '',
+      payload.opsi_c || '', payload.opsi_d || '', payload.opsi_e || '',
     ];
     return parts.join(' ').toLowerCase().trim();
   },
@@ -2628,7 +2628,7 @@ function taeResolve(topikRaw, materiList) {
 }
 
 
-const AI_COLS=['tipe','pertanyaan','vrl_gambar','opsi_a','opsi_b','opsi_c','opsi_d','kunci'];
+const AI_COLS=['tipe','pertanyaan','vrl_gambar','opsi_a','opsi_b','opsi_c','opsi_d','opsi_e','kunci'];
 const OUT_COLS=['topik','bloom','kesulitan','confidence','kunci_ai','status_kunci','rekomendasi_poin'];
 const ESAI=['esai','essay','uraian','esai_gambar','essay_gambar','isian'];
 const BLOOM_SCORE={C1:1,C2:2,C3:3,C4:4,C5:5,C6:6};
@@ -2886,7 +2886,7 @@ function buildPayload(row,mapel,kelas){
   else{
     p.pertanyaan=qbePrepare(row['pertanyaan']||'');
     if(row['vrl_gambar']&&String(row['vrl_gambar']).trim())p.url_gambar=String(row['vrl_gambar']).trim();
-    ['opsi_a','opsi_b','opsi_c','opsi_d'].forEach(function(k){if(row[k]&&String(row[k]).trim())p[k]=row[k];});
+    ['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'].forEach(function(k){if(row[k]&&String(row[k]).trim())p[k]=row[k];});
   }
   if(row['kunci']&&String(row['kunci']).trim())p.kunci=String(row['kunci']).trim();
   return p;
@@ -2897,8 +2897,8 @@ function buildPrompt(items,materiList){
   const itemArr=isSingle?[items[0]]:items;
   const hasEsai=itemArr.some(function(it){return ESAI.includes(String(it.tipe||'').toLowerCase().trim());});
   const kunciNote=hasEsai
-    ? '5. KUNCI_AI \u2014 PG: tulis pilihan tepat (A/B/C/D). ESAI: tulis jawaban RINGKAS & PADAT langsung ke inti, maks. 2 kalimat bahasa Indonesia. JANGAN tulis kata \\"Esai\\" saja. Selalu isi.'
-    : '5. KUNCI_AI \u2014 Jawaban paling tepat A/B/C/D. Selalu isi.';
+    ? '5. KUNCI_AI \u2014 PG: tulis pilihan tepat (A/B/C/D, atau E hanya bila soal punya opsi_e atau gambar soal menampilkan pilihan E). ESAI: tulis jawaban RINGKAS & PADAT langsung ke inti, maks. 2 kalimat bahasa Indonesia. JANGAN tulis kata \\"Esai\\" saja. Selalu isi.'
+    : '5. KUNCI_AI \u2014 Jawaban paling tepat A/B/C/D (atau E hanya bila soal punya opsi_e atau gambar soal menampilkan pilihan E). Selalu isi.';
   const contohEsai=hasEsai
     ? (isSingle
         ? '{"topik":"Nama | kw1, kw2","bloom":"C2","kesulitan":"Sedang","confidence":85,"kunci_ai":"Zakat adalah kewajiban mengeluarkan sebagian harta kepada yang berhak menerimanya sesuai ketentuan syariat."}'
@@ -2950,7 +2950,7 @@ function normalizeItem(p,materiList,_soalPayload){
 }
 
 function localAnalyze(row,mapel,kelas,materiList){
-  const text=[row['pertanyaan'],row['opsi_a'],row['opsi_b'],row['opsi_c'],row['opsi_d']].join(' ').toLowerCase();
+  const text=[row['pertanyaan'],row['opsi_a'],row['opsi_b'],row['opsi_c'],row['opsi_d'],row['opsi_e']].join(' ').toLowerCase();
   const stem=String(row['pertanyaan']||'').toLowerCase();
   const isEsai=ESAI.includes(String(row['tipe']||'').toLowerCase().trim());
   let best=materiList[0],bestScore=0;
@@ -2959,8 +2959,8 @@ function localAnalyze(row,mapel,kelas,materiList){
   let bloom='C2';
   for(const[level,kws]of bloomMap){if(kws.some(function(k){return stem.includes(k)||text.includes(k);})){bloom=level;break;}}
   let score=0;const wc=stem.split(/\s+/).length;if(wc>40)score+=2;else if(wc>20)score+=1;score+=(BLOOM_SCORE[bloom]||1)-1;
-  const opsi=['opsi_a','opsi_b','opsi_c','opsi_d'].map(function(k){return String(row[k]||'').trim();}).filter(function(o){return o;});
-  if(!isEsai&&opsi.length===4){const avg=opsi.reduce(function(a,b){return a+b.length;},0)/4;const varL=opsi.reduce(function(a,b){return a+Math.abs(b.length-avg);},0)/4;if(varL<5)score+=2;else if(varL<15)score+=1;}
+  const opsi=['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'].map(function(k){return String(row[k]||'').trim();}).filter(function(o){return o;});
+  if(!isEsai&&opsi.length>=4){const avg=opsi.reduce(function(a,b){return a+b.length;},0)/opsi.length;const varL=opsi.reduce(function(a,b){return a+Math.abs(b.length-avg);},0)/opsi.length;if(varL<5)score+=2;else if(varL<15)score+=1;}
   const kd5=score>=7?'Sangat Sulit':score>=5?'Sulit':score>=3?'Sedang':score>=1?'Mudah':'Sangat Mudah';
   return{topik:best+' | (AI Lokal)',bloom:bloom,kesulitan:kd5,confidence:40,kunci_ai:isEsai?'Esai':'?'};
 }
@@ -3323,7 +3323,7 @@ var singleState = { topik_ai: null, topik_final: null, override_by_user: false }
 
 function resetSingleAnalysis() {
   // Clear all inputs
-  var fields = ['sPert','sGambar','sA','sB','sC','sD','sPgGambar'];
+  var fields = ['sPert','sGambar','sA','sB','sC','sD','sE','sPgGambar'];
   fields.forEach(function(id) { if ($id(id)) $id(id).value = ''; });
   if ($id('sKunci')) $id('sKunci').value = '';
   if ($id('sPgKunci')) $id('sPgKunci').value = '';
@@ -3390,11 +3390,19 @@ async function doSingleAnalyze() {
     opsi_b:     ($id('sB') && $id('sB').value.trim()) || '',
     opsi_c:     ($id('sC') && $id('sC').value.trim()) || '',
     opsi_d:     ($id('sD') && $id('sD').value.trim()) || '',
+    opsi_e:     ($id('sE') && $id('sE').value.trim()) || '',
     kunci:      ($id('sKunci') && $id('sKunci').value.trim()) || '',
     no: 1
   };
 
-  if (!row.pertanyaan && !row.vrl_gambar) { showSErr('Isi pertanyaan terlebih dahulu.'); return; }
+  // PG Gambar: field yang tampil adalah sPgGambar (URL) dan sPgKunci (kunci),
+  // bukan sGambar/sKunci (keduanya tersembunyi pada mode ini).
+  if (row.tipe === 'pg_gambar') {
+    row.vrl_gambar = ($id('sPgGambar') && $id('sPgGambar').value.trim()) || '';
+    row.kunci      = ($id('sPgKunci') && $id('sPgKunci').value.trim()) || '';
+  }
+
+  if (!row.pertanyaan && !row.vrl_gambar) { showSErr(row.tipe === 'pg_gambar' ? 'Isi URL gambar soal terlebih dahulu.' : 'Isi pertanyaan terlebih dahulu.'); return; }
 
   // Reset state override topik
   singleState.override_by_user = false;
@@ -7536,7 +7544,7 @@ callGemini = async function(apiKey, model, rows, mapel, kelas, materiList) {
 //   Guru Hub -> sini : {type:'GH_KLASIFIKASI_REQUEST', mode:'lokal'|'gemini',
 //                       apiKey (kalau mode gemini -- dikirim Guru Hub, BUKAN
 //                       dibaca dari localStorage app ini), soal:[{ref, mapel,
-//                       kelas, tipe, pertanyaan, opsi_a..d, kunci, url_gambar}]}
+//                       kelas, tipe, pertanyaan, opsi_a..e, kunci, url_gambar}]}
 //   sini -> Guru Hub : {type:'GH_KLASIFIKASI_READY', keAktif, jumlahModulKE}
 //                      {type:'GH_KLASIFIKASI_PROGRESS', selesai, total, label}
 //                      {type:'GH_KLASIFIKASI_HASIL', hasil:[{ref, topik,
@@ -7631,7 +7639,7 @@ callGemini = async function(apiKey, model, rows, mapel, kelas, materiList) {
       if (mode === 'lokal') {
         soalGrup.forEach(function (s) {
           var row = { tipe: s.tipe || '', pertanyaan: s.pertanyaan || '', kunci: s.kunci || '' };
-          ['a', 'b', 'c', 'd'].forEach(function (h) { if (s['opsi_' + h]) row['opsi_' + h] = s['opsi_' + h]; });
+          ['a', 'b', 'c', 'd', 'e'].forEach(function (h) { if (s['opsi_' + h]) row['opsi_' + h] = s['opsi_' + h]; });
           try {
             var res = localAnalyze(row, mapel, kelas, materiList);
             var kesulitan3 = (KD_MAP[res.kesulitan] || res.kesulitan || '').toLowerCase();
@@ -7652,7 +7660,7 @@ callGemini = async function(apiKey, model, rows, mapel, kelas, materiList) {
         var rows = potongan.map(function (s) {
           var row = { tipe: s.tipe || '', pertanyaan: s.pertanyaan || '', kunci: s.kunci || '' };
           if (s.url_gambar) row.vrl_gambar = s.url_gambar; // nama field 'vrl_gambar' memang begitu di buildPayload()
-          ['a', 'b', 'c', 'd'].forEach(function (h) { if (s['opsi_' + h]) row['opsi_' + h] = s['opsi_' + h]; });
+          ['a', 'b', 'c', 'd', 'e'].forEach(function (h) { if (s['opsi_' + h]) row['opsi_' + h] = s['opsi_' + h]; });
           return row;
         });
         try {
