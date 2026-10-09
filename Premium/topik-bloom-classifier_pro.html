@@ -2799,7 +2799,7 @@ async function startAnalysis(){
       let results;
       if(aMode==='local'){results=batch.map(function(b){return localAnalyze(b.row,mapel,kelas,materiList);});}
       else{
-        results=await callGemini(apiKey,model,batch.map(function(b){return b.row;}),mapel,kelas,materiList);
+        results=await callGemini(apiKey,model,batch.map(function(b){return b.row;}),mapel,kelas,materiList,{periksaKunci:true});
         if(results&&results.length) addLog('info','\u2139 Gemini OK: '+results.length+' hasil diterima untuk batch ini');
       }
       results.forEach(function(res,ri){
@@ -2829,6 +2829,9 @@ function applyResult(row,res){
   const _isEsaiRow=ESAI.includes(String(row['tipe']||'').toLowerCase().trim());
   const kA=String(row['kunci']||'').trim().toUpperCase(),kAI=String(res.kunci_ai||'').trim().toUpperCase();
   row['status_kunci']=_isEsaiRow?'Esai_AI':(!kA?'Dibuat_AI':kA===kAI?'Cocok':'Berbeda');
+  // Catatan internal (tidak masuk kolom Excel): model penjawab & alur penentuan kunci
+  row['_model']=res._model||'';row['_finish']=res._finish||'';row['_thoughts']=res._thoughts||0;
+  row['_kunci_alur']=res._kunci_alur||'';row['_kunci_awal']=res._kunci_awal||'';
   const bs=BLOOM_SCORE[res.bloom]||1,ds=DIFF_SCORE[res.kesulitan]||1,k=bs+ds;
   row['rekomendasi_poin']=k<=3?'1-2 poin':k<=5?'2-3 poin':k<=8?'3-4 poin':'4-5 poin';
   // Store TKB metadata for explainability
@@ -2865,15 +2868,24 @@ async function callGemini(apiKey,model,rows,mapel,kelas,materiList){
         const data=await res.json();
         const raw=(data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text)||'';
         const clean=raw.replace(/```json|```/g,'').trim();
+        const _fin=(data.candidates&&data.candidates[0]&&data.candidates[0].finishReason)||'';
+        const _th=(data.usageMetadata&&data.usageMetadata.thoughtsTokenCount)||0;
+        if(_fin==='MAX_TOKENS'){try{addLog('retry','\u26A0 '+tryModel+': jawaban terpotong (MAX_TOKENS, token berpikir '+_th+')');}catch(_e){}}
         activeModel=tryModel;
-        if(rows.length===1){const p=JSON.parse(clean);return[normalizeItem(Array.isArray(p)?p[0]:p,materiList,rows[0])];}
+        if(rows.length===1){const p=JSON.parse(clean);return[_tandaiModel(normalizeItem(Array.isArray(p)?p[0]:p,materiList,rows[0]),tryModel,_fin,_th)];}
         const parsed=JSON.parse(clean);
         if(!Array.isArray(parsed))throw new Error('Response bukan array');
-        return parsed.map(function(item,ri){return normalizeItem(item,materiList,rows[ri]);});
+        return parsed.map(function(item,ri){return _tandaiModel(normalizeItem(item,materiList,rows[ri]),tryModel,_fin,_th);});
       }catch(e){lastErr=friendlyErr(e.message,0);if(attempt<MAX_RETRY){addLog('retry','⟳ Percobaan '+attempt+': '+lastErr);await sleep(1500*attempt);}}
     }
   }
   return rows.map(function(){return{error:lastErr};});
+}
+
+/** Catat model yang menjawab + alasan berhenti + token berpikir pada hasil (untuk sheet metadata). */
+function _tandaiModel(r,model,fin,th){
+  if(r&&typeof r==='object'&&!r.error){r._model=model;r._finish=fin||'';r._thoughts=th||0;}
+  return r;
 }
 
 function buildPayload(row,mapel,kelas){
@@ -2897,8 +2909,8 @@ function buildPrompt(items,materiList){
   const itemArr=isSingle?[items[0]]:items;
   const hasEsai=itemArr.some(function(it){return ESAI.includes(String(it.tipe||'').toLowerCase().trim());});
   const kunciNote=hasEsai
-    ? '5. KUNCI_AI \u2014 PG: tulis pilihan tepat (A/B/C/D, atau E hanya bila soal punya opsi_e atau gambar soal menampilkan pilihan E). ESAI: tulis jawaban RINGKAS & PADAT langsung ke inti, maks. 2 kalimat bahasa Indonesia. JANGAN tulis kata \\"Esai\\" saja. Selalu isi.'
-    : '5. KUNCI_AI \u2014 Jawaban paling tepat A/B/C/D (atau E hanya bila soal punya opsi_e atau gambar soal menampilkan pilihan E). Selalu isi.';
+    ? '5. KUNCI_AI \u2014 PG: tulis HANYA SATU HURUF pilihan yang tepat (A/B/C/D, atau E hanya bila soal punya opsi_e atau gambar soal menampilkan pilihan E) \u2014 BUKAN isi jawabannya dan BUKAN lebih dari satu huruf. ESAI: tulis jawaban RINGKAS & PADAT langsung ke inti, maks. 2 kalimat bahasa Indonesia. JANGAN tulis kata \\"Esai\\" saja. Selalu isi.'
+    : '5. KUNCI_AI \u2014 Tulis HANYA SATU HURUF pilihan yang paling tepat (A/B/C/D, atau E hanya bila soal punya opsi_e atau gambar soal menampilkan pilihan E) \u2014 BUKAN isi jawabannya dan BUKAN lebih dari satu huruf. Selalu isi.';
   const contohEsai=hasEsai
     ? (isSingle
         ? '{"topik":"Nama | kw1, kw2","bloom":"C2","kesulitan":"Sedang","confidence":85,"kunci_ai":"Zakat adalah kewajiban mengeluarkan sebagian harta kepada yang berhak menerimanya sesuai ketentuan syariat."}'
@@ -3419,7 +3431,7 @@ async function doSingleAnalyze() {
     if (sMode === 'local') {
       res = localAnalyze(row, mapel, kelas, materiList);
     } else {
-      var results = await callGemini(apiKey, model, [row], mapel, kelas, materiList);
+      var results = await callGemini(apiKey, model, [row], mapel, kelas, materiList, { periksaKunci: true });
       res = results[0];
     }
 
@@ -4820,6 +4832,27 @@ function _buildMetadataSheet() {
   ['Sangat Mudah','Mudah','Sedang','Sulit','Sangat Sulit'].forEach(function(lvl) {
     if (dk[lvl]) rows.push([lvl, dk[lvl]]);
   });
+  rows.push(['', '']);
+
+  // ── Catatan Kunci AI per soal (model penjawab & alur penentuan kunci) ──────
+  rows.push(['CATATAN KUNCI AI PER SOAL', '']);
+  var _cat = [];
+  if (typeof resultData !== 'undefined') {
+    resultData.forEach(function(r, i) {
+      if (r['_model'] || r['_kunci_alur']) {
+        var akhir = String(r['kunci_ai'] || '');
+        _cat.push([r['no'] || (i + 1), r['tipe'] || '', r['_model'] || '', r['_finish'] || '',
+                   r['_thoughts'] || 0, r['kunci'] || '', r['_kunci_awal'] || '',
+                   akhir.length > 60 ? akhir.slice(0, 60) + '...' : akhir, r['_kunci_alur'] || '']);
+      }
+    });
+  }
+  if (_cat.length) {
+    rows.push(['No', 'Tipe', 'Model Penjawab', 'Alasan Berhenti', 'Token Berpikir', 'Kunci Guru', 'Kunci AI Awal', 'Kunci AI Akhir', 'Alur Kunci']);
+    _cat.forEach(function(c) { rows.push(c); });
+  } else {
+    rows.push(['\u2014', 'Tidak ada catatan (mode lokal atau belum dianalisis dengan Gemini)']);
+  }
   rows.push(['', '']);
 
   // ── Footer ────────────────────────────────────────────────────────────────
@@ -7472,9 +7505,12 @@ async function callGeminiSingle(apiKey, model, row, mapel, kelas, materiList, im
                      data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
                      data.candidates[0].content.parts[0].text) || '';
         const clean = raw.replace(/```json|```/g, '').trim();
+        const _fin = (data.candidates && data.candidates[0] && data.candidates[0].finishReason) || '';
+        const _th = (data.usageMetadata && data.usageMetadata.thoughtsTokenCount) || 0;
+        if (_fin === 'MAX_TOKENS') { try { addLog('retry', '\u26A0 ' + tryModel + ': jawaban terpotong (MAX_TOKENS, token berpikir ' + _th + ')'); } catch (_e) {} }
         activeModel = tryModel;
         const p = JSON.parse(clean);
-        return [normalizeItem(Array.isArray(p) ? p[0] : p, materiList, row)];
+        return [_tandaiModel(normalizeItem(Array.isArray(p) ? p[0] : p, materiList, row), tryModel, _fin, _th)];
       } catch (e) {
         lastErr = friendlyErr(e.message, 0);
         if (attempt < MAX_RETRY) await sleep(1500 * attempt);
@@ -7522,6 +7558,180 @@ callGemini = async function(apiKey, model, rows, mapel, kelas, materiList) {
   }
 
   return results;
+};
+
+// ════════════════════════════════════════════════════════════════
+//  KUNCI PG — validasi huruf + pemeriksaan mendalam (2026-10)
+//  ------------------------------------------------------------------
+//  Masalah: kunci_ai untuk PG kadang berisi isi jawaban ("8") atau beberapa
+//  huruf ("D, E, F"), dan kadang salah karena kunci diminta bersamaan dengan
+//  4 tugas lain dalam satu JSON tanpa ruang berpikir.
+//  Solusi (hanya Analisis Excel & Analisis Satu Soal; bridge Guru Hub tidak
+//  memakai kunci_ai sehingga tidak dilibatkan):
+//   1. Kunci PG dipaksa jadi SATU HURUF yang ada di soal (A–D, E bila ada).
+//      Isi jawaban dipetakan kembali ke hurufnya; multi-huruf ditolak.
+//   2. Bila format tidak valid -> soal dikerjakan ulang khusus (PG teks).
+//   3. PG teks yang jawabannya BEDA dengan kunci guru diperiksa ulang lewat
+//      panggilan khusus satu soal (ruang berpikir longgar, tanpa
+//      membocorkan kunci guru). Soal yang sudah cocok tidak diproses ulang.
+// ════════════════════════════════════════════════════════════════
+function kunciPGHurufValid(row, adaGambar) {
+  var semua = ['A', 'B', 'C', 'D', 'E'];
+  if (adaGambar) return semua; // pilihan ada di dalam gambar
+  var ada = semua.filter(function (h) { return String(row['opsi_' + h.toLowerCase()] || '').trim() !== ''; });
+  if (ada.length >= 2) return ada;
+  // pilihan tidak diisi di kolom opsi (mis. tertulis di dalam teks soal)
+  return String(row['opsi_e'] || '').trim() ? semua : semua.slice(0, 4);
+}
+
+/** Kembalikan SATU huruf valid dari jawaban AI, atau '' bila tidak bisa dipastikan. */
+function normalizeKunciPG(raw, row, huruf) {
+  var s = String(raw == null ? '' : raw).trim();
+  if (!s) return '';
+  huruf = huruf || kunciPGHurufValid(row, false);
+  var up = s.toUpperCase();
+  // 1) Hanya huruf: "B", "b", "B.", "(B)", "B)", "Jawaban: B", "Opsi B"
+  var m = up.match(/^(?:JAWABAN|KUNCI|OPSI|PILIHAN)?\s*[:\-]?\s*\(?([A-E])\)?[.)]?$/);
+  // 2) Huruf lalu isi: "B. 8", "C) Zakat"
+  if (!m) m = up.match(/^\(?([A-E])[.)]\s+\S/);
+  if (m && huruf.indexOf(m[1]) >= 0) return m[1];
+  // 3) Isi jawaban yang persis sama dengan SATU opsi -> petakan ke hurufnya
+  var norm = function (t) { return String(t).toLowerCase().replace(/\s+/g, ' ').replace(/[.,;:!?]+$/, '').trim(); };
+  var num = function (t) {
+    var x = String(t).trim();
+    return /^-?\d+([.,]\d+)?$/.test(x) ? parseFloat(x.replace(',', '.')) : null;
+  };
+  var cocok = [];
+  huruf.forEach(function (h) {
+    var t = String(row['opsi_' + h.toLowerCase()] || '').trim();
+    if (!t) return;
+    var a = num(s), b = num(t);
+    if (norm(t) === norm(s) || (a !== null && b !== null && a === b)) cocok.push(h);
+  });
+  return cocok.length === 1 ? cocok[0] : '';
+}
+
+/**
+ * Kerjakan SATU soal PG teks secara khusus (hanya menjawab, boleh berpikir,
+ * keluaran dipaksa berupa satu huruf). Kunci guru TIDAK dikirim agar AI tidak
+ * terpengaruh. Mengembalikan {huruf, model, finish, thoughts} atau null.
+ */
+async function solveKunciPG(apiKey, model, row, mapel, kelas, huruf) {
+  var soal = String(row['pertanyaan'] || '').trim();
+  if (!soal) return null;
+  var teksOpsi = ['A', 'B', 'C', 'D', 'E'].map(function (h) {
+    var t = String(row['opsi_' + h.toLowerCase()] || '').trim();
+    return t ? (h + '. ' + t) : '';
+  }).filter(Boolean).join('\n');
+  var prompt = 'Kamu guru berpengalaman ahli kurikulum Kemenag MTs. Kerjakan soal pilihan ganda berikut dengan sangat teliti.\n' +
+    '- Soal hitungan: hitung langkah demi langkah lebih dulu, lalu cocokkan hasilnya dengan pilihan.\n' +
+    '- Soal hafalan, keagamaan, atau ilmu: pilih jawaban yang paling benar menurut fakta dan kurikulum Kemenag MTs.\n' +
+    '- Pilih TEPAT SATU huruf pilihan yang paling benar.\n\n' +
+    'Mata pelajaran: ' + mapel + '\nKelas: ' + kelas + '\n\nSOAL:\n' + qbePrepare(soal) +
+    (teksOpsi ? '\n\nPILIHAN:\n' + teksOpsi : '') +
+    '\n\nJawab HANYA dengan JSON: {"jawaban":"<satu huruf>"}';
+  var order = [activeModel || model].concat(FALLBACK_MODELS.filter(function (m) { return m !== (activeModel || model); }));
+  for (var oi = 0; oi < order.length; oi++) {
+    var tryModel = order[oi];
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      try {
+        var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + tryModel + ':generateContent?key=' + apiKey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.1,
+              maxOutputTokens: 8192,
+              responseMimeType: 'application/json',
+              responseSchema: { type: 'OBJECT', properties: { jawaban: { type: 'STRING', enum: huruf } }, required: ['jawaban'] }
+            }
+          })
+        });
+        if (!res.ok) {
+          if (res.status === 401) return null;
+          if (res.status === 429 || res.status === 404 || res.status === 403 || res.status === 400) break; // model berikutnya
+          if (attempt < 2) await sleep(1500);
+          continue;
+        }
+        var data = await res.json();
+        var cand = data.candidates && data.candidates[0];
+        var teks = ((cand && cand.content && cand.content.parts) || []).map(function (pt) { return pt.text || ''; }).join('');
+        var obj = JSON.parse(teks.replace(/```json|```/g, '').trim());
+        var h = normalizeKunciPG(obj && obj.jawaban, row, huruf);
+        if (h) {
+          return { huruf: h, model: tryModel, finish: (cand && cand.finishReason) || '',
+                   thoughts: (data.usageMetadata && data.usageMetadata.thoughtsTokenCount) || 0 };
+        }
+      } catch (e) {
+        if (attempt < 2) await sleep(1500);
+      }
+    }
+  }
+  return null;
+}
+
+function _logKunci(pesan) { try { addLog('info', pesan); } catch (e) {} }
+
+/** Rapikan & periksa kunci_ai SATU soal PG langsung pada objek hasil `res`. */
+async function periksaKunciSatuSoal(apiKey, model, row, res, mapel, kelas, materiList) {
+  if (!res || res.error) return;
+  var tipe = String(row['tipe'] || '').toLowerCase().trim();
+  if (ESAI.indexOf(tipe) >= 0) return; // esai: kunci_ai berupa teks jawaban, tidak diubah
+  var adaGambar = tipe.indexOf('gambar') >= 0 || String(row['vrl_gambar'] || '').trim() !== '';
+  var huruf = kunciPGHurufValid(row, adaGambar);
+  var noL = row['no'] || '?';
+  var awal = String(res.kunci_ai || '');
+  var v = normalizeKunciPG(awal, row, huruf);
+  var alur = 'langsung', sudahDalam = false;
+
+  if (!v) {
+    if (!adaGambar) {
+      var s1 = await solveKunciPG(apiKey, model, row, mapel, kelas, huruf);
+      if (s1) { v = s1.huruf; alur = 'format tidak valid → dikerjakan ulang'; sudahDalam = true; res._model = s1.model; res._finish = s1.finish; res._thoughts = s1.thoughts; }
+    } else {
+      var ulang = await _callGeminiTanpaPeriksaKunci(apiKey, model, [row], mapel, kelas, materiList);
+      var r2 = ulang && ulang[0];
+      var v2 = r2 && !r2.error ? normalizeKunciPG(r2.kunci_ai, row, huruf) : '';
+      if (v2) { v = v2; alur = 'format tidak valid → diulang'; }
+    }
+    if (!v) { v = '?'; alur = 'tidak valid'; }
+    _logKunci('↻ Soal #' + noL + ': kunci AI "' + awal.slice(0, 30) + '" tidak valid → ' + v);
+  }
+
+  // Pemeriksaan mendalam: hanya PG teks, kunci guru valid, dan beda dengan jawaban AI
+  if (!adaGambar && v !== '?' && !sudahDalam) {
+    var kg = normalizeKunciPG(row['kunci'], row, huruf);
+    if (kg && kg !== v) {
+      _logKunci('↻ Soal #' + noL + ': AI=' + v + ' beda dengan kunci guru=' + kg + ' → diperiksa ulang');
+      var s2 = await solveKunciPG(apiKey, model, row, mapel, kelas, huruf);
+      if (s2) {
+        alur = s2.huruf === kg ? 'diperiksa ulang → sesuai kunci guru'
+             : s2.huruf === v  ? 'diperiksa ulang → tetap beda'
+             : 'diperiksa ulang → beda dari keduanya';
+        v = s2.huruf; res._model = s2.model; res._finish = s2.finish; res._thoughts = s2.thoughts;
+        _logKunci('✓ Soal #' + noL + ': hasil pemeriksaan ulang = ' + v);
+      } else { alur = 'beda dengan kunci guru (pemeriksaan ulang gagal)'; }
+    }
+  }
+  res._kunci_awal = awal;
+  res.kunci_ai = v;
+  res._kunci_alur = alur;
+}
+
+// Lapisan di atas callGemini: bila pemanggil meminta {periksaKunci:true},
+// kunci_ai tiap soal PG dirapikan/diperiksa. Tanpa argumen itu (mis. bridge
+// Guru Hub) perilaku callGemini sama persis seperti sebelumnya.
+var _callGeminiTanpaPeriksaKunci = callGemini;
+callGemini = async function(apiKey, model, rows, mapel, kelas, materiList, opsi) {
+  var hasil = await _callGeminiTanpaPeriksaKunci(apiKey, model, rows, mapel, kelas, materiList);
+  if (!opsi || !opsi.periksaKunci || !Array.isArray(hasil)) return hasil;
+  for (var i = 0; i < rows.length; i++) {
+    if (typeof abortFlag !== 'undefined' && abortFlag) break;
+    try { await periksaKunciSatuSoal(apiKey, model, rows[i], hasil[i], mapel, kelas, materiList); }
+    catch (e) { /* pemeriksaan kunci tidak boleh menggagalkan hasil utama */ }
+  }
+  return hasil;
 };
 
 // ─── PATCH aKelas change event binding ────────────────────────────────────────
