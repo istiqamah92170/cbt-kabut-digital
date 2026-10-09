@@ -2211,6 +2211,21 @@ function ghAutoTinggiTextarea(el) {
   el.style.height = (el.scrollHeight + 2) + 'px';
 }
 
+// FITUR (2026-10): PG Gambar -- pilihan A-E tergambar di gambar soal, kolom
+// Opsi_A..D memang kosong. Guru TIDAK wajib mengisi Opsi_E: Kunci = E sudah
+// cukup (Portal menghitung 5 tombol di server). Jadi untuk tipe ini preview
+// TIDAK mendaftar teks opsi apa pun dan Opsi_E tidak pernah ditampilkan
+// sebagai teks -- cukup keterangan + kunci.
+function ghAdalahPgGambar(r) {
+  return String((r && r.Tipe) || '').trim().toLowerCase() === 'pg_gambar';
+}
+function ghHtmlKeteranganPgGambar(r) {
+  let kunci = String(r.Kunci || '').trim().toUpperCase();
+  let lima = kunci === 'E' || String(r.Opsi_E || '').trim() !== '';
+  return '<div class="gh-prev-box"><div class="gh-prev-box-lbl">Pilihan ada pada gambar (' + (lima ? 'A–E' : 'A–D') + ')</div>' +
+    '<div class="gh-prev-box-txt' + (kunci ? ' gh-prev-benar' : '') + '">' + (kunci ? 'Kunci: ' + ghEsc(kunci) + ' ✓' : 'Kunci: (belum diisi)') + '</div></div>';
+}
+
 function ghPreviewSoal(idx) {
   let r = ghBankSoalData.find(x => x._idx === idx);
   if (!r) return;
@@ -2225,8 +2240,10 @@ function ghPreviewSoal(idx) {
   html += '<div class="gh-prev-pertanyaan">' + ghEsc(r.Pertanyaan) + '</div>';
   if (r.URL_Gambar) html += '<img class="gh-prev-img" src="' + ghEsc(ghGdrivePrev(r.URL_Gambar)) + '" alt="Gambar soal">';
 
-  if (isPg) {
-    let opsiKeys = [['A', r.Opsi_A], ['B', r.Opsi_B], ['C', r.Opsi_C], ['D', r.Opsi_D]];
+  if (isPg && ghAdalahPgGambar(r)) {
+    html += ghHtmlKeteranganPgGambar(r);
+  } else if (isPg) {
+    let opsiKeys = [['A', r.Opsi_A], ['B', r.Opsi_B], ['C', r.Opsi_C], ['D', r.Opsi_D], ['E', r.Opsi_E]];
     html += '<div class="gh-prev-opsi">' + opsiKeys.filter(o => o[1]).map(o =>
       '<div class="gh-prev-opsi-item' + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' gh-prev-benar' : '') + '">' +
         '<span class="gh-prev-huruf">' + o[0] + '.</span><span>' + ghLihatGambarAtauTeks(o[1], 'Opsi ' + o[0]) + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' ✓' : '') + '</span>' +
@@ -2402,7 +2419,14 @@ function ghGambarKanvas(cv, strokes) {
 const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
-const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar'];
+const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar','Opsi_E'];
+// FITUR (2026-10): Opsi_E = opsi kelima OPSIONAL untuk soal PG (kosong = soal
+// 4 opsi seperti biasa). SENGAJA di UJUNG skema (kolom ke-14), BUKAN disisip
+// setelah Opsi_D -- pelajaran bencana Rekap_Akhir (2026-09): menyisip kolom
+// di tengah menggeser semua kolom sesudahnya di sheet lama. Kolom baru HANYA
+// boleh ditambah di ujung. Efek ke GH_KOLOM_BANK = 21 kolom (Opsi_E = U) dan
+// GH_KOLOM_GENERATE = 17 kolom (Opsi_E = ke-14, Topik/Bloom/Kesulitan = 15-17;
+// semua pembaca ketiganya memakai NAMA header, jangan diubah jadi posisi).
 // FITUR (2026-09): kolom Kelas ditambahkan setelah Mapel sebelum Tahun (atas
 // permintaan DIK); Topik/Bloom/Kesulitan ditambahkan sebagai metadata
 // klasifikasi -- diisi OTOMATIS dari header kolom bernama sama di sheet
@@ -2477,12 +2501,36 @@ async function ghMuatBankSoalTersimpan() {
   await ghSetBankSoalAktif(id, true);
 }
 
+// FITUR (2026-10): bank lama dibuat dengan 20 header (tanpa Opsi_E), sedangkan
+// baris baru sekarang 21 nilai -> sel Opsi_E akan tanpa judul. Fungsi ini
+// menulis header 'Opsi_E' ke kolom terakhir (U1) HANYA bila belum ada --
+// idempoten, tidak menyentuh kolom lain, dan GAGAL SENYAP (mis. akses
+// hanya-baca) supaya tidak menggagalkan aktivasi bank. Baris bank lama tidak
+// diubah: Opsi_E kosong = soal 4 opsi.
+async function ghMigrasiHeaderBank(id) {
+  try {
+    let idxE = GH_KOLOM_BANK.indexOf('Opsi_E');
+    let lebar = ghKolomHuruf(GH_KOLOM_BANK.length);
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/BankSoal!A1:' + lebar + '1', { headers: ghHeaderAuth() });
+    if (!resp.ok) return;
+    let hasil = await resp.json();
+    let h = ((hasil.values || [[]])[0] || []).map(x => (x == null ? '' : x).toString().trim());
+    if (h.length < idxE) return;                                   // bukan bank baku (header tidak lengkap) -- jangan disentuh
+    if (h.some(x => x.toLowerCase() === 'opsi_e')) return;         // sudah ada -> tidak menulis ulang
+    if (h[idxE]) return;                                           // sel U1 sudah terisi hal lain -> jangan timpa
+    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/BankSoal!' + lebar + '1?valueInputOption=RAW', {
+      method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [['Opsi_E']] })
+    });
+  } catch (e) { console.warn('Migrasi header Opsi_E dilewati:', e); }
+}
+
 async function ghSetBankSoalAktif(id, diam) {
   let statusEl = document.getElementById('gh-bs-setup-status');
   try {
     let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '?fields=properties.title', { headers: ghHeaderAuth() });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    await ghMigrasiHeaderBank(id);   // FITUR (2026-10): upgrade header bank lama (Opsi_E), idempoten & tidak fatal
     ghBankSoalId = id;
     localStorage.setItem(GH_KEY_BANKSOAL_ID, id);
     document.getElementById('gh-bs-nama-aktif').value = hasil.properties.title;
@@ -3940,7 +3988,7 @@ function ghKecualikanKelompokAktif() {
 }
 
 function ghBangunKolomBanding(r, gi) {
-  let opsiKeys = [['A', r.Opsi_A], ['B', r.Opsi_B], ['C', r.Opsi_C], ['D', r.Opsi_D]];
+  let opsiKeys = [['A', r.Opsi_A], ['B', r.Opsi_B], ['C', r.Opsi_C], ['D', r.Opsi_D], ['E', r.Opsi_E]];
   let html = '<div class="gh-banding-kolom">' +
     '<div class="gh-bs-soal-meta" style="margin-bottom:8px;">' +
       '<span class="gh-bs-badge">' + ghEsc(r.TipeTampil) + '</span><span class="gh-bs-badge">' + ghEsc(r.Mapel) + '</span>' +
@@ -3950,7 +3998,9 @@ function ghBangunKolomBanding(r, gi) {
     '<div style="font-size:11px;color:var(--gray-soft);margin-bottom:6px;">' + ghEsc(r.Sumber) + ' #' + ghEsc(r.No_Asal) + '</div>' +
     '<div style="font-weight:700;margin-bottom:8px;">' + ghEsc(r.Pertanyaan) + '</div>';
   if (r.URL_Gambar) html += '<img class="gh-prev-img" src="' + ghEsc(ghGdrivePrev(r.URL_Gambar)) + '" alt="Gambar soal">';
-  if (opsiKeys.some(o => o[1])) {
+  if (ghAdalahPgGambar(r)) {
+    html += ghHtmlKeteranganPgGambar(r);
+  } else if (opsiKeys.some(o => o[1])) {
     html += '<div class="gh-prev-opsi">' + opsiKeys.filter(o => o[1]).map(o =>
       '<div class="gh-prev-opsi-item' + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' gh-prev-benar' : '') + '">' +
         '<span class="gh-prev-huruf">' + o[0] + '.</span><span>' + ghLihatGambarAtauTeks(o[1], 'Opsi ' + o[0]) + (r.Kunci && r.Kunci.toUpperCase() === o[0] ? ' ✓' : '') + '</span>' +
@@ -4214,7 +4264,7 @@ function ghEksekusiKlasifikasi() {
   document.getElementById('gh-klasifikasi-status').textContent = '📤 Mengirim ' + ghKlasifikasiSoalDikirim.length + ' soal (mode: ' + (mode === 'gemini' ? 'Gemini AI' : 'AI Lokal') + ')...';
   let payload = ghKlasifikasiSoalDikirim.map(r => ({
     ref: ghSoalKey(r), mapel: r.Mapel, kelas: r.Kelas, tipe: r.Tipe, pertanyaan: r.Pertanyaan,
-    opsi_a: r.Opsi_A, opsi_b: r.Opsi_B, opsi_c: r.Opsi_C, opsi_d: r.Opsi_D, kunci: r.Kunci,
+    opsi_a: r.Opsi_A, opsi_b: r.Opsi_B, opsi_c: r.Opsi_C, opsi_d: r.Opsi_D, opsi_e: ghAdalahPgGambar(r) ? '' : r.Opsi_E, kunci: r.Kunci,
     url_gambar: r.URL_Gambar,
   }));
   document.getElementById('gh-klasifikasi-iframe').contentWindow.postMessage(
@@ -4363,8 +4413,8 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
-const MIDTRANS_CLIENT_KEY = 'Mid-client-M0YhnqNbhFWgr7e2';
-const MIDTRANS_PRODUCTION = true;
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
+const MIDTRANS_PRODUCTION = false;
 
 // FITUR (2026-09): pembungkus fetch+parse KHUSUS untuk server Lisensi
 // pusat (GH_URL_LISENSI) -- supaya SEMUA pemanggilnya memberi pesan yang
