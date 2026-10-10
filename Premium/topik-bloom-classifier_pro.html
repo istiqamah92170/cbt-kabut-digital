@@ -233,7 +233,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
   <div class="card">
     <div class="card-title"><span class="step-dot">3</span> Opsi</div>
     <div class="g3" id="aGeminiOpts">
-      <div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Model Gemini</div><div class="sw"><select id="aModel"><option value="gemini-2.5-flash" selected>gemini-2.5-flash &#x2605;</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option><option value="gemini-2.0-flash">gemini-2.0-flash</option><option value="gemini-1.5-flash">gemini-1.5-flash</option></select></div></div>
+      <div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Model Gemini</div><div class="sw"><select id="aModel"><option value="gemini-2.5-flash" selected>gemini-2.5-flash &#x2605;</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option><option value="gemini-2.0-flash">gemini-2.0-flash</option><option value="gemini-1.5-flash">gemini-1.5-flash</option></select></div><label style="display:flex;gap:6px;align-items:flex-start;font-size:11px;color:var(--text3);margin-top:6px;cursor:pointer"><input type="checkbox" id="aStrictModel" checked onchange="_setKetat(this.checked)" style="margin-top:2px"><span>Jangan pakai model yang lebih lemah. Bila kuota habis, tunggu lalu coba lagi model ini.</span></label></div>
       <div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Soal per request</div><div class="sw"><select id="aBatch"><option value="1">1 soal</option><option value="5">5 soal</option><option value="10" selected>10 soal</option><option value="20">20 soal</option></select></div></div>
       <div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Jeda antar batch</div><div class="sw"><select id="aDelay"><option value="0">Tanpa jeda</option><option value="500">500ms</option><option value="1000" selected>1 detik</option><option value="2000">2 detik</option></select></div></div>
     </div>
@@ -270,7 +270,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
   <div class="card">
     <div class="card-title"><span class="step-dot">1</span> Konfigurasi</div>
     <div class="mode-toggle"><button class="mode-btn active" id="sModeGemini" onclick="setSMode('gemini')">&#x2728; Gemini AI</button><button class="mode-btn" id="sModeLocal" onclick="setSMode('local')">&#x2699;&#xFE0F; AI Lokal</button></div>
-    <div id="sApiSection"><div class="key-row"><input type="password" id="sApiKey" placeholder="Gemini API key..." autocomplete="off"><span class="key-saved" id="sKeySaved">&#x2713; Tersimpan</span></div><div style="margin-top:8px;display:flex;gap:10px;align-items:center"><div style="font-size:11px;color:var(--text3);white-space:nowrap">Model:</div><div class="sw" style="flex:1"><select id="sModel"><option value="gemini-2.5-flash" selected>gemini-2.5-flash &#x2605;</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option><option value="gemini-2.0-flash">gemini-2.0-flash</option><option value="gemini-1.5-flash">gemini-1.5-flash</option></select></div></div></div>
+    <div id="sApiSection"><div class="key-row"><input type="password" id="sApiKey" placeholder="Gemini API key..." autocomplete="off"><span class="key-saved" id="sKeySaved">&#x2713; Tersimpan</span></div><div style="margin-top:8px;display:flex;gap:10px;align-items:center"><div style="font-size:11px;color:var(--text3);white-space:nowrap">Model:</div><div class="sw" style="flex:1"><select id="sModel"><option value="gemini-2.5-flash" selected>gemini-2.5-flash &#x2605;</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option><option value="gemini-2.0-flash">gemini-2.0-flash</option><option value="gemini-1.5-flash">gemini-1.5-flash</option></select></div></div><label style="display:flex;gap:6px;align-items:flex-start;font-size:11px;color:var(--text3);margin-top:6px;cursor:pointer"><input type="checkbox" id="sStrictModel" checked onchange="_setKetat(this.checked)" style="margin-top:2px"><span>Jangan pakai model yang lebih lemah. Bila kuota habis, tunggu lalu coba lagi model ini.</span></label></div>
     <div id="sLocalSection" style="display:none"><div class="local-badge">&#x2699;&#xFE0F; Mode Offline Aktif</div></div>
     <div class="g2" style="margin-top:12px">
       <div><label class="lbl" style="margin-top:0">Mata Pelajaran</label><div class="sw"><select id="sMapel" onchange="onSMapelChange()"><option value="">-- Pilih --</option></select></div></div>
@@ -1175,7 +1175,7 @@ function onAMapelChange(){
 }
 function onAKelasChange(){
   var m=$id('aMapel').value,k=$id('aKelas').value,info=$id('aMateriInfo');
-  if(m&&k){var _ml=getMateriListForKelas(m,k);if(_ml.length){info.style.display='block';info.textContent='✓ '+_ml.length+' materi untuk '+m+(k==='__SEMUA__'?' (semua kelas)':' Kelas '+k);}else{info.style.display='none';}}
+  if(m&&k){var _ml=getMateriListForKelas(m,k);if(_ml.length){info.style.display='block';info.textContent='✓ '+_ml.length+' materi untuk '+(m==='Otomatis'?'semua mapel':m)+(k==='__SEMUA__'?' (semua kelas)':' Kelas '+k);}else{info.style.display='none';}}
   else{info.style.display='none';}
   if(typeof checkRunnable==='function')checkRunnable();
 }
@@ -1342,6 +1342,13 @@ function getMateriById(id) {
 
 /** Get kelas list for a mapel */
 function getKelasList(mapel) {
+  if (mapel === 'Otomatis') { // gabungan semua kelas dari semua mapel
+    var _ks = [];
+    Object.keys(DB.mapel || DB).forEach(function (m) {
+      Object.keys((DB.mapel && DB.mapel[m]) || DB[m] || {}).forEach(function (k) { if (_ks.indexOf(k) < 0) _ks.push(k); });
+    });
+    return _ks;
+  }
   var src = (DB.mapel && DB.mapel[mapel]) ? DB.mapel[mapel] : (DB[mapel] || {});
   return Object.keys(src);
 }
@@ -2722,7 +2729,7 @@ async function runApiTest(k){
   for(const m of order){
     try{
       const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+k,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'Hi'}]}],generationConfig:{maxOutputTokens:5}})});
-      if(r.ok){activeModel=m;setApiStatus('ok','✓ API key valid · Model: '+m);checkRunnable();return;}
+      if(r.ok){activeModel=m;setApiStatus(m===preferred?'ok':'error',m===preferred?'✓ API key valid · Model: '+m:'⚠ API key valid, tetapi '+preferred+' sedang tidak tersedia (mungkin kuota). Model cadangan yang jalan: '+m+' — analisis tetap memakai '+preferred+'.');checkRunnable();return;}
       const ed=await r.json().catch(function(){return{};});
       if(r.status===401){setApiStatus('error','✗ API key tidak valid.');return;}
     }catch(e){}
@@ -2760,7 +2767,7 @@ function checkRunnable(){const apiOk=aMode==='local'||$id('apiKey').value.trim()
 
 async function startAnalysis(){
   const apiKey=$id('apiKey').value.trim(),mapel=$id('aMapel').value,kelas=$id('aKelas').value;
-  const model=activeModel||$id('aModel').value;
+  const model=$id('aModel').value;
   const batchSize=aMode==='local'?50:parseInt($id('aBatch').value);
   const delay=aMode==='local'?0:parseInt($id('aDelay').value);
   const skipFilled=$id('aSkip').checked;
@@ -2831,7 +2838,7 @@ function applyResult(row,res){
   row['status_kunci']=_isEsaiRow?'Esai_AI':(!kA?'Dibuat_AI':kA===kAI?'Cocok':'Berbeda');
   // Catatan internal (tidak masuk kolom Excel): model penjawab & alur penentuan kunci
   row['_model']=res._model||'';row['_finish']=res._finish||'';row['_thoughts']=res._thoughts||0;
-  row['_kunci_alur']=res._kunci_alur||'';row['_kunci_awal']=res._kunci_awal||'';
+  row['_kunci_alur']=res._kunci_alur||'';row['_kunci_awal']=res._kunci_awal||'';row['_model_pilih']=res._model_pilih||'';row['_gambar_gagal']=res._gambar_gagal?1:0;
   const bs=BLOOM_SCORE[res.bloom]||1,ds=DIFF_SCORE[res.kesulitan]||1,k=bs+ds;
   row['rekomendasi_poin']=k<=3?'1-2 poin':k<=5?'2-3 poin':k<=8?'3-4 poin':'4-5 poin';
   // Store TKB metadata for explainability
@@ -2850,9 +2857,10 @@ function applyResult(row,res){
 async function callGemini(apiKey,model,rows,mapel,kelas,materiList){
   const items=rows.map(function(row,idx){return Object.assign({no:idx+1},buildPayload(row,mapel,kelas));});
   const prompt=buildPrompt(items,materiList);
-  const order=[activeModel||model,...FALLBACK_MODELS.filter(function(m){return m!==(activeModel||model);})];
+  const order=_urutanModel(model);
   let lastErr='Terjadi kesalahan.';
   for(const tryModel of order){
+    const _st={n:0};
     for(let attempt=1;attempt<=MAX_RETRY;attempt++){
       try{
         const url='https://generativelanguage.googleapis.com/v1beta/models/'+tryModel+':generateContent?key='+apiKey;
@@ -2860,7 +2868,7 @@ async function callGemini(apiKey,model,rows,mapel,kelas,materiList){
         if(!res.ok){
           const ed=await res.json().catch(function(){return{};});
           lastErr=friendlyErr((ed.error&&ed.error.message)||'HTTP '+res.status,res.status);
-          if(res.status===429||res.status===404||res.status===403){addLog('retry','⟳ '+tryModel+': '+lastErr+' — model lain...');break;}
+          if(res.status===429||res.status===404||res.status===403){const _a=await _tanganiGagalModel(tryModel,res.status,ed,_st);if(_a==='ulang'){attempt--;continue;}break;}
           if(res.status===401)throw new Error('API key tidak valid.');
           if(attempt<MAX_RETRY){addLog('retry','⟳ Percobaan '+attempt+': '+lastErr);await sleep(1500*attempt);}
           continue;
@@ -2879,7 +2887,44 @@ async function callGemini(apiKey,model,rows,mapel,kelas,materiList){
       }catch(e){lastErr=friendlyErr(e.message,0);if(attempt<MAX_RETRY){addLog('retry','⟳ Percobaan '+attempt+': '+lastErr);await sleep(1500*attempt);}}
     }
   }
-  return rows.map(function(){return{error:lastErr};});
+  return rows.map(function(){return{error:lastErr+(_ketatAktif?' (mode ketat: model lebih lemah tidak dipakai)':'')};});
+}
+
+
+/* ── Pemilihan model: tanpa turun diam-diam ke model lebih lemah ───────────────
+   Mode ketat (bawaan, bisa dimatikan): hanya model yang dipilih pengguna.
+   Bila kena batas kuota per menit, tunggu lalu coba lagi model yang SAMA.
+   Mode longgar: boleh beralih ke model cadangan, tapi selalu diberi peringatan. */
+var _ketatAktif=false;
+function _ketatPref(){try{return localStorage.getItem('kea_model_ketat')!=='0';}catch(e){return true;}}
+function _setKetat(v){
+  try{localStorage.setItem('kea_model_ketat',v?'1':'0');}catch(e){}
+  ['aStrictModel','sStrictModel'].forEach(function(id){var c=document.getElementById(id);if(c)c.checked=!!v;});
+}
+function _urutanModel(model){
+  return _ketatAktif?[model]:[model].concat(FALLBACK_MODELS.filter(function(m){return m!==model;}));
+}
+async function _tungguDetik(sec){
+  for(var i=0;i<sec;i++){if(typeof abortFlag!=='undefined'&&abortFlag)return;await sleep(1000);}
+}
+/** 'ulang' = coba lagi model yang sama; 'lanjut' = keluar dari model ini */
+async function _tanganiGagalModel(tryModel,status,ed,st){
+  var msg='';try{msg=JSON.stringify((ed&&ed.error)||{});}catch(e){}
+  var harian=/PerDay|per day|daily/i.test(msg);
+  if(_ketatAktif){
+    if(status===429&&!harian&&st.n<4){
+      var sec=15*(st.n+1),m=msg.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/);
+      if(m)sec=Math.ceil(parseFloat(m[1]))+2;
+      sec=Math.min(Math.max(sec,5),90);st.n++;
+      try{addLog('retry','⏳ '+tryModel+' kena batas kuota per menit — menunggu '+sec+' dtk lalu mencoba lagi ('+st.n+'/4). Model lebih lemah tidak dipakai.');}catch(e){}
+      await _tungguDetik(sec);
+      return (typeof abortFlag!=='undefined'&&abortFlag)?'lanjut':'ulang';
+    }
+    try{addLog('warn','✗ '+tryModel+' gagal (status '+status+(harian?', kuota harian habis':'')+'). Berhenti — model lebih lemah tidak dipakai (mode ketat).');}catch(e){}
+    return 'lanjut';
+  }
+  try{addLog('warn','⚠ '+tryModel+' tidak bisa dipakai (status '+status+') — beralih ke model cadangan yang LEBIH LEMAH; mutu kunci/topik bisa turun.');}catch(e){}
+  return 'lanjut';
 }
 
 /** Catat model yang menjawab + alasan berhenti + token berpikir pada hasil (untuk sheet metadata). */
@@ -2893,6 +2938,8 @@ function buildPayload(row,mapel,kelas){
   const isPgG=tipe==='pg_gambar';
   const isEsai=ESAI.includes(tipe);
   const p={mapel:mapel,kelas:kelas,tipe:row['tipe']||''};
+  if(!mapel||mapel==='Otomatis')delete p.mapel;
+  if(!kelas||kelas==='__SEMUA__')delete p.kelas;
   if(isPgG){p.pertanyaan='[Soal PG ada di gambar yang dikirim bersama prompt ini — baca gambar untuk menentukan jawaban yang benar]';if(row['vrl_gambar'])p.url_gambar=String(row['vrl_gambar']).trim();}
   else if(isEsai){p.pertanyaan=qbePrepare(row['pertanyaan']||'');if(row['vrl_gambar']&&String(row['vrl_gambar']).trim())p.url_gambar=String(row['vrl_gambar']).trim();}
   else{
@@ -2918,7 +2965,7 @@ function buildPrompt(items,materiList){
     : (isSingle
         ? '{"topik":"Nama | kw1, kw2","bloom":"C2","kesulitan":"Sedang","confidence":85,"kunci_ai":"B"}'
         : '[{"no":1,"topik":"...","bloom":"C2","kesulitan":"Sedang","confidence":85,"kunci_ai":"B"},...]');
-  return 'Kamu adalah guru berpengalaman ahli kurikulum Kemenag MTs dan taksonomi Bloom.\n\nAnalisis '+items.length+' soal berikut:\n'+JSON.stringify(isSingle?items[0]:items,null,2)+'\n\nDAFTAR MATERI (wajib pilih satu \u2014 dilarang membuat topik baru):\n'+materiList.map(function(m,i){return (i+1)+'. '+m;}).join('\n')+'\n\nINSTRUKSI:\n1. TOPIK \u2014 Format: "Nama Materi | keyword1, keyword2, keyword3"\n   Nama materi PERSIS dari daftar. Contoh: "Norma dan Keadilan | sanksi, adat, hukum"\n2. BLOOM \u2014 Berdasarkan PROSES BERPIKIR: Soal\u27f2Proses Berpikir\u27f2Bloom (bukan hanya KKO)\n   C1=Mengingat C2=Memahami C3=Menerapkan C4=Menganalisis C5=Mengevaluasi C6=Mencipta\n3. KESULITAN \u2014 5 level: Sangat Mudah/Mudah/Sedang/Sulit/Sangat Sulit\n4. CONFIDENCE \u2014 0-100. Dari kecocokan: proses berpikir+topik+pola soal+jawaban+gambar (jika ada). Gambar dikirim langsung ke AI — confidence rendah hanya jika gambar gagal dimuat\n'+kunciNote+'\n\nJawab HANYA dengan JSON '+(isSingle?'object':'array')+' valid:\n'+contohEsai;
+  return 'Kamu adalah guru berpengalaman ahli kurikulum Kemenag MTs dan taksonomi Bloom.\n\nAnalisis '+items.length+' soal berikut:\n'+JSON.stringify(isSingle?items[0]:items,null,2)+(itemArr.every(function(it){return !it.mapel;})?'\n\nCATATAN: Mata pelajaran dan kelas TIDAK ditentukan. Tentukan sendiri mapel soal dari isinya, lalu pilih materi yang paling cocok dari daftar gabungan beberapa mapel di bawah. Pilih materi yang benar-benar membahas konsep soal; jangan memilih materi mapel lain hanya karena ada kata yang mirip.':'')+'\n\nDAFTAR MATERI (wajib pilih satu \u2014 dilarang membuat topik baru):\n'+materiList.map(function(m,i){return (i+1)+'. '+m;}).join('\n')+'\n\nINSTRUKSI:\n1. TOPIK \u2014 Format: "Nama Materi | keyword1, keyword2, keyword3"\n   Nama materi PERSIS dari daftar. Contoh: "Norma dan Keadilan | sanksi, adat, hukum"\n2. BLOOM \u2014 Berdasarkan PROSES BERPIKIR: Soal\u27f2Proses Berpikir\u27f2Bloom (bukan hanya KKO)\n   C1=Mengingat C2=Memahami C3=Menerapkan C4=Menganalisis C5=Mengevaluasi C6=Mencipta\n3. KESULITAN \u2014 5 level: Sangat Mudah/Mudah/Sedang/Sulit/Sangat Sulit\n4. CONFIDENCE \u2014 0-100. Dari kecocokan: proses berpikir+topik+pola soal+jawaban+gambar (jika ada). Gambar dikirim langsung ke AI — confidence rendah hanya jika gambar gagal dimuat\n'+kunciNote+'\n\nJawab HANYA dengan JSON '+(isSingle?'object':'array')+' valid:\n'+contohEsai;
 }
 
 function normalizeItem(p,materiList,_soalPayload){
@@ -3047,7 +3094,7 @@ function populateMapelSelects(){
     if (!selMapel) return;
 
     var prev = selMapel.value;
-    selMapel.innerHTML = '<option value="">' + placeholder + '</option>';
+    selMapel.innerHTML = '<option value="">' + placeholder + '</option><option value="Otomatis">Otomatis</option>';
     mapels.forEach(function(m) {
       var o = document.createElement('option');
       o.value = m; o.textContent = m;
@@ -3068,7 +3115,7 @@ function populateMapelSelects(){
       selKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
       if (kelas.length > 1) {
         var oAll = document.createElement('option');
-        oAll.value = '__SEMUA__'; oAll.textContent = 'Semua Kelas';
+        oAll.value = '__SEMUA__'; oAll.textContent = 'Otomatis';
         selKelas.appendChild(oAll);
       }
       kelas.forEach(function(k) {
@@ -3102,16 +3149,17 @@ function _fillKelasDropdown(mapelSelectId, kelasSelectId) {
   selKelas.innerHTML = '<option value="">-- Pilih Kelas --</option>';
   if (!mapel) return;
   var kelasList = getKelasList(mapel);
-  // Tambah opsi Semua Kelas jika lebih dari satu
-  if (kelasList.length > 1) {
+  // Tambah opsi Otomatis (semua kelas) jika lebih dari satu kelas, atau bila mapel = Otomatis
+  if (kelasList.length > 1 || mapel === 'Otomatis') {
     var oAll = document.createElement('option');
-    oAll.value = '__SEMUA__'; oAll.textContent = 'Semua Kelas';
+    oAll.value = '__SEMUA__'; oAll.textContent = 'Otomatis';
     selKelas.appendChild(oAll);
   }
   kelasList.forEach(function(k) {
     var o = document.createElement('option');
     o.value = k; o.textContent = 'Kelas ' + k; selKelas.appendChild(o);
   });
+  if (mapel === 'Otomatis') { selKelas.value = '__SEMUA__'; return; }
   // Pilih kelas: pertahankan lama, atau pilih pertama
   // Pilih kelas lama jika masih ada, atau kelas pertama spesifik (bukan __SEMUA__)
   if (prevKelas && prevKelas !== '__SEMUA__' && kelasList.includes(prevKelas)) {
@@ -3270,8 +3318,8 @@ function populateKelasDropdown(selId, mapelId, withSemua, onChange) {
   var mapel = $id(mapelId) ? $id(mapelId).value : '';
   var kelasList = mapel ? getKelasList(mapel) : [];
   sel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-  if (withSemua && kelasList.length > 1) {
-    var o = document.createElement('option'); o.value = '__SEMUA__'; o.textContent = 'Semua Kelas';
+  if (withSemua && (kelasList.length > 1 || mapel === 'Otomatis')) {
+    var o = document.createElement('option'); o.value = '__SEMUA__'; o.textContent = 'Otomatis';
     sel.appendChild(o);
   }
   kelasList.forEach(function(k) {
@@ -3283,6 +3331,16 @@ function populateKelasDropdown(selId, mapelId, withSemua, onChange) {
 
 /** Get merged materiList for "Semua" kelas */
 function getMateriListForKelas(mapel, kelas) {
+  if (mapel === 'Otomatis') { // gabungan materi semua mapel (dan kelas yang dipilih / semua kelas)
+    var _gab = [];
+    Object.keys(DB.mapel || DB).forEach(function (m) {
+      var _kl = (kelas === '__SEMUA__') ? getKelasList(m) : [kelas];
+      _kl.forEach(function (k) {
+        getMateriList(m, k).forEach(function (t) { if (_gab.indexOf(t) < 0) _gab.push(t); });
+      });
+    });
+    return _gab;
+  }
   if (kelas === '__SEMUA__') {
     var all = [];
     var ks = getKelasList(mapel);
@@ -3303,14 +3361,15 @@ onSMapelChange = function() {
   var sel = $id('sKelas');
   sel.innerHTML = '<option value="">-- Pilih Kelas --</option>';
   var ks = m ? getKelasList(m) : [];
-  if (ks.length > 1) {
-    var o = document.createElement('option'); o.value = '__SEMUA__'; o.textContent = 'Semua Kelas';
+  if (ks.length > 1 || m === 'Otomatis') {
+    var o = document.createElement('option'); o.value = '__SEMUA__'; o.textContent = 'Otomatis';
     sel.appendChild(o);
   }
   ks.forEach(function(k) {
     var o = document.createElement('option'); o.value = k; o.textContent = 'Kelas ' + k;
     sel.appendChild(o);
   });
+  if (m === 'Otomatis') sel.value = '__SEMUA__';
 };
 
 // Patch checkRunnable to accept __SEMUA__
@@ -3326,7 +3385,7 @@ checkRunnable = function() {
 // getMateriList tetap di-patch agar __SEMUA__ ditangani transparan di seluruh pemanggil lain.
 var _origGetMateriList = getMateriList;
 getMateriList = function(mapel, kelas) {
-  if (kelas === '__SEMUA__') return getMateriListForKelas(mapel, kelas);
+  if (kelas === '__SEMUA__' || mapel === 'Otomatis') return getMateriListForKelas(mapel, kelas);
   return _origGetMateriList(mapel, kelas);
 };
 
@@ -4847,6 +4906,15 @@ function _buildMetadataSheet() {
       }
     });
   }
+  var _cad = 0, _pil = '', _gg = 0;
+  if (typeof resultData !== 'undefined') {
+    resultData.forEach(function(r) {
+      if (r['_model_pilih'] && r['_model'] && r['_model'] !== r['_model_pilih']) { _cad++; _pil = r['_model_pilih']; }
+      if (r['_gambar_gagal']) _gg++;
+    });
+  }
+  if (_cad) rows.push(['\u26A0 PERINGATAN', _cad + ' soal dijawab model CADANGAN (lebih lemah), bukan ' + _pil + '. Jawaban/topik soal itu perlu dicek.']);
+  if (_gg) rows.push(['\u26A0 PERINGATAN', _gg + ' soal bergambar: gambar gagal dimuat sehingga AI menjawab tanpa melihat gambar. Kunci/topik soal itu tidak bisa dipercaya.']);
   if (_cat.length) {
     rows.push(['No', 'Tipe', 'Model Penjawab', 'Alasan Berhenti', 'Token Berpikir', 'Kunci Guru', 'Kunci AI Awal', 'Kunci AI Akhir', 'Alur Kunci']);
     _cat.forEach(function(c) { rows.push(c); });
@@ -5769,6 +5837,10 @@ validateFile = function(json, file) {
   var rawHeaders = keepIdx.map(function(i) { return rawHeadersFull[i]; });
   origHeadersRaw = rawHeaders;
   origHeaders = rawHeaders.map(function(h) { return h.toLowerCase(); });
+  // Header "URL_Gambar" (nama yang dipakai Guru Hub/Excel) = kolom gambar soal (kunci internal vrl_gambar).
+  // Tanpa alias ini gambar tidak pernah dikirim ke AI dan soal bergambar dijawab tebakan buta.
+  // Nama tampilan di Excel keluaran tetap memakai header asli (origHeadersRaw).
+  if (origHeaders.indexOf('vrl_gambar') < 0) { var _ug = origHeaders.indexOf('url_gambar'); if (_ug >= 0) origHeaders[_ug] = 'vrl_gambar'; }
 
   // Kolom wajib: hanya 'tipe' — 'pertanyaan' opsional jika ada vrl_gambar
   var missingRequired = ['tipe'].filter(function(h) { return !origHeaders.includes(h); });
@@ -7476,10 +7548,11 @@ async function callGeminiSingle(apiKey, model, row, mapel, kelas, materiList, im
     parts.push({ inline_data: { mime_type: imgData.mimeType, data: imgData.base64 } });
   }
 
-  const order = [activeModel || model, ...FALLBACK_MODELS.filter(function(m) { return m !== (activeModel || model); })];
+  const order = _urutanModel(model);
   let lastErr = 'Terjadi kesalahan.';
 
   for (const tryModel of order) {
+    const _st = { n: 0 };
     for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
       try {
         const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + tryModel +
@@ -7495,7 +7568,7 @@ async function callGeminiSingle(apiKey, model, row, mapel, kelas, materiList, im
         if (!res.ok) {
           const ed = await res.json().catch(function() { return {}; });
           lastErr = friendlyErr((ed.error && ed.error.message) || 'HTTP ' + res.status, res.status);
-          if (res.status === 429 || res.status === 404 || res.status === 403) { break; }
+          if (res.status === 429 || res.status === 404 || res.status === 403) { const _a = await _tanganiGagalModel(tryModel, res.status, ed, _st); if (_a === 'ulang') { attempt--; continue; } break; }
           if (res.status === 401) throw new Error('API key tidak valid.');
           if (attempt < MAX_RETRY) await sleep(1500 * attempt);
           continue;
@@ -7517,7 +7590,7 @@ async function callGeminiSingle(apiKey, model, row, mapel, kelas, materiList, im
       }
     }
   }
-  return [{ error: lastErr }];
+  return [{ error: lastErr + (_ketatAktif ? ' (mode ketat: model lebih lemah tidak dipakai)' : '') }];
 }
 
 // Override callGemini agar batch yang mengandung soal bergambar tetap
@@ -7546,6 +7619,10 @@ callGemini = async function(apiKey, model, rows, mapel, kelas, materiList) {
       } catch(e) { imgData = null; }
       const r = await callGeminiSingle(apiKey, model, row, mapel, kelas, materiList, imgData);
       results[i] = r[0];
+      if (!imgData && results[i] && !results[i].error) {
+        results[i]._gambar_gagal = true;
+        try { addLog('warn', '\u26A0 Soal #' + (row['no'] || (i + 1)) + ': gambar GAGAL dimuat \u2014 AI menjawab tanpa melihat gambar (jawaban/topik tidak bisa dipercaya).'); } catch (_e) {}
+      }
     } else {
       textBatch.push({ idx: i, row: row });
     }
@@ -7630,9 +7707,10 @@ async function solveKunciPG(apiKey, model, row, mapel, kelas, huruf) {
     'Mata pelajaran: ' + mapel + '\nKelas: ' + kelas + '\n\nSOAL:\n' + qbePrepare(soal) +
     (teksOpsi ? '\n\nPILIHAN:\n' + teksOpsi : '') +
     '\n\nJawab HANYA dengan JSON: {"jawaban":"<satu huruf>"}';
-  var order = [activeModel || model].concat(FALLBACK_MODELS.filter(function (m) { return m !== (activeModel || model); }));
+  var order = _urutanModel(model);
   for (var oi = 0; oi < order.length; oi++) {
     var tryModel = order[oi];
+    var _st = { n: 0 };
     for (var attempt = 1; attempt <= 2; attempt++) {
       try {
         var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + tryModel + ':generateContent?key=' + apiKey, {
@@ -7650,7 +7728,8 @@ async function solveKunciPG(apiKey, model, row, mapel, kelas, huruf) {
         });
         if (!res.ok) {
           if (res.status === 401) return null;
-          if (res.status === 429 || res.status === 404 || res.status === 403 || res.status === 400) break; // model berikutnya
+          if (res.status === 429 || res.status === 404 || res.status === 403) { var _a = await _tanganiGagalModel(tryModel, res.status, await res.json().catch(function () { return {}; }), _st); if (_a === 'ulang') { attempt--; continue; } break; }
+          if (res.status === 400) break; // model berikutnya
           if (attempt < 2) await sleep(1500);
           continue;
         }
@@ -7671,6 +7750,52 @@ async function solveKunciPG(apiKey, model, row, mapel, kelas, huruf) {
   return null;
 }
 
+
+/**
+ * Kerjakan SATU soal PG BERGAMBAR secara khusus: gambar dikirim, thinking dinyalakan
+ * (model 2.5), keluaran dipaksa satu huruf. Kunci guru TIDAK dikirim.
+ * Mengembalikan {huruf, model, finish, thoughts} atau null.
+ */
+async function solveKunciGambar(apiKey, model, row, mapel, kelas, huruf, imgData) {
+  if (!imgData || !imgData.base64) return null;
+  var oto = !mapel || mapel === 'Otomatis';
+  var prompt = 'Kamu guru berpengalaman ahli kurikulum Kemenag MTs. Soal pilihan ganda ada di GAMBAR terlampir.\n' +
+    '- Baca soal dan semua pilihan pada gambar dengan teliti.\n' +
+    '- Soal hitungan atau fisika: hitung langkah demi langkah lebih dulu, lalu cocokkan dengan pilihan.\n' +
+    '- Pilih TEPAT SATU huruf pilihan yang paling benar.\n' +
+    (oto ? '' : '\nMata pelajaran: ' + mapel + (kelas && kelas !== '__SEMUA__' ? '\nKelas: ' + kelas : '')) +
+    '\n\nJawab HANYA dengan JSON: {"jawaban":"<satu huruf>"}';
+  var order = _urutanModel(model);
+  for (var oi = 0; oi < order.length; oi++) {
+    var tryModel = order[oi], _st = { n: 0 };
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      try {
+        var gc = { temperature: 0.1, maxOutputTokens: 8192, responseMimeType: 'application/json',
+                   responseSchema: { type: 'OBJECT', properties: { jawaban: { type: 'STRING', enum: huruf } }, required: ['jawaban'] } };
+        if (/gemini-2\.5/.test(tryModel)) gc.thinkingConfig = { thinkingBudget: -1 };
+        var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + tryModel + ':generateContent?key=' + apiKey, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: imgData.mimeType, data: imgData.base64 } }] }], generationConfig: gc })
+        });
+        if (!res.ok) {
+          if (res.status === 401) return null;
+          if (res.status === 429 || res.status === 404 || res.status === 403) { var _a = await _tanganiGagalModel(tryModel, res.status, await res.json().catch(function () { return {}; }), _st); if (_a === 'ulang') { attempt--; continue; } break; }
+          if (res.status === 400) break;
+          if (attempt < 2) await sleep(1500);
+          continue;
+        }
+        var data = await res.json();
+        var cand = data.candidates && data.candidates[0];
+        var teks = ((cand && cand.content && cand.content.parts) || []).map(function (pt) { return pt.text || ''; }).join('');
+        var obj = JSON.parse(teks.replace(/```json|```/g, '').trim());
+        var h = normalizeKunciPG(obj && obj.jawaban, row, huruf);
+        if (h) return { huruf: h, model: tryModel, finish: (cand && cand.finishReason) || '', thoughts: (data.usageMetadata && data.usageMetadata.thoughtsTokenCount) || 0 };
+      } catch (e) { if (attempt < 2) await sleep(1500); }
+    }
+  }
+  return null;
+}
+
 function _logKunci(pesan) { try { addLog('info', pesan); } catch (e) {} }
 
 /** Rapikan & periksa kunci_ai SATU soal PG langsung pada objek hasil `res`. */
@@ -7684,6 +7809,14 @@ async function periksaKunciSatuSoal(apiKey, model, row, res, mapel, kelas, mater
   var awal = String(res.kunci_ai || '');
   var v = normalizeKunciPG(awal, row, huruf);
   var alur = 'langsung', sudahDalam = false;
+
+  // Gambar soal gagal dimuat: jawaban AI hanyalah tebakan -> jangan dipakai
+  if (res._gambar_gagal && tipe === 'pg_gambar') {
+    _logKunci('\u26A0 Soal #' + noL + ': gambar tidak terbaca \u2192 kunci AI dikosongkan ("?"), topik/bloom hanya perkiraan');
+    res._kunci_awal = awal; res.kunci_ai = '?';
+    res._kunci_alur = 'gambar gagal dimuat \u2192 kunci tidak ditebak; topik/bloom perkiraan tanpa gambar';
+    return;
+  }
 
   if (!v) {
     if (!adaGambar) {
@@ -7714,6 +7847,32 @@ async function periksaKunciSatuSoal(apiKey, model, row, res, mapel, kelas, mater
       } else { alur = 'beda dengan kunci guru (pemeriksaan ulang gagal)'; }
     }
   }
+  // PG bergambar: bila belum terkonfirmasi kunci guru (kunci kosong ATAU beda), kerjakan ulang
+  // dengan gambar + thinking sebagai pembanding. Selaras dengan kunci guru -> tidak perlu diperiksa.
+  if (tipe === 'pg_gambar' && v !== '?') {
+    var kgG = normalizeKunciPG(row['kunci'], row, huruf);
+    if (!kgG || kgG !== v) {
+      var imgU = String(row['vrl_gambar'] || '').trim(), imgD = null;
+      try { if (imgU) { imgD = await _fetchImageAsBase64(imgU); if (imgD && imgD.error) imgD = null; } } catch (_e) { imgD = null; }
+      _logKunci('\u21BB Soal #' + noL + ' (gambar): ' + (kgG ? 'AI=' + v + ' beda dengan kunci guru=' + kgG : 'tanpa kunci guru') + ' \u2192 diperiksa ulang dengan penalaran');
+      var sg = await solveKunciGambar(apiKey, model, row, mapel, kelas, huruf, imgD);
+      if (sg) {
+        var awalG = v;
+        if (kgG) {
+          alur = sg.huruf === kgG ? 'bernalar \u2192 sesuai kunci guru (awal ' + awalG + ')'
+               : sg.huruf === awalG ? 'bernalar \u2192 tetap beda dari kunci guru'
+               : 'bernalar \u2192 beda dari keduanya \u26A0 perlu diperiksa guru';
+        } else {
+          alur = sg.huruf === awalG ? 'bernalar \u2192 terkonfirmasi (dua jawaban sama)'
+               : 'bernalar \u2192 beda dari jawaban awal (' + awalG + ' \u2192 ' + sg.huruf + ') \u26A0 perlu diperiksa guru';
+        }
+        v = sg.huruf; res._model = sg.model; res._finish = sg.finish; res._thoughts = sg.thoughts;
+        _logKunci('\u2713 Soal #' + noL + ': hasil penalaran = ' + v);
+      } else {
+        alur = (alur === 'langsung' ? '' : alur + '; ') + 'pemeriksaan bernalar gagal' + (imgD ? '' : ' (gambar tidak terbaca)') + ' \u26A0 jawaban belum terkonfirmasi';
+      }
+    }
+  }
   res._kunci_awal = awal;
   res.kunci_ai = v;
   res._kunci_alur = alur;
@@ -7724,15 +7883,26 @@ async function periksaKunciSatuSoal(apiKey, model, row, res, mapel, kelas, mater
 // Guru Hub) perilaku callGemini sama persis seperti sebelumnya.
 var _callGeminiTanpaPeriksaKunci = callGemini;
 callGemini = async function(apiKey, model, rows, mapel, kelas, materiList, opsi) {
-  var hasil = await _callGeminiTanpaPeriksaKunci(apiKey, model, rows, mapel, kelas, materiList);
-  if (!opsi || !opsi.periksaKunci || !Array.isArray(hasil)) return hasil;
-  for (var i = 0; i < rows.length; i++) {
-    if (typeof abortFlag !== 'undefined' && abortFlag) break;
-    try { await periksaKunciSatuSoal(apiKey, model, rows[i], hasil[i], mapel, kelas, materiList); }
-    catch (e) { /* pemeriksaan kunci tidak boleh menggagalkan hasil utama */ }
-  }
-  return hasil;
+  var _ketatLama = _ketatAktif;
+  if (opsi && opsi.periksaKunci) _ketatAktif = _ketatPref();
+  try {
+    var hasil = await _callGeminiTanpaPeriksaKunci(apiKey, model, rows, mapel, kelas, materiList);
+    if (!opsi || !opsi.periksaKunci || !Array.isArray(hasil)) return hasil;
+    for (var i = 0; i < rows.length; i++) {
+      if (typeof abortFlag !== 'undefined' && abortFlag) break;
+      try { await periksaKunciSatuSoal(apiKey, model, rows[i], hasil[i], mapel, kelas, materiList); }
+      catch (e) { /* pemeriksaan kunci tidak boleh menggagalkan hasil utama */ }
+    }
+    var beda = 0;
+    hasil.forEach(function (r) {
+      if (r && typeof r === 'object') { r._model_pilih = model; if (r._model && r._model !== model) beda++; }
+    });
+    if (beda) { try { addLog('warn', '\u26A0 ' + beda + ' soal pada batch ini dijawab model CADANGAN (bukan ' + model + ') \u2014 lihat sheet _Metadata_Analisis.'); } catch (e) {} }
+    return hasil;
+  } finally { _ketatAktif = _ketatLama; }
 };
+
+document.addEventListener('DOMContentLoaded',function(){_setKetat(_ketatPref());});
 
 // ─── PATCH aKelas change event binding ────────────────────────────────────────
 // The original aKelas listener in DOMContentLoaded binds to onAKelasChange
