@@ -1871,6 +1871,21 @@ B. Sub-poin...
         </div>
 
         <div class="settings-group">
+          <div class="settings-group-title">🏫 Logo Sekolah</div>
+          <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Dipakai di sampul Laporan ATP. Gambar otomatis dikecilkan &amp; disimpan di perangkat ini.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+            <img id="previewLogoSekolah" alt="Logo sekolah" style="display:none;max-height:80px;max-width:160px;object-fit:contain;border:1px solid var(--border);border-radius:6px;padding:4px;background:#fff;">
+            <p id="ketLogoSekolah" style="font-size:12px;color:var(--text-muted);margin:0;">Belum ada logo. Sampul laporan dibuat tanpa logo.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <label class="btn btn-secondary btn-sm" style="width:auto;cursor:pointer;">📷 Pilih Logo
+                <input type="file" accept="image/*" style="display:none;" onchange="pilihLogoSekolah(this)">
+              </label>
+              <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="hapusLogoSekolah()">🗑️ Hapus Logo</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
           <div class="settings-group-title">☁️ Cadangan Cloud (Google Drive)</div>
           <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Simpan salinan project ke Google Drive lewat Google Apps Script milik sendiri — data tidak cuma bergantung pada penyimpanan HP. Riwayat lama juga baru diringkas di HP SETELAH cadangan cloud ini berhasil.</p>
           <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px;">
@@ -2371,6 +2386,7 @@ B. Sub-poin...
                 <div style="display:flex;gap:6px;align-items:center;">
                   <span id="atpTPCount" class="badge badge-teal" style="font-size:10px;">0 TP</span>
                   <button class="btn btn-secondary btn-sm" style="font-size:11px;" onclick="atpDistribusiOtomatis()">⚡ Distribusi Otomatis</button>
+                  <button class="btn btn-secondary btn-sm" style="font-size:11px;" onclick="exportLaporanATP()" title="Unduh ATP kelas ini sbg dokumen Word format laporan">📄 Laporan ATP</button>
                 </div>
               </div>
               <div class="atp-card-body" id="atpTPList">
@@ -2696,7 +2712,7 @@ const IDB = {
   /* ID project aktif — diisi saat init/switch project. Semua key otomatis
      diberi awalan 'proj_<id>_' KECUALI key di GLOBAL_KEYS (dipakai bersama semua project). */
   _activeProjectId: null,
-  GLOBAL_KEYS: ['project_list', 'active_project_id', 'ai_cache'],
+  GLOBAL_KEYS: ['project_list', 'active_project_id', 'ai_cache', 'logo_sekolah'],
 
   /** Ubah key logis menjadi key fisik ber-namespace project */
   _k(key) {
@@ -6396,7 +6412,7 @@ function _buatZip(files) {
 
   files.forEach(f => {
     const nameBytes = enc.encode(f.name);
-    const dataBytes = enc.encode(f.data);
+    const dataBytes = (f.data instanceof Uint8Array) ? f.data : enc.encode(f.data);
     const crc  = _crc32(dataBytes);
     const size = dataBytes.length;
 
@@ -6772,6 +6788,306 @@ function exportTabWord(tabId) {
   const namaFile = `${labelBersih.replace(/\s+/g, '_')}_${(data.mapel || 'Dokumen').replace(/\s+/g, '_')}_Kelas${data.kelas || ''}.docx`;
   _unduhDocx(judulDoc, konten, namaFile);
   showToast(`📄 ${labelBersih} berhasil diunduh — buka dengan Microsoft Word`);
+}
+
+/* ============================================================
+   LAPORAN ATP (.docx) — mengikuti format dokumen ATP contoh Rapian:
+   sampul (logo + judul + identitas) -> identitas & Capaian Pembelajaran
+   -> tabel ATP 4 kolom (Bab | ATP | Materi | Alokasi Waktu) per semester
+   dgn baris Total -> blok tanda tangan Kepala Sekolah & Guru.
+   A4 tegak, margin ~2,5 cm, Times New Roman 12 pt, tanpa header/footer.
+   ============================================================ */
+const _LAP_FONT = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>';
+
+function _rLap(teks, o) {
+  o = o || {};
+  const sz = o.sz || 24;
+  const rpr = _LAP_FONT + (o.b ? '<w:b/>' : '') + (o.i ? '<w:i/>' : '') +
+    `<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/>` + (o.u ? '<w:u w:val="single"/>' : '');
+  return `<w:r><w:rPr>${rpr}</w:rPr><w:t xml:space="preserve">${_escXml(teks)}</w:t></w:r>`;
+}
+function _tabLap() { return '<w:r><w:tab/></w:r>'; }
+
+function _pLap(runs, o) {
+  o = o || {};
+  let ppr = '';
+  if (o.keepNext) ppr += '<w:keepNext/>';
+  if (o.garisBawah) ppr += '<w:pBdr><w:bottom w:val="single" w:sz="12" w:space="1" w:color="000000"/></w:pBdr>';
+  if (o.tabs) ppr += '<w:tabs>' + o.tabs.map(p => `<w:tab w:val="left" w:pos="${p}"/>`).join('') + '</w:tabs>';
+  ppr += `<w:spacing w:before="${o.before || 0}" w:after="${o.after == null ? 0 : o.after}" w:line="240" w:lineRule="auto"/>`;
+  if (o.jc) ppr += `<w:jc w:val="${o.jc}"/>`;
+  return `<w:p><w:pPr>${ppr}</w:pPr>${runs || ''}</w:p>`;
+}
+
+function _selLap(lebar, isi, o) {
+  o = o || {};
+  const tcpr = `<w:tcW w:w="${lebar}" w:type="dxa"/>` +
+    (o.span ? `<w:gridSpan w:val="${o.span}"/>` : '') +
+    (o.vm === 'mulai' ? '<w:vMerge w:val="restart"/>' : (o.vm === 'lanjut' ? '<w:vMerge/>' : ''));
+  return `<w:tc><w:tcPr>${tcpr}</w:tcPr>${isi}</w:tc>`;
+}
+
+function _barisLap(sel, header) {
+  return `<w:tr><w:trPr><w:cantSplit/>${header ? '<w:tblHeader/>' : ''}</w:trPr>${sel}</w:tr>`;
+}
+
+/** Kumpulkan data baris tabel ATP utk satu kelas (7/8/9) dari state aplikasi */
+function _dataBarisATP(k) {
+  _pastikanTpKelas();
+  const idxG = _tpIndexUntukKelas(k);
+  const st   = ATP_ALL_KELAS[k] || _atpKosong();
+  const sesi = st.sesi || [];
+  const rows = idxG.map((g, lokal) => {
+    const s = sesi.find(x => (x.bagian || []).some(b => b.tpIdx === lokal));
+    const sem = (s && st.ptmSem1 > 0) ? (s.ke <= st.ptmSem1 ? 1 : 2) : 0;
+    return {
+      bab:    (STATE_ANALISIS.tpBab && STATE_ANALISIS.tpBab[g]) || '',
+      tp:     STATE_ANALISIS.tp[g] || '',
+      materi: (STATE_ANALISIS.materi && STATE_ANALISIS.materi[g]) || '',
+      jp:     (st.jpPerTP && st.jpPerTP[lokal]) || 0,
+      sem,
+    };
+  });
+  /* Kalau pembagian semester belum bisa ditentukan dari distribusi pertemuan
+     (kalkulator/distribusi belum dijalankan), bagi dua berdasarkan urutan TP */
+  if (rows.some(r => !r.sem)) {
+    const n = rows.length;
+    rows.forEach((r, i) => { r.sem = i < Math.ceil(n / 2) ? 1 : 2; });
+  }
+  return rows;
+}
+
+/** Susun isi dokumen (XML body) Laporan ATP utk satu kelas */
+function _bodyLaporanATP(k, adaLogo, logoUkuran) {
+  const S  = DATABASE.settings || {};
+  const v  = id => ((document.getElementById(id) || {}).value || '').trim();
+  const titik = '................................................';
+  const sekolah = v('f-sekolah') || S.sekolah || '';
+  const guru    = v('f-guru')    || S.guru    || '';
+  const nip     = v('f-nip')     || S.nip     || '';
+  const mapel   = v('f-mapel');
+  const tahun   = v('f-tahun');
+  const romawi  = KELAS_ROMAWI[k] || String(k);
+  const kataKelas = { 7: 'Tujuh', 8: 'Delapan', 9: 'Sembilan' }[k] || '';
+  const kelasSem = `${romawi}${kataKelas ? ' (' + kataKelas + ')' : ''} / I (Ganjil) & II (Genap)`;
+  const tanggal = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const tengah = { jc: 'center' };
+
+  let x = '';
+
+  /* ---------- Halaman 1: sampul ---------- */
+  if (adaLogo) {
+    x += _pLap(_gambarLogoDocx(logoUkuran.cx, logoUkuran.cy), { jc: 'center', before: 2800, after: 360 });
+  }
+  x += _pLap(_rLap('ALUR TUJUAN PEMBELAJARAN (ATP)', { b: true, sz: 32 }), { jc: 'center', before: adaLogo ? 0 : 3600, after: 120 });
+  x += _pLap(_rLap('KURIKULUM MERDEKA ', { b: true }) + _rLap('(Deep Learning)', { b: true, i: true }), { jc: 'center', after: 360 });
+  const barisCover = [
+    ['Nama Sekolah', sekolah || titik],
+    ['Nama Penyusun', guru || titik],
+    ['NIP', nip || titik],
+    ['Mata pelajaran', mapel || titik],
+    ['Fase D, Kelas / Semester', kelasSem],
+  ];
+  barisCover.forEach(([lbl, val]) => {
+    x += _pLap(_rLap(lbl, { b: true }) + _tabLap() + _rLap(':', { b: true }) + _tabLap() + _rLap(val, { b: true }),
+      { tabs: [3260, 3686], after: 120 });
+  });
+  x += _pLap('', { garisBawah: true, before: 360 });
+  x += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+
+  /* ---------- Halaman 2: identitas + CP ---------- */
+  x += _pLap(_rLap('ALUR TUJUAN PEMBELAJARAN (ATP)', { b: true }), { ...tengah });
+  x += _pLap(_rLap('KURIKULUM MERDEKA', { b: true }), { ...tengah, after: 240 });
+  [['Mata Pelajaran', mapel || titik],
+   ['Satuan Pendidikan', sekolah || titik],
+   ['Tahun Pelajaran', tahun || titik]].forEach(([lbl, val]) => {
+    x += _pLap(_rLap(lbl, { b: true }) + _tabLap() + _rLap(': ' + val), { tabs: [2835], after: 20 });
+  });
+  x += _pLap(_rLap('Fase D, Kelas/Semester : ', { b: true }) + _rLap(kelasSem), { after: 200 });
+
+  x += _pLap(_rLap('A. Capaian Pembelajaran (CP)', { b: true }), { after: 60, keepNext: true });
+  const cpBaris = v('f-cp').split(/\n+/).map(s => s.trim()).filter(Boolean);
+  if (cpBaris.length) {
+    if (!/^pada akhir/i.test(cpBaris[0])) {
+      x += _pLap(_rLap('Pada akhir Fase D, murid memiliki kemampuan sebagai berikut.'), { jc: 'both', after: 80 });
+    }
+    cpBaris.forEach(t => { x += _pLap(_rLap(t), { jc: 'both', after: 120 }); });
+  } else {
+    x += _pLap(_rLap('(Capaian Pembelajaran belum diisi di halaman Modul Ajar.)', { i: true }), { after: 120 });
+  }
+  x += _pLap('', { after: 120 });
+
+  /* ---------- Tabel ATP ---------- */
+  const W = [2268, 3057, 2336, 1410]; /* jumlah 9071 = lebar area teks A4 dgn margin 2,5 cm */
+  const rows = _dataBarisATP(k);
+  const selTeks = (lebar, teks, o) => _selLap(lebar,
+    _pLap(_rLap(teks || '', { b: !!(o && o.b) }), { jc: (o && o.jc) || 'both' }), o);
+
+  let tabel = _barisLap(
+    selTeks(W[0], 'Bab', { b: true, jc: 'center' }) + selTeks(W[1], 'Alur Tujuan Pembelajaran', { b: true, jc: 'center' }) +
+    selTeks(W[2], 'Materi', { b: true, jc: 'center' }) + selTeks(W[3], 'Alokasi Waktu', { b: true, jc: 'center' }), true);
+
+  let totalJp = 0;
+  [1, 2].forEach(sem => {
+    const dalam = rows.filter(r => r.sem === sem);
+    if (!dalam.length) return;
+    tabel += _barisLap(_selLap(9071, _pLap(_rLap('SEMESTER ' + sem, { b: true }), { jc: 'center' }), { span: 4 }));
+    let babTerakhir = null;
+    dalam.forEach(r => {
+      const lanjut = (r.bab === babTerakhir);
+      babTerakhir = r.bab;
+      totalJp += r.jp;
+      tabel += _barisLap(
+        _selLap(W[0], _pLap(lanjut ? '' : _rLap(r.bab, { b: true }), { jc: 'both' }), { vm: lanjut ? 'lanjut' : 'mulai' }) +
+        selTeks(W[1], r.tp) + selTeks(W[2], r.materi, { jc: 'left' }) +
+        selTeks(W[3], r.jp ? r.jp + ' JP' : '', { jc: 'center' }));
+    });
+  });
+  tabel += _barisLap(
+    _selLap(W[0] + W[1] + W[2], _pLap(_rLap('Total', { b: true }), { jc: 'center' }), { span: 3 }) +
+    selTeks(W[3], totalJp ? totalJp + ' JP' : '', { b: true, jc: 'center' }));
+
+  const gb = '<w:{L} w:val="single" w:sz="4" w:space="0" w:color="000000"/>';
+  const batas = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(L => gb.replace('{L}', L)).join('');
+  x += `<w:tbl><w:tblPr><w:tblW w:w="9071" w:type="dxa"/><w:tblBorders>${batas}</w:tblBorders>` +
+       `<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="70" w:type="dxa"/><w:right w:w="70" w:type="dxa"/></w:tblCellMar></w:tblPr>` +
+       `<w:tblGrid>${W.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${tabel}</w:tbl>`;
+
+  /* ---------- Blok tanda tangan (tabel 2 kolom tanpa garis) ---------- */
+  x += _pLap('', { after: 240 });
+  const kiri =
+    _pLap(_rLap('Mengetahui,'), { jc: 'center' }) +
+    _pLap(_rLap('Kepala Sekolah'), { jc: 'center', after: 1000 }) +
+    _pLap(_rLap('...........................................', { b: true }), { jc: 'center' }) +
+    _pLap(_rLap('NIP. ................................'), { jc: 'center' });
+  const kanan =
+    _pLap(_rLap('..........., ' + tanggal), { jc: 'center' }) +
+    _pLap(_rLap('Guru Mata Pelajaran'), { jc: 'center', after: 1000 }) +
+    _pLap(_rLap(guru || '...........................................', { b: true, u: !!guru }), { jc: 'center' }) +
+    _pLap(_rLap('NIP. ' + (nip || '................................')), { jc: 'center' });
+  x += `<w:tbl><w:tblPr><w:tblW w:w="9071" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr>` +
+       `<w:tblGrid><w:gridCol w:w="4535"/><w:gridCol w:w="4536"/></w:tblGrid>` +
+       `<w:tr><w:trPr><w:cantSplit/></w:trPr>${_selLap(4535, kiri)}${_selLap(4536, kanan)}</w:tr></w:tbl>`;
+  x += _pLap('');
+  return x;
+}
+
+function _gambarLogoDocx(cx, cy) {
+  const A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+  return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>` +
+    `<wp:docPr id="1" name="Logo Sekolah"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${A}" noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
+    `<a:graphic xmlns:a="${A}"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+    `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr>` +
+    `<pic:blipFill><a:blip r:embed="rIdLogo"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
+    `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>` +
+    `</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+}
+
+/** Rakit file .docx Laporan ATP utk satu kelas. logo = {bytes:Uint8Array, w, h} atau null */
+function _rakitLaporanATPDocx(k, logo) {
+  let logoUkuran = null;
+  if (logo) {
+    const lebarEmu = 1368000; /* ~3,8 cm — setara logo pd contoh */
+    logoUkuran = { cx: lebarEmu, cy: Math.round(lebarEmu * (logo.h / logo.w)) };
+  }
+  const body = _bodyLaporanATP(k, !!logo, logoUkuran);
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${body}<w:sectPr><w:pgSz w:w="11907" w:h="16839" w:code="9"/><w:pgMar w:top="1418" w:right="1418" w:bottom="1276" w:left="1418" w:header="709" w:footer="720" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+
+  const contentTypes = _DOCX_CONTENT_TYPES.replace('<Default Extension="xml"', '<Default Extension="png" ContentType="image/png"/>\n<Default Extension="xml"');
+  const docRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${logo ? '<Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/>' : ''}</Relationships>`;
+
+  const berkas = [
+    { name: '[Content_Types].xml',          data: contentTypes },
+    { name: '_rels/.rels',                  data: _DOCX_RELS },
+    { name: 'docProps/core.xml',            data: _docxCoreXml('Alur Tujuan Pembelajaran (ATP)') },
+    { name: 'docProps/app.xml',             data: _DOCX_APP_XML },
+    { name: 'word/document.xml',            data: documentXml },
+    { name: 'word/_rels/document.xml.rels', data: docRels },
+  ];
+  if (logo) berkas.push({ name: 'word/media/logo.png', data: logo.bytes });
+  return _buatZip(berkas);
+}
+
+/** Ambil logo sekolah tersimpan (IDB global) -> {bytes, w, h} atau null */
+async function _ambilLogoSekolah() {
+  const simpan = await IDB.get('logo_sekolah', null);
+  if (!simpan || !simpan.dataUrl) return null;
+  const b64 = simpan.dataUrl.split(',')[1] || '';
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return { bytes, w: simpan.w || 1, h: simpan.h || 1 };
+}
+
+/** Tombol "📄 Laporan ATP" di halaman ATP — unduh .docx utk kelas yang sedang aktif */
+async function exportLaporanATP() {
+  const k = ATP_KELAS_AKTIF;
+  if (!_tpIndexUntukKelas(k).length) {
+    showToast('⚠️ Belum ada TP untuk Kelas ' + (KELAS_ROMAWI[k] || k) + ' — buat/impor TP dulu', 'warning');
+    return;
+  }
+  try {
+    const logo = await _ambilLogoSekolah();
+    const blob = _rakitLaporanATPDocx(k, logo);
+    const mapel = ((document.getElementById('f-mapel') || {}).value || 'Mapel').replace(/\s+/g, '_');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Laporan_ATP_${mapel}_Kelas${KELAS_ROMAWI[k] || k}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 1000);
+    showToast('📄 Laporan ATP berhasil diunduh — buka dengan Microsoft Word');
+  } catch (err) {
+    showToast('⚠️ Gagal membuat Laporan ATP: ' + (err && err.message ? err.message : err), 'warning');
+  }
+}
+
+/** Logo sekolah: guru unggah gambar -> dikecilkan (maks 400 px) & disimpan sbg PNG di IDB global */
+function pilihLogoSekolah(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    const img = new Image();
+    img.onload = async () => {
+      const sk = Math.min(1, 400 / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * sk));
+      const h = Math.max(1, Math.round(img.height * sk));
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      await IDB.set('logo_sekolah', { dataUrl: c.toDataURL('image/png'), w, h });
+      _tampilkanLogoSekolah();
+      showToast('✅ Logo sekolah disimpan');
+    };
+    img.onerror = () => showToast('⚠️ File gambar tidak bisa dibaca', 'warning');
+    img.src = rd.result;
+  };
+  rd.readAsDataURL(f);
+  input.value = '';
+}
+
+async function hapusLogoSekolah() {
+  await IDB.del('logo_sekolah');
+  _tampilkanLogoSekolah();
+  showToast('🗑️ Logo sekolah dihapus');
+}
+
+async function _tampilkanLogoSekolah() {
+  const el = document.getElementById('previewLogoSekolah');
+  const ket = document.getElementById('ketLogoSekolah');
+  if (!el) return;
+  let simpan = null;
+  try { simpan = await IDB.get('logo_sekolah', null); } catch (e) { /* abaikan */ }
+  if (simpan && simpan.dataUrl) {
+    el.src = simpan.dataUrl; el.style.display = 'block';
+    if (ket) ket.textContent = 'Logo tersimpan — dipakai di sampul Laporan ATP.';
+  } else {
+    el.removeAttribute('src'); el.style.display = 'none';
+    if (ket) ket.textContent = 'Belum ada logo. Sampul laporan dibuat tanpa logo.';
+  }
 }
 
 function exportPDF() {
@@ -9845,6 +10161,7 @@ async function init() {
   if (DATABASE.settings.cloudSecret) document.getElementById('set-cloudSecret').value = DATABASE.settings.cloudSecret;
   if (DATABASE.settings.idGuru)      document.getElementById('set-idGuru').value      = DATABASE.settings.idGuru;
   _perbaruiStatusCloud();
+  _tampilkanLogoSekolah();
 
   /* 4. Siapkan Manajemen Project — migrasi data lama kalau ada, tentukan project aktif */
   await _initProjectManager();
