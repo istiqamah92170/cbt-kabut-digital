@@ -6268,6 +6268,7 @@ renderDbDetail = function() {
   var materiObjs = getMateriObjects(dbActiveMapel, dbActiveKelas);
   var listEl = document.querySelector('#dbDetail .materi-list, .materi-list');
   if (!listEl) return;
+  try { _alPasangBar(listEl); } catch (_e) {}
 
   var items = listEl.querySelectorAll('.materi-item');
   items.forEach(function(itemEl, i) {
@@ -6409,6 +6410,225 @@ function unlinkMateri(materiId) {
   closeModal('modalLinkMateri');
   renderDbDetail();
 }
+
+// ═════════════════════════════════════════════════════════════════════
+// HUBUNGKAN OTOMATIS MATERI → KURIKULUM (kata + Gemini, 2026-10)
+// Per mapel & kelas yang sedang dibuka di Database Materi.
+//  1. Skor kemiripan kata antara nama materi dan narasi TP (IDF, offline).
+//  2. Yang skornya rendah/ambigu diserahkan ke Gemini (satu panggilan per 20 materi).
+//  3. Hasil TIDAK langsung disimpan: tampil di tabel tinjau, dicentang lalu diterapkan.
+//  Hubungan yang sudah ada tidak ditimpa. Ada tombol Urungkan untuk penerapan terakhir.
+// ═════════════════════════════════════════════════════════════════════
+var _AL_STOP = {};
+('yang dan di ke dari untuk dengan pada dalam atau serta sebagai oleh agar secara dapat akan ini itu adalah ' +
+ 'peserta didik mampu siswa melalui terhadap antar bagi para suatu berbagai sebuah lebih juga tidak bukan ' +
+ 'menjadi dalam hal tentang kegiatan berdasarkan sesuai kondisi berupa').split(' ').forEach(function (w) { _AL_STOP[w] = 1; });
+var _alState = null, _alUndo = null;
+
+function _alStem(w) {
+  if (w.length > 6) w = w.replace(/(nya|kan|lah|kah)$/, '');
+  if (w.length > 6) w = w.replace(/(an|i)$/, '');
+  if (w.length > 6) w = w.replace(/^(meng|meny|mem|men|ber|per|pen|pem|ter|di|ke|se)/, '');
+  return w;
+}
+function _alToken(t) {
+  var seen = {}, out = [];
+  String(t || '').toLowerCase().replace(/[^a-z0-9À-ɏ]+/g, ' ').split(' ').forEach(function (w) {
+    if (w.length < 3 || _AL_STOP[w]) return;
+    w = _alStem(w); if (w.length < 3 || seen[w]) return;
+    seen[w] = 1; out.push(w);
+  });
+  return out;
+}
+function _alKandidatTP(mapel, kelas) {
+  var out = [];
+  kurGetCpForContext(null, mapel).forEach(function (cp) {
+    kurGetTpForCp(cp.id, kelas).forEach(function (tp) {
+      out.push({ id: tp.id, narasi: tp.narasi || '', semester: tp.semester || '', cp_id: cp.id,
+                 elemen: cp.elemen || '', kurikulum_id: cp.kurikulum_id || null, tok: _alToken(tp.narasi) });
+    });
+  });
+  return out;
+}
+/** Skor tiap TP untuk satu materi: bobot IDF token bersama / bobot token materi (0..1). */
+function _alSkor(materi, tps, idf, idfMax) {
+  var mt = _alToken(materi), tot = 0;
+  mt.forEach(function (t) { tot += (idf[t] !== undefined ? idf[t] : idfMax); });
+  return tps.map(function (tp, i) {
+    var set = {}; tp.tok.forEach(function (t) { set[t] = 1; });
+    var sh = 0; mt.forEach(function (t) { if (set[t]) sh += idf[t]; });
+    return { i: i, skor: tot ? sh / tot : 0 };
+  }).sort(function (a, b) { return b.skor - a.skor; });
+}
+function _alApiKey() {
+  var k = ''; try { k = ($id('apiKey') && $id('apiKey').value.trim()) || localStorage.getItem('gemini_api_key') || ''; } catch (e) {}
+  return k;
+}
+async function _alGemini(apiKey, model, prompt, n) {
+  var lama = _ketatAktif; _ketatAktif = _ketatPref();
+  try {
+    var order = _urutanModel(model), err = 'Gagal.';
+    for (var oi = 0; oi < order.length; oi++) {
+      var m = order[oi], st = { n: 0 };
+      for (var at = 1; at <= 2; at++) {
+        try {
+          var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent?key=' + apiKey, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: {
+              temperature: 0.1, maxOutputTokens: 8192, responseMimeType: 'application/json',
+              responseSchema: { type: 'ARRAY', items: { type: 'OBJECT', properties: {
+                materi: { type: 'INTEGER' }, tp: { type: 'INTEGER' }, keyakinan: { type: 'INTEGER' } }, required: ['materi', 'tp', 'keyakinan'] } } } })
+          });
+          if (!res.ok) {
+            if (res.status === 401) return { error: 'API key tidak valid.' };
+            if (res.status === 429 || res.status === 404 || res.status === 403) {
+              var ed = await res.json().catch(function () { return {}; });
+              err = 'Model ' + m + ' tidak tersedia (status ' + res.status + ').';
+              var a = await _tanganiGagalModel(m, res.status, ed, st); if (a === 'ulang') { at--; continue; } break;
+            }
+            if (res.status === 400) { err = 'Permintaan ditolak (400).'; break; }
+            await sleep(1500); continue;
+          }
+          var data = await res.json(), c = data.candidates && data.candidates[0];
+          var txt = ((c && c.content && c.content.parts) || []).map(function (p) { return p.text || ''; }).join('');
+          var arr = JSON.parse(txt.replace(/```json|```/g, '').trim());
+          if (Array.isArray(arr)) return { hasil: arr, model: m };
+        } catch (e) { err = e.message || err; await sleep(1000); }
+      }
+    }
+    return { error: err };
+  } finally { _ketatAktif = lama; }
+}
+
+function _alPasangBar(listEl) {
+  if (document.getElementById('alBar') || !listEl.parentNode) return;
+  var bar = document.createElement('div'); bar.id = 'alBar';
+  bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px';
+  bar.innerHTML = '<button class="btn-sec" onclick="alMulai()" title="Cocokkan materi yang belum terhubung ke TP Database Kurikulum">&#x1F517; Hubungkan Otomatis</button>' +
+    (_alUndo && _alUndo.perubahan.length ? '<button class="btn-sec" onclick="alUrungkan()">&#x21B6; Urungkan penerapan terakhir (' + _alUndo.perubahan.length + ')</button>' : '');
+  listEl.parentNode.insertBefore(bar, listEl);
+}
+function _alModal() {
+  if (!$id('modalAutoLink')) {
+    var d = document.createElement('div'); d.className = 'modal-overlay'; d.id = 'modalAutoLink';
+    d.innerHTML = '<div class="modal-box" style="max-width:900px;width:95%"><button class="modal-close" onclick="closeModal(\'modalAutoLink\')">&#x2715;</button>' +
+      '<div class="modal-title">&#x1F517; Hubungkan Otomatis ke Kurikulum</div><div id="alIsi"></div></div>';
+    document.body.appendChild(d);
+  }
+  return $id('alIsi');
+}
+
+async function alMulai() {
+  var mapel = dbActiveMapel, kelas = dbActiveKelas;
+  if (!mapel || !kelas) { alert('Pilih mapel dan kelas terlebih dahulu.'); return; }
+  var tps = _alKandidatTP(mapel, kelas);
+  var isi = _alModal(); showModal('modalAutoLink');
+  if (!tps.length) {
+    isi.innerHTML = '<div class="info-box">Database Kurikulum belum memiliki CP/TP untuk <strong>' + kurEsc(mapel) + '</strong> kelas <strong>' + kurEsc(kelas) +
+      '</strong>. Isi dulu di tab Database Kurikulum (atau impor template), lalu coba lagi.</div>';
+    return;
+  }
+  var objs = getMateriObjects(mapel, kelas), baru = [], lewat = 0;
+  objs.forEach(function (o) {
+    var r = o.kurikulum_ref;
+    if (r && (r.cp_id || (r.tp_ids && r.tp_ids.length))) lewat++; else baru.push(o);
+  });
+  if (!baru.length) { isi.innerHTML = '<div class="info-box">Semua ' + objs.length + ' materi sudah terhubung. Tidak ada yang perlu dikerjakan.</div>'; return; }
+
+  // 1. skor kata
+  var N = tps.length, df = {};
+  tps.forEach(function (tp) { tp.tok.forEach(function (t) { df[t] = (df[t] || 0) + 1; }); });
+  var idf = {}; Object.keys(df).forEach(function (t) { idf[t] = Math.log(1 + N / df[t]); });
+  var idfMax = Math.log(1 + N);
+  var baris = baru.map(function (o) {
+    var sk = _alSkor(o.materi, tps, idf, idfMax), b = sk[0], k2 = sk[1];
+    var margin = b ? b.skor - (k2 ? k2.skor : 0) : 0;
+    var tinggi = N === 1 ? false : (b && b.skor >= 0.5 && margin >= 0.15);
+    return { obj: o, lokal: (b && b.skor >= 0.2) ? b.i : -1, skor: b ? b.skor : 0, tinggi: tinggi,
+             tp: tinggi ? b.i : -1, sumber: tinggi ? 'Kata' : '-', yakin: tinggi ? Math.round(60 + 40 * Math.min(1, b.skor)) : 0, centang: !!tinggi };
+  });
+
+  // 2. Gemini untuk yang belum meyakinkan
+  var sisa = baris.filter(function (r) { return !r.tinggi; }), catatan = '';
+  var key = _alApiKey();
+  if (sisa.length && key) {
+    var model = ($id('aModel') && $id('aModel').value) || 'gemini-2.5-flash';
+    var dTp = tps.map(function (tp, i) { return (i + 1) + '. [Smt ' + tp.semester + '] ' + tp.narasi.replace(/\s+/g, ' ').slice(0, 220); }).join('\n');
+    for (var a = 0; a < sisa.length; a += 20) {
+      var grup = sisa.slice(a, a + 20);
+      isi.innerHTML = '<div class="info-box">&#x23F3; ' + baris.length + ' materi: ' + (baris.length - sisa.length) + ' cocok lewat kata. Menanyakan Gemini untuk ' + sisa.length + ' materi (' + Math.min(a + 20, sisa.length) + '/' + sisa.length + ')...</div>';
+      var prompt = 'Kamu ahli kurikulum Kemenag MTs. Cocokkan setiap MATERI dengan SATU Tujuan Pembelajaran (TP) yang paling sesuai.\n' +
+        'Mata pelajaran: ' + mapel + '\nKelas: ' + kelas + '\n\nDAFTAR TP:\n' + dTp + '\n\nDAFTAR MATERI:\n' +
+        grup.map(function (r, i) { return (i + 1) + '. ' + r.obj.materi; }).join('\n') +
+        '\n\nAturan: pilih nomor TP yang benar-benar mencakup isi materi itu. Bila tidak ada TP yang cocok, isi tp = 0 — jangan memaksa. ' +
+        'keyakinan = 0-100.\nJawab HANYA array JSON: [{"materi":1,"tp":3,"keyakinan":85}, ...]';
+      var r = await _alGemini(key, model, prompt, grup.length);
+      if (r.error) { catatan = 'Gemini tidak bisa dipakai (' + r.error + '). Usulan hanya dari kemiripan kata.'; break; }
+      r.hasil.forEach(function (h) {
+        var row = grup[(h.materi | 0) - 1], t = (h.tp | 0) - 1;
+        if (!row || t < 0 || t >= N) return;
+        row.tp = t; row.sumber = 'AI'; row.yakin = Math.max(0, Math.min(100, h.keyakinan | 0)); row.centang = row.yakin >= 75;
+      });
+    }
+  } else if (sisa.length && !key) {
+    catatan = 'API key Gemini belum diisi, jadi yang tidak meyakinkan hanya diberi usulan dari kemiripan kata (tidak dicentang).';
+  }
+  baris.forEach(function (r) {
+    if (r.tp < 0 && r.lokal >= 0) { r.tp = r.lokal; r.sumber = 'Kata'; r.yakin = Math.round(100 * r.skor); r.centang = false; }
+  });
+  _alState = { mapel: mapel, kelas: kelas, tps: tps, baris: baris };
+  _alTampil(lewat, catatan);
+}
+
+function _alTampil(lewat, catatan) {
+  var S = _alState, isi = _alModal();
+  var opsi = '<option value="-1">— jangan hubungkan —</option>' + S.tps.map(function (tp, i) {
+    return '<option value="' + i + '">[Smt ' + kurEsc(String(tp.semester)) + '] ' + kurEsc(tp.narasi.slice(0, 70)) + (tp.narasi.length > 70 ? '…' : '') + ' · ' + kurEsc(tp.elemen) + '</option>';
+  }).join('');
+  var h = '<div style="font-size:12px;color:var(--text2);margin-bottom:8px"><strong>' + kurEsc(S.mapel) + '</strong> · Kelas ' + kurEsc(S.kelas) + ' · ' + S.baris.length +
+    ' materi diusulkan' + (lewat ? ', ' + lewat + ' sudah terhubung (dilewati)' : '') + '</div>';
+  if (catatan) h += '<div class="info-box" style="margin-bottom:8px">' + kurEsc(catatan) + '</div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Centang yang benar, ubah pilihan TP bila perlu, lalu klik Terapkan. Yang keyakinannya rendah sengaja tidak dicentang.</div>';
+  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text3)"><th></th><th>Materi</th><th>TP yang diusulkan</th><th>Sumber</th><th>Yakin</th></tr></thead><tbody>';
+  S.baris.forEach(function (r, i) {
+    h += '<tr style="border-top:1px solid var(--border)"><td style="padding:6px"><input type="checkbox" id="alChk' + i + '"' + (r.centang ? ' checked' : '') + '></td>' +
+      '<td style="padding:6px;min-width:150px">' + kurEsc(r.obj.materi) + '</td>' +
+      '<td style="padding:6px"><select id="alSel' + i + '" style="max-width:420px;width:100%">' + opsi.replace('value="' + r.tp + '"', 'value="' + r.tp + '" selected') + '</select></td>' +
+      '<td style="padding:6px">' + r.sumber + '</td><td style="padding:6px">' + (r.sumber === '-' ? '—' : r.yakin + '%') + '</td></tr>';
+  });
+  h += '</tbody></table></div><div class="row-btns" style="margin-top:14px"><button class="btn-run" style="margin-top:0" onclick="alTerapkan()">&#x1F4BE; Terapkan yang dicentang</button>' +
+    '<button class="btn-sec" onclick="closeModal(\'modalAutoLink\')">Batal</button></div>';
+  isi.innerHTML = h;
+}
+
+function alTerapkan() {
+  var S = _alState; if (!S) return;
+  var perubahan = [], n = 0;
+  S.baris.forEach(function (r, i) {
+    var chk = $id('alChk' + i), sel = $id('alSel' + i);
+    if (!chk || !chk.checked || !sel) return;
+    var t = parseInt(sel.value, 10); if (isNaN(t) || t < 0) return;
+    var tp = S.tps[t], item = getMateriById(r.obj.id); if (!item) return;
+    perubahan.push({ id: r.obj.id, sebelum: item.kurikulum_ref ? JSON.parse(JSON.stringify(item.kurikulum_ref)) : null });
+    if (!item.kurikulum_ref) item.kurikulum_ref = { kurikulum_id: null, cp_id: null, tp_ids: [], atp_id: null, kd_ids: [], indikator_ids: [] };
+    item.kurikulum_ref.cp_id = tp.cp_id; item.kurikulum_ref.tp_ids = [tp.id]; item.kurikulum_ref.kurikulum_id = tp.kurikulum_id;
+    n++;
+  });
+  if (!n) { alert('Tidak ada materi yang dicentang.'); return; }
+  _alUndo = { waktu: new Date().toISOString(), mapel: S.mapel, kelas: S.kelas, perubahan: perubahan };
+  saveDB(); closeModal('modalAutoLink'); renderDbDetail();
+  alert(n + ' materi berhasil dihubungkan ke kurikulum. Bila keliru, pakai tombol Urungkan.');
+}
+function alUrungkan() {
+  if (!_alUndo || !_alUndo.perubahan.length) return;
+  if (!confirm('Urungkan ' + _alUndo.perubahan.length + ' hubungan yang diterapkan terakhir?')) return;
+  _alUndo.perubahan.forEach(function (p) {
+    var item = getMateriById(p.id); if (!item) return;
+    item.kurikulum_ref = p.sebelum;
+  });
+  _alUndo = null; saveDB(); renderDbDetail();
+}
+
 
 
 
