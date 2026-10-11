@@ -320,6 +320,8 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
       <button class="btn-sm" onclick="document.getElementById('dbImport').click()">&#x2B06; Import JSON</button>
       <button class="btn-sm" onclick="document.getElementById('dbExcel').click()">&#x1F4D7; Import Excel</button>
       <button class="btn-sm" onclick="downloadTemplateMateri()">&#x1F4CB; Template Excel</button>
+      <button class="btn-sm" onclick="document.getElementById('atpFile').click()" title="Tambah CP, TP, dan materi sekaligus dari dokumen ATP (.docx); otomatis terhubung">&#x1F4C4; Impor ATP (.docx)</button>
+      <input type="file" id="atpFile" accept=".docx" style="display:none" onchange="atpPilihFile(this)">
       <button class="btn-sm danger" onclick="resetDBConfirm()">&#x1F5D1; Reset Default</button>
       <button class="btn-sm" onclick="backupDB()">&#x1F4BE; Backup Database</button>
       <button class="btn-sm" onclick="document.getElementById('dbRestore').click()">&#x1F504; Restore Database</button>
@@ -6628,6 +6630,351 @@ function alUrungkan() {
   });
   _alUndo = null; saveDB(); renderDbDetail();
 }
+
+// ═════════════════════════════════════════════════════════════════════
+// IMPOR ATP (.docx) → CP + TP + Materi + ATP, otomatis terhubung (2026-10)
+//  Dibaca berdasarkan JUDUL KOLOM (bukan urutan kolom): kolom TP = "Alur Tujuan
+//  Pembelajaran/Tujuan Pembelajaran/TP/ATP", kolom Materi = "Materi/Pokok Bahasan";
+//  opsional: Bab/Unit, Semester, Kelas, Bloom. Baris pemisah "SEMESTER 1/2" dibaca
+//  sebagai semester; baris "Total" diabaikan. Hasil ditinjau dulu, baru disimpan.
+// ═════════════════════════════════════════════════════════════════════
+var _atpState = null;
+function _atpNorm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9À-ɏ ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+function _atpJSZip() {
+  return new Promise(function (resolve, reject) {
+    if (window.JSZip) return resolve(window.JSZip);
+    var sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    sc.onload = function () { window.JSZip ? resolve(window.JSZip) : reject(new Error('JSZip tidak termuat')); };
+    sc.onerror = function () { reject(new Error('Pustaka pembaca .docx (JSZip) tidak bisa dimuat. Periksa koneksi internet.')); };
+    document.head.appendChild(sc);
+  });
+}
+function _atpKids(el, name) {
+  var o = []; for (var i = 0; i < el.childNodes.length; i++) { var c = el.childNodes[i]; if (c.nodeType === 1 && c.localName === name) o.push(c); } return o;
+}
+function _atpTeks(el) {
+  var out = '', all = el.getElementsByTagName('*');
+  for (var i = 0; i < all.length; i++) {
+    var n = all[i].localName;
+    if (n === 't') out += all[i].textContent; else if (n === 'tab' || n === 'br') out += ' ';
+  }
+  return out.replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
+}
+function _atpParas(el) { // semua paragraf (w:p) di dalam el sesuai urutan dokumen
+  var o = [], all = el.getElementsByTagName('*');
+  for (var i = 0; i < all.length; i++) if (all[i].localName === 'p') o.push(_atpTeks(all[i]));
+  return o;
+}
+/** Tabel -> grid sel (gridSpan diratakan, vMerge lanjutan mewarisi isi sel di atasnya). */
+function _atpTabel(tbl) {
+  var rows = [], prev = [];
+  _atpKids(tbl, 'tr').forEach(function (tr) {
+    var row = [], col = 0, unik = 0;
+    _atpKids(tr, 'tc').forEach(function (tc) {
+      var pr = _atpKids(tc, 'tcPr')[0], span = 1, vm = null;
+      if (pr) {
+        var gs = _atpKids(pr, 'gridSpan')[0]; if (gs) span = parseInt(gs.getAttribute('w:val') || gs.getAttribute('val'), 10) || 1;
+        var v = _atpKids(pr, 'vMerge')[0]; if (v) vm = (v.getAttribute('w:val') || v.getAttribute('val') || 'continue');
+      }
+      var teks = _atpParas(tc).filter(Boolean).join(' ').trim();
+      if (vm === 'continue') teks = prev[col] !== undefined ? prev[col] : teks;
+      unik++;
+      for (var k = 0; k < span; k++) { row[col + k] = teks; }
+      col += span;
+    });
+    rows.push({ sel: row, unik: unik, lebar: row.length });
+    prev = row;
+  });
+  return rows;
+}
+var _ATP_BLOOM = {
+  C1: ['menyebutkan', 'mengidentifikasi', 'mengenali', 'menyatakan', 'mengingat', 'menuliskan', 'menunjukkan', 'mendaftar', 'menamai', 'menghafal', 'melafalkan', 'membaca'],
+  C2: ['menjelaskan', 'menerangkan', 'mendeskripsikan', 'menguraikan', 'meringkas', 'memahami', 'membandingkan', 'menafsirkan', 'mencontohkan', 'mengklasifikasikan', 'menyimpulkan', 'memberi contoh', 'menceritakan', 'memaknai'],
+  C3: ['menerapkan', 'menggunakan', 'menghitung', 'mendemonstrasikan', 'melaksanakan', 'menyelesaikan', 'melakukan', 'mempraktikkan', 'mengoperasikan', 'mengimplementasikan', 'mencontoh'],
+  C4: ['menganalisis', 'membedakan', 'mengorganisasi', 'menelusuri', 'menyelidiki', 'menemukan', 'mengaitkan', 'menguji', 'mengurai'],
+  C5: ['mengevaluasi', 'menilai', 'mengkritik', 'menimbang', 'memutuskan', 'mempertahankan', 'menanggapi', 'merefleksikan'],
+  C6: ['membuat', 'merancang', 'menyusun', 'mengembangkan', 'menciptakan', 'merumuskan', 'memproduksi', 'menyajikan', 'merencanakan', 'mengkreasikan']
+};
+/** Tebak level Bloom dari kata kerja dalam TP (bisa lebih dari satu, contoh "C2, C4"). */
+function _atpBloom(tp) {
+  var t = ' ' + _atpNorm(tp) + ' ', out = {};
+  Object.keys(_ATP_BLOOM).forEach(function (lv) {
+    _ATP_BLOOM[lv].forEach(function (v) { if (t.indexOf(' ' + v + ' ') >= 0) out[lv] = 1; });
+  });
+  var lv = Object.keys(out).sort();
+  if (lv.length > 1 && lv[0] === 'C1') lv.shift();        // C1 ("mengidentifikasi") hanya prasyarat bila ada level lebih tinggi
+  return lv.length > 2 ? lv.slice(-2) : lv;               // maksimal dua level tertinggi, seperti contoh template ("C2, C4")
+}
+function _atpSemester(s) {
+  var m = String(s || '').toLowerCase().match(/(?:semester|smt)?\s*[:\-]?\s*(ganjil|genap|ii|i|1|2)\b/);
+  if (!m) return 0; var v = m[1];
+  return (v === '1' || v === 'i' || v === 'ganjil') ? 1 : 2;
+}
+var _ATP_ROMAWI = { '7': 'VII', '8': 'VIII', '9': 'IX', 'VII': 'VII', 'VIII': 'VIII', 'IX': 'IX', 'X': 'X', 'XI': 'XI', 'XII': 'XII', '10': 'X', '11': 'XI', '12': 'XII' };
+
+async function atpBacaDocx(buffer) {
+  var JS = await _atpJSZip();
+  var zip = await JS.loadAsync(buffer);
+  var f = zip.file('word/document.xml'); if (!f) throw new Error('Bukan berkas .docx yang valid (word/document.xml tidak ada).');
+  var xml = await f.async('string');
+  var doc = new DOMParser().parseFromString(xml, 'application/xml');
+  if (doc.getElementsByTagName('parsererror').length) throw new Error('Isi dokumen tidak bisa dibaca.');
+  var body = null, all = doc.getElementsByTagName('*');
+  for (var i = 0; i < all.length; i++) if (all[i].localName === 'body') { body = all[i]; break; }
+  if (!body) throw new Error('Isi dokumen kosong.');
+
+  // urutan konten tingkat atas: paragraf & tabel
+  var blok = [], paraSemua = [];
+  for (var c = 0; c < body.childNodes.length; c++) {
+    var n = body.childNodes[c]; if (n.nodeType !== 1) continue;
+    if (n.localName === 'p') { var t = _atpTeks(n); blok.push({ j: 'p', t: t }); if (t) paraSemua.push(t); }
+    else if (n.localName === 'tbl') { blok.push({ j: 'tbl', rows: _atpTabel(n) }); _atpParas(n).forEach(function (t2) { if (t2) paraSemua.push(t2); }); }
+  }
+
+  // ── Tabel ATP: dikenali dari JUDUL kolom ──
+  var terbaik = null;
+  blok.forEach(function (b, bi) {
+    if (b.j !== 'tbl') return;
+    for (var ri = 0; ri < Math.min(4, b.rows.length); ri++) {
+      if (b.rows[ri].unik < 2) continue; // judul tabel/sampul (satu sel) bukan baris judul kolom
+      var sel = b.rows[ri].sel, kol = { tp: -1, materi: -1, bab: -1, bloom: -1, semester: -1, kelas: -1, elemen: -1 };
+      sel.forEach(function (h, ci) {
+        var x = _atpNorm(h); if (!x || x.length > 60) return;
+        if (kol.tp < 0 && /(alur tujuan|tujuan pembelajaran|^atp$|^tp$)/.test(x)) kol.tp = ci;
+        else if (kol.materi < 0 && /(^materi|pokok bahasan|materi pokok)/.test(x)) kol.materi = ci;
+        else if (kol.bab < 0 && /^(bab|unit|tema)\b/.test(x)) kol.bab = ci;
+        else if (kol.bloom < 0 && /(bloom|level kognitif|kognitif)/.test(x)) kol.bloom = ci;
+        else if (kol.semester < 0 && /^(semester|smt)\b/.test(x)) kol.semester = ci;
+        else if (kol.kelas < 0 && /^kelas\b/.test(x)) kol.kelas = ci;
+        else if (kol.elemen < 0 && /^elemen\b/.test(x)) kol.elemen = ci;
+      });
+      if (kol.tp >= 0 && (!terbaik || b.rows.length > terbaik.b.rows.length)) { terbaik = { b: b, bi: bi, hdr: ri, kol: kol }; break; }
+    }
+  });
+  if (!terbaik) {
+    var judul = []; blok.forEach(function (b) { if (b.j === 'tbl' && b.rows[0]) judul.push(b.rows[0].sel.filter(Boolean).join(' | ')); });
+    throw new Error('Kolom "Alur Tujuan Pembelajaran" tidak ditemukan di tabel mana pun. Judul kolom yang terbaca: ' + (judul.join(' ; ') || '(tidak ada tabel)'));
+  }
+  var K = terbaik.kol, rows = [], smt = 0, bab = '', urut = {};
+  terbaik.b.rows.slice(terbaik.hdr + 1).forEach(function (r) {
+    var penuh = r.unik === 1 && r.lebar >= 2, a = (r.sel[0] || '').trim();
+    if (penuh) {
+      if (/^total\b/i.test(a)) return;
+      var sm = /semester/i.test(a) ? _atpSemester(a) : 0;
+      if (sm) { smt = sm; return; }
+      if (a) bab = a; return;
+    }
+    if (/^(total|jumlah)\b/i.test(a)) return;
+    var tp = (r.sel[K.tp] || '').trim(); if (!tp || /^alur tujuan pembelajaran$/.test(_atpNorm(tp))) return;
+    var b2 = K.bab >= 0 ? (r.sel[K.bab] || '').trim() : bab;
+    var sem = K.semester >= 0 ? (_atpSemester(r.sel[K.semester]) || smt) : smt;
+    var bl = K.bloom >= 0 ? ((String(r.sel[K.bloom] || '').toUpperCase().match(/C[1-6]/g)) || []) : null;
+    urut[sem] = (urut[sem] || 0) + 1;
+    rows.push({ semester: sem || 1, bab: b2, tp: tp, materi: K.materi >= 0 ? (r.sel[K.materi] || '').trim() : '',
+                kelas: K.kelas >= 0 ? (r.sel[K.kelas] || '').trim() : '', bloom: bl && bl.length ? bl : _atpBloom(tp), bloomDariFile: !!(bl && bl.length) });
+  });
+
+  // ── Metadata dari paragraf (juga yang ada di dalam tabel sampul) ──
+  var meta = { mapel: '', fase: '', kelas: '' };
+  paraSemua.forEach(function (t) {
+    var m;
+    if (!meta.mapel && (m = t.match(/^(?:mata\s*pelajaran|mapel)\s*[:：]\s*(.+)$/i))) meta.mapel = m[1].trim();
+    if (!meta.fase && (m = t.match(/\bfase\s*([A-F])\b/i))) meta.fase = m[1].toUpperCase();
+    if (!meta.kelas && /kelas/i.test(t) && (m = t.match(/\b(VIII|VII|IX|XII|XI|X|12|11|10|7|8|9)\b/))) meta.kelas = _ATP_ROMAWI[m[1]] || '';
+  });
+  if (!meta.kelas) { for (var q = 0; q < rows.length; q++) { var mk = rows[q].kelas.match(/\b(VIII|VII|IX|7|8|9)\b/i); if (mk) { meta.kelas = _ATP_ROMAWI[mk[1].toUpperCase()]; break; } } }
+
+  // ── CP: pasangan "judul elemen" (pendek) + narasi (panjang), antara judul CP dan tabel ATP ──
+  var cps = [], mulai = -1;
+  for (var bi2 = 0; bi2 < terbaik.bi; bi2++) { if (blok[bi2].j === 'p' && /capaian\s+pembelajaran/i.test(blok[bi2].t)) { mulai = bi2; break; } }
+  if (mulai >= 0) {
+    var cur = null;
+    for (var bj = mulai + 1; bj < terbaik.bi; bj++) {
+      var tt = blok[bj].j === 'p' ? blok[bj].t : ''; if (!tt) continue;
+      var judulElemen = tt.length <= 60 && !/[.;]$/.test(tt) && !/^pada akhir/i.test(tt);
+      if (judulElemen) { cur = { elemen: tt.replace(/^[-•\d.\s]+/, '').replace(/[:\s]+$/, ''), narasi: '' }; cps.push(cur); }
+      else if (cur) cur.narasi += (cur.narasi ? ' ' : '') + tt;
+    }
+    cps = cps.filter(function (x) { return x.elemen && x.narasi; });
+  }
+  return { meta: meta, cps: cps, rows: rows, kolom: K, header: terbaik.b.rows[terbaik.hdr].sel };
+}
+
+function _atpTebakMapel(teks) {
+  var nt = _atpNorm(teks), par = (String(teks).match(/\(([^)]+)\)/) || [])[1], best = '';
+  getMapelList().forEach(function (m) {
+    var nm = _atpNorm(m);
+    if (nm && (nt === nm || (par && _atpNorm(par) === nm) || (' ' + nt + ' ').indexOf(' ' + nm + ' ') >= 0)) { if (m.length > best.length) best = m; }
+  });
+  return best;
+}
+
+async function atpPilihFile(input) {
+  var file = input.files && input.files[0]; input.value = '';
+  if (!file) return;
+  var isi = _atpModal(); showModal('modalImporATP');
+  isi.innerHTML = '<div class="info-box">&#x23F3; Membaca ' + kurEsc(file.name) + '...</div>';
+  try {
+    var buf = file.arrayBuffer ? await file.arrayBuffer() : await new Promise(function (res, rej) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.onerror = function () { rej(new Error('Gagal membaca berkas.')); }; fr.readAsArrayBuffer(file); });
+    var hasil = await atpBacaDocx(buf);
+    _atpState = { file: file.name, hasil: hasil };
+    _atpTampil();
+  } catch (e) {
+    isi.innerHTML = '<div class="info-box" style="border-color:#ef4444">&#x26A0; ' + kurEsc(e.message || String(e)) + '</div>' +
+      '<div class="row-btns" style="margin-top:12px"><button class="btn-sec" onclick="closeModal(\'modalImporATP\')">Tutup</button></div>';
+  }
+}
+function _atpModal() {
+  if (!$id('modalImporATP')) {
+    var d = document.createElement('div'); d.className = 'modal-overlay'; d.id = 'modalImporATP';
+    d.innerHTML = '<div class="modal-box" style="max-width:1000px;width:96%"><button class="modal-close" onclick="closeModal(\'modalImporATP\')">&#x2715;</button>' +
+      '<div class="modal-title">&#x1F4C4; Impor ATP (.docx)</div><div id="atpIsi"></div></div>';
+    document.body.appendChild(d);
+  }
+  return $id('atpIsi');
+}
+function _atpOpt(list, sel) {
+  return list.map(function (o) { return '<option value="' + kurEsc(String(o[0])) + '"' + (String(o[0]) === String(sel) ? ' selected' : '') + '>' + kurEsc(o[1]) + '</option>'; }).join('');
+}
+function _atpTampil() {
+  var S = _atpState, H = S.hasil, isi = _atpModal();
+  var kurList = kurGetActiveKurikulum();
+  var mapelTebak = _atpTebakMapel(H.meta.mapel), mapelOpts = getMapelList().map(function (m) { return [m, m]; });
+  var baruNama = ((H.meta.mapel.match(/\(([^)]+)\)/) || [])[1] || H.meta.mapel).trim();
+  if (!mapelTebak && baruNama) mapelOpts.unshift(['__BARU__', 'Mapel baru: ' + baruNama]);
+  S.baruNama = baruNama;
+  var kelasOpts = ['VII', 'VIII', 'IX'].map(function (k) { return [k, 'Kelas ' + k]; });
+  var h = '<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Berkas: <strong>' + kurEsc(S.file) + '</strong> · judul kolom terbaca: ' +
+    kurEsc(H.header.filter(Boolean).join(' | ')) + '</div>';
+  if (!kurList.length) h += '<div class="info-box" style="border-color:#ef4444;margin-bottom:8px">Belum ada Kurikulum di tab Database Kurikulum. Tambahkan dulu, lalu ulangi impor.</div>';
+  h += '<div class="g3" style="margin-bottom:10px">' +
+    '<div><label class="lbl" style="margin-top:0">Mapel</label><div class="sw"><select id="atpMapel" onchange="_atpSegarkan()">' + _atpOpt(mapelOpts, mapelTebak || (mapelOpts[0] && mapelOpts[0][0])) + '</select></div></div>' +
+    '<div><label class="lbl" style="margin-top:0">Kelas</label><div class="sw"><select id="atpKelas" onchange="_atpSegarkan()">' + _atpOpt(kelasOpts, H.meta.kelas || 'VII') + '</select></div></div>' +
+    '<div><label class="lbl" style="margin-top:0">Kurikulum</label><div class="sw"><select id="atpKur">' + _atpOpt(kurList.map(function (k) { return [k.id, k.nama]; }), kurList[0] && kurList[0].id) + '</select></div></div></div>';
+  h += '<div class="lbl" style="margin-top:0">Capaian Pembelajaran (CP) — ' + H.cps.length + ' elemen</div>';
+  if (!H.cps.length) h += '<div class="info-box" style="margin-bottom:8px">CP tidak ditemukan di dokumen. TP tetap bisa diimpor, tetapi tiap TP butuh satu CP: tambahkan dulu satu CP di tab Database Kurikulum untuk mapel ini.</div>';
+  H.cps.forEach(function (cp, i) {
+    h += '<div style="margin-bottom:6px"><input id="atpCpEl' + i + '" value="' + kurEsc(cp.elemen) + '" style="width:100%;font-weight:600"><textarea id="atpCpNar' + i + '" rows="2" style="width:100%;font-size:11px">' + kurEsc(cp.narasi) + '</textarea></div>';
+  });
+  h += '<div class="lbl">Tujuan Pembelajaran (TP) dan Materi — ' + H.rows.length + ' baris</div>' +
+    '<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Elemen CP semua diisi ke elemen pertama (Pemahaman Konsep) — ubah per baris bila perlu. Level Bloom ditebak dari kata kerja TP — centang ulang bila keliru.</div>' +
+    '<div id="atpTabel"></div>' +
+    '<div class="row-btns" style="margin-top:14px"><button class="btn-run" style="margin-top:0" onclick="atpImpor()">&#x1F4BE; Impor yang dicentang</button><button class="btn-sec" onclick="closeModal(\'modalImporATP\')">Batal</button></div>';
+  isi.innerHTML = h;
+  _atpTabelRender();
+}
+function _atpSegarkan() { _atpSimpanBaris(); _atpTabelRender(); }
+function _atpSimpanBaris() {
+  var H = _atpState && _atpState.hasil; if (!H) return;
+  H.rows.forEach(function (r, i) {
+    var c = $id('atpChk' + i); if (!c) return;
+    r.pilih = c.checked; r.semester = parseInt($id('atpSmt' + i).value, 10) || 1; r.tp = $id('atpTp' + i).value; r.materi = $id('atpMat' + i).value;
+    r.elemenIdx = parseInt($id('atpEl' + i).value, 10); r.bloom = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'].filter(function (lv) { return $id('atpBl' + i + lv).checked; });
+  });
+}
+function _atpTabelRender() {
+  var S = _atpState, H = S.hasil, mapelSel = $id('atpMapel') ? $id('atpMapel').value : '', kelas = $id('atpKelas').value;
+  var mapel = mapelSel === '__BARU__' ? S.baruNama : mapelSel;
+  var tpAda = {}, matAda = {};
+  if (mapel) {
+    kurGetCpForContext(null, mapel).forEach(function (cp) { kurGetTpForCp(cp.id, kelas).forEach(function (tp) { tpAda[_atpNorm(tp.narasi)] = 1; }); });
+    getMateriList(mapel, kelas).forEach(function (m) { matAda[_atpNorm(m)] = 1; });
+  }
+  var elOpts = H.cps.map(function (cp, i) { return [i, cp.elemen]; });
+  var iPaham = 0; H.cps.forEach(function (cp, i) { if (/pemahaman/i.test(cp.elemen)) iPaham = i; });
+  var h = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text3)"><th></th><th>Smt</th><th>Tujuan Pembelajaran</th><th>Materi</th><th>Elemen CP</th><th>Bloom</th><th>Status</th></tr></thead><tbody>';
+  H.rows.forEach(function (r, i) {
+    var ada = !!tpAda[_atpNorm(r.tp)], adaM = r.materi && !!matAda[_atpNorm(r.materi)];
+    if (r.pilih === undefined) r.pilih = !ada;
+    if (r.elemenIdx === undefined || isNaN(r.elemenIdx)) r.elemenIdx = iPaham;
+    h += '<tr style="border-top:1px solid var(--border);vertical-align:top"><td style="padding:5px"><input type="checkbox" id="atpChk' + i + '"' + (r.pilih ? ' checked' : '') + '></td>' +
+      '<td style="padding:5px"><select id="atpSmt' + i + '"><option value="1"' + (r.semester === 1 ? ' selected' : '') + '>1</option><option value="2"' + (r.semester === 2 ? ' selected' : '') + '>2</option></select></td>' +
+      '<td style="padding:5px;min-width:260px"><textarea id="atpTp' + i + '" rows="3" style="width:100%;font-size:11px">' + kurEsc(r.tp) + '</textarea></td>' +
+      '<td style="padding:5px;min-width:140px"><input id="atpMat' + i + '" value="' + kurEsc(r.materi) + '" style="width:100%"></td>' +
+      '<td style="padding:5px"><select id="atpEl' + i + '">' + (elOpts.length ? _atpOpt(elOpts, r.elemenIdx) : '<option value="-1">(tanpa CP)</option>') + '</select></td>' +
+      '<td style="padding:5px;white-space:nowrap">' + ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'].map(function (lv) {
+        return '<label style="font-size:10px;margin-right:3px"><input type="checkbox" id="atpBl' + i + lv + '"' + (r.bloom.indexOf(lv) >= 0 ? ' checked' : '') + '>' + lv.slice(1) + '</label>';
+      }).join('') + (r.bloomDariFile ? '' : '<div style="font-size:9px;color:var(--text3)">tebakan</div>') + '</td>' +
+      '<td style="padding:5px;font-size:11px">' + (ada ? '<span style="color:#f59e0b">TP sudah ada</span>' : '<span style="color:#4ade80">TP baru</span>') + '<br>' +
+      (r.materi ? (adaM ? '<span style="color:#f59e0b">materi sudah ada → dihubungkan</span>' : '<span style="color:#4ade80">materi baru</span>') : '<span style="color:var(--text3)">tanpa materi</span>') + '</td></tr>';
+  });
+  $id('atpTabel').innerHTML = h + '</tbody></table></div>';
+}
+
+function atpImpor() {
+  var S = _atpState; if (!S) return;
+  _atpSimpanBaris();
+  var H = S.hasil, mapelSel = $id('atpMapel').value, kelas = $id('atpKelas').value, kurId = $id('atpKur').value;
+  var mapel = mapelSel === '__BARU__' ? S.baruNama : mapelSel;
+  if (!mapel || !kelas || !kurId) { alert('Mapel, kelas, dan kurikulum wajib dipilih.'); return; }
+  var pilih = H.rows.filter(function (r) { return r.pilih && String(r.tp).trim(); });
+  if (!pilih.length) { alert('Tidak ada baris yang dicentang.'); return; }
+  var hariIni = new Date().toISOString().slice(0, 10), fase = H.meta.fase ? 'FASE-' + H.meta.fase : null;
+  var lap = { cpBaru: 0, cpAda: 0, tpBaru: 0, tpAda: 0, matBaru: 0, matAda: 0, link: 0, linkLain: 0, atpBaru: 0, atpAda: 0, tanpaCp: 0 };
+
+  // CP (pakai yang sudah ada bila mapel + elemen sama)
+  var cpIds = [], cpAda = kurGetCpForContext(kurId, mapel).filter(function (c) { return _atpNorm(c.mapel_nama) === _atpNorm(mapel); });
+  H.cps.forEach(function (cp, i) {
+    var el = ($id('atpCpEl' + i) ? $id('atpCpEl' + i).value : cp.elemen).trim(), nar = ($id('atpCpNar' + i) ? $id('atpCpNar' + i).value : cp.narasi).trim();
+    var ex = cpAda.filter(function (c) { return _atpNorm(c.elemen) === _atpNorm(el); })[0];
+    if (ex) { cpIds[i] = ex.id; lap.cpAda++; return; }
+    if (!el || !nar) { cpIds[i] = null; return; }
+    cpIds[i] = kurAddCp({ kurikulum_id: kurId, mapel_nama: mapel, fase_id: fase, elemen: el, narasi: nar, regulasi_id: null, berlaku_mulai: hariIni, validation_status: 'draft' }, 'Impor ATP: ' + S.file);
+    lap.cpBaru++;
+  });
+  var cadangCp = cpAda.length ? cpAda[0].id : null; // dipakai bila dokumen tak memuat CP
+
+  // TP yang sudah ada (cegah duplikat), urutan lanjutan per semester
+  var tpAda = {}, urutan = { 1: 0, 2: 0 };
+  kurGetCpForContext(null, mapel).forEach(function (cp) {
+    kurGetTpForCp(cp.id, kelas).forEach(function (tp) { tpAda[_atpNorm(tp.narasi)] = tp.id; urutan[tp.semester] = Math.max(urutan[tp.semester] || 0, tp.urutan || 0); });
+  });
+  var perSmt = { 1: [], 2: [] }, materiAda = {};
+  getMateriObjects(mapel, kelas).forEach(function (o) { materiAda[_atpNorm(o.materi)] = o; });
+
+  pilih.forEach(function (r) {
+    var cpId = r.elemenIdx >= 0 && cpIds[r.elemenIdx] ? cpIds[r.elemenIdx] : cadangCp;
+    var key = _atpNorm(r.tp), tpId = tpAda[key];
+    if (tpId) lap.tpAda++;
+    else {
+      if (!cpId) { lap.tanpaCp++; return; }
+      urutan[r.semester] = (urutan[r.semester] || 0) + 1;
+      var cpCur = kurGetCpCurrent(cpId);
+      tpId = kurAddTp({ cp_id: cpId, kurikulum_id: cpCur ? cpCur.kurikulum_id : kurId, mapel_nama: mapel, kelas: kelas, semester: r.semester, urutan: urutan[r.semester],
+        narasi: String(r.tp).trim(), bloom_target: r.bloom, berlaku_mulai: hariIni, validation_status: 'draft' }, 'Impor ATP: ' + S.file);
+      tpAda[key] = tpId; lap.tpBaru++;
+    }
+    perSmt[r.semester].push(tpId);
+    var nm = String(r.materi || '').trim(); if (!nm) return;
+    var item = materiAda[_atpNorm(nm)];
+    if (item) lap.matAda++; else { item = dbAddMateri(mapel, kelas, nm); materiAda[_atpNorm(nm)] = item; lap.matBaru++; }
+    var tpCur = _kurGetCurrent('tp', tpId), cpTp = tpCur ? tpCur.cp_id : cpId, ref = item.kurikulum_ref;
+    if (ref && (ref.cp_id || (ref.tp_ids && ref.tp_ids.length)) && !(ref.tp_ids && ref.tp_ids.indexOf(tpId) >= 0)) { lap.linkLain++; return; }
+    var cpC = kurGetCpCurrent(cpTp);
+    item.kurikulum_ref = { kurikulum_id: cpC ? cpC.kurikulum_id : kurId, cp_id: cpTp, tp_ids: [tpId], atp_id: null, kd_ids: [], indikator_ids: [] };
+    lap.link++;
+  });
+
+  // ATP per semester (lewati bila sudah ada untuk kurikulum + mapel + kelas + semester)
+  [1, 2].forEach(function (sm) {
+    if (!perSmt[sm].length) return;
+    var ada = Object.keys(DB_KUR.atp || {}).some(function (id) { var a = _kurGetCurrent('atp', id) || {}; return a.kurikulum_id === kurId && _atpNorm(a.mapel_nama) === _atpNorm(mapel) && a.kelas === kelas && a.semester === sm; });
+    if (ada) { lap.atpAda++; return; }
+    kurAddAtp({ kurikulum_id: kurId, mapel_nama: mapel, kelas: kelas, semester: sm, tp_ids_urutan: perSmt[sm], keterangan: 'Diimpor dari ' + S.file, berlaku_mulai: hariIni, validation_status: 'draft' }, 'Impor ATP: ' + S.file);
+    lap.atpBaru++;
+  });
+
+  saveDB();
+  try { populateMapelSelects(); } catch (e) {}
+  try { renderDbMapelList(); renderDbDetail(); } catch (e) {}
+  try { kurRefreshAll(); } catch (e) {}
+  closeModal('modalImporATP');
+  alert('Impor selesai.\nCP: ' + lap.cpBaru + ' baru, ' + lap.cpAda + ' sudah ada\nTP: ' + lap.tpBaru + ' baru, ' + lap.tpAda + ' sudah ada' +
+    (lap.tanpaCp ? ' (' + lap.tanpaCp + ' dilewati karena tidak ada CP)' : '') + '\nMateri: ' + lap.matBaru + ' baru, ' + lap.matAda + ' sudah ada\nTerhubung ke kurikulum: ' + lap.link +
+    (lap.linkLain ? ' (' + lap.linkLain + ' materi sudah terhubung ke TP lain, tidak ditimpa)' : '') + '\nATP: ' + lap.atpBaru + ' baru' + (lap.atpAda ? ', ' + lap.atpAda + ' sudah ada' : ''));
+}
+
 
 
 
