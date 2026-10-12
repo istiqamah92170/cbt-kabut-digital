@@ -158,14 +158,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     <div>
       <div class="brand">Kabut Digital · CBT</div>
       <h1>Konverter soal PDF ke spreadsheet CBT</h1>
-      <p class="lede">Unggah PDF soal. Aplikasi mengenali nomor soal, pilihan ganda, kunci, pembahasan, dan esai, lalu menyusunnya ke format spreadsheet CBT. Semua diproses di peramban Anda; berkas tidak dikirim ke server.</p>
+      <p class="lede">Unggah soal berupa PDF, dokumen Word (.docx), atau foto. Aplikasi mengenali nomor soal, pilihan ganda, kunci, pembahasan, dan esai, lalu menyusunnya ke format spreadsheet CBT. Semua diproses di peramban Anda dan tanpa biaya; OCR memakai Tesseract gratis.</p>
     </div>
   </header>
 
   <label class="drop" id="drop">
-    <input type="file" id="file" accept="application/pdf,.pdf">
-    <strong>Seret PDF soal ke sini, atau klik untuk memilih berkas</strong>
-    <span>Mendukung PDF dari Word/Google Docs (teks asli) dan PDF hasil scan (dengan OCR).</span>
+    <input type="file" id="file" multiple accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*">
+    <strong>Seret berkas soal ke sini, atau klik untuk memilih</strong>
+    <span>PDF (teks asli atau hasil scan), Word .docx, atau satu/beberapa foto soal (JPG, PNG).</span>
     <div class="file" id="fileName"></div>
   </label>
 
@@ -181,6 +181,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
           <option value="off">Tanpa OCR</option>
         </select>
         <small>OCR memuat mesin tambahan dan lebih lambat.</small>
+      </label>
+      <label class="f">Bahasa OCR
+        <select id="setLang">
+          <option value="ind" selected>Indonesia</option>
+          <option value="ind+eng">Indonesia + Inggris</option>
+          <option value="eng">Inggris</option>
+        </select>
+        <small>Berlaku untuk foto, PDF hasil scan, dan OCR per soal.</small>
       </label>
       <label class="f">Awalan URL gambar (opsional)
         <input type="text" id="setPrefix" placeholder="https://pengguna.github.io/bank-soal/img/">
@@ -229,7 +237,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     <div id="list"></div>
   </section>
 
-  <footer>Periksa hasil sebelum diunduh: rumus, simbol matematika, dan tabel di PDF sering terbaca tidak sempurna. Opsi E, bila ada, ditulis apa adanya di kolom Opsi_E setelah Izin_Gambar.</footer>
+  <footer>Periksa hasil sebelum diunduh: rumus, simbol matematika, dan tabel sering terbaca tidak sempurna, terutama dari PDF dan foto. Rumus MathType di Word tidak bisa dibaca dan diberi penanda [rumus]. Opsi E, bila ada, ditulis apa adanya di kolom Opsi_E setelah Izin_Gambar.</footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -289,6 +297,8 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   }
 
   function matchStart(text) {
+    const lead = /^(?:\s*\[(?:rumus|gambar)\])+/.exec(text);
+    if (lead) { const r = matchStart(text.slice(lead[0].length)); return r ? Object.assign(r, { offset: r.offset + lead[0].length }) : null; }
     const m = RE_START.exec(text);
     if (!m) return null;
     const prefix = m[1], open = m[2], punct = m[4];
@@ -469,6 +479,29 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     return out.trim();
   }
 
+
+  /* ---------- opsi dua kolom turun (A,C / B,D) → urutan A,B,C,D ---------- */
+  const reMk = (ch) => new RegExp('(^|\\s)\\(?[' + ch + ch.toLowerCase() + '][.)](?=\\s|$)', 'g');
+  function secondMarkerIdx(text, first, second, between) {
+    if (!new RegExp('^\\s*\\(?[' + first + first.toLowerCase() + '][.)](?=\\s|$)').test(text)) return -1;
+    if (reMk(between).test(text)) return -1;
+    const re = reMk(second); let m;
+    while ((m = re.exec(text))) { const idx = m.index + m[1].length; if (idx > 0) return idx; }
+    return -1;
+  }
+  function fixColumnOptions(blk) {
+    const out = [];
+    for (let i = 0; i < blk.length; i++) {
+      const L1 = blk[i], L2 = blk[i + 1];
+      if (L2) {
+        const c = secondMarkerIdx(L1.text, 'A', 'C', 'B'), d = secondMarkerIdx(L2.text, 'B', 'D', 'C');
+        if (c > 0 && d > 0) { out.push(clone(L1, 0, c), clone(L2, 0, d), clone(L1, c), clone(L2, d)); i++; continue; }
+      }
+      out.push(L1);
+    }
+    return out;
+  }
+
   /* ---------- parse satu blok soal ---------- */
   function parseBlock(blk, scan) {
     const R = { stem: [], opts: [], keyLetter: null, keyText: [], pemb: [], pembI: -1 };
@@ -516,6 +549,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       }
       if (mode === 'key') { R.keyText.push(t); continue; }
 
+      if (/^[A-Za-z]$/.test(t) || /^(?:[A-Za-z]|\d{1,2})(?:\s{3,}(?:[A-Za-z]|\d{1,2}))+$/.test(t)) continue;   // label pada gambar/diagram
       if (!scan) { addToTarget(L, 0, L.text.length); continue; }
 
       // ---- cari penanda opsi ----
@@ -525,17 +559,21 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
         if (pos === 0 && expected >= 2 && R.opts.length >= 2 && /^\s*\(?[Aa][.)](?=\s|$)/.test(text)) demote();
         if (expected >= LETTERS.length) { addToTarget(L, pos, text.length); pos = text.length; break; }
         const ch = LETTERS[expected];
-        const re = new RegExp('(^|\\s)\\(?([' + ch + ch.toLowerCase() + '])[.)](?=\\s|$)', 'g');
+        const re = new RegExp('(^|\\s)\\(?([' + ch + ch.toLowerCase() + '])[' + ch + ch.toLowerCase() + ']?\\s?[.)](?=\\s|$)', 'g');
         re.lastIndex = pos;
         let m, hit = null;
         while ((m = re.exec(text))) {
           const mkStart = m.index + m[1].length;
-          if (expected === 0 && mkStart > 0) {
+          if (expected === 0 && text.slice(0, mkStart).trim()) {
             // opsi A di tengah baris hanya sah bila disusul penanda B di baris yang sama
             if (!/(^|\s)\(?[Bb][.)](?=\s|$)/.test(text.slice(m.index + m[0].length))) continue;
           } else if (expected > 0 && !cur) continue;
           hit = { s: mkStart, e: m.index + m[0].length };
           break;
+        }
+        if (!hit && cur && pos === 0 && expected >= 1 && expected + 1 < LETTERS.length) {
+          const nx = LETTERS[expected + 1], m2 = new RegExp('^\\s*\\(?[' + nx + nx.toLowerCase() + '][' + nx + nx.toLowerCase() + ']?\\s?[.)](?=\\s|$)').exec(text);
+          if (m2) { startOpt(L, '', expected); expected++; hit = { s: m2[0].length - m2[0].replace(/^\s*/, '').length, e: m2[0].length }; }
         }
         if (!hit) { addToTarget(L, pos, text.length); pos = text.length; break; }
         addToTarget(L, pos, hit.s);
@@ -568,8 +606,67 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     }
     if (q.length < 6 && !hasImg) w.push('Teks soal sangat pendek');
     if (q.length > 1500) w.push('Teks sangat panjang — mungkin dua soal menyatu');
+    const all = [r.q, r.pemb, r.kunci].concat(r.opts || []).map(x => String(x == null ? '' : x)).join(' ');
+    if (/\[rumus\]/.test(all)) w.push('Ada rumus berupa gambar ([rumus]) — isi manual');
+    if (/\[gambar\]/.test(all)) w.push('Ada gambar berformat EMF/WMF yang tidak bisa ditampilkan ([gambar])');
     (r.fixed || []).forEach(x => w.push(x));
     return { warns: w, status: bad ? 'bad' : (w.length ? 'warn' : 'ok') };
+  }
+
+
+  /* ---------- bangun satu baris soal dari satu blok ---------- */
+  function buildRow(b, cfg) {
+    b = Object.assign({}, b, { lines: fixColumnOptions(b.lines) });
+    let P = parseBlock(b.lines, true);
+    const nOpt = P.opts.length;
+    const optText = o => norm(o.parts.join(' '));
+    const avg = nOpt ? P.opts.reduce((a, o) => a + optText(o).length, 0) / nOpt : 0;
+    const stemLen = norm(P.stem.map(l => l.text).join(' ')).length;
+    let isPG = nOpt >= 4 || (nOpt === 3 && avg <= 80 && stemLen > 0);
+    if (!isPG && nOpt > 0) P = parseBlock(b.lines, false);
+
+    const row = {
+      num: b.start.num, tipe: 'esai', poin: cfg.esaiPoin, q: '', opts: ['', '', '', '', ''],
+      kunci: '', pemb: '', izin: '', warns: [], status: 'ok',
+      raw: b.lines.map(l => l.text).join('\n'),
+      startOrder: orderOf(b.startLine),
+      pembOrder: P.pembI >= 0 ? orderOf(b.lines[P.pembI]) : Infinity,
+      imgsE: [], imgsL: [], keySrc: '', fixed: [], hasE: false, hasImg: false
+    };
+    row.q = joinLines(P.stem);
+    row.pemb = norm(P.pemb.join(' '));
+
+    if (isPG) {
+      row.tipe = 'pg_teks'; row.poin = cfg.pgPoin;
+      for (let i = 0; i < 5; i++) row.opts[i] = P.opts[i] ? optText(P.opts[i]) : '';
+      if (P.keyLetter) { row.kunci = P.keyLetter; row.keySrc = 'soal'; }
+      else if (cfg.formatKey) {
+        // opsi yang ditebalkan / digarisbawahi sendirian
+        for (const flag of ['bold', 'ul']) {
+          const fr = P.opts.map(o => {
+            let n = 0, f = 0;
+            o.spans.forEach(sp => {
+              const arr = sp.L[flag];
+              for (let i = sp.from; i < sp.to; i++) { if (/\s/.test(sp.L.text[i])) continue; n++; if (arr[i]) f++; }
+            });
+            return n ? f / n : 0;
+          });
+          const hi = fr.map((v, i) => v >= 0.6 ? i : -1).filter(i => i >= 0);
+          if (hi.length === 1 && fr.every((v, i) => i === hi[0] || v <= 0.3)) {
+            row.kunci = LETTERS[hi[0]]; row.keySrc = flag === 'bold' ? 'tebal' : 'garis bawah'; break;
+          }
+        }
+      }
+    } else if (P.keyLetter && !P.opts.length) {
+      row.kunciHint = P.keyLetter;   // huruf kunci tapi tanpa opsi
+    }
+    if (!isPG) {
+      const kt = norm(P.keyText.join(' '));
+      if (kt) { row.kunci = kt; row.keySrc = 'soal'; }
+    }
+    row.stemLen = norm(row.q).length;
+    row.pgLetterNoOpts = P.keyLetter && !isPG ? P.keyLetter : null;
+    return row;
   }
 
   /* ---------- parser utama ---------- */
@@ -578,7 +675,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     const notes = [];
     images = images || [];
     const pageCount = cfg.pageCount || Math.max(1, ...rawLines.map(l => l.page + 1));
-    let lines = cleanLines(rawLines, pageCount);
+    let lines = cfg.skipClean ? rawLines.filter(L => L.text.trim()) : cleanLines(rawLines, pageCount);
 
     const cands = [];
     lines.forEach((L, i) => {
@@ -636,59 +733,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     });
 
     const rows = [];
-    const imgByRow = new Map();
-    blocks.forEach((b, k) => {
-      let P = parseBlock(b.lines, true);
-      const nOpt = P.opts.length;
-      const optText = o => norm(o.parts.join(' '));
-      const avg = nOpt ? P.opts.reduce((a, o) => a + optText(o).length, 0) / nOpt : 0;
-      const stemLen = norm(P.stem.map(l => l.text).join(' ')).length;
-      let isPG = nOpt >= 4 || (nOpt === 3 && avg <= 80 && stemLen > 0);
-      if (!isPG && nOpt > 0) P = parseBlock(b.lines, false);
-
-      const row = {
-        num: b.start.num, tipe: 'esai', poin: cfg.esaiPoin, q: '', opts: ['', '', '', '', ''],
-        kunci: '', pemb: '', izin: '', warns: [], status: 'ok',
-        raw: b.lines.map(l => l.text).join('\n'),
-        startOrder: orderOf(b.startLine),
-        pembOrder: P.pembI >= 0 ? orderOf(b.lines[P.pembI]) : Infinity,
-        imgsE: [], imgsL: [], keySrc: '', fixed: [], hasE: false, hasImg: false
-      };
-      row.q = joinLines(P.stem);
-      row.pemb = norm(P.pemb.join(' '));
-
-      if (isPG) {
-        row.tipe = 'pg_teks'; row.poin = cfg.pgPoin;
-        for (let i = 0; i < 5; i++) row.opts[i] = P.opts[i] ? optText(P.opts[i]) : '';
-        if (P.keyLetter) { row.kunci = P.keyLetter; row.keySrc = 'soal'; }
-        else if (cfg.formatKey) {
-          // opsi yang ditebalkan / digarisbawahi sendirian
-          for (const flag of ['bold', 'ul']) {
-            const fr = P.opts.map(o => {
-              let n = 0, f = 0;
-              o.spans.forEach(sp => {
-                const arr = sp.L[flag];
-                for (let i = sp.from; i < sp.to; i++) { if (/\s/.test(sp.L.text[i])) continue; n++; if (arr[i]) f++; }
-              });
-              return n ? f / n : 0;
-            });
-            const hi = fr.map((v, i) => v >= 0.6 ? i : -1).filter(i => i >= 0);
-            if (hi.length === 1 && fr.every((v, i) => i === hi[0] || v <= 0.3)) {
-              row.kunci = LETTERS[hi[0]]; row.keySrc = flag === 'bold' ? 'tebal' : 'garis bawah'; break;
-            }
-          }
-        }
-      } else if (P.keyLetter && !P.opts.length) {
-        row.kunciHint = P.keyLetter;   // huruf kunci tapi tanpa opsi
-      }
-      if (!isPG) {
-        const kt = norm(P.keyText.join(' '));
-        if (kt) { row.kunci = kt; row.keySrc = 'soal'; }
-      }
-      row.stemLen = norm(row.q).length;
-      row.pgLetterNoOpts = P.keyLetter && !isPG ? P.keyLetter : null;
-      rows.push(row);
-    });
+    blocks.forEach(b => rows.push(buildRow(b, cfg)));
 
     /* gambar → soal */
     const startOrders = rows.map(r => r.startOrder);
@@ -760,14 +805,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 
     /* catatan global */
     const pgRows = rows.filter(r => r.tipe !== 'esai');
-    if (pgRows.length && !anyKey) notes.push('PDF ini tidak memuat kunci jawaban yang bisa dibaca. Kolom Kunci dikosongkan — isi manual atau tempel daftar kunci.');
+    if (pgRows.length && !anyKey) notes.push('Dokumen ini tidak memuat kunci jawaban yang bisa dibaca. Kolom Kunci dikosongkan — isi manual atau tempel daftar kunci.');
     if (tail.pemb.size) notes.push('Pembahasan di akhir dokumen dipasangkan ke ' + rows.filter(r => r.pemb).length + ' soal.');
     const gaps = [];
     for (let i = 1; i < starts.length; i++) {
       const d = starts[i].num - starts[i - 1].num;
       if (d > 1) gaps.push(starts[i - 1].num + 1 + (d > 2 ? '–' + (starts[i].num - 1) : ''));
     }
-    if (gaps.length) notes.push('Nomor soal yang tidak ditemukan di PDF: ' + gaps.join(', ') + '.');
+    if (gaps.length) notes.push('Nomor soal yang tidak ditemukan di dokumen: ' + gaps.join(', ') + '.');
     const stats = {
       total: rows.length,
       pg: rows.filter(r => r.tipe === 'pg_teks').length,
@@ -780,6 +825,19 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     return { rows, notes, stats, lines };
   }
 
+
+  /* ---------- hasil OCR satu gambar soal → satu baris (tanpa rantai nomor) ---------- */
+  function parseFragment(rawLines, cfgIn) {
+    const cfg = Object.assign({ pgPoin: 2, esaiPoin: 5, formatKey: false }, cfgIn || {});
+    let lines = rawLines.filter(L => L.text.trim());
+    if (!lines.length) return null;
+    const m = matchStart(lines[0].text);
+    const first = m ? clone(lines[0], m.offset) : lines[0];
+    const row = buildRow({ start: { num: m ? m.num : 0 }, lines: [first].concat(lines.slice(1)), startLine: lines[0] }, cfg);
+    row.hasImg = false;
+    return row;
+  }
+
   /* ---------- tempel kunci manual ---------- */
   function parsePastedKeys(text) {
     const pr = parsePairs(text.split(/\n/));
@@ -789,7 +847,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     return null;
   }
 
-  return { parse, validateRow, parsePastedKeys, cleanLines, matchStart, isSectionHeading, joinLines, LETTERS };
+  return { parse, parseFragment, validateRow, parsePastedKeys, cleanLines, matchStart, isSectionHeading, joinLines, LETTERS };
 });
 
 </script>
@@ -970,6 +1028,346 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 </script>
 <script>
 /* ==========================================================================
+   CBTDocx — membaca .docx menjadi baris teks (model sama dengan pembaca PDF).
+   - Menghitung ulang penomoran otomatis Word (1. / A. / (a) dst) menjadi teks
+   - Tebal & garis bawah per teks (untuk deteksi kunci)
+   - Persamaan Word (OMML) → teks linear: 1/4, 25^(1/2), √(x)
+   - Gambar PNG/JPEG diambil; rumus MathType (OLE/WMF/EMF) → penanda [rumus]
+   Tanpa DOM global selain DOMParser (disuntikkan agar bisa diuji di Node).
+   ========================================================================== */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CBTDocx = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const NS_M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
+  const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const NS_MC = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+
+  const kids = el => { const o = []; for (let n = el && el.firstChild; n; n = n.nextSibling) if (n.nodeType === 1) o.push(n); return o; };
+  const ln = el => el.localName || (el.nodeName || '').replace(/^.*:/, '');
+  const child = (el, name) => kids(el).find(k => ln(k) === name) || null;
+  const wattr = (el, name) => el && (el.getAttributeNS(NS_W, name) || el.getAttribute('w:' + name) || null);
+  const isOn = el => { if (!el) return false; const v = wattr(el, 'val'); return !(v === '0' || v === 'false' || v === 'off' || v === 'none'); };
+  function descendants(el, name, out) {
+    out = out || [];
+    kids(el).forEach(k => { if (ln(k) === name) out.push(k); descendants(k, name, out); });
+    return out;
+  }
+
+  /* ---------- format angka penomoran ---------- */
+  function letters(n, upper) {
+    let s = ''; n = Math.max(1, n);
+    while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(97 + r) + s; n = Math.floor((n - 1) / 26); }
+    return upper ? s.toUpperCase() : s;
+  }
+  function roman(n, upper) {
+    const t = [[1000, 'm'], [900, 'cm'], [500, 'd'], [400, 'cd'], [100, 'c'], [90, 'xc'], [50, 'l'], [40, 'xl'], [10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']];
+    let s = ''; for (const [v, r] of t) while (n >= v) { s += r; n -= v; }
+    return upper ? s.toUpperCase() : s;
+  }
+  function fmtNum(n, fmt) {
+    switch (fmt) {
+      case 'upperLetter': return letters(n, true);
+      case 'lowerLetter': return letters(n, false);
+      case 'upperRoman': return roman(n, true);
+      case 'lowerRoman': return roman(n, false);
+      case 'decimalZero': return (n < 10 ? '0' : '') + n;
+      case 'none': return '';
+      default: return String(n);
+    }
+  }
+
+  /* ---------- superskrip / subskrip ---------- */
+  const SUP = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '+': '⁺', '-': '⁻', '–': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', 'n': 'ⁿ', 'i': 'ⁱ' };
+  const SUB = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉', '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎' };
+  function script(str, sup) {
+    const map = sup ? SUP : SUB, s = str.replace(/\s+/g, '');
+    if (!s) return str;
+    if (s && [...s].every(ch => map[ch])) return [...s].map(ch => map[ch]).join('');
+    return (sup ? '^(' : '_(') + str.trim() + ')';
+  }
+
+  /* ---------- OMML → teks linear ---------- */
+  const simple = s => /^[\w.,]+$/.test(s);
+  const wrap = s => (simple(s) ? s : '(' + s + ')');
+  function om(node) {
+    const name = ln(node), K = kids(node);
+    const sub = n => { const c = child(node, n); return c ? omAll(c) : ''; };
+    switch (name) {
+      case 'r': return descendants(node, 't').filter(t => t.namespaceURI === NS_M || /^m:/.test(t.nodeName)).map(t => t.textContent).join('');
+      case 'f': return wrap(sub('num')) + '/' + wrap(sub('den'));
+      case 'sSup': return wrap(sub('e')) + '^' + (/^[\w.,+\-]+$/.test(sub('sup')) ? sub('sup') : '(' + sub('sup') + ')');
+      case 'sSub': return wrap(sub('e')) + '_' + (/^[\w.,+\-]+$/.test(sub('sub')) ? sub('sub') : '(' + sub('sub') + ')');
+      case 'sSubSup': return wrap(sub('e')) + '_' + wrap(sub('sub')) + '^' + wrap(sub('sup'));
+      case 'sPre': return '_' + wrap(sub('sub')) + '^' + wrap(sub('sup')) + sub('e');
+      case 'rad': { const d = sub('deg').trim(), e = sub('e'); return d ? '√[' + d + '](' + e + ')' : (simple(e) ? '√' + e : '√(' + e + ')'); }
+      case 'd': {
+        const pr = child(node, 'dPr'); let beg = '(', end = ')', sep = '|';
+        if (pr) {
+          const b = child(pr, 'begChr'), e = child(pr, 'endChr'), s = child(pr, 'sepChr');
+          if (b) beg = b.getAttributeNS(NS_M, 'val') || b.getAttribute('m:val') || ''; if (e) end = e.getAttributeNS(NS_M, 'val') || e.getAttribute('m:val') || '';
+          if (s) sep = s.getAttributeNS(NS_M, 'val') || s.getAttribute('m:val') || '|';
+        }
+        return beg + K.filter(k => ln(k) === 'e').map(omAll).join(sep) + end;
+      }
+      case 'nary': {
+        const pr = child(node, 'naryPr'); let chr = '∫';
+        const c = pr && child(pr, 'chr'); if (c) chr = c.getAttributeNS(NS_M, 'val') || c.getAttribute('m:val') || chr;
+        const lo = sub('sub'), hi = sub('sup');
+        return chr + (lo ? '_' + wrap(lo) : '') + (hi ? '^' + wrap(hi) : '') + ' ' + sub('e');
+      }
+      case 'func': { const fn = sub('fName'), e = sub('e'); return fn + (simple(e) ? ' ' + e : '(' + e + ')'); }
+      case 'limLow': return sub('e') + '_' + wrap(sub('lim'));
+      case 'limUpp': return sub('e') + '^' + wrap(sub('lim'));
+      case 'm': return '[' + K.filter(k => ln(k) === 'mr').map(r => kids(r).filter(k => ln(k) === 'e').map(omAll).join(' ')).join('; ') + ']';
+      case 'eqArr': return K.filter(k => ln(k) === 'e').map(omAll).join('; ');
+      case 'oMathPara': case 'oMath': case 'e': case 'num': case 'den': case 'sup': case 'sub': case 'deg': case 'lim': case 'fName':
+      case 'acc': case 'bar': case 'groupChr': case 'box': case 'phant': case 'borderBox': case 'mr':
+        return omAll(node);
+      default: return omAll(node);
+    }
+  }
+  function omAll(node) {
+    // properti (…Pr) dilewati; sisanya digabung berurutan
+    return kids(node).filter(k => !/Pr$/.test(ln(k))).map(om).join('');
+  }
+
+  /* ---------- pembaca utama ---------- */
+  async function read(buf, JSZip, DOMParserCls) {
+    const zip = await JSZip.loadAsync(buf);
+    const getXml = async path => { const f = zip.file(path); if (!f) return null; return new DOMParserCls().parseFromString(await f.async('string'), 'application/xml'); };
+    const docXml = await getXml('word/document.xml');
+    if (!docXml) throw new Error('Berkas ini bukan dokumen Word (.docx) yang valid.');
+    const numXml = await getXml('word/numbering.xml');
+    const styXml = await getXml('word/styles.xml');
+    const relXml = await getXml('word/_rels/document.xml.rels');
+
+    /* relasi gambar */
+    const rels = {};
+    if (relXml) kids(relXml.documentElement).forEach(r => { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
+
+    /* penomoran */
+    const abs = {}, nums = {};
+    if (numXml) {
+      kids(numXml.documentElement).forEach(el => {
+        if (ln(el) === 'abstractNum') {
+          const id = wattr(el, 'abstractNumId'), lv = {};
+          kids(el).filter(k => ln(k) === 'lvl').forEach(l => {
+            const il = +wattr(l, 'ilvl');
+            const st = child(l, 'start'), nf = child(l, 'numFmt'), lt = child(l, 'lvlText');
+            lv[il] = { start: st ? +wattr(st, 'val') : 1, fmt: nf ? wattr(nf, 'val') : 'decimal', text: lt ? (wattr(lt, 'val') || '') : '%' + (il + 1) + '.' };
+          });
+          abs[id] = lv;
+        }
+      });
+      kids(numXml.documentElement).forEach(el => {
+        if (ln(el) === 'num') {
+          const id = wattr(el, 'numId'), a = child(el, 'abstractNumId'), ov = {};
+          kids(el).filter(k => ln(k) === 'lvlOverride').forEach(o => {
+            const so = child(o, 'startOverride'); if (so) ov[+wattr(o, 'ilvl')] = +wattr(so, 'val');
+          });
+          nums[id] = { absId: a ? wattr(a, 'val') : null, ov };
+        }
+      });
+    }
+    const counters = {}, seen = new Set();
+    function labelFor(numId, ilvl) {
+      const n = nums[numId]; if (!n || n.absId == null) return '';
+      const a = abs[n.absId]; if (!a) return '';
+      const cs = counters[n.absId] || (counters[n.absId] = []);
+      if (!seen.has(numId)) {
+        seen.add(numId);
+        Object.keys(n.ov).forEach(k => { cs[+k] = n.ov[k] - 1; for (let j = +k + 1; j < 9; j++) cs[j] = undefined; });
+      }
+      const lv = a[ilvl] || { start: 1, fmt: 'decimal', text: '%' + (ilvl + 1) + '.' };
+      if (lv.fmt === 'bullet') return '';
+      cs[ilvl] = (cs[ilvl] == null ? lv.start - 1 : cs[ilvl]) + 1;
+      for (let j = ilvl + 1; j < 9; j++) cs[j] = undefined;
+      return lv.text.replace(/%(\d)/g, (m, d) => {
+        const k = +d - 1, l2 = a[k] || lv;
+        return fmtNum(cs[k] == null ? l2.start : cs[k], l2.fmt);
+      });
+    }
+
+    /* gaya (penomoran & format run lewat style) */
+    const styles = {};
+    if (styXml) kids(styXml.documentElement).filter(k => ln(k) === 'style').forEach(s => {
+      const id = wattr(s, 'styleId'), based = child(s, 'basedOn'), ppr = child(s, 'pPr'), rpr = child(s, 'rPr');
+      const np = ppr && child(ppr, 'numPr');
+      styles[id] = {
+        basedOn: based ? wattr(based, 'val') : null,
+        numId: np && child(np, 'numId') ? wattr(child(np, 'numId'), 'val') : null,
+        ilvl: np && child(np, 'ilvl') ? +wattr(child(np, 'ilvl'), 'val') : null,
+        b: rpr && child(rpr, 'b') ? isOn(child(rpr, 'b')) : null,
+        u: rpr && child(rpr, 'u') ? isOn(child(rpr, 'u')) : null
+      };
+    });
+    const styleProp = (id, prop, guard) => {
+      guard = guard || 0; const s = styles[id]; if (!s || guard > 8) return null;
+      if (s[prop] != null) return s[prop];
+      return s.basedOn ? styleProp(s.basedOn, prop, guard + 1) : null;
+    };
+
+    /* ---------- keluaran ---------- */
+    const out = { lines: [], images: [], stats: { formulas: 0, badImages: 0, images: 0 } };
+    let lineNo = 0;
+    const imgCache = new Map();
+
+    async function loadMedia(rid) {
+      const target = rels[rid]; if (!target) return null;
+      if (imgCache.has(rid)) return imgCache.get(rid);
+      const path = 'word/' + target.replace(/^\.?\//, '').replace(/^\.\.\//, '');
+      const f = zip.file(path) || zip.file(target.replace(/^\//, ''));
+      const ext = (target.split('.').pop() || '').toLowerCase();
+      const mime = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp' }[ext];
+      const res = { ext, ok: !!(f && mime), blob: f && mime ? new Blob([await f.async('uint8array')], { type: mime }) : null };
+      imgCache.set(rid, res); return res;
+    }
+
+    /* satu paragraf → daftar baris (bisa >1 bila ada <w:br/>) + gambar + paragraf kotak teks */
+    async function paragraph(p) {
+      const lines = [{ text: '', bold: [], ul: [] }], pendingImgs = [], extra = [];
+      let cur = lines[0];
+      const add = (str, b, u) => { for (const ch of str) { cur.text += ch; cur.bold.push(!!b); cur.ul.push(!!u); } };
+      const nl = () => { cur = { text: '', bold: [], ul: [] }; lines.push(cur); };
+
+      const ppr = child(p, 'pPr');
+      const pStyle = ppr && child(ppr, 'pStyle') ? wattr(child(ppr, 'pStyle'), 'val') : null;
+      const pB = pStyle ? styleProp(pStyle, 'b') : null, pU = pStyle ? styleProp(pStyle, 'u') : null;
+
+      // penomoran
+      let numId = null, ilvl = 0;
+      const np = ppr && child(ppr, 'numPr');
+      if (np) { const ni = child(np, 'numId'), il = child(np, 'ilvl'); if (ni) numId = wattr(ni, 'val'); if (il) ilvl = +wattr(il, 'val'); }
+      else if (pStyle) { numId = styleProp(pStyle, 'numId'); const si = styleProp(pStyle, 'ilvl'); if (si != null) ilvl = si; }
+      const hasSect = !!(ppr && child(ppr, 'sectPr'));
+
+      async function drawingLike(node, kind) {
+        // ukuran perkiraan (cm) untuk membedakan gambar rumus kecil dari gambar soal
+        let hcm = null;
+        const ext = descendants(node, 'extent')[0];
+        if (ext) hcm = (+ext.getAttribute('cy') || 0) / 360000;
+        const shape = descendants(node, 'shape')[0];
+        if (hcm == null && shape) { const m = /height:\s*([\d.]+)pt/.exec(shape.getAttribute('style') || ''); if (m) hcm = (+m[1]) * 0.03528; }
+        const blips = descendants(node, 'blip').map(b => b.getAttributeNS(NS_R, 'embed') || b.getAttribute('r:embed')).filter(Boolean);
+        descendants(node, 'imagedata').forEach(im => { const id = im.getAttributeNS(NS_R, 'id') || im.getAttribute('r:id'); if (id) blips.push(id); });
+        // kotak teks di dalam gambar/bentuk
+        descendants(node, 'txbxContent').forEach(tb => kids(tb).filter(k => ln(k) === 'p').forEach(tp => extra.push(tp)));
+        const isEq = descendants(node, 'OLEObject').some(o => /equation|mathtype/i.test(o.getAttribute('ProgID') || ''));
+        if (kind === 'object' && isEq) { add('[rumus]', false, false); out.stats.formulas++; return; }
+        for (const rid of blips) {
+          const m = await loadMedia(rid);
+          if (!m) continue;
+          if (!m.ok) {
+            if (hcm != null && hcm >= 1.6) { add('[gambar]', false, false); out.stats.badImages++; }
+            else { add('[rumus]', false, false); out.stats.formulas++; }
+          } else if (hcm != null && hcm < 0.9 && cur.text.trim()) {
+            add('[rumus]', false, false); out.stats.formulas++;       // gambar kecil sebaris teks = rumus bergambar
+          } else {
+            pendingImgs.push(m); out.stats.images++;
+          }
+        }
+      }
+
+      async function walk(node, fmt) {
+        for (const k of kids(node)) {
+          const n = ln(k);
+          if (n === 'r') {
+            const rpr = child(k, 'rPr'); let b = fmt.b, u = fmt.u, vAlign = null;
+            if (rpr) {
+              const rs = child(rpr, 'rStyle'); if (rs) { const sb = styleProp(wattr(rs, 'val'), 'b'), su = styleProp(wattr(rs, 'val'), 'u'); if (sb != null) b = sb; if (su != null) u = su; }
+              if (child(rpr, 'b')) b = isOn(child(rpr, 'b'));
+              if (child(rpr, 'u')) u = isOn(child(rpr, 'u'));
+              const va = child(rpr, 'vertAlign'); if (va) vAlign = wattr(va, 'val');
+            }
+            for (const c of kids(k)) {
+              const cn = ln(c);
+              if (cn === 't') { if (vAlign === 'superscript' || vAlign === 'subscript') add(script(c.textContent, vAlign === 'superscript'), b, u); else add(c.textContent, b, u); }
+              else if (cn === 'tab') add('  ', false, false);
+              else if (cn === 'br' || cn === 'cr') { const t = wattr(c, 'type'); if (t !== 'page') nl(); }
+              else if (cn === 'noBreakHyphen') add('-', b, u);
+              else if (cn === 'drawing') await drawingLike(c, 'drawing');
+              else if (cn === 'pict') await drawingLike(c, 'pict');
+              else if (cn === 'object') await drawingLike(c, 'object');
+              else if (cn === 'AlternateContent') {
+                const ch = kids(c).find(x => ln(x) === 'Choice') || kids(c).find(x => ln(x) === 'Fallback');
+                if (ch) for (const x of kids(ch)) { const xn = ln(x); if (xn === 'drawing') await drawingLike(x, 'drawing'); else if (xn === 'pict') await drawingLike(x, 'pict'); }
+              }
+            }
+          } else if (n === 'oMath' || n === 'oMathPara') add(om(k), false, false);
+          else if (n === 'AlternateContent') {
+            const ch = kids(k).find(x => ln(x) === 'Choice') || kids(k).find(x => ln(x) === 'Fallback');
+            if (ch) await walk(ch, fmt);
+          } else if (['hyperlink', 'smartTag', 'sdt', 'sdtContent', 'ins', 'fldSimple', 'customXml'].includes(n)) await walk(k, fmt);
+        }
+      }
+      await walk(p, { b: pB, u: pU });
+      // nomor otomatis dihitung SETELAH isi diketahui: paragraf kosong pembawa pembatas bagian
+      // (sectPr) tidak tampil di Word/LibreOffice dan tidak ikut menghitung nomor.
+      const hasContent = lines.some(l => l.text.trim()) || pendingImgs.length > 0;
+      let label = '';
+      if (numId && numId !== '0' && !(hasSect && !hasContent)) label = labelFor(numId, ilvl);
+      if (label) {
+        const L0 = lines[0], pre = label + ' ';
+        L0.text = pre + L0.text;
+        L0.bold = new Array(pre.length).fill(false).concat(L0.bold);
+        L0.ul = new Array(pre.length).fill(false).concat(L0.ul);
+      }
+      return { lines: lines.filter(l => l.text.trim()), imgs: pendingImgs, extra };
+    }
+
+    function emit(parLines, imgs, extraLines) {
+      const y = lineNo * 10;
+      parLines.forEach(l => { out.lines.push(Object.assign({ page: 0, y: lineNo * 10, x: 0 }, l)); lineNo++; });
+      if (!parLines.length && imgs.length) lineNo++;
+      imgs.forEach(m => out.images.push({ page: 0, y0: y + 1, blob: m.blob, mime: m.blob.type }));
+      void extraLines;
+    }
+
+    async function block(parent) {
+      for (const el of kids(parent)) {
+        const n = ln(el);
+        if (n === 'p') {
+          const r = await paragraph(el); emit(r.lines, r.imgs);
+          for (const tp of r.extra) { const t = await paragraph(tp); emit(t.lines.filter(l => l.text.trim().length > 4), t.imgs); }
+        } else if (n === 'tbl') {
+          for (const tr of kids(el).filter(k => ln(k) === 'tr')) {
+            const cells = kids(tr).filter(k => ln(k) === 'tc');
+            const perCell = [];
+            for (const tc of cells) {
+              const ls = [], ims = [];
+              for (const pe of kids(tc).filter(k => ln(k) === 'p')) { const r = await paragraph(pe); ls.push(...r.lines); ims.push(...r.imgs); for (const tp of r.extra) { const t = await paragraph(tp); ls.push(...t.lines.filter(l => l.text.trim().length > 4)); } }
+              perCell.push({ ls, ims });
+            }
+            const nested = cells.some(tc => kids(tc).some(k => ln(k) === 'tbl'));
+            if (nested) { for (const tc of cells) await block(tc); continue; }
+            if (perCell.length > 1 && perCell.every(c => c.ls.length === 1)) {
+              // satu baris tabel dengan satu paragraf per sel → satu baris teks (opsi berdampingan)
+              const merged = { text: '', bold: [], ul: [] };
+              perCell.forEach((c, i) => {
+                if (i) { merged.text += '  '; merged.bold.push(false, false); merged.ul.push(false, false); }
+                merged.text += c.ls[0].text; merged.bold.push(...c.ls[0].bold); merged.ul.push(...c.ls[0].ul);
+              });
+              emit([merged], perCell.flatMap(c => c.ims));
+            } else perCell.forEach(c => emit(c.ls, c.ims));
+          }
+        } else if (n === 'sdt') { const c = child(el, 'sdtContent'); if (c) await block(c); }
+      }
+    }
+    await block(docXml.documentElement.getElementsByTagNameNS(NS_W, 'body')[0] || child(docXml.documentElement, 'body'));
+    void NS_MC;
+    return out;
+  }
+
+  return { read };
+});
+
+</script>
+<script>
+/* ==========================================================================
    Aplikasi — Konverter soal PDF → spreadsheet CBT Kabut Digital
    ========================================================================== */
 (function () {
@@ -982,7 +1380,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 
   const S = {
     name: '', doc: null, lines: [], images: [], rows: [], notes: [], filter: 'all',
-    dirty: false, readCfg: null, anyKey: false, scanned: []
+    dirty: false, readCfg: null, anyKey: false, scanned: [], kind: '', files: null, pageCount: 1, srcNotes: []
   };
 
   /* ---------- UI helpers ---------- */
@@ -1002,6 +1400,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       pgPoin: Math.max(0, +$('#setPgPoin').value || 0),
       esaiPoin: Math.max(0, +$('#setEsaiPoin').value || 0),
       ocr: $('#setOcr').value,
+      lang: $('#setLang').value,
       images: $('#setImages').checked,
       formatKey: $('#setFormatKey').checked,
       prefix: $('#setPrefix').value.trim()
@@ -1014,33 +1413,67 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     });
   }
 
-  /* ---------- OCR (hanya dimuat bila diperlukan) ---------- */
-  let ocrWorker = null;
-  async function getOcr(onProgress) {
-    if (!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
-    if (!ocrWorker) ocrWorker = await Tesseract.createWorker('ind+eng', 1, { logger: m => onProgress && onProgress(m) });
-    return ocrWorker;
+  /* ---------- OCR Tesseract (gratis, jalan di peramban) ----------
+     Konfigurasi ditiru dari aplikasi OCR Multi Engine: tesseract.js v5 dari jsDelivr,
+     inti WASM simd-lstm, data bahasa tessdata 4.0.0, bahasa ind / ind+eng / eng. */
+  const TESS = Object.assign({
+    cdn: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
+    worker: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+    lang: 'https://tessdata.projectnaptha.com/4.0.0',
+    core: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core-simd-lstm.wasm.js'
+  }, window._TESS || {});
+
+  // dari OCR Multi Engine: rapikan baris kosong dan spasi ganda
+  function cleanOcrText(raw) {
+    if (!raw) return '';
+    return raw.split('\n').map(l => l.trim()).filter((l, i, arr) => l || (arr[i - 1] && arr[i + 1])).join('\n').replace(/[ \t]{2,}/g, ' ').trim();
   }
-  async function ocrPage(page, idx, onProgress) {
-    const scale = 2.5, vp = page.getViewport({ scale });
-    const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
-    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
-    const w = await getOcr(onProgress);
-    const { data } = await w.recognize(cv);
-    const ph = vp.height / scale, pw = vp.width / scale;
-    let lines = [];
-    if (data.lines && data.lines.length) {
-      lines = data.lines.map(l => {
-        const text = l.text.replace(/\s+$/, '');
-        return { text, bold: new Array(text.length).fill(false), ul: new Array(text.length).fill(false), page: idx,
-          y: l.bbox.y0 / scale, x: l.bbox.x0 / scale, h: Math.max(8, (l.bbox.y1 - l.bbox.y0) / scale), ph, pw };
-      }).filter(l => l.text.trim());
-    } else {
-      lines = (data.text || '').split('\n').filter(t => t.trim()).map((text, i) => ({
-        text, bold: new Array(text.length).fill(false), ul: new Array(text.length).fill(false), page: idx, y: 40 + i * 14, x: 40, h: 11, ph, pw }));
+  const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg || 'Timeout OCR')), ms))]);
+  const Ocr = {
+    worker: null, loadedLang: null,
+    async init(lang, onStatus) {
+      if (!window.Tesseract) await loadScript(TESS.cdn);
+      if (this.worker && this.loadedLang === lang) return;
+      if (this.worker) { await this.worker.terminate().catch(() => {}); this.worker = null; }
+      this.worker = await Tesseract.createWorker(lang, 1, { workerPath: TESS.worker, langPath: TESS.lang, corePath: TESS.core, logger: m => onStatus && onStatus(m) });
+      this.loadedLang = lang;
+    },
+    async recognize(canvas, lang, onStatus) {
+      await this.init(lang, onStatus);
+      const { data } = await withTimeout(this.worker.recognize(canvas), 180000, 'Timeout OCR — gambar terlalu besar');
+      return data;
     }
-    return lines;
+  };
+
+  // perbaikan gambar sebelum OCR: perbesar bila kecil, abu-abu, regangkan kontras
+  function prepCanvas(src, minWidth) {
+    const k = Math.min(3, Math.max(1, (minWidth || 0) / src.width));
+    const cv = document.createElement('canvas'); cv.width = Math.round(src.width * k); cv.height = Math.round(src.height * k);
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.imageSmoothingQuality = 'high'; ctx.drawImage(src, 0, 0, cv.width, cv.height);
+    const img = ctx.getImageData(0, 0, cv.width, cv.height), d = img.data, hist = new Uint32Array(256);
+    for (let i = 0; i < d.length; i += 4) { const g = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) | 0; d[i] = d[i + 1] = d[i + 2] = g; hist[g]++; }
+    const total = cv.width * cv.height; let lo = 0, hi = 255, acc = 0;
+    for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= total * 0.01) { lo = v; break; } }
+    acc = 0; for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= total * 0.01) { hi = v; break; } }
+    if (hi - lo > 20) { const sc = 255 / (hi - lo); for (let i = 0; i < d.length; i += 4) { const g = Math.max(0, Math.min(255, ((d[i] - lo) * sc) | 0)); d[i] = d[i + 1] = d[i + 2] = g; } }
+    ctx.putImageData(img, 0, 0);
+    return { canvas: cv, scale: k };
   }
+  async function ocrLines(canvas, pageIdx, scale, lang, onStatus) {
+    const data = await Ocr.recognize(canvas, lang, onStatus);
+    const ph = canvas.height / scale, pw = canvas.width / scale;
+    const mk = (text, y, x, h) => { text = text.replace(/[ \t]{2,}/g, ' ').trim(); return { text, bold: new Array(text.length).fill(false), ul: new Array(text.length).fill(false), page: pageIdx, y, x, h, ph, pw }; };
+    let lines;
+    if (data.lines && data.lines.length) lines = data.lines.map(l => mk(l.text, l.bbox.y0 / scale, l.bbox.x0 / scale, Math.max(8, (l.bbox.y1 - l.bbox.y0) / scale)));
+    else lines = cleanOcrText(data.text || '').split('\n').map((t, i) => mk(t, 40 + i * 14, 40, 11));
+    return lines.filter(l => l.text);
+  }
+  const ocrStatus = (label, base, span) => m => {
+    if (!m || !m.status) return;
+    const pct = base + span * (m.status === 'recognizing text' ? (m.progress || 0) : 0);
+    busy(true, label + ' — ' + m.status + '…', pct);
+  };
 
   /* ---------- gambar: potong dari halaman yang dirender ---------- */
   function canvasToBlob(cv) { return new Promise(res => cv.toBlob(res, 'image/png')); }
@@ -1085,7 +1518,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     busy(true, 'Membuka PDF…', 0.02);
     const buf = new Uint8Array(await file.arrayBuffer());
     const doc = await pdfjsLib.getDocument({ data: buf }).promise;
-    S.doc = doc; S.name = file.name.replace(/\.pdf$/i, ''); S.scanned = [];
+    S.doc = doc; S.kind = 'pdf'; S.files = null; S.pageCount = doc.numPages; S.name = file.name.replace(/\.pdf$/i, ''); S.scanned = [];
     const lines = [], images = [];
     for (let p = 0; p < doc.numPages; p++) {
       busy(true, 'Membaca halaman ' + (p + 1) + ' dari ' + doc.numPages + '…', 0.05 + 0.65 * (p / doc.numPages));
@@ -1094,12 +1527,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       const needOcr = cfg.ocr === 'always' || (cfg.ocr === 'auto' && r.textChars < 15);
       if (needOcr) {
         try {
-          const l2 = await ocrPage(page, p, m => {
-            if (m && m.status) busy(true, 'OCR halaman ' + (p + 1) + ' — ' + m.status + '…', 0.05 + 0.65 * ((p + (m.progress || 0)) / doc.numPages));
-          });
+          const sc = 2.5, vp = page.getViewport({ scale: sc });
+          const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+          await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+          const pr = prepCanvas(cv, 0);
+          const l2 = await ocrLines(pr.canvas, p, sc, cfg.lang, ocrStatus('OCR halaman ' + (p + 1), 0.05 + 0.65 * (p / doc.numPages), 0.65 / doc.numPages));
           lines.push(...l2); S.scanned.push(p + 1);
         } catch (e) {
-          console.error(e); toast('OCR gagal pada halaman ' + (p + 1) + '. Periksa koneksi internet.');
+          console.error(e); toast('OCR gagal pada halaman ' + (p + 1) + ': ' + e.message);
           lines.push(...r.lines);
         }
       } else {
@@ -1108,28 +1543,70 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       }
     }
     if (images.length) { busy(true, 'Memotong ' + images.length + ' gambar…', 0.8); await cropImages(doc, images, 2.2); }
-    S.lines = lines; S.images = images; S.readCfg = { ocr: cfg.ocr, images: cfg.images };
+    S.lines = lines; S.images = images; S.readCfg = { ocr: cfg.ocr, images: cfg.images, lang: cfg.lang };
   }
 
   /* ---------- deteksi ---------- */
   async function detect() {
     const cfg = readSettings();
     busy(true, 'Mendeteksi soal…', 0.9);
-    const res = CBTParser.parse(S.lines, S.images, { pgPoin: cfg.pgPoin, esaiPoin: cfg.esaiPoin, formatKey: cfg.formatKey, pageCount: S.doc ? S.doc.numPages : 1 });
+    const res = CBTParser.parse(S.lines, S.images, { pgPoin: cfg.pgPoin, esaiPoin: cfg.esaiPoin, formatKey: cfg.formatKey, pageCount: S.pageCount || 1, skipClean: S.kind !== 'pdf' });
     for (const r of res.rows) {
       r.imgE = await makeImage(r.imgsE); r.imgL = await makeImage(r.imgsL);
     }
     S.rows = res.rows; S.notes = res.notes.slice(); S.anyKey = res.rows.some(r => r.tipe !== 'esai' && r.kunci); S.dirty = false;
+    (S.srcNotes || []).slice().reverse().forEach(n => S.notes.unshift(n));
+    if (S.kind === 'image') S.notes.unshift('Teks dibaca dari foto dengan OCR Tesseract. Periksa rumus, simbol, dan angka dengan teliti.');
     if (S.scanned.length) S.notes.unshift('Halaman ' + S.scanned.join(', ') + ' dibaca dengan OCR. Periksa teksnya lebih teliti; gambar pada halaman hasil scan tidak dipotong otomatis.');
     busy(false); render();
   }
 
-  async function handleFile(file) {
-    if (!file) return;
-    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { toast('Pilih berkas berformat PDF.'); return; }
-    $('#fileName').textContent = file.name;
-    try { await readPdf(file); await detect(); }
-    catch (e) { console.error(e); busy(false); toast('PDF tidak bisa dibaca: ' + (e && e.message ? e.message : e)); }
+  async function readImages(files, cfg) {
+    const list = files.slice().sort((x, y) => x.name.localeCompare(y.name, undefined, { numeric: true }));
+    S.doc = null; S.kind = 'image'; S.files = list; S.pageCount = list.length; S.scanned = [];
+    S.name = list.length === 1 ? list[0].name.replace(/\.[^.]+$/, '') : 'soal_foto';
+    const lines = [];
+    for (let i = 0; i < list.length; i++) {
+      const label = 'Foto ' + (i + 1) + ' dari ' + list.length;
+      busy(true, label + ' — menyiapkan gambar…', 0.05 + 0.85 * (i / list.length));
+      const bmp = await createImageBitmap(list[i]);
+      const pr = prepCanvas(bmp, 1800);
+      lines.push(...await ocrLines(pr.canvas, i, pr.scale, cfg.lang, ocrStatus(label, 0.05 + 0.85 * (i / list.length), 0.85 / list.length)));
+    }
+    S.lines = lines; S.images = []; S.readCfg = { ocr: cfg.ocr, images: cfg.images, lang: cfg.lang };
+  }
+  async function readDocx(file, cfg) {
+    busy(true, 'Membaca dokumen Word…', 0.2);
+    const r = await CBTDocx.read(await file.arrayBuffer(), JSZip, DOMParser);
+    const images = [];
+    if (cfg.images) for (const im of r.images) {
+      const bmp = await createImageBitmap(im.blob), cv = document.createElement('canvas');
+      cv.width = bmp.width; cv.height = bmp.height; cv.getContext('2d').drawImage(bmp, 0, 0);
+      images.push({ page: 0, y0: im.y0, canvas: cv });
+    }
+    S.doc = null; S.kind = 'docx'; S.files = null; S.pageCount = 1; S.scanned = []; S.name = file.name.replace(/\.docx$/i, '');
+    S.lines = r.lines; S.images = images; S.readCfg = { ocr: cfg.ocr, images: cfg.images, lang: cfg.lang };
+    S.srcNotes = [];
+    if (r.stats.formulas) S.srcNotes.push(r.stats.formulas + ' rumus berupa gambar/objek MathType tidak bisa dibaca sebagai teks dan diganti penanda [rumus]; kartu terkait diberi peringatan.');
+    if (r.stats.badImages) S.srcNotes.push(r.stats.badImages + ' gambar berformat EMF/WMF tidak bisa ditampilkan peramban dan diganti penanda [gambar].');
+  }
+
+  async function handleFiles(fileList) {
+    const files = Array.from(fileList || []); if (!files.length) return;
+    const first = files[0], cfg = readSettings();
+    const isPdf = f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf';
+    const isDocx = f => /\.docx$/i.test(f.name);
+    const isImg = f => /^image\//.test(f.type) || /\.(png|jpe?g|webp|bmp)$/i.test(f.name);
+    if (/\.doc$/i.test(first.name)) { toast('Format .doc lama tidak didukung. Simpan dulu sebagai .docx.'); return; }
+    if (!isPdf(first) && !isDocx(first) && !isImg(first)) { toast('Pilih berkas PDF, Word (.docx), atau foto/gambar soal.'); return; }
+    $('#fileName').textContent = files.length > 1 ? files.length + ' berkas' : first.name;
+    S.srcNotes = [];
+    try {
+      if (isPdf(first)) await readPdf(first);
+      else if (isDocx(first)) await readDocx(first, cfg);
+      else await readImages(files.filter(isImg), cfg);
+      await detect();
+    } catch (e) { console.error(e); busy(false); toast('Berkas tidak bisa dibaca: ' + (e && e.message ? e.message : e)); }
   }
 
   /* ---------- tampilan ---------- */
@@ -1187,14 +1664,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
         <label class="fl">Izin_Gambar<select data-f="izin"><option value=""></option><option ${r.izin === 'Ya' ? 'selected' : ''}>Ya</option></select></label>
         <label class="fl full">Pembahasan<textarea data-f="pemb" rows="1">${esc(r.pemb)}</textarea></label>
       </div>
-      <div class="imgs">${imgBox(r.imgE, 'Gambar soal', 'rmE')}${imgBox(r.imgL, 'Gambar pembahasan', 'rmL')}</div>
+      <div class="imgs">${imgBox(r.imgE, 'Gambar soal', 'rmE')}${imgBox(r.imgL, 'Gambar pembahasan', 'rmL')}${r.imgE ? '<button type="button" data-act="ocr" title="Membaca teks soal dari gambar dengan Tesseract (gratis)">Baca teks dari gambar (OCR)</button>' : ''}</div>
       <details class="raw"><summary>Teks asli dari PDF</summary><pre>${esc(r.raw)}</pre></details>
     </article>`;
   }
   function autosize(el) { el.style.height = 'auto'; el.style.height = Math.min(520, el.scrollHeight + 2) + 'px'; }
   function render() {
     $('#result').hidden = false;
-    $('#notes').innerHTML = S.notes.map(n => `<div class="note ${/^Pembahasan di akhir|^Halaman/.test(n) ? 'info' : ''}">${esc(n)}</div>`).join('');
+    $('#notes').innerHTML = S.notes.map(n => `<div class="note ${/^Pembahasan di akhir|^Halaman|^Teks dibaca dari foto/.test(n) ? 'info' : ''}">${esc(n)}</div>`).join('');
     renderStats();
     const f = S.filter;
     const rows = S.rows.filter(r => f === 'all' || (f === 'review' && r.status !== 'ok') || (f === 'pg' && r.tipe !== 'esai') || (f === 'esai' && r.tipe === 'esai'));
@@ -1246,6 +1723,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       const card = b.closest('.q'), r = byId(card.dataset.id), i = S.rows.indexOf(r), act = b.dataset.act;
       if (act === 'rmE') { r.imgE = null; S.dirty = true; revalidate(r); card.outerHTML = cardHTML(r); renderStats(); return; }
       if (act === 'rmL') { r.imgL = null; S.dirty = true; revalidate(r); card.outerHTML = cardHTML(r); renderStats(); return; }
+      if (act === 'ocr') { ocrRow(r, card); return; }
       S.dirty = true;
       if (act === 'del') { S.rows.splice(i, 1); }
       else if (act === 'merge' && i > 0) {
@@ -1264,6 +1742,29 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       renumber(); S.rows.forEach(revalidate); render();
     });
     document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { S.filter = c.dataset.filter; render(); }));
+  }
+
+
+  async function ocrRow(r, card) {
+    if (!r.imgE) return;
+    if ((r.q || '').length > 20 && !confirm('Teks soal akan diganti dengan hasil OCR dari gambar. Lanjutkan?')) return;
+    const cfg = readSettings();
+    try {
+      busy(true, 'OCR gambar soal — menyiapkan…', 0.1);
+      const bmp = await createImageBitmap(r.imgE.blob), pr = prepCanvas(bmp, 1800);
+      const lines = await ocrLines(pr.canvas, 0, pr.scale, cfg.lang, ocrStatus('OCR gambar soal', 0.1, 0.8));
+      busy(false);
+      const res = CBTParser.parseFragment(lines, { pgPoin: cfg.pgPoin, esaiPoin: cfg.esaiPoin, formatKey: false });
+      if (!res || !res.q) { toast('Tidak ada teks yang terbaca dari gambar.'); return; }
+      r.q = res.q;
+      if (res.tipe === 'pg_teks') { r.tipe = 'pg_teks'; r.opts = res.opts.slice(0, 5); if (res.kunci && !r.kunci) { r.kunci = res.kunci; r.keySrc = 'ocr'; } }
+      r.fixed = (r.fixed || []).filter(x => !/OCR/.test(x)); r.fixed.push('Teks dibaca dengan OCR dari gambar — periksa rumus dan simbol');
+      S.dirty = true; revalidate(r);
+      card.outerHTML = cardHTML(r);
+      const nc = $('#list').querySelector('[data-id="' + r.id + '"]'); if (nc) nc.querySelectorAll('textarea').forEach(autosize);
+      renderStats();
+      toast(res.tipe === 'pg_teks' ? 'Teks soal dan opsi berhasil dibaca. Periksa hasilnya.' : 'Teks soal dibaca; opsi tidak terdeteksi di gambar.');
+    } catch (e) { console.error(e); busy(false); toast('OCR gagal: ' + e.message); }
   }
 
   /* ---------- tempel kunci ---------- */
@@ -1343,14 +1844,14 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 
   /* ---------- deteksi ulang ---------- */
   async function redetect() {
-    if (!S.doc) return;
+    if (!S.kind) return;
     if (S.dirty && !confirm('Deteksi ulang akan menimpa semua suntingan Anda. Lanjutkan?')) return;
-    const cfg = readSettings();
+    const cfg = readSettings(), rc = S.readCfg || {};
     try {
-      if (!S.readCfg || S.readCfg.ocr !== cfg.ocr || S.readCfg.images !== cfg.images) {
+      if (S.kind === 'pdf' && S.doc && (rc.ocr !== cfg.ocr || rc.images !== cfg.images || rc.lang !== cfg.lang)) {
         const bytes = await S.doc.getData();
         await readPdf(new File([bytes], S.name + '.pdf', { type: 'application/pdf' }));
-      }
+      } else if (S.kind === 'image' && S.files && rc.lang !== cfg.lang) await readImages(S.files, cfg);
       await detect();
     } catch (e) { console.error(e); busy(false); toast('Gagal mendeteksi ulang: ' + e.message); }
   }
@@ -1358,10 +1859,10 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   /* ---------- init ---------- */
   function init() {
     const drop = $('#drop'), input = $('#file');
-    input.addEventListener('change', () => handleFile(input.files[0]));
+    input.addEventListener('change', () => handleFiles(input.files));
     ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
     ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-    drop.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+    drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
     $('#btnXlsx').addEventListener('click', () => exportXlsx().catch(e => { console.error(e); toast('Gagal membuat Excel: ' + e.message); }));
     $('#btnZip').addEventListener('click', () => exportZip().catch(e => { console.error(e); toast('Gagal membuat ZIP: ' + e.message); }));
     $('#btnRedetect').addEventListener('click', redetect);
