@@ -1454,6 +1454,28 @@ window.addEventListener('appinstalled', () => {
             📄 Atau Impor Tabel ATP dari Word
           </button>
 
+          <div id="panelImporWord" style="display:none;margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-surface);">
+            <div class="form-group">
+              <label>Kelas tujuan untuk data ini</label>
+              <select id="importAtpKelas">
+                <option value="7">Kelas VII</option>
+                <option value="8">Kelas VIII</option>
+                <option value="9">Kelas IX</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Pilih file ATP (.docx)</label>
+              <input type="file" id="importAtpFile" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="bacaFileATPWord(this)">
+            </div>
+            <div class="form-group">
+              <label>Atau tempel tabel hasil copy dari Word (kolom dipisah TAB)</label>
+              <textarea id="importAtpTeks" rows="6" placeholder="Bab&#9;Alur Tujuan Pembelajaran&#9;Materi&#9;Alokasi Waktu
+Bab 1 : ...&#9;Peserta didik mampu ...&#9;Materi ...&#9;4 JP"></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;" onclick="importTabelATPWord()">📥 Impor Tabel ATP</button>
+            <p class="text-muted" style="font-size:11px;margin-top:6px;">Format tabel: Bab | Alur Tujuan Pembelajaran | Materi | Alokasi Waktu (baris "SEMESTER 1/2" &amp; "Total" otomatis dilewati; sel Bab yang digabung otomatis mengikuti Bab di atasnya). Alokasi Waktu boleh kosong atau berupa "4 JP".</p>
+          </div>
+
           <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;" onclick="toggleImporBuku()" id="btnToggleImporBuku">
             📖 Atau Impor Materi dari Buku Paket
           </button>
@@ -4102,6 +4124,105 @@ function _pastikanTpTopik() {
  *  Kelas yang belum diatur diisi otomatis: TP dibagi berurutan menjadi
  *  3 bagian (VII → VIII → IX) sesuai urutan kemunculan dalam CP.
  *  Guru bisa menimpa manual lewat dropdown per TP. */
+/** Baca SATU berkas dari dalam file ZIP (.docx) langsung di browser, tanpa
+    pustaka luar. Daftar berkas dibaca dari "central directory" ZIP, lalu isi
+    yg terkompresi (deflate) dibuka dgn DecompressionStream bawaan browser. */
+async function _bacaEntriZip(buffer, namaDicari) {
+  const u8 = new Uint8Array(buffer);
+  const dv = new DataView(buffer);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Ini bukan file Word .docx yang valid (file .doc lama belum didukung — simpan ulang sbg .docx).');
+  const jumlah = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const dec = new TextDecoder();
+  for (let n = 0; n < jumlah; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const metode   = dv.getUint16(p + 10, true);
+    const ukuranKp = dv.getUint32(p + 20, true);
+    const lenNama  = dv.getUint16(p + 28, true);
+    const lenExtra = dv.getUint16(p + 30, true);
+    const lenKomen = dv.getUint16(p + 32, true);
+    const offLokal = dv.getUint32(p + 42, true);
+    const nama = dec.decode(u8.subarray(p + 46, p + 46 + lenNama));
+    if (nama === namaDicari) {
+      const mulai = offLokal + 30 + dv.getUint16(offLokal + 26, true) + dv.getUint16(offLokal + 28, true);
+      const data  = u8.subarray(mulai, mulai + ukuranKp);
+      if (metode === 0) return dec.decode(data);
+      if (metode === 8) {
+        const aliran = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        return await new Response(aliran).text();
+      }
+      throw new Error('Metode kompresi file Word tidak didukung.');
+    }
+    p += 46 + lenNama + lenExtra + lenKomen;
+  }
+  throw new Error(namaDicari + ' tidak ditemukan di dalam file.');
+}
+
+/** Ubah isi word/document.xml jadi teks TAB-delimited (sama persis dgn hasil
+    copy tabel Word) utk _parseTabelATPWord. Sel gabungan horizontal (gridSpan)
+    diisi kolom kosong supaya kolom tetap sejajar; sel gabungan vertikal
+    (vMerge, mis. kolom Bab) kosong sehingga parser meneruskan Bab di atasnya. */
+function _docxXmlKeTsvATP(xmlStr) {
+  const doc = new DOMParser().parseFromString(xmlStr, 'application/xml');
+  if (doc.getElementsByTagName('parsererror').length) throw new Error('Isi dokumen Word tidak bisa dibaca.');
+  const teksParagraf = p => Array.from(p.getElementsByTagName('w:t')).map(t => t.textContent).join('');
+  const teksSel = tc => Array.from(tc.getElementsByTagName('w:p')).map(teksParagraf)
+    .filter(s => s.trim()).join(' ').replace(/[\t\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const tabelCocok = Array.from(doc.getElementsByTagName('w:tbl')).filter(t => {
+    const baris1 = t.getElementsByTagName('w:tr')[0];
+    if (!baris1) return false;
+    const selJudul = Array.from(baris1.childNodes).filter(n => n.nodeName === 'w:tc').map(teksSel);
+    return selJudul.length >= 3 && selJudul.some(s => /tujuan\s+pembelajaran/i.test(s));
+  });
+  if (!tabelCocok.length) throw new Error('Tabel ATP (kolom "Alur Tujuan Pembelajaran") tidak ditemukan di dokumen ini.');
+
+  const baris = [];
+  tabelCocok.forEach((tbl, ti) => {
+    Array.from(tbl.getElementsByTagName('w:tr')).forEach((tr, ri) => {
+      if (ti > 0 && ri === 0) return; /* judul kolom hanya sekali */
+      const sel = [];
+      Array.from(tr.childNodes).filter(n => n.nodeName === 'w:tc').forEach(tc => {
+        sel.push(teksSel(tc));
+        const gs = tc.getElementsByTagName('w:gridSpan')[0];
+        const span = gs ? parseInt(gs.getAttribute('w:val'), 10) : 1;
+        for (let s = 1; s < span; s++) sel.push('');
+      });
+      baris.push(sel.join('\t'));
+    });
+  });
+
+  const teksPenuh = Array.from(doc.getElementsByTagName('w:p')).map(teksParagraf).join('\n');
+  const m = teksPenuh.match(/Kelas[^IVX0-9\n]{0,30}(VIII|VII|IX)\b/);
+  const kelas = m ? { VII: 7, VIII: 8, IX: 9 }[m[1]] : null;
+  return { tsv: baris.join('\n'), kelas };
+}
+
+/** Dipanggil saat guru memilih file .docx ATP: baca, isi kotak tempel & kelas tujuan */
+async function bacaFileATPWord(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  try {
+    if (typeof DecompressionStream === 'undefined') {
+      throw new Error('Browser ini belum bisa membaca .docx langsung — pakai cara tempel tabel di bawah.');
+    }
+    const xml = await _bacaEntriZip(await f.arrayBuffer(), 'word/document.xml');
+    const { tsv, kelas } = _docxXmlKeTsvATP(xml);
+    const jumlah = _parseTabelATPWord(tsv).length;
+    if (!jumlah) throw new Error('Tabel ditemukan, tapi tidak ada baris TP yang terbaca.');
+    document.getElementById('importAtpTeks').value = tsv;
+    if (kelas) document.getElementById('importAtpKelas').value = String(kelas);
+    showToast(`📄 ${jumlah} TP terbaca${kelas ? ' — Kelas ' + KELAS_ROMAWI[kelas] + ' terdeteksi' : ''}. Cek kelas tujuan, lalu tekan "Impor Tabel ATP".`);
+  } catch (e) {
+    showToast('⚠️ ' + (e && e.message ? e.message : e), 'warning');
+  }
+  input.value = '';
+}
+
 /** Buka/tutup panel Impor Tabel ATP dari Word */
 function toggleImporWord() {
   const panel = document.getElementById('panelImporWord');
@@ -4158,7 +4279,7 @@ function _parseTabelATPWord(teks) {
       bab: babAktif,
       tp,
       materi,
-      alokasi: /^\d+$/.test(alokasiRaw) ? parseInt(alokasiRaw, 10) : null,
+      alokasi: (/^(\d+)\s*(?:jp|jam(?:\s*pelajaran)?)?$/i.exec(alokasiRaw) || [])[1] ? parseInt(/^(\d+)/.exec(alokasiRaw)[1], 10) : null,
     });
   }
   return hasil;
