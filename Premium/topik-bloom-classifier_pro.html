@@ -6792,6 +6792,11 @@ async function atpBacaDocx(buffer) {
     var cur = null;
     for (var bj = mulai + 1; bj < terbaik.bi; bj++) {
       var tt = blok[bj].j === 'p' ? blok[bj].t : ''; if (!tt) continue;
+      // Bentuk satu paragraf: "Elemen Pancasila: Memahami sejarah ..." (judul elemen + narasi dipisah titik dua)
+      var inl = tt.replace(/^[\s\u2022\u25CF\u25AA\-\d.)]+/, '').match(/^([^:;,]{3,90}?)\s*:\s*(.{60,})$/);
+      if (inl && !/^pada akhir/i.test(inl[1]) && (/^elemen\b/i.test(inl[1]) || inl[1].length <= 50)) {
+        cur = { elemen: inl[1].replace(/^elemen\s+/i, '').trim(), narasi: inl[2].trim() }; cps.push(cur); continue;
+      }
       var judulElemen = tt.length <= 60 && !/[.;]$/.test(tt) && !/^pada akhir/i.test(tt);
       if (judulElemen) { cur = { elemen: tt.replace(/^[-•\d.\s]+/, '').replace(/[:\s]+$/, ''), narasi: '' }; cps.push(cur); }
       else if (cur) cur.narasi += (cur.narasi ? ' ' : '') + tt;
@@ -6950,9 +6955,11 @@ function atpImpor() {
     var item = materiAda[_atpNorm(nm)];
     if (item) lap.matAda++; else { item = dbAddMateri(mapel, kelas, nm); materiAda[_atpNorm(nm)] = item; lap.matBaru++; }
     var tpCur = _kurGetCurrent('tp', tpId), cpTp = tpCur ? tpCur.cp_id : cpId, ref = item.kurikulum_ref;
+    if (item._atpImpor && ref && ref.tp_ids) { if (ref.tp_ids.indexOf(tpId) < 0) { ref.tp_ids.push(tpId); lap.linkTambah = (lap.linkTambah || 0) + 1; } return; } // materi yang sama dipakai beberapa TP
     if (ref && (ref.cp_id || (ref.tp_ids && ref.tp_ids.length)) && !(ref.tp_ids && ref.tp_ids.indexOf(tpId) >= 0)) { lap.linkLain++; return; }
     var cpC = kurGetCpCurrent(cpTp);
     item.kurikulum_ref = { kurikulum_id: cpC ? cpC.kurikulum_id : kurId, cp_id: cpTp, tp_ids: [tpId], atp_id: null, kd_ids: [], indikator_ids: [] };
+    Object.defineProperty(item, '_atpImpor', { value: true, enumerable: false, configurable: true });
     lap.link++;
   });
 
@@ -6971,7 +6978,7 @@ function atpImpor() {
   try { kurRefreshAll(); } catch (e) {}
   closeModal('modalImporATP');
   alert('Impor selesai.\nCP: ' + lap.cpBaru + ' baru, ' + lap.cpAda + ' sudah ada\nTP: ' + lap.tpBaru + ' baru, ' + lap.tpAda + ' sudah ada' +
-    (lap.tanpaCp ? ' (' + lap.tanpaCp + ' dilewati karena tidak ada CP)' : '') + '\nMateri: ' + lap.matBaru + ' baru, ' + lap.matAda + ' sudah ada\nTerhubung ke kurikulum: ' + lap.link +
+    (lap.tanpaCp ? ' (' + lap.tanpaCp + ' dilewati karena tidak ada CP)' : '') + '\nMateri: ' + lap.matBaru + ' baru, ' + lap.matAda + ' sudah ada\nTerhubung ke kurikulum: ' + lap.link + (lap.linkTambah ? ' (+' + lap.linkTambah + ' TP tambahan pada materi yang sama)' : '') +
     (lap.linkLain ? ' (' + lap.linkLain + ' materi sudah terhubung ke TP lain, tidak ditimpa)' : '') + '\nATP: ' + lap.atpBaru + ' baru' + (lap.atpAda ? ', ' + lap.atpAda + ' sudah ada' : ''));
 }
 
