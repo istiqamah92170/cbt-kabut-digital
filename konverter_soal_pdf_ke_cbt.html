@@ -155,6 +155,12 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
+.more { display: flex; gap: 10px 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 12px; color: var(--muted); font-size: 13.5px; }
+.rawedit { width: 100%; margin-top: 8px; font: 12.5px/1.5 ui-monospace, Menlo, Consolas, monospace; min-height: 120px; }
+.rawtools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.rawtools button { font-size: 13px; padding: 8px 12px; }
+details.raw .hint { color: var(--muted); font-size: 12.5px; margin: 8px 0 0; }
+
 </style>
 </head>
 <body>
@@ -173,6 +179,8 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     <span>PDF (teks asli atau hasil scan), Word .docx, atau satu/beberapa foto soal (JPG, PNG).</span>
     <div class="file" id="fileName"></div>
   </label>
+  <div class="more"><span>Soal tersebar di beberapa berkas? Baca yang pertama dulu, lalu pakai <b>Tambah berkas lain</b> agar nomor dilanjutkan.</span>
+    <button type="button" id="btnImportTop">Lanjutkan dari Excel CBT yang sudah dibuat</button></div>
 
   <details class="panel">
     <summary>Pengaturan deteksi</summary>
@@ -214,6 +222,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     <div class="summary">
       <div class="stats" id="stats"></div>
       <div class="actions">
+        <button type="button" id="btnAdd" title="Baca berkas berikutnya dan tambahkan di akhir daftar; nomor dilanjutkan">+ Tambah berkas lain</button>
         <button type="button" id="btnZip" hidden>Unduh gambar</button>
         <button type="button" class="primary" id="btnXlsx">Unduh Excel (.xlsx)</button>
       </div>
@@ -239,6 +248,9 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
         <button type="button" class="chip" data-filter="esai" aria-pressed="false">Esai <i></i></button>
       </div>
       <div class="actions">
+        <button type="button" id="btnImport" title="Gabungkan soal dari Excel CBT yang pernah diunduh">Gabung dari Excel</button>
+        <input type="file" id="addFile" multiple hidden accept="application/pdf,.pdf,.docx,image/*">
+        <input type="file" id="importFile" hidden accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <button type="button" id="btnAux" hidden title="PDF yang disimpan dari dokumen Word yang sama">Lampirkan PDF dokumen</button>
         <button type="button" id="btnGrabReview" hidden title="Potong gambar semua soal yang bertanda perlu dicek">Ambil gambar soal yang perlu dicek</button>
         <input type="file" id="auxFile" accept="application/pdf,.pdf" hidden>
@@ -675,6 +687,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     });
     const row = {
       regions: [...reg.values()].sort((a, b) => a.page - b.page),
+      rawLines: b.lines,
       num: b.start.num, tipe: 'esai', poin: cfg.esaiPoin, q: '', opts: ['', '', '', '', ''],
       kunci: '', pemb: '', izin: '', warns: [], status: 'ok',
       raw: b.lines.map(l => l.text).join('\n'),
@@ -888,15 +901,21 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 
 
   /* ---------- hasil OCR satu gambar soal → satu baris (tanpa rantai nomor) ---------- */
-  function parseFragment(rawLines, cfgIn) {
+  function finalizeRow(r, anyKey) {
+    r.hasImg = !!(r.imgE || (r.imgsE && r.imgsE.length));
+    if (r.tipe === 'esai' && !r.izin && RE_DRAW.test(r.q || '')) r.izin = 'Ya';
+    const v = validateRow(r, anyKey);
+    r.warns = v.warns; r.status = v.status;
+    return r;
+  }
+  function parseFragment(rawLines, cfgIn, opt) {
     const cfg = Object.assign({ pgPoin: 2, esaiPoin: 5, formatKey: false }, cfgIn || {});
-    let lines = rawLines.filter(L => L.text.trim());
+    const lines = rawLines.filter(L => L.text.trim());
     if (!lines.length) return null;
-    const m = matchStart(lines[0].text);
+    const m = !(opt && opt.noStrip) ? matchStart(lines[0].text) : null;
     const first = m ? clone(lines[0], m.offset) : lines[0];
     const row = buildRow({ start: { num: m ? m.num : 0 }, lines: [first].concat(lines.slice(1)), startLine: lines[0] }, cfg);
-    row.hasImg = false;
-    return row;
+    return finalizeRow(row, false);
   }
 
   /* ---------- tempel kunci manual ---------- */
@@ -908,7 +927,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     return null;
   }
 
-  return { parse, parseFragment, validateRow, parsePastedKeys, cleanLines, matchStart, isSectionHeading, joinLines, LETTERS };
+  return { parse, parseFragment, finalizeRow, validateRow, parsePastedKeys, cleanLines, matchStart, isSectionHeading, joinLines, LETTERS };
 });
 
 </script>
@@ -1613,7 +1632,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 
   const S = {
     name: '', doc: null, lines: [], images: [], rows: [], notes: [], filter: 'all',
-    dirty: false, bitmaps: [], aux: null, readCfg: null, anyKey: false, scanned: [], kind: '', files: null, pageCount: 1, srcNotes: []
+    dirty: false, batchSeq: 0, batchInfo: [], cur: null, bitmaps: [], aux: null, readCfg: null, anyKey: false, scanned: [], kind: '', files: null, pageCount: 1, srcNotes: []
   };
 
   /* ---------- UI helpers ---------- */
@@ -1815,18 +1834,40 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   }
 
   /* ---------- deteksi ---------- */
-  async function detect() {
+  const notesAll = () => S.batchInfo.flatMap(b => b.notes.map(n => (S.batchInfo.length > 1 ? '[' + b.name + '] ' : '') + n));
+  const exportBase = () => (S.batchInfo.length > 1 ? 'soal_gabungan' : ((S.batchInfo[0] && S.batchInfo[0].name) || S.name || 'soal'));
+  function refreshAll() {
+    renumber(); S.anyKey = S.rows.some(r => r.tipe !== 'esai' && r.kunci); S.rows.forEach(revalidate);
+    S.notes = notesAll(); $('#fileName').textContent = S.batchInfo.map(b => b.name).join(' + ');
+  }
+  /* opt.append: tambahkan di akhir daftar (nomor dilanjutkan); opt.replaceBatch: ganti soal dari satu berkas saja */
+  async function detect(opt) {
+    opt = opt || {};
     const cfg = readSettings();
     busy(true, 'Mendeteksi soal…', 0.9);
     const res = CBTParser.parse(S.lines, S.images, { pgPoin: cfg.pgPoin, esaiPoin: cfg.esaiPoin, formatKey: cfg.formatKey, pageCount: S.pageCount || 1, skipClean: S.kind !== 'pdf' });
+    const batchId = opt.replaceBatch || ++S.batchSeq;
+    const src = S.kind === 'pdf' && S.doc ? { kind: 'pdf', doc: S.doc, id: 'b' + batchId } : (S.kind === 'image' ? { kind: 'image', bitmaps: S.bitmaps } : null);
     for (const r of res.rows) {
       r.imgE = await makeImage(r.imgsE); r.imgL = await makeImage(r.imgsL);
+      r.batch = batchId; r.srcName = S.name; r.src = src; r.needsAux = S.kind === 'docx';
     }
-    S.rows = res.rows; if (S.aux && S.kind === 'docx') mapAux(); S.notes = res.notes.slice(); S.anyKey = res.rows.some(r => r.tipe !== 'esai' && r.kunci); S.dirty = false;
-    (S.srcNotes || []).slice().reverse().forEach(n => S.notes.unshift(n));
-    if (S.kind === 'image') S.notes.unshift('Teks dibaca dari foto dengan OCR Tesseract. Periksa rumus, simbol, dan angka dengan teliti.');
-    if (S.scanned.length) S.notes.unshift('Halaman ' + S.scanned.join(', ') + ' dibaca dengan OCR. Periksa teksnya lebih teliti; gambar pada halaman hasil scan tidak dipotong otomatis.');
-    busy(false); render();
+    const bn = res.notes.slice();
+    (S.srcNotes || []).slice().reverse().forEach(n => bn.unshift(n));
+    if (S.kind === 'image') bn.unshift('Teks dibaca dari foto dengan OCR Tesseract. Periksa rumus, simbol, dan angka dengan teliti.');
+    if (S.scanned.length) bn.unshift('Halaman ' + S.scanned.join(', ') + ' dibaca dengan OCR. Periksa teksnya lebih teliti; gambar pada halaman hasil scan tidak dipotong otomatis.');
+    if (opt.replaceBatch) {
+      const idx = S.rows.findIndex(r => r.batch === batchId), rest = S.rows.filter(r => r.batch !== batchId);
+      rest.splice(idx < 0 ? rest.length : idx, 0, ...res.rows); S.rows = rest;
+    } else if (opt.append) S.rows = S.rows.concat(res.rows);
+    else { S.rows = res.rows; S.batchInfo = []; }
+    const bi = S.batchInfo.find(b => b.id === batchId);
+    if (bi) { bi.notes = bn; bi.name = S.name; } else S.batchInfo.push({ id: batchId, name: S.name, notes: bn });
+    S.cur = { id: batchId };
+    if (S.aux && S.kind === 'docx') mapAux();
+    if (!opt.append) S.dirty = false;
+    refreshAll(); busy(false); render();
+    if (opt.append) toast(res.rows.length + ' soal ditambahkan. Total sekarang ' + S.rows.length + ' soal; nomor dilanjutkan.');
   }
 
   async function readImages(files, cfg) {
@@ -1861,7 +1902,8 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     if (r.stats.badImages) S.srcNotes.push(r.stats.badImages + ' gambar berformat EMF/WMF tidak bisa ditampilkan peramban dan diganti penanda [gambar].');
   }
 
-  async function handleFiles(fileList) {
+  async function handleFiles(fileList, opt) {
+    const append = !!(opt && opt.append);
     const files = Array.from(fileList || []); if (!files.length) return;
     const first = files[0], cfg = readSettings();
     const isPdf = f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf';
@@ -1869,13 +1911,13 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     const isImg = f => /^image\//.test(f.type) || /\.(png|jpe?g|webp|bmp)$/i.test(f.name);
     if (/\.doc$/i.test(first.name)) { toast('Format .doc lama tidak didukung. Simpan dulu sebagai .docx.'); return; }
     if (!isPdf(first) && !isDocx(first) && !isImg(first)) { toast('Pilih berkas PDF, Word (.docx), atau foto/gambar soal.'); return; }
-    $('#fileName').textContent = files.length > 1 ? files.length + ' berkas' : first.name;
+    if (!append && S.rows.length && !confirm('Mulai dari awal? Semua soal yang sudah ada akan diganti.\n\nUntuk MELANJUTKAN soal dari berkas berikutnya, tekan Batal lalu pakai tombol "Tambah berkas lain".')) return;
     S.srcNotes = []; S.aux = null; pageCache.clear();
     try {
       if (isPdf(first)) await readPdf(first);
       else if (isDocx(first)) await readDocx(first, cfg);
       else await readImages(files.filter(isImg), cfg);
-      await detect();
+      await detect({ append });
     } catch (e) { console.error(e); busy(false); toast('Berkas tidak bisa dibaca: ' + (e && e.message ? e.message : e)); }
   }
 
@@ -1925,7 +1967,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
         <label class="fl" style="grid-auto-flow:column;align-items:center;gap:6px">Poin <input class="poin" type="number" min="0" step="0.5" data-f="poin" value="${esc(r.poin)}"></label>
         ${r.keySrc && choice && r.kunci ? `<span class="pill" title="Dari mana kunci ini dibaca">kunci: ${esc(r.keySrc)}</span>` : ''}
         <span class="sp"></span>
-        <span class="rowtools"><button type="button" class="ghost" data-act="merge" ${r.no === 1 ? 'disabled' : ''}>Gabung ke atas</button><button type="button" class="ghost" data-act="add">Tambah di bawah</button><button type="button" class="ghost" data-act="del">Hapus</button></span>
+        <span class="rowtools"><button type="button" class="ghost" data-act="split" title="Pisahkan soal yang menyatu menjadi dua">Pisahkan soal</button><button type="button" class="ghost" data-act="merge" ${r.no === 1 ? 'disabled' : ''}>Gabung ke atas</button><button type="button" class="ghost" data-act="add">Tambah di bawah</button><button type="button" class="ghost" data-act="del">Hapus</button></span>
       </div>
       <div class="warns">${warnHTML(r)}</div>
       <div class="grid">
@@ -1934,22 +1976,27 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
         ${keyField}
         <label class="fl">Izin_Gambar<select data-f="izin"><option value=""></option><option ${r.izin === 'Ya' ? 'selected' : ''}>Ya</option></select></label>
         <label class="fl full">Pembahasan<textarea data-f="pemb" rows="1">${esc(r.pemb)}</textarea></label>
+        ${(r.urlE || r.urlL) ? `<label class="fl">URL_Gambar<input type="text" data-f="urlE" value="${esc(r.urlE || '')}"></label><label class="fl">URL_Gambar_Pembahasan<input type="text" data-f="urlL" value="${esc(r.urlL || '')}"></label>` : ''}
       </div>
       <div class="imgs">${imgBox(r.imgE, 'Gambar soal', 'rmE', 'E')}${imgBox(r.imgL, 'Gambar pembahasan', 'rmL', 'L')}</div>
       <div class="imgacts">${canGrab(r) ? `<button type="button" data-act="grab" title="Memotong soal ini dari halaman sumber sebagai gambar">Ambil gambar soal</button>` : ''}${r.imgE ? `<button type="button" data-act="ocr" title="Membaca teks soal dari gambar dengan Tesseract (gratis)">Baca teks dari gambar (OCR)</button>` : ''}${r.imgE && r.tipe !== 'pg_gambar' ? `<button type="button" data-act="topg">Jadikan pg_gambar</button>` : ''}</div>
-      <details class="raw"><summary>Teks asli dari PDF</summary><pre>${esc(r.raw)}</pre></details>
+      <details class="raw"><summary>Teks asli dan pisahkan soal</summary>
+        <textarea class="rawedit" rows="7" spellcheck="false" aria-label="Teks asli soal">${esc(r.raw)}</textarea>
+        <div class="rawtools"><button type="button" data-act="splitcur">Pisahkan di kursor</button><button type="button" data-act="redetectrow">Deteksi ulang dari teks ini</button></div>
+        <p class="hint">Soal menyatu? Klik di titik awal soal kedua (sebelum nomornya) lalu tekan "Pisahkan di kursor". Teks yang salah dibaca juga bisa diperbaiki di sini, lalu tekan "Deteksi ulang dari teks ini".</p>
+      </details>
     </article>`;
   }
   function autosize(el) { el.style.height = 'auto'; el.style.height = Math.min(520, el.scrollHeight + 2) + 'px'; }
   function render() {
     $('#result').hidden = false;
-    $('#notes').innerHTML = S.notes.map(n => `<div class="note ${/^Pembahasan di akhir|^Halaman|^Teks dibaca dari foto|^Untuk soal Word/.test(n) ? 'info' : ''}">${esc(n)}</div>`).join('');
+    $('#notes').innerHTML = S.notes.map(n => `<div class="note ${/^(\[[^\]]*\] )?(Pembahasan di akhir|Halaman|Teks dibaca dari foto|Untuk soal Word|Diimpor dari Excel)/.test(n) ? 'info' : ''}">${esc(n)}</div>`).join('');
     renderStats();
     const f = S.filter;
     const rows = S.rows.filter(r => f === 'all' || (f === 'review' && r.status !== 'ok') || (f === 'pg' && r.tipe !== 'esai') || (f === 'esai' && r.tipe === 'esai'));
     const list = $('#list');
     list.innerHTML = rows.length ? rows.map(cardHTML).join('') : `<div class="empty">${S.rows.length ? 'Tidak ada soal pada filter ini.' : 'Belum ada soal terdeteksi. Pastikan soal diawali nomor seperti "1." atau "1)".'}</div>`;
-    list.querySelectorAll('textarea').forEach(autosize);
+    list.querySelectorAll('textarea[data-f]').forEach(autosize);
   }
   function refreshCard(card, r) {
     revalidate(r);
@@ -1961,7 +2008,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   const byId = id => S.rows.find(r => r.id === id);
 
   function applyField(r, f, v) {
-    if (f === 'q' || f === 'pemb' || f === 'izin') r[f] = v;
+    if (f === 'q' || f === 'pemb' || f === 'izin' || f === 'urlE' || f === 'urlL') r[f] = v;
     else if (f === 'poin') r.poin = v === '' ? '' : +v;
     else if (/^o[0-4]$/.test(f)) r.opts[+f[1]] = v;
     else if (f === 'kunci') { r.kunci = r.tipe === 'esai' ? v : v.toUpperCase(); r.keySrc = 'manual'; }
@@ -1987,7 +2034,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       const r = byId(card.dataset.id); if (!r) return;
       applyField(r, el.dataset.f, el.value); S.dirty = true;
       S.anyKey = S.anyKey || !!(r.tipe !== 'esai' && r.kunci);
-      if (el.dataset.f === 'tipe') { revalidate(r); card.outerHTML = cardHTML(r); const nc = list.querySelector(`[data-id="${r.id}"]`); nc.querySelectorAll('textarea').forEach(autosize); renderStats(); }
+      if (el.dataset.f === 'tipe') { revalidate(r); card.outerHTML = cardHTML(r); const nc = list.querySelector(`[data-id="${r.id}"]`); nc.querySelectorAll('textarea[data-f]').forEach(autosize); renderStats(); }
       else refreshCard(card, r);
     });
     list.addEventListener('click', e => {
@@ -1995,6 +2042,9 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       const card = b.closest('.q'), r = byId(card.dataset.id), i = S.rows.indexOf(r), act = b.dataset.act;
       if (act === 'rmE') { r.imgE = null; S.dirty = true; revalidate(r); card.outerHTML = cardHTML(r); renderStats(); return; }
       if (act === 'rmL') { r.imgL = null; S.dirty = true; revalidate(r); card.outerHTML = cardHTML(r); renderStats(); return; }
+      if (act === 'split') { const d = card.querySelector('details.raw'); d.open = true; d.querySelector('textarea').focus(); toast('Klik di titik awal soal kedua pada kotak teks, lalu tekan "Pisahkan di kursor".'); return; }
+      if (act === 'splitcur') { splitRow(r, card); return; }
+      if (act === 'redetectrow') { redetectRow(r, card); return; }
       if (act === 'ocr') { ocrRow(r, card); return; }
       if (act === 'grab') { grabAction(r, card); return; }
       if (act === 'dl') { const im = b.dataset.k === 'L' ? r.imgL : r.imgE; if (im) download(im.blob, imgName(b.dataset.k, r)); return; }
@@ -2037,7 +2087,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       r.fixed = (r.fixed || []).filter(x => !/OCR/.test(x)); r.fixed.push('Teks dibaca dengan OCR dari gambar — periksa rumus dan simbol');
       S.dirty = true; revalidate(r);
       card.outerHTML = cardHTML(r);
-      const nc = $('#list').querySelector('[data-id="' + r.id + '"]'); if (nc) nc.querySelectorAll('textarea').forEach(autosize);
+      const nc = $('#list').querySelector('[data-id="' + r.id + '"]'); if (nc) nc.querySelectorAll('textarea[data-f]').forEach(autosize);
       renderStats();
       toast(res.tipe === 'pg_teks' ? 'Teks soal dan opsi berhasil dibaca. Periksa hasilnya.' : 'Teks soal dibaca; opsi tidak terdeteksi di gambar.');
     } catch (e) { console.error(e); busy(false); toast('OCR gagal: ' + e.message); }
@@ -2057,13 +2107,8 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     if (pageCache.size > 6) pageCache.delete(pageCache.keys().next().value);
     const res = { img: cv, scale: sc }; pageCache.set(key, res); return res;
   }
-  function sourceOf(r) {
-    if (r.src) return r.src;
-    if (S.kind === 'pdf' && S.doc) return { kind: 'pdf', doc: S.doc, id: 'main' };
-    if (S.kind === 'image' && S.bitmaps.length) return { kind: 'image', bitmaps: S.bitmaps };
-    return null;
-  }
-  const canGrab = r => (r.regions && r.regions.length && sourceOf(r)) || S.kind === 'docx';
+  const sourceOf = r => r.src || null;
+  const canGrab = r => !!((r.regions && r.regions.length && sourceOf(r)) || r.needsAux);
   async function grabRow(r) {
     const src = sourceOf(r);
     if (!src || !r.regions || !r.regions.length) return false;
@@ -2083,7 +2128,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   }
   async function grabAction(r, card) {
     if (!r.regions || !r.regions.length || !sourceOf(r)) {
-      if (S.kind === 'docx') { toast('Untuk dokumen Word, lampirkan dulu PDF dari dokumen yang sama (Word → Simpan sebagai PDF).'); $('#auxFile').click(); }
+      if (r.needsAux) { toast('Untuk dokumen Word, lampirkan dulu PDF dari dokumen yang sama (Word → Simpan sebagai PDF).'); $('#auxFile').click(); }
       else toast('Posisi soal ini di halaman tidak diketahui.');
       return;
     }
@@ -2093,7 +2138,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       const ok = await grabRow(r); busy(false);
       if (!ok) { toast('Gambar soal tidak bisa dipotong.'); return; }
       card.outerHTML = cardHTML(r);
-      const nc = $('#list').querySelector('[data-id="' + r.id + '"]'); if (nc) nc.querySelectorAll('textarea').forEach(autosize);
+      const nc = $('#list').querySelector('[data-id="' + r.id + '"]'); if (nc) nc.querySelectorAll('textarea[data-f]').forEach(autosize);
       renderStats();
       toast('Gambar soal diambil. Jadikan pg_gambar, atau unduh/salin untuk dibaca dengan OCR lain.');
     } catch (e) { console.error(e); busy(false); toast('Gagal mengambil gambar: ' + e.message); }
@@ -2116,7 +2161,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   /* PDF pendamping untuk dokumen Word: posisi soal di PDF dipakai untuk memotong gambar */
   function mapAux() {
     if (!S.aux) return 0;
-    const A = S.aux.rows, R = S.rows, src = { kind: 'pdf', doc: S.aux.doc, id: S.aux.id }; let n = 0;
+    const A = S.aux.rows, R = S.rows.filter(r => S.cur && r.batch === S.cur.id), src = { kind: 'pdf', doc: S.aux.doc, id: S.aux.id }; let n = 0;
     const same = A.length === R.length && R.length && A.filter((x, i) => x.num === R[i].num).length >= 0.8 * R.length;
     if (same) R.forEach((r, i) => { r.regions = A[i].regions; r.src = src; n++; });
     else { let j = 0; R.forEach(r => { const k = A.findIndex((x, idx) => idx >= j && x.num === r.num); if (k >= 0) { r.regions = A[k].regions; r.src = src; j = k + 1; n++; } }); }
@@ -2135,8 +2180,98 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       const res = CBTParser.parse(lines, [], { pgPoin: 2, esaiPoin: 5, formatKey: false, pageCount: doc.numPages });
       S.aux = { doc, rows: res.rows, id: 'aux' + Date.now() };
       const n = mapAux(); busy(false); render();
-      toast(n + ' dari ' + S.rows.length + ' soal cocok dengan PDF. Tombol "Ambil gambar soal" siap dipakai.');
+      toast(n + ' dari ' + S.rows.filter(r => S.cur && r.batch === S.cur.id).length + ' soal cocok dengan PDF. Tombol "Ambil gambar soal" siap dipakai.');
     } catch (e) { console.error(e); busy(false); toast('PDF pendamping tidak bisa dibaca: ' + e.message); }
+  }
+
+
+  /* ---------- pisahkan soal yang menyatu / deteksi ulang satu kartu ---------- */
+  const defPoin = (tipe, cfg) => (tipe === 'esai' ? cfg.esaiPoin : cfg.pgPoin);
+  function textToLines(r, text) {
+    const orig = r.rawLines || [];
+    return text.split('\n').map((t, i) => {
+      const o = orig[i];
+      if (o && o.text.trim() === t.trim()) return o;                      // posisi & gaya asli dipertahankan
+      const near = orig[Math.min(i, orig.length - 1)] || { page: 0, y: i * 10 };
+      return Object.assign({}, near, { text: t, bold: new Array(t.length).fill(false), ul: new Array(t.length).fill(false) });
+    });
+  }
+  function sliceLine(L, from, to) {
+    const ok = L.bold && L.bold.length === L.text.length;
+    return Object.assign({}, L, { text: L.text.slice(from, to), bold: ok ? L.bold.slice(from, to) : new Array(L.text.slice(from, to).length).fill(false), ul: ok && L.ul ? L.ul.slice(from, to) : new Array(L.text.slice(from, to).length).fill(false) });
+  }
+  function adoptRow(r, res, cfg) {
+    const oldKey = r.kunci, oldSrc = r.keySrc, oldDef = defPoin(r.tipe, cfg);
+    ['tipe', 'q', 'opts', 'kunci', 'keySrc', 'pemb', 'izin', 'fixed', 'regions', 'rawLines', 'raw'].forEach(k => { r[k] = res[k]; });
+    if (!r.kunci && oldKey && r.tipe !== 'esai' && /^[A-E]$/.test(oldKey)) { r.kunci = oldKey; r.keySrc = oldSrc; }
+    if (+r.poin === oldDef) r.poin = defPoin(r.tipe, cfg);
+  }
+  function splitRow(r, card) {
+    const ta = card.querySelector('textarea.rawedit'), text = ta.value, pos = ta.selectionStart;
+    if (!pos || pos <= 0 || pos >= text.length) { toast('Letakkan kursor di titik pemisahan (di dalam teks) dulu.'); return; }
+    const cfg = readSettings(), pc = { pgPoin: cfg.pgPoin, esaiPoin: cfg.esaiPoin, formatKey: cfg.formatKey };
+    const lines = textToLines(r, text), before = text.slice(0, pos);
+    const li = before.split('\n').length - 1, col = pos - (before.lastIndexOf('\n') + 1), cur = lines[li];
+    const A = lines.slice(0, li), B = lines.slice(li + 1);
+    if (cur.text.slice(0, col).trim()) A.push(sliceLine(cur, 0, col));
+    if (cur.text.slice(col).trim()) B.unshift(sliceLine(cur, col));
+    const ra = CBTParser.parseFragment(A, pc, { noStrip: true }), rb = CBTParser.parseFragment(B, pc);
+    if (!ra || !rb) { toast('Kedua bagian harus berisi teks. Pindahkan kursor ke tengah teks.'); return; }
+    adoptRow(r, ra, cfg);
+    Object.assign(rb, { id: 'sp' + Date.now() + Math.random().toString(36).slice(2, 6), batch: r.batch, src: r.src, srcName: r.srcName, needsAux: r.needsAux,
+      imgE: null, imgL: null, urlE: '', urlL: '', poin: defPoin(rb.tipe, cfg), kunci: rb.kunci || '' });
+    if (!rb.num) rb.num = (r.num || 0) + 1;
+    S.rows.splice(S.rows.indexOf(r) + 1, 0, rb); S.dirty = true;
+    S.filter = 'all'; refreshAll(); render();
+    const nc = $('#list').querySelector('[data-id="' + rb.id + '"]'); if (nc) nc.scrollIntoView({ block: 'center' });
+    toast('Soal dipisah menjadi dua. Periksa kunci dan opsi pada keduanya.');
+  }
+  function redetectRow(r, card) {
+    const text = card.querySelector('textarea.rawedit').value, cfg = readSettings();
+    const res = CBTParser.parseFragment(textToLines(r, text), { pgPoin: cfg.pgPoin, esaiPoin: cfg.esaiPoin, formatKey: cfg.formatKey }, { noStrip: true });
+    if (!res) { toast('Teks kosong.'); return; }
+    adoptRow(r, res, cfg); S.dirty = true; revalidate(r);
+    card.outerHTML = cardHTML(r);
+    const nc = $('#list').querySelector('[data-id="' + r.id + '"]'); if (nc) nc.querySelectorAll('textarea[data-f]').forEach(autosize);
+    renderStats(); toast('Soal dideteksi ulang dari teks yang Anda perbaiki.');
+  }
+
+  /* ---------- lanjutkan dari Excel CBT yang sudah dibuat ---------- */
+  function cellText(c) {
+    let v = c && c.value; if (v == null) return '';
+    if (typeof v === 'object') { if (v.richText) v = v.richText.map(t => t.text).join(''); else if (v.result != null) v = v.result; else if (v.text != null) v = v.text; else if (v instanceof Date) v = ''; }
+    return String(v == null ? '' : v).trim();
+  }
+  async function importXlsx(file) {
+    if (!file) return;
+    try {
+      busy(true, 'Membaca Excel…', 0.3);
+      const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await file.arrayBuffer());
+      const ws = wb.getWorksheet('Soal') || wb.worksheets[0];
+      if (!ws) throw new Error('Tidak ada lembar kerja.');
+      const head = {}; ws.getRow(1).eachCell((c, i) => { head[cellText(c).toLowerCase()] = i; });
+      if (!head['tipe'] && !head['pertanyaan']) throw new Error('Kolom Tipe/Pertanyaan tidak ditemukan. Pastikan ini berkas format CBT.');
+      const g = (row, n) => (head[n.toLowerCase()] ? cellText(row.getCell(head[n.toLowerCase()])) : '');
+      const rows = [];
+      ws.eachRow((row, rn) => {
+        if (rn === 1) return;
+        const q = g(row, 'Pertanyaan'), opts = ['Opsi_A', 'Opsi_B', 'Opsi_C', 'Opsi_D', 'Opsi_E'].map(n => g(row, n));
+        let tipe = g(row, 'Tipe').toLowerCase();
+        if (!q && !tipe && !opts.some(Boolean)) return;
+        if (!['pg_teks', 'pg_gambar', 'esai'].includes(tipe)) tipe = opts.slice(0, 4).some(Boolean) ? 'pg_teks' : 'esai';
+        const poin = g(row, 'Poin');
+        rows.push({ id: 'x' + rn + Math.random().toString(36).slice(2, 6), num: +g(row, 'No') || 0, tipe, poin: poin === '' ? '' : +poin, q, opts, kunci: g(row, 'Kunci'),
+          keySrc: 'excel', pemb: g(row, 'Pembahasan'), izin: g(row, 'Izin_Gambar'), urlE: g(row, 'URL_Gambar'), urlL: g(row, 'URL_Gambar_Pembahasan'),
+          warns: [], status: 'ok', raw: '(diimpor dari Excel)', rawLines: [], regions: [], fixed: [], imgE: null, imgL: null });
+      });
+      if (!rows.length) throw new Error('Tidak ada baris soal pada berkas ini.');
+      const id = ++S.batchSeq, name = file.name.replace(/\.xlsx$/i, '').replace(/_CBT$/i, '');
+      rows.forEach(r => { r.batch = id; r.srcName = name; });
+      S.rows = S.rows.concat(rows);
+      S.batchInfo.push({ id, name, notes: ['Diimpor dari Excel: ' + rows.length + ' soal. Gambar tidak ikut terbaca; URL gambar dipertahankan.'] });
+      S.dirty = true; refreshAll(); busy(false); render();
+      toast(rows.length + ' soal diimpor. Total sekarang ' + S.rows.length + ' soal; Anda bisa terus menambah berkas lain.');
+    } catch (e) { console.error(e); busy(false); toast('Excel tidak bisa dibaca: ' + e.message); }
   }
 
   /* ---------- tempel kunci ---------- */
@@ -2164,8 +2299,9 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   }
   const imgName = (kind, r) => (kind === 'E' ? 'soal_' : 'pembahasan_') + pad3(r.no) + '.png';
   function urlFor(kind, r, prefix) {
-    const has = kind === 'E' ? r.imgE : r.imgL; if (!has || !prefix) return '';
-    return prefix + (/\/$/.test(prefix) ? '' : '/') + imgName(kind, r);
+    const has = kind === 'E' ? r.imgE : r.imgL;
+    if (has && prefix) return prefix + (/\/$/.test(prefix) ? '' : '/') + imgName(kind, r);
+    return (kind === 'E' ? r.urlE : r.urlL) || '';
   }
   const asCell = s => { s = String(s == null ? '' : s); if (/^-?(0|[1-9]\d{0,14})(\.\d+)?$/.test(s.trim())) return Number(s.trim()); return s.length > 32000 ? s.slice(0, 32000) : s; };
 
@@ -2200,7 +2336,7 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
     ws.dataValidations.add('B2:B' + last, { type: 'list', allowBlank: true, formulae: ['"pg_teks,pg_gambar,esai"'] });
     ws.dataValidations.add('J2:J' + last, { type: 'list', allowBlank: true, showErrorMessage: false, formulae: ['"A,B,C,D,E"'] });
     const buf = await wb.xlsx.writeBuffer();
-    download(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), S.name + '_CBT.xlsx');
+    download(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), exportBase() + '_CBT.xlsx');
     const withImg = S.rows.filter(r => r.imgE || r.imgL).length;
     toast(withImg && !cfg.prefix ? 'Excel diunduh. Kolom URL gambar masih kosong — unggah gambar lalu isi tautannya.' : 'Excel diunduh.');
   }
@@ -2211,27 +2347,31 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
       if (r.imgL) { f.file(imgName('L', r), r.imgL.blob); csv.push(`${r.no},URL_Gambar_Pembahasan,${imgName('L', r)}`); }
     });
     zip.file('daftar_gambar.csv', csv.join('\n'));
-    download(await zip.generateAsync({ type: 'blob' }), S.name + '_gambar.zip');
+    download(await zip.generateAsync({ type: 'blob' }), exportBase() + '_gambar.zip');
   }
 
   /* ---------- deteksi ulang ---------- */
   async function redetect() {
-    if (!S.kind) return;
-    if (S.dirty && !confirm('Deteksi ulang akan menimpa semua suntingan Anda. Lanjutkan?')) return;
+    if (!S.kind || !S.cur) { toast('Deteksi ulang berlaku untuk berkas yang terakhir dibaca.'); return; }
+    if (S.dirty && !confirm('Deteksi ulang akan menimpa suntingan pada soal dari berkas terakhir. Lanjutkan?')) return;
     const cfg = readSettings(), rc = S.readCfg || {};
     try {
       if (S.kind === 'pdf' && S.doc && (rc.ocr !== cfg.ocr || rc.images !== cfg.images || rc.lang !== cfg.lang)) {
         const bytes = await S.doc.getData();
         await readPdf(new File([bytes], S.name + '.pdf', { type: 'application/pdf' }));
       } else if (S.kind === 'image' && S.files && rc.lang !== cfg.lang) await readImages(S.files, cfg);
-      await detect();
+      await detect({ replaceBatch: S.cur.id });
     } catch (e) { console.error(e); busy(false); toast('Gagal mendeteksi ulang: ' + e.message); }
   }
 
   /* ---------- init ---------- */
   function init() {
     const drop = $('#drop'), input = $('#file');
-    input.addEventListener('change', () => handleFiles(input.files));
+    input.addEventListener('change', () => { handleFiles(input.files); input.value = ''; });
+    $('#btnAdd').addEventListener('click', () => $('#addFile').click());
+    $('#addFile').addEventListener('change', e => { handleFiles(e.target.files, { append: true }); e.target.value = ''; });
+    ['#btnImport', '#btnImportTop'].forEach(s => $(s).addEventListener('click', () => $('#importFile').click()));
+    $('#importFile').addEventListener('change', e => { importXlsx(e.target.files[0]); e.target.value = ''; });
     ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
     ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
     drop.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
