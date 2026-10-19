@@ -108,6 +108,7 @@ a{color:var(--blue-main);}
 .acc-body-inner p:last-child{margin-bottom:0;}
 .acc-body-inner ul{padding-left:18px;margin:4px 0 8px;}
 .acc-body-inner li{margin-bottom:4px;}
+.acc-body-inner a{color:var(--blue-main);font-weight:600;text-decoration:underline;}
 .acc-body-inner code{background:var(--blue-pale);color:var(--blue-deep);padding:1px 5px;
   border-radius:4px;font-size:11.5px;font-family:'Plus Jakarta Sans',sans-serif;}
 mark.search-hl{background:var(--blue-light);color:var(--blue-deep);padding:0 3px;border-radius:3px;}
@@ -251,11 +252,23 @@ footer p{font-size:11px;color:var(--gray-soft);}
 
     <div class="acc-item">
       <button class="acc-head" type="button">
+        <span class="q">Bagaimana jika salah memasukkan link ujian?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Setelah soal berhasil dimuat, halaman Masuk Ujian menampilkan judul ujian beserta jumlah soal yang terbaca. Periksa dulu apakah judulnya sudah sesuai sebelum melanjutkan login.</p>
+        <p>Kalau ternyata linknya salah, klik tombol <strong>Reset</strong>. Data soal yang sudah dimuat dihapus dan halaman kembali ke kondisi awal, sehingga Anda bisa langsung memasukkan link yang benar tanpa menutup aplikasi. Selalu gunakan link ujian terbaru dari Pengelola; pengingatnya tampil di halaman Masuk Ujian supaya tidak terjadi kesalahan akibat link lama. <a href="./wawasan/pembaruan-cbt-kabut-digital-1785905022812.html">Baca selengkapnya.</a></p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
         <span class="q">Bagaimana cara mengerjakan tes?</span>
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       <div class="acc-body"><div class="acc-body-inner">
-        <p>Soal ditampilkan satu per satu dengan navigasi bernomor, mendukung soal pilihan ganda (teks maupun gambar) dan soal esai. Jawaban tersimpan otomatis setiap kali berpindah soal, jadi tidak perlu tombol simpan manual di tiap soal.</p>
+        <p>Soal ditampilkan satu per satu dengan navigasi bernomor, mendukung soal pilihan ganda (teks maupun gambar) dan soal esai. Soal pilihan ganda bisa berisi 4 opsi (A-D) atau 5 opsi (A-E), tergantung soal yang disiapkan Pengelola. Jawaban tersimpan otomatis setiap kali berpindah soal, jadi tidak perlu tombol simpan manual di tiap soal.</p>
+        <p>Pada soal esai tertentu, Pengelola dapat mengaktifkan kanvas gambar tangan: tombol <strong>Buka Kanvas Gambar</strong> muncul di bawah kotak jawaban teks, sehingga Anda bisa menulis hitungan atau menggambar diagram langsung dengan jari. Teks dan gambar boleh diisi bersamaan, dan keduanya ikut terkirim sebagai jawaban. Kalau tombol itu tidak muncul, soal tersebut memang dijawab dengan teks saja. <a href="./wawasan/fitur-rahasia-di-cbt-kabut-digital-kanvas-gambar-tangan-1788605596335.html">Baca selengkapnya.</a></p>
         <p>Timer ujian berjalan sesuai durasi yang ditentukan Pengelola. Sistem juga memantau pelanggaran seperti keluar dari tampilan ujian (pindah tab/aplikasi) sesuai batas yang ditentukan Pengelola — kalau batas ini terlampaui, ujian bisa dihentikan otomatis dan hanya bisa dilanjutkan dengan token khusus dari Pengelola. Jadi sebaiknya tetap di halaman ujian sampai selesai mengerjakan.</p>
       </div></div>
     </div>
@@ -277,6 +290,7 @@ footer p{font-size:11px;color:var(--gray-soft);}
       </button>
       <div class="acc-body"><div class="acc-body-inner">
         <p>Kalau fitur pembahasan diaktifkan oleh Pengelola, tombol/menu pembahasan (berisi teks maupun gambar penjelasan) akan muncul setelah ujian selesai dikirim. Pengelola bisa mengunci fitur ini agar tidak tampil selama ujian masih berlangsung, supaya tidak disalahgunakan peserta lain yang belum selesai mengerjakan.</p>
+        <p>Pembahasan dapat dicetak atau disimpan sebagai PDF langsung dari layar hasil, sehingga bisa dipakai sebagai bahan belajar mandiri. Contohnya ada di artikel <a href="./wawasan/persiapan-omi-2026-jangan-cuma-latihan-soal-pelajari-juga-pe-1788441039739.html">Persiapan OMI 2026</a>.</p>
         <p>Kalau menu pembahasan tidak muncul sama sekali, kemungkinan Pengelola memang belum mengaktifkan fitur ini untuk ujian tersebut — silakan tanyakan langsung ke Pengelola ujian Anda.</p>
       </div></div>
     </div>
@@ -315,12 +329,14 @@ footer p{font-size:11px;color:var(--gray-soft);}
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       <div class="acc-body"><div class="acc-body-inner">
-        <p>Soal diisi langsung ke sheet Soal dengan format kolom yang sudah disiapkan wizard (tipe soal, teks atau gambar, kunci jawaban, poin, dan pembahasan opsional). Ada dua cara mempercepat pengisian soal dalam jumlah banyak:</p>
+        <p>Soal diisi langsung ke sheet Soal dengan format kolom yang sudah disiapkan wizard (tipe soal, teks atau gambar, kunci jawaban, poin, dan pembahasan opsional). Ada tiga cara mempercepat pengisian soal dalam jumlah banyak:</p>
         <ul>
           <li><strong>Generator Prompt Soal PG</strong> — menyusun prompt siap pakai untuk AI (Gemini, ChatGPT, dan sejenisnya), hasilnya berupa format pipe-delimited yang tinggal ditempel langsung ke sheet Soal</li>
           <li><strong>Konverter Google Form ke CBT</strong> — mengubah soal yang sudah ada di Google Form mode Kuis (lengkap dengan kunci jawaban dan gambar) langsung menjadi format sheet Soal CBT Kabut Digital</li>
+          <li><strong>Konverter Soal CBT</strong> — mengubah soal dari PDF (teks asli maupun hasil scan), dokumen Word (.docx), atau foto menjadi file Excel sesuai format CBT Kabut Digital. Pilihan ganda, kunci, dan esai dikenali otomatis, foto dibaca dengan OCR gratis, dan hasilnya bisa diperiksa serta diedit sebagai kartu per soal sebelum diunduh. Gratis, tanpa akun, dan berjalan di peramban. <a href="./wawasan/konverter-soal-cbt-ubah-pdf-word-dan-foto-soal-menjadi-sprea-1792408439557.html">Baca selengkapnya</a></li>
         </ul>
-        <p>Kedua alat ini tersedia sebagai Aplikasi Pendukung di halaman Aplikasi.</p>
+        <p>Ketiga alat ini tersedia sebagai Aplikasi Pendukung di halaman Aplikasi.</p>
+        <p>Dua kolom opsional di sheet Soal: <code>Izin_Gambar</code> untuk kanvas gambar tangan pada soal esai, dan <code>Opsi_E</code> untuk soal pilihan ganda 5 opsi. Caranya ada di dua pertanyaan di bawah.</p>
       </div></div>
     </div>
 
@@ -375,6 +391,92 @@ footer p{font-size:11px;color:var(--gray-soft);}
         <p>Semua menu di atas aman dijalankan berulang kali — tidak ada yang menghapus data secara permanen kecuali Anda memang mengedit/menghapus manual di sheet. Satu hal yang perlu diingat: kalau ada perubahan pada script (misalnya update dari versi Library terbaru), pastikan melakukan <strong>Deploy → Manage deployments → New version</strong> di Apps Script agar Portal peserta memakai kode terbaru — menyimpan script saja tidak cukup untuk fitur Web App.</p>
       </div></div>
     </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana membuat satu ujian untuk beberapa kelas?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Satu soal yang sama bisa dipakai oleh beberapa kelas, tingkat, golongan, atau sekolah lewat pilihan (selector) di halaman masuk ujian.</p>
+        <ul>
+          <li>Saat memakai Wizard, ubah dulu label institusi sesuai kebutuhan, misalnya Kelas, Tingkat, Golongan, atau Sekolah.</li>
+          <li>Setelah Wizard selesai, buka sheet <strong>Konfigurasi</strong> dan isi parameter <code>selector_options</code> dengan pilihan yang diinginkan, dipisah koma tanpa spasi setelah koma. Contoh: <code>VII (Tujuh),VIII (Delapan),IX (Sembilan)</code></li>
+          <li>Masih di Konfigurasi, kosongkan nilai pada kolom nama institusi. Dengan begitu label di atas pilihan akan mengikuti label yang sudah Anda tentukan.</li>
+        </ul>
+        <p><a href="./wawasan/tips-multi-kelas-1-soal-1785639524974.html">Baca selengkapnya.</a></p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana membuat soal pilihan ganda 5 opsi (A-E)?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Soal pilihan ganda tetap 4 opsi seperti biasa. Opsi E bersifat opsional dan hanya muncul pada soal yang memang Anda siapkan. Kolom <code>Opsi_E</code> ada di sheet Soal, paling kanan setelah kolom <code>Izin_Gambar</code>.</p>
+        <ul>
+          <li><strong>Soal PG teks:</strong> isi kolom <code>Opsi_E</code> dengan teks opsi E (atau link gambar, sama seperti opsi A-D). Kosongkan kolom itu kalau soal hanya 4 opsi. Kolom <code>Kunci</code> boleh berisi A, B, C, D, atau E.</li>
+          <li><strong>Soal PG gambar</strong> (pilihan tertulis di dalam gambar): kolom <code>Opsi_A</code> sampai <code>Opsi_D</code> dikosongkan dan <code>Opsi_E</code> tidak perlu diisi. Cukup isi <code>Kunci</code> dengan E, maka tombol E otomatis muncul. Kalau soal gambar punya 5 pilihan tetapi kuncinya bukan E, isi <code>Opsi_E</code> dengan huruf E sebagai penanda.</li>
+        </ul>
+        <p>Kalau sheet Soal dibuat sebelum fitur ini ada: tambahkan judul <code>Opsi_E</code> di baris pertama pada kolom kosong paling kanan. Agar kolom Kunci menerima huruf E dari daftar pilihan, perbarui aturannya lewat menu Data &gt; Validasi data, atau ketik E langsung. Pastikan Library CBT sekolah dan Portal sudah versi terbaru, lalu buat versi baru pada deployment supaya perubahan langsung terbaca Peserta.</p>
+        <p>Server offline versi terbaru juga mendukung 5 opsi. <a href="./wawasan/soal-pilihan-ganda-5-opsi-ae-kini-didukung-cbt-kabut-digital-1792372654711.html">Baca selengkapnya.</a></p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana mengaktifkan kanvas gambar tangan di soal esai?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Kanvas gambar tangan memungkinkan Peserta menggambar dengan jari di layar HP atau tablet, tepat di dalam soal esai. Cocok untuk soal hitungan yang perlu langkah pengerjaan, diagram, atau sketsa. Fitur ini tidak aktif otomatis; Anda memilih sendiri soal mana yang memakainya.</p>
+        <ul>
+          <li>Tambahkan kolom <code>Izin_Gambar</code> secara manual sebagai kolom ke-13 di sheet <strong>Soal</strong>.</li>
+          <li>Isi <code>Ya</code> pada baris soal esai yang membutuhkan kanvas. Soal esai yang kolomnya kosong tetap berupa kotak teks biasa.</li>
+        </ul>
+        <p>Pada soal yang diberi izin, tombol Buka Kanvas Gambar muncul di bawah kotak jawaban teks. Saat Anda membuka panel koreksi esai, jawaban bergambar otomatis digambar ulang tepat di bawah jawaban teksnya, tanpa perlu membuka file terpisah. Berlaku untuk ujian online maupun server offline. <a href="./wawasan/fitur-rahasia-di-cbt-kabut-digital-kanvas-gambar-tangan-1788605596335.html">Baca selengkapnya.</a></p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana menjalankan ujian secara offline (tanpa internet)?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Cara ini untuk sekolah yang tidak punya sinyal di ruang ujian. Syaratnya, ada satu tempat yang berinternet untuk menyalin soal sebelum hari ujian dan mengirim hasil sesudahnya. Satu laptop (Windows) menjadi hotspot sekaligus server, dan satu server bisa menyimpan beberapa ujian dengan ID berbeda.</p>
+        <ul>
+          <li><strong>Sebelum hari ujian (ada internet):</strong> ekspor sheet Soal menjadi CSV, simpan di folder <code>cbt-server</code>, lalu jalankan <code>node import-soal.js &lt;URL_GAS_SEKOLAH&gt; soal.csv &lt;id-ujian&gt;</code>. Tunggu sampai muncul tulisan Berhasil, termasuk proses mengunduh gambar.</li>
+          <li><strong>Hari ujian (tanpa internet):</strong> nyalakan hotspot laptop, klik dua kali <code>JALANKAN-SERVER.bat</code> (jendelanya jangan ditutup), lalu bagikan alamat server ke Peserta, misalnya <code>http://192.168.137.1:8080/matematika-vii</code>. Peserta menyambung ke Wi-Fi laptop dan membuka alamat itu lewat browser.</li>
+          <li><strong>Setelah ujian (ada internet):</strong> jalankan <code>node sync-ke-sheets.js</code> untuk mengirim hasil ke Google Sheets. Kalau prosesnya gagal di tengah, ulangi saja; data yang sudah terkirim tidak akan terkirim dobel.</li>
+        </ul>
+        <p>Pemasangan pertama: pasang Node.js versi LTS (minimal 22.5) dari nodejs.org, cek dengan mengetik <code>node -v</code>, lalu letakkan folder <code>cbt-server</code> di tempat yang mudah dicari. Memperbarui dari versi lama: ganti <code>server.js</code>, <code>import-soal.js</code>, <code>skema-db.js</code>, dan <code>portal.html</code> dengan versi terbaru, dan jangan hapus <code>cbt.db</code>. Sebelum ujian sungguhan, uji satu soal dari satu HP Peserta terlebih dahulu.</p>
+        <p>Paket <code>cbt-server</code> dapat diminta ke pengembang lewat kontak di bagian bawah halaman ini. Penjelasan lengkap: <a href="./wawasan/ujian-digital-tanpa-sinyal-cbt-kabut-digital-kini-bisa-jalan-1789088171341.html">Ujian Digital Tanpa Sinyal</a> dan <a href="./wawasan/update-server-offline-cbt-kabut-digital-dukungan-soal-5-opsi-1792381734894.html">Update Server Offline</a>.</p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Soal yang tampil tidak sesuai atau perubahan belum terbaca, apa yang harus dilakukan?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Pembaruan terbaru memisahkan cache soal per institusi, sehingga soal tidak lagi tercampur antarinstitusi dan pemuatan soal lebih akurat. Perbaikan ini berjalan otomatis; pastikan Library <code>CBTKDLib</code> di Apps Script memakai versi tertinggi (pembaruan perbaikan cache itu menaikkan Library ke versi 6).</p>
+        <p>Kalau Anda baru mengubah soal atau Konfigurasi tetapi belum terlihat di Portal Peserta, jalankan menu <strong>Hapus Cache Soal</strong> dan buat versi baru lewat <strong>Deploy &gt; Manage deployments &gt; New version</strong>. <a href="./wawasan/pembaruan-cbt-kabut-digital-1785905022812.html">Baca selengkapnya.</a></p>
+      </div></div>
+    </div>
+
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="q">Bagaimana memakai ujian sebagai bahan latihan dan belajar?</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="acc-body"><div class="acc-body-inner">
+        <p>Ujian tidak harus berhenti sebagai angka. Setiap soal bisa dilengkapi pembahasan berupa teks, gambar, atau materi pendukung yang tampil setelah ujian selesai dikirim. Pembahasan juga bisa dicetak atau disimpan sebagai PDF untuk dibagikan sebagai bahan belajar mandiri.</p>
+        <p>Contohnya soal dan pembahasan OMI 2026 tingkat MTs (IPA, IPS, dan Matematika) yang tersedia sebagai lampiran di artikel <a href="./wawasan/persiapan-omi-2026-jangan-cuma-latihan-soal-pelajari-juga-pe-1788441039739.html">Persiapan OMI 2026</a>. Cara memakainya: buat ujian baru lewat Wizard 5 Langkah, ganti template soal bawaan dengan file soal lampiran, lalu aktifkan fitur acak soal di Konfigurasi supaya Peserta berlatih memahami materi, bukan menghafal urutan soal.</p>
+      </div></div>
+    </div>
   </div>
 
   <!-- === FAQ === -->
@@ -387,7 +489,8 @@ footer p{font-size:11px;color:var(--gray-soft);}
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       <div class="acc-body"><div class="acc-body-inner">
-        <p>Karena CBT Kabut Digital berjalan berbasis Google Sheets dan Apps Script, ujian membutuhkan koneksi internet aktif untuk memuat soal dan mengirim jawaban. Kalau koneksi terputus di tengah ujian, segera sambungkan ulang secepatnya. Jawaban yang sudah tersimpan di soal-soal sebelumnya umumnya tidak hilang, tapi jawaban yang sedang dikerjakan saat koneksi putus berisiko tidak tersimpan.</p>
+        <p>Kalau koneksi hanya terputus sebentar, ujian masih bisa dilanjutkan secara online: sambungkan ulang jaringan secepatnya dan lanjutkan mengerjakan. Jawaban yang sudah tersimpan di soal-soal sebelumnya umumnya tidak hilang, tapi jawaban yang sedang dikerjakan saat koneksi putus berisiko tidak tersimpan, jadi periksa kembali soal terakhir setelah tersambung.</p>
+        <p>Kalau tempat ujian memang tidak memiliki jaringan internet sama sekali, gunakan cara offline: laptop Pengelola menjadi hotspot sekaligus server soal, dan Peserta mengerjakan lewat Wi-Fi laptop itu tanpa internet. Penjelasannya ada di pertanyaan berikutnya, dan langkah pemasangannya di tab Untuk Pengelola.</p>
         <p>Kalau mengalami kendala ini, segera hubungi Pengelola ujian Anda supaya bisa dibantu, misalnya dengan token pembuka ulang sesi.</p>
       </div></div>
     </div>
@@ -398,8 +501,10 @@ footer p{font-size:11px;color:var(--gray-soft);}
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       <div class="acc-body"><div class="acc-body-inner">
-        <p>Belum sepenuhnya. Aplikasi Utama CBT Kabut Digital bisa dipasang sebagai aplikasi (PWA) di Android sehingga tampilan luarnya (shell aplikasi) bisa termuat lebih cepat berkat cache, dan terasa seperti aplikasi biasa tanpa harus membuka browser secara manual.</p>
-        <p>Namun karena soal dan jawaban tersimpan di Google Sheets milik institusi, tetap dibutuhkan koneksi internet aktif untuk memuat soal baru dan mengirim jawaban ujian. Jadi yang berjalan offline hanyalah tampilan awal aplikasinya, bukan proses ujiannya secara keseluruhan.</p>
+        <p>Bisa, lewat <strong>mode server offline</strong>. Mode ini dibuat untuk sekolah yang tidak punya sinyal di ruang ujian: laptop Pengelola menjadi hotspot Wi-Fi sekaligus server soal, dan HP Peserta cukup tersambung ke Wi-Fi laptop itu lalu membuka Portal lewat browser. Selama ujian berlangsung tidak ada permintaan yang keluar ke internet.</p>
+        <p>Internet hanya dibutuhkan dua kali: sebelum hari ujian untuk menyalin soal dan gambar dari Google Sheets ke laptop, dan setelah ujian untuk mengirim hasilnya kembali ke Google Sheets. Kunci jawaban dan pembahasan tidak dikirim ke perangkat Peserta; penilaian dilakukan di server (laptop Pengelola).</p>
+        <p>Mode online biasa (langsung lewat Google Sheets) tetap membutuhkan internet aktif untuk memuat soal dan mengirim jawaban. Aplikasi Utama CBT Kabut Digital yang dipasang sebagai PWA di Android hanya mempercepat tampilan awal aplikasinya.</p>
+        <p>Langkah pemasangan server offline ada di tab Untuk Pengelola. Baca juga <a href="./wawasan/ujian-digital-tanpa-sinyal-cbt-kabut-digital-kini-bisa-jalan-1789088171341.html">Ujian Digital Tanpa Sinyal</a> dan <a href="./wawasan/update-server-offline-cbt-kabut-digital-dukungan-soal-5-opsi-1792381734894.html">Update Server Offline</a>.</p>
       </div></div>
     </div>
 
