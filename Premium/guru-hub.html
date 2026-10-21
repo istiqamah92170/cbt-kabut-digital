@@ -4789,7 +4789,8 @@ async function ghMintaTiket(appId) {
     method: 'POST', headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({ action: 'bukaAplikasiPremium', email: k.email, kunciGuru: k.kunciGuru, app: appId })
   });
-  if (h.status !== 'ok' || !h.tiket) throw new Error(h.msg || 'Langganan Anda tidak aktif, tiket tidak diberikan.');
+  if (h.status === undefined) throw new Error('Server Lisensi belum diperbarui untuk Alat Premium (action bukaAplikasiPremium belum dikenal). Pasang tambahan server lalu Deploy > Versi baru.');
+  if (h.status !== 'ok' || !h.tiket) throw new Error(h.msg || 'Tiket tidak diberikan oleh server.');
   return h.tiket;
 }
 
