@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- GERBANG PREMIUM: hanya terbuka lewat Guru Hub (tiket) -- JANGAN dipindah/dihapus, harus paling awal. -->
+<script src="ghp-bridge.js" data-app="kea" data-kunci="mts_db,mts_db_changelog,mts_sessions,mts_db_kurikulum" data-url-server="https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec" data-url-guruhub=""></script>
+<script>if(!window.GHP){document.addEventListener('DOMContentLoaded',function(){document.body.innerHTML='<div style="position:fixed;inset:0;background:#0b1410;color:#e8f3ee;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;text-align:center">🔒 Aplikasi ini hanya bisa dibuka lewat Guru Hub dengan langganan aktif.</div>';});}</script>
 <title>Smart Bloom & Topic Analyzer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -8655,11 +8658,9 @@ document.addEventListener('DOMContentLoaded',function(){_setKetat(_ketatPref());
   window.addEventListener('message', function (ev) {
     var d = ev.data;
     if (!d || d.type !== 'GH_KLASIFIKASI_REQUEST') return;
-    // Catatan keamanan: kedua aplikasi ini dibuat & dipakai oleh orang yang
-    // sama (bukan layanan publik multi-pengguna), jadi validasi origin di
-    // sini sengaja dibuat longgar (terima dari origin manapun yang mengirim
-    // format pesan yang benar/dikenali). Kalau nanti dipakai lintas pihak
-    // lain, ketatkan dengan daftar origin yang diizinkan di sini.
+    // Catatan keamanan: origin divalidasi lewat GHP (gerbang premium).
+    // GERBANG: hanya dari Guru Hub (jendela induk) & hanya bila sudah lolos tiket.
+    if (!window.GHP || !GHP.terbuka || ev.source !== window.parent || ev.origin !== GHP.originInduk) return;
     ghProsesBatchDariGuruHub(d.soal || [], ev.origin, d.mode, d.apiKey);
   });
 
@@ -8679,7 +8680,9 @@ document.addEventListener('DOMContentLoaded',function(){_setKetat(_ketatPref());
       percobaan++;
       var dbSiap = (typeof DB !== 'undefined') && DB && DB.mapel && Object.keys(DB.mapel).length > 0;
       if (dbSiap || percobaan >= maxPercobaan) {
-        ghKirimKeParent('GH_KLASIFIKASI_READY', ghStatusKnowledgeEngine(), '*');
+        // Tunggu gerbang terbuka (tiket sah + data tersinkron; bila data baru diterapkan, halaman dimuat ulang dulu).
+        if (!window.GHP) return;
+        GHP.saatTerbuka(function () { ghKirimKeParent('GH_KLASIFIKASI_READY', ghStatusKnowledgeEngine(), GHP.originInduk); });
       } else {
         setTimeout(cek, 150);
       }
