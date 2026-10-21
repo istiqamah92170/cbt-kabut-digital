@@ -28,7 +28,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;color:#fff;
 
 .ad-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue-mid) 100%);}
-.ad-stage img, .ad-stage video, .ad-stage iframe{width:100%;height:100%;object-fit:cover;border:none;}
+.ad-stage img, .ad-stage video, .ad-stage iframe{max-width:100%;max-height:100%;object-fit:cover;border:none;}
 .ad-stage.clickable{cursor:pointer;}
 .ad-link-badge{position:absolute;left:16px;bottom:150px;z-index:15;background:rgba(0,0,0,.55);
   color:#fff;font-size:11px;font-weight:700;padding:6px 12px;border-radius:20px;
@@ -355,7 +355,7 @@ function renderPanggungIklan(iklan) {
   }
 
   if (iklan.tipe === 'video') {
-    stage.innerHTML = '<video src="' + iklan.src + '" autoplay muted loop playsinline></video>';
+    stage.innerHTML = '<video src="' + iklan.src + '" autoplay loop playsinline></video>';
   } else if (iklan.tipe === 'iframe') {
     stage.innerHTML = '<iframe src="' + iklan.src + '" allowfullscreen></iframe>';
   } else {
