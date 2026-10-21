@@ -31,8 +31,8 @@
   var ORIGIN_HUB = '';
   try { if (URL_HUB) ORIGIN_HUB = new URL(URL_HUB, location.href).origin; } catch (e) {}
 
-  var SK_TIKET = 'ghp_tiket_' + APP, SK_OK = 'ghp_ok_' + APP, SK_RELOAD = 'ghp_reload_' + APP, LK_META = 'ghp_meta_' + APP;
-  var GRACE_OFFLINE_MS = 12 * 3600 * 1000, VERIF_ULANG_MS = 20 * 60 * 1000, TUNGGU_INIT_MS = 15000;
+  var SK_TIKET = 'ghp_tiket_' + APP, LK_OK = 'ghp_ok_' + APP, SK_RELOAD = 'ghp_reload_' + APP, LK_META = 'ghp_meta_' + APP;
+  var GRACE_OFFLINE_MS = 3 * 24 * 3600 * 1000, VERIF_ULANG_MS = 20 * 60 * 1000, TUNGGU_INIT_MS = 15000;
 
   var _get = Storage.prototype.getItem, _set = Storage.prototype.setItem, _rem = Storage.prototype.removeItem;
   var siap = false, terbuka = false, terkunci = false, originInduk = '', tiket = '';
@@ -167,14 +167,18 @@
     var url = URL_SERVER + '?action=verifikasiTiket&app=' + encodeURIComponent(APP) + '&tiket=' + encodeURIComponent(tiket);
     return fetch(url).then(function (r) { return r.text(); }).then(function (t) {
       var j; try { j = JSON.parse(t); } catch (e) { throw { jaringan: true }; }
-      if (j && j.status === 'ok') { ss('s', SK_OK, String(Date.now())); return true; }
+      if (j && j.status === 'ok') { try { _set.call(localStorage, LK_OK, tiket + '|' + Date.now()); } catch (e) {} return true; }
       throw { tolak: true, msg: (j && j.msg) || 'Tiket tidak sah atau sudah kedaluwarsa.' };
     }, function () { throw { jaringan: true }; });
   }
+  // Tiket yang SAMA pernah disahkan server dalam masa tenggang -> aplikasi langsung dibuka (tanpa menunggu jaringan),
+  // pengesahan diulang di latar belakang. Tiket asing/baru selalu menunggu pengesahan server.
+  function pernahSah() {
+    try { var r = (_get.call(localStorage, LK_OK) || '').split('|'); return r[0] === tiket && Date.now() - parseInt(r[1] || '0', 10) < GRACE_OFFLINE_MS; } catch (e) { return false; }
+  }
   function gagalVerif(e) {
     if (e && e.jaringan) {
-      var t = parseInt(ss('g', SK_OK) || '0', 10);
-      if (t && Date.now() - t < GRACE_OFFLINE_MS) return true; // sedang offline, masih dalam masa tenggang
+      if (pernahSah()) return true; // sedang offline, masih dalam masa tenggang
       kunci('Tidak bisa memastikan langganan (tidak ada koneksi). Sambungkan internet lalu buka lagi lewat <b>Guru Hub</b>.'); return false;
     }
     kunci((e && e.msg ? e.msg : 'Akses ditolak.') + ' Buka ulang lewat menu <b>Alat Premium</b> di Guru Hub.'); return false;
@@ -230,14 +234,19 @@
     simpanSekarang: kirimPending
   };
 
-  verifikasi().then(function () { return true; }, gagalVerif).then(function (lanjut) {
-    if (!lanjut) return;
-    var n = 0, hentikan = false;
+  function mulaiHello() {
+    var n = 0;
     (function ulang() {
       if (terbuka || terkunci) return;
       if (n++ * 2000 >= TUNGGU_INIT_MS) { kunci('Tidak terhubung ke Guru Hub. Tutup lalu buka lagi lewat menu <b>Alat Premium</b>.'); return; }
       kirimHello(); setTimeout(ulang, 2000);
     })();
     setInterval(function () { verifikasi().then(null, function (e) { if (e && e.tolak) gagalVerif(e); }); }, VERIF_ULANG_MS);
-  });
+  }
+  if (pernahSah()) {
+    mulaiHello(); // buka cepat
+    verifikasi().then(null, function (e) { if (e && e.tolak) gagalVerif(e); }); // pengesahan di latar belakang
+  } else {
+    verifikasi().then(function () { return true; }, gagalVerif).then(function (lanjut) { if (lanjut) mulaiHello(); });
+  }
 })();
