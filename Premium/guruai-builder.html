@@ -13,7 +13,7 @@
 <!DOCTYPE html>
 <html lang="id"><head>
 <!-- GERBANG PREMIUM: hanya terbuka lewat Guru Hub (tiket) -- JANGAN dipindah/dihapus, harus paling awal. API key Gemini sengaja TIDAK disinkronkan. -->
-<script src="ghp-bridge.js" data-app="guruai" data-kunci="guruai_settings" data-idb="guruai_idb:1:data" data-idb-kecuali="ai_cache" data-url-server="https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec" data-url-guruhub="https://cbtkabutdigital.com/Premium/Guru-Hub/index.html"></script>
+<script src="ghp-bridge.js" data-app="guruai" data-kunci="guruai_settings" data-sembunyi="guruai_settings:cloudUrl,cloudSecret,idGuru,cloudLastBackup" data-idb="guruai_idb:1:data" data-idb-kecuali="ai_cache" data-url-server="https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec" data-url-guruhub="https://cbtkabutdigital.com/Premium/Guru-Hub/index.html"></script>
 <script>if(!window.GHP){document.addEventListener('DOMContentLoaded',function(){document.body.innerHTML='<div style="position:fixed;inset:0;background:#0b1410;color:#e8f3ee;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;text-align:center">\uD83D\uDD12 Aplikasi ini hanya bisa dibuka lewat Guru Hub dengan langganan aktif.</div>';});}</script>
 <meta name="author" content="Rapian Hasanuddin">
 <meta name="copyright" content="© 2026 Rapian Hasanuddin">
@@ -1910,7 +1910,10 @@ B. Sub-poin...
           </div>
         </div>
 
-        <div class="settings-group">
+        <!-- 2026-10: Cadangan Cloud lewat Apps Script pribadi DISEMBUNYIKAN. Penyimpanan data kini diatur di Guru Hub
+             (Alat Premium > Data & Privasi: Google Drive saya / Server / Hanya perangkat). Kode lama dibiarkan (tidak aktif
+             tanpa URL & ID Guru); cadangan manual tetap tersedia lewat Simpan project (.gaib). -->
+        <div class="settings-group" style="display:none;" aria-hidden="true">
           <div class="settings-group-title">☁️ Cadangan Cloud (Google Drive)</div>
           <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Simpan salinan project ke Google Drive lewat Google Apps Script milik sendiri — data tidak cuma bergantung pada penyimpanan HP. Riwayat lama juga baru diringkas di HP SETELAH cadangan cloud ini berhasil.</p>
           <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:10px;">
