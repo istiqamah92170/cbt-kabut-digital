@@ -238,6 +238,21 @@
         } catch (e) {}
         penunggu.splice(0).forEach(function (f) { try { f(); } catch (e) {} });
       });
+    } else if (d.type === 'GHP_SEMUA') {
+      // Hub meminta SEMUA data lokal dikirim (mis. baru menghubungkan Google Drive di tengah sesi).
+      if (!siap) return;
+      KUNCI.forEach(function (k) {
+        var v = _get.call(localStorage, k); if (v === null) return;
+        var ver = meta[k] || (meta[k] = Date.now()); tulisMeta();
+        kePar({ type: 'GHP_PERUBAHAN', tiket: tiket, kunci: k, versi: ver, nilai: saring(k, v) });
+      });
+      bacaIdb().then(function (idb) {
+        Object.keys(idb).forEach(function (k) {
+          var ver = meta['idb:' + k] || (meta['idb:' + k] = Date.now());
+          kePar({ type: 'GHP_PERUBAHAN', tiket: tiket, kunci: 'idb:' + k, versi: ver, nilai: idb[k] });
+        });
+        tulisMeta();
+      });
     } else if (d.type === 'GHP_FLUSH') {
       kirimPending(); kePar({ type: 'GHP_FLUSH_OK', tiket: tiket });
     } else if (d.type === 'GHP_TUTUP') {
