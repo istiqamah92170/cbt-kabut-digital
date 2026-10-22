@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="id"><head>
+<html lang="id">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guru Hub · CBT Kabut Digital</title>
@@ -7,9 +8,9 @@
      supaya tidak ada kedipan tema terang sekilas saat guru sudah memilih
      mode gelap sebelumnya. Sengaja ditaruh sesederhana & sesegera mungkin. -->
 <script>(function(){try{if(localStorage.getItem('guruhub_tema_v1')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
-<script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
@@ -446,6 +447,12 @@
   .ghp-body iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; }
   .ghp-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center; color:var(--gray-soft); font-size:14px; }
   .ghp-loading.err { color:#b91c1c; }
+  .ghp-priv-app { border:1px solid var(--gray-line); border-radius:var(--r-lg); padding:14px; margin-top:12px; }
+  .ghp-priv-hd { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .ghp-priv-hd .ghp-ico { width:28px; height:28px; border-radius:7px; }
+  .ghp-priv-opt { display:flex; gap:10px; align-items:flex-start; padding:8px 4px; cursor:pointer; font-size:13px; line-height:1.45; }
+  .ghp-priv-opt small { color:var(--gray-soft); }
+  .ghp-priv-aksi { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 </style>
 <meta name="description" content="Ujian online, bank soal, koreksi esai, dan asisten AI perangkat ajar dalam satu aplikasi."><meta name="theme-color" content="#0589e8"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Guru Hub · CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"></head>
 <body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0589e8;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal Guru Hub · CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#0589e8;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
@@ -480,7 +487,10 @@
            Library GSI sendiri yang mendeteksi elemen ini begitu siap, kapan
            pun itu. data-client_id HARUS SAMA PERSIS dengan GH_CLIENT_ID di
            script bawah -- kalau GH_CLIENT_ID diganti, ganti juga di sini. -->
-      <div id="g_id_onload" data-client_id="822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com" data-callback="ghProsesLoginGoogle" data-auto_prompt="false"></div>
+      <div id="g_id_onload"
+           data-client_id="822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com"
+           data-callback="ghProsesLoginGoogle"
+           data-auto_prompt="false"></div>
       <div id="gh-google-signin-btn" class="g_id_signin" style="display:flex;justify-content:center;min-height:44px;" data-type="standard" data-size="large" data-theme="outline" data-width="300"></div>
       <div class="gh-status-msg" id="gh-login-status" style="margin-top:14px;"></div>
       <button class="gh-btn gh-btn-ghost" id="gh-btn-login-coba-lagi" style="width:100%;margin-top:6px;display:none;" onclick="ghUiCobaAkunLain()">Coba akun Google lain</button>
@@ -696,7 +706,7 @@
          di CBTKD_MasterLib.js). Label & status tombol selalu mengikuti
          nilai TERBARU dari server (bukan diasumsikan), supaya tidak
          menampilkan status yang salah kalau ada perubahan dari tempat lain. -->
-    <button class="gh-btn gh-btn-outline" id="gh-btn-toggle-pembahasan" onclick="ghToggleBukaPembahasan()" style="width:100%;margin-top:8px;display:none;" disabled="">📖 Memuat status pembahasan...</button>
+    <button class="gh-btn gh-btn-outline" id="gh-btn-toggle-pembahasan" onclick="ghToggleBukaPembahasan()" style="width:100%;margin-top:8px;display:none;" disabled>📖 Memuat status pembahasan...</button>
 
     <div id="gh-form-sekolah" style="display:none;">
       <p class="gh-hint" style="margin-top:0;">ℹ️ Nama diambil <b>otomatis</b> dari judul di Konfigurasi ujian itu sendiri — tidak perlu diketik manual.</p>
@@ -766,7 +776,7 @@
       <div class="gh-fg">
         <label>Spreadsheet Bank Soal aktif</label>
         <div class="gh-row">
-          <div class="gh-fg" style="margin-bottom:0;"><input type="text" id="gh-bs-nama-aktif" readonly="" placeholder="Belum ada — buat atau pilih dulu"></div>
+          <div class="gh-fg" style="margin-bottom:0;"><input type="text" id="gh-bs-nama-aktif" readonly placeholder="Belum ada — buat atau pilih dulu"></div>
           <button class="gh-btn gh-btn-outline" onclick="ghBuatBankSoalBaru()">+ Buat Baru</button>
           <button class="gh-btn gh-btn-outline" onclick="ghToggleFormBankManual()">Pakai ID Lain</button>
         </div>
@@ -800,6 +810,11 @@
       <button class="ghp-tile" onclick="ghpBukaApp('kea')"><span class="ghp-ico ghp-ico-kea"></span><b>Smart Bloom &amp; Topic Analyzer</b><span class="ghp-sub">Klasifikasi topik, level Bloom &amp; kesulitan soal, plus Database Materi Anda.</span></button>
       <button class="ghp-tile" onclick="ghpBukaApp('guruai')"><span class="ghp-ico ghp-ico-guruai"></span><b>GuruAI Builder</b><span class="ghp-sub">Susun perangkat ajar dan konten dengan bantuan AI.</span></button>
     </div>
+  </div>
+  <div class="gh-card" style="margin-top:16px;" id="ghp-privasi">
+    <h3 style="margin:0 0 6px;">🔐 Data &amp; Privasi</h3>
+    <p class="gh-sub">Pilih di mana data tiap aplikasi disimpan. Anda bisa mengunduh atau menghapus data cloud Anda kapan saja, juga bila langganan sudah berhenti.</p>
+    <div id="ghp-privasi-isi"></div>
   </div>
   </div><!-- /gh-page-premium -->
 
@@ -884,10 +899,21 @@
 <!-- FITUR (2026-09): modal Klasifikasi Topik/Bloom/Kesulitan -- menghubungkan
      ke aplikasi topik-bloom-classifier.html lewat <iframe> + postMessage
      (bisa beda domain). Lihat ghBukaKlasifikasi() dkk di script bawah. -->
+<div class="gh-modal-bg" id="gh-modal-simpan" style="z-index:500;">
+  <div class="gh-card" style="max-width:460px;width:calc(100% - 32px);max-height:92vh;overflow:auto;">
+    <h3 style="margin:0 0 6px;">Di mana data Anda disimpan?</h3>
+    <p class="gh-sub" style="margin-bottom:12px;">Untuk <b id="ghp-tanya-app"></b>. Pilihan ini bisa diubah kapan saja di halaman Alat Premium.</p>
+    <button class="ghp-tile" style="width:100%;margin-bottom:8px;" onclick="ghpTanyaPilih('drive')"><b>☁️ Google Drive saya (disarankan)</b><span class="ghp-sub">Folder tersembunyi di Drive Anda sendiri. Pengelola tidak menyimpan isinya. Perlu satu kali izin Google.</span></button>
+    <button class="ghp-tile" style="width:100%;margin-bottom:8px;" onclick="ghpTanyaPilih('server')"><b>🖥️ Server Guru Hub</b><span class="ghp-sub">Tanpa izin tambahan. Data bisa dibaca pengelola dan tidak dienkripsi.</span></button>
+    <button class="ghp-tile" style="width:100%;margin-bottom:8px;" onclick="ghpTanyaPilih('perangkat')"><b>📱 Hanya perangkat ini</b><span class="ghp-sub">Tidak ada yang dikirim. Tidak tersinkron antar-perangkat.</span></button>
+    <button class="gh-btn gh-btn-outline" style="width:100%;" onclick="ghpTanyaPilih('batal')">Batal</button>
+  </div>
+</div>
+
 <div class="ghp-panel" id="gh-premium-panel">
   <div class="ghp-bar">
     <button class="gh-btn gh-btn-outline" style="padding:6px 12px;font-size:13px;" onclick="ghpTutupPanel()">← Kembali</button>
-    <span class="ghp-ico" id="ghp-ico"></span><b id="ghp-judul"></b><span class="ghp-status" id="ghp-status"></span>
+    <span class="ghp-ico" id="ghp-ico"></span><b id="ghp-judul"></b><button class="gh-btn" id="ghp-hubung" style="display:none;padding:5px 10px;font-size:12px;" onclick="ghpHubungkanDrive()">🔌 Hubungkan Google Drive</button><span class="ghp-status" id="ghp-status"></span>
   </div>
   <div class="ghp-body">
     <div class="ghp-loading" id="ghp-loading"></div>
@@ -913,7 +939,7 @@
         <label>Mesin Klasifikasi</label>
         <div class="gh-klasifikasi-mode-pilihan">
           <label class="gh-radio-card">
-            <input type="radio" name="gh-mode-klasifikasi" value="gemini" checked="" onchange="ghGantiModeKlasifikasi()">
+            <input type="radio" name="gh-mode-klasifikasi" value="gemini" checked onchange="ghGantiModeKlasifikasi()">
             <b>✨ Gemini AI</b><span class="gh-hint">Perlu API key, hasil lebih akurat</span>
           </label>
           <label class="gh-radio-card">
@@ -929,7 +955,7 @@
         <p class="gh-hint">Disimpan di perangkat ini (Guru Hub), dikirim ke aplikasi Klasifikasi cuma saat diproses.</p>
       </div>
 
-      <button class="gh-btn gh-btn-primary" style="width:100%;" id="gh-btn-mulai-klasifikasi" onclick="ghEksekusiKlasifikasi()" disabled="">▶️ Mulai Klasifikasi</button>
+      <button class="gh-btn gh-btn-primary" style="width:100%;" id="gh-btn-mulai-klasifikasi" onclick="ghEksekusiKlasifikasi()" disabled>▶️ Mulai Klasifikasi</button>
     </div>
 
     <div class="gh-status-msg" id="gh-klasifikasi-status"></div>
@@ -4585,7 +4611,7 @@ async function ghMuatDashboardSesi() {
 }
 
 function ghUiGotoPage(nama) {
-  if (ghModeBelumAktif && nama !== 'langganan') {
+  if (ghModeBelumAktif && nama !== 'langganan' && nama !== 'premium') {
     ghToast('🔒 Aktifkan langganan dulu untuk membuka fitur ini.');
     nama = 'langganan';
   }
@@ -4602,6 +4628,7 @@ function ghUiGotoPage(nama) {
     ghMuatSesiSaya();
   }
   if (nama === 'langganan') ghMuatStatusLangganan();
+  if (nama === 'premium') ghpRenderPrivasi();
   ghUiCloseSidebar();
   window.scrollTo(0, 0);
 }
@@ -4649,7 +4676,7 @@ function ghUiTampilkanBelumAktif(profil, alasan, akunBaru) {
   document.getElementById('gh-ui-sb-instansi').textContent = (profil.sekolah || '').trim() || 'CBT Kabut Digital';
   document.getElementById('gh-ui-sapaan').textContent = ghUiSapaanWaktu() + ', ' + nama;
 
-  ['linkujian', 'esai', 'banksoal', 'premium'].forEach(p => {
+  ['linkujian', 'esai', 'banksoal'].forEach(p => {
     let nav = document.getElementById('gh-nav-' + p);
     if (nav) nav.classList.add('gh-locked');
   });
@@ -4726,6 +4753,8 @@ function ghUiLogout() {
   if (!confirm('Keluar dari Guru Hub?')) return;
   (document.getElementById('gh-premium-panel') || {style:{}}).style.visibility = 'hidden';
   try { localStorage.removeItem(GH_KEY_TIKET_CACHE); } catch (e) {}
+  try { if (ghpToken && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(ghpToken, function () {}); } catch (e) {}
+  ghpToken = null; ghpTokenExp = 0;
   ghpTutupPanel(); // simpan sisa perubahan Alat Premium lalu tutup panel (kredensial masih ada sampai selesai)
   try { google.accounts.id.disableAutoSelect(); } catch (e) {}
   localStorage.removeItem(GH_KEY_SESI_LISENSI);
@@ -4772,8 +4801,13 @@ function ghUiLogout() {
 //  PWA: sengaja TIDAK memakai window.open -- semuanya panel di dalam aplikasi.
 // ═══════════════════════════════════════════════
 // OFFLINE (2026-10): service worker menyimpan Guru Hub + aplikasi premium supaya terbuka tanpa internet (lihat sw.js).
-// sw.js harus berada di folder yang sama dengan guru-hub.html.
-try { if ('serviceWorker' in navigator && location.protocol === 'https:') { navigator.serviceWorker.register('sw.js').catch(function () {}); navigator.serviceWorker.register('../sw-premium.js', { scope: '../' }).catch(function () {}); } } catch (e) {}
+// sw.js di folder Guru-Hub; sw-premium.js di folder /Premium/ (induknya) supaya iframe aplikasi premium ikut tercakup.
+try {
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(function () {});                                  // /Premium/Guru-Hub/sw.js  (Guru Hub)
+    navigator.serviceWorker.register('../sw-premium.js', { scope: '../' }).catch(function () {});     // /Premium/sw-premium.js   (aplikasi premium di iframe)
+  }
+} catch (e) {}
 const GH_APP_PREMIUM = {
   kea:    { nama: 'Smart Bloom & Topic Analyzer', url: 'https://cbtkabutdigital.com/Premium/topik-bloom-classifier_pro.html', ikon: 'ghp-ico-kea' },
   guruai: { nama: 'GuruAI Builder',               url: 'https://cbtkabutdigital.com/Premium/guruai-builder.html',            ikon: 'ghp-ico-guruai' }
@@ -4784,7 +4818,7 @@ const ghpTiketFrame = { panel: null, klasifikasi: null };   // {app, tiket}
 const ghpHelloJalan = { panel: false, klasifikasi: false };
 const ghpTerhubung = { panel: false };
 const ghpAntrian = {};            // 'app|kunci' -> {app,kunci,versi,nilai}
-let ghpTimerKirim = null, ghpSedangKirim = false, ghpGagalBeruntun = 0;
+let ghpTimerKirim = null, ghpSedangKirim = false, ghpGagalBeruntun = 0, ghpMacetIzin = false;
 
 function ghpKred() {
   if (!ghProfilAktif || !ghProfilAktif.kunciGuru || ghModeBelumAktif) throw new Error('Sesi login bermasalah -- coba logout & login ulang.');
@@ -4855,7 +4889,8 @@ async function ghpMuatServer(appId, opsi) {
 }
 function ghpMulaiPrefetch(appId) {
   if (Date.now() - (ghpCekTerakhir[appId] || 0) < 120000) return;
-  try { ghpPrefetch[appId] = ghpMuatServer(appId, { hanyaVersi: true }); ghpPrefetch[appId].catch(function () {}); } catch (e) {}
+  if (['drive', 'server'].indexOf(ghpBacaMode(appId)) < 0) return;
+  try { ghpPrefetch[appId] = ghpMuatData(appId, { hanyaVersi: true }); ghpPrefetch[appId].catch(function () {}); } catch (e) {}
 }
 // Cache tiket: tiket berlaku 6 jam di server, dipakai ulang 5 jam supaya buka aplikasi tidak menunggu jaringan.
 const GH_KEY_TIKET_CACHE = 'guruhub_tiket_cache_v1';
@@ -4877,6 +4912,9 @@ async function ghpDapatkanTiket(appId) {
   }
 }
 async function ghpKirimSatu(it) {
+  let modeSimpan = ghpBacaMode(it.app);
+  if (modeSimpan === 'drive') return ghpDriveSimpan(it);
+  if (modeSimpan !== 'server') return; // 'perangkat' / belum dipilih: tidak ada yang dikirim
   let k = ghpKred(), potong = [], fmt = 'kosong';
   if (it.nilai !== null) {
     let p = await ghpKemas(it.nilai); fmt = p.fmt;
@@ -4897,10 +4935,14 @@ async function ghpKirimSatu(it) {
 // ---- antrian simpan (debounce + ulang) ----
 function ghpSetStatus(s) {
   let el = document.getElementById('ghp-status'); if (!el) return;
+  let m = ghpBacaMode(ghpPanelAppId || 'kea');
   el.className = 'ghp-status ' + s;
-  el.textContent = s === 'simpan' ? '⏳ Menyimpan…' : s === 'gagal' ? '⚠️ Belum tersimpan, mencoba lagi…' : '☁️ Tersimpan';
+  el.textContent = s === 'simpan' ? '⏳ Menyimpan…' : s === 'gagal' ? '⚠️ Belum tersimpan, mencoba lagi…' : s === 'perlu' ? '🔌 Drive belum tersambung'
+    : (m === 'drive' ? '☁️ Tersimpan di Drive Anda' : m === 'server' ? '☁️ Tersimpan di server' : '💾 Hanya di perangkat ini');
+  let hb = document.getElementById('ghp-hubung'); if (hb) hb.style.display = (s === 'perlu') ? '' : 'none';
 }
 function ghpAntrikan(app, kunci, versi, nilai) {
+  if (['drive', 'server'].indexOf(ghpBacaMode(app)) < 0) return;
   ghpAntrian[app + '|' + kunci] = { app, kunci, versi, nilai };
   ghpSetStatus('simpan');
   clearTimeout(ghpTimerKirim);
@@ -4916,11 +4958,12 @@ async function ghpKuras() {
       await ghpKirimSatu(it);
       if (ghpAntrian[key] === it) delete ghpAntrian[key]; // kalau sudah berganti ke versi lebih baru, biarkan untuk putaran berikut
     }
-    ghpGagalBeruntun = 0;
+    ghpGagalBeruntun = 0; ghpMacetIzin = false;
     if (Object.keys(ghpAntrian).length) { ghpSedangKirim = false; return ghpKuras(); }
     ghpSetStatus('ok');
   } catch (e) {
     console.warn('Sinkron Alat Premium gagal:', e.message);
+    if (e.perluIzin) { ghpMacetIzin = true; ghpSetStatus('perlu'); ghpSedangKirim = false; return; } // menunggu guru menekan 'Hubungkan Google Drive'
     ghpGagalBeruntun++; ghpSetStatus('gagal');
     clearTimeout(ghpTimerKirim);
     ghpTimerKirim = setTimeout(ghpKuras, Math.min(60000, 5000 * Math.pow(3, Math.min(ghpGagalBeruntun - 1, 3))));
@@ -4931,7 +4974,7 @@ window.addEventListener('online', function () { if (Object.keys(ghpAntrian).leng
 async function ghpTungguAntrian(maksMs) {
   let mulai = Date.now();
   if (Object.keys(ghpAntrian).length) { clearTimeout(ghpTimerKirim); ghpKuras(); }
-  while ((Object.keys(ghpAntrian).length || ghpSedangKirim) && Date.now() - mulai < maksMs) await new Promise(r => setTimeout(r, 150));
+  while ((Object.keys(ghpAntrian).length || ghpSedangKirim) && !ghpMacetIzin && Date.now() - mulai < maksMs) await new Promise(r => setTimeout(r, 150));
 }
 
 // ---- pesan dari aplikasi ----
@@ -4951,11 +4994,11 @@ async function ghpTanganiHello(jenis, d, ev) {
       server = ghpVerServer[app]; // baru saja dipastikan sinkron -- tidak perlu tanya server lagi
     } else {
       try {
-        let p = ghpPrefetch[app] || ghpMuatServer(app, { hanyaVersi: true });
+        let p = ghpPrefetch[app] || ghpMuatData(app, { hanyaVersi: true });
         delete ghpPrefetch[app];
         server = await ghpDenganBatas(p, 4000);
         ghpVerServer[app] = server; ghpCekTerakhir[app] = Date.now();
-      } catch (e) { offline = true; server = ghpVerServer[app] || {}; console.warn('Cek server dilewati (offline/lambat):', e.message); }
+      } catch (e) { offline = true; server = ghpVerServer[app] || {}; console.warn('Cek penyimpanan dilewati (offline/lambat/izin):', e.message); if (e.perluIzin && jenis === 'panel') ghpSetStatus('perlu'); }
     }
     let terapkan = {}, versi = {}, naik = [], perluIsi = [];
     let lokal = d.lokal || {};
@@ -4974,7 +5017,7 @@ async function ghpTanganiHello(jenis, d, ev) {
     for (let x = 0; x < perluIsi.length && !offline; x += 12) {
       try {
         let bagian = perluIsi.slice(x, x + 12);
-        let isi = await ghpDenganBatas(ghpMuatServer(app, { kunci: bagian }), 30000);
+        let isi = await ghpDenganBatas(ghpMuatData(app, { kunci: bagian }), 30000);
         bagian.forEach(function (kunci) { if (isi[kunci] && isi[kunci].nilai !== undefined) terapkan[kunci] = { versi: isi[kunci].versi, nilai: isi[kunci].nilai }; });
       } catch (e) { console.warn('Unduh data baru gagal, dicoba lagi di pembukaan berikutnya:', e.message); }
     }
@@ -5000,6 +5043,7 @@ window.addEventListener('message', function (ev) {
 async function ghpBukaApp(appId) {
   let app = GH_APP_PREMIUM[appId]; if (!app) return;
   if (ghModeBelumAktif) { ghToast('🔒 Aktifkan langganan dulu untuk membuka alat premium.'); ghUiGotoPage('langganan'); return; }
+  if (!ghpBacaMode(appId)) { let pilih = await ghpTanyaMode(appId); if (!pilih) return; }
   let panel = document.getElementById('gh-premium-panel');
   document.getElementById('ghp-judul').textContent = app.nama;
   document.getElementById('ghp-ico').className = 'ghp-ico ' + app.ikon;
@@ -5041,18 +5085,231 @@ async function ghpTutupPanel() {
   ifr.src = 'about:blank'; ghpPanelAppId = null; ghpTiketFrame.panel = null; ghpTerhubung.panel = false;
   if (Object.keys(ghpAntrian).length) ghToast('⚠️ Sebagian perubahan belum terkirim; akan dicoba lagi otomatis.');
 }
-</script>
 
+// ═══════════════════════════════════════════════
+//  PENYIMPANAN DATA ALAT PREMIUM -- 3 pilihan per aplikasi (2026-10)
+//   'drive'    : Google Drive milik guru sendiri (folder tersembunyi aplikasi, scope drive.appdata)
+//   'server'   : server Guru Hub (sheet DataApp milik pengelola)
+//   'perangkat': tidak ada yang dikirim ke mana pun
+//  Pilihan disimpan per email & aplikasi; belum dipilih -> ditanyakan saat aplikasi pertama dibuka.
+// ═══════════════════════════════════════════════
+const GH_KEY_MODE_SIMPAN = 'guruhub_penyimpanan_v1';
+const GHP_SCOPE = 'https://www.googleapis.com/auth/drive.appdata openid email';
+const GHP_LABEL_MODE = { drive: 'Google Drive saya', server: 'Server Guru Hub', perangkat: 'Hanya perangkat ini' };
+function ghpBacaMode(appId) {
+  try { let o = JSON.parse(localStorage.getItem(GH_KEY_MODE_SIMPAN) || '{}'); return ((o[(ghProfilAktif || {}).email] || {})[appId]) || null; } catch (e) { return null; }
+}
+function ghpTulisMode(appId, mode) {
+  try {
+    let o = JSON.parse(localStorage.getItem(GH_KEY_MODE_SIMPAN) || '{}'), em = (ghProfilAktif || {}).email; if (!em) return;
+    o[em] = o[em] || {}; o[em][appId] = mode; localStorage.setItem(GH_KEY_MODE_SIMPAN, JSON.stringify(o));
+  } catch (e) {}
+  delete ghpVerServer[appId]; ghpCekTerakhir[appId] = 0; delete ghpDriveIdx[appId]; delete ghpPrefetch[appId];
+}
 
+// ---- token Google Drive (hanya di memori; berlaku ~1 jam) ----
+let ghpToken = null, ghpTokenExp = 0, ghpTokenPending = null;
+const ghpDriveIdx = {}; // app -> {kunci:{id, versi}}
+function ghpErrIzin(msg) { let e = new Error(msg); e.perluIzin = true; return e; }
+function ghpAmbilToken(interaktif) {
+  if (ghpToken && Date.now() < ghpTokenExp - 60000) return Promise.resolve(ghpToken);
+  if (ghpTokenPending) return ghpTokenPending;
+  ghpTokenPending = new Promise(function (res, rej) {
+    if (!(window.google && google.accounts && google.accounts.oauth2)) { rej(ghpErrIzin('Layanan Google belum termuat (mungkin offline).')); return; }
+    let batas = interaktif ? null : setTimeout(function () { rej(ghpErrIzin('Izin Google Drive perlu dikonfirmasi ulang.')); }, 5000);
+    let client = google.accounts.oauth2.initTokenClient({
+      client_id: GH_CLIENT_ID, scope: GHP_SCOPE, hint: (ghProfilAktif || {}).email || undefined,
+      callback: async function (r) {
+        clearTimeout(batas);
+        if (r.error) { rej(ghpErrIzin(r.error_description || r.error)); return; }
+        try {
+          if ((r.scope || '').indexOf('drive.appdata') < 0) { rej(ghpErrIzin('Izin Google Drive tidak diberikan.')); return; }
+          let ui = await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + r.access_token } })).json();
+          let em = String(ui.email || '').toLowerCase();
+          if (!em || em !== String((ghProfilAktif || {}).email || '').toLowerCase()) {
+            try { google.accounts.oauth2.revoke(r.access_token, function () {}); } catch (e) {}
+            rej(ghpErrIzin('Akun Google yang dipilih (' + (ui.email || '?') + ') berbeda dengan akun Guru Hub (' + ((ghProfilAktif || {}).email || '?') + '). Pilih akun yang sama.')); return;
+          }
+          ghpToken = r.access_token; ghpTokenExp = Date.now() + parseInt(r.expires_in || '3600', 10) * 1000;
+          res(ghpToken);
+        } catch (e) { rej(ghpErrIzin('Gagal memeriksa akun Google.')); }
+      },
+      error_callback: function (e) { clearTimeout(batas); rej(ghpErrIzin(e && e.type === 'popup_closed' ? 'Izin dibatalkan.' : 'Izin Google tidak bisa diminta (' + ((e && e.type) || '?') + ').')); }
+    });
+    client.requestAccessToken({ prompt: '' });
+  }).then(function (t) { ghpTokenPending = null; return t; }, function (e) { ghpTokenPending = null; throw e; });
+  return ghpTokenPending;
+}
+async function ghpDriveFetch(url, opt) {
+  opt = opt || {};
+  let tok = await ghpAmbilToken(false);
+  opt.headers = Object.assign({ Authorization: 'Bearer ' + tok }, opt.headers || {});
+  let r = await fetch(url, opt);
+  if (r.status === 401) { ghpToken = null; tok = await ghpAmbilToken(false); opt.headers.Authorization = 'Bearer ' + tok; r = await fetch(url, opt); }
+  if (!r.ok && !(opt.boleh && opt.boleh.indexOf(r.status) >= 0)) throw new Error('Google Drive menjawab ' + r.status + '.');
+  return r;
+}
+async function ghpDriveDaftar(appId) {
+  let hasil = [], pt = '';
+  do {
+    let q = "'appDataFolder' in parents and appProperties has { key='a' and value='" + appId + "' } and trashed=false";
+    let u = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields=nextPageToken,files(id,name,appProperties)&q=' + encodeURIComponent(q) + (pt ? '&pageToken=' + encodeURIComponent(pt) : '');
+    let j = await (await ghpDriveFetch(u)).json();
+    hasil = hasil.concat(j.files || []); pt = j.nextPageToken || '';
+  } while (pt);
+  let idx = {};
+  hasil.forEach(function (f) {
+    if (f.name.indexOf(appId + '|') !== 0) return;
+    let k = f.name.slice(appId.length + 1), v = Number((f.appProperties || {}).v || 0);
+    if (!idx[k] || v > idx[k].versi) idx[k] = { id: f.id, versi: v, fmt: (f.appProperties || {}).f === 'k' ? 'kosong' : (f.appProperties || {}).f };
+  });
+  ghpDriveIdx[appId] = idx;
+  return { idx: idx, berkas: hasil };
+}
+async function ghpDriveMuat(appId, opsi) {
+  opsi = opsi || {};
+  let d = await ghpDriveDaftar(appId), hasil = {};
+  for (let k of Object.keys(d.idx)) {
+    let it = d.idx[k];
+    if (opsi.kunci && opsi.kunci.indexOf(k) < 0) continue;
+    if (opsi.hanyaVersi) { hasil[k] = { versi: it.versi, nilai: undefined }; continue; }
+    if (it.fmt === 'kosong') { hasil[k] = { versi: it.versi, nilai: null }; continue; }
+    let teks = await (await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + it.id + '?alt=media')).text();
+    hasil[k] = { versi: it.versi, nilai: await ghpBuka(it.fmt, teks) };
+  }
+  return hasil;
+}
+async function ghpDriveSimpan(it) {
+  let idx = ghpDriveIdx[it.app];
+  if (!idx) { await ghpDriveDaftar(it.app); idx = ghpDriveIdx[it.app]; }
+  let ada = idx[it.kunci];
+  if (ada && ada.versi >= it.versi) return; // Drive sudah punya yang sama/lebih baru
+  let p = it.nilai === null ? { fmt: 'kosong', b64: '' } : await ghpKemas(it.nilai);
+  let meta = { name: it.app + '|' + it.kunci, appProperties: { a: it.app, v: String(it.versi), f: p.fmt === 'kosong' ? 'k' : p.fmt } };
+  if (!ada) meta.parents = ['appDataFolder'];
+  let b = 'ghp' + Math.random().toString(36).slice(2);
+  let isi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + '\r\n--' + b + '\r\nContent-Type: text/plain\r\n\r\n' + p.b64 + '\r\n--' + b + '--';
+  let url = ada ? 'https://www.googleapis.com/upload/drive/v3/files/' + ada.id + '?uploadType=multipart&fields=id' : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id';
+  let r = await ghpDriveFetch(url, { method: ada ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: isi, boleh: ada ? [404] : [] });
+  if (ada && r.status === 404) { delete idx[it.kunci]; return ghpDriveSimpan(it); } // berkas sudah dihapus di tempat lain
+  let j = await r.json();
+  idx[it.kunci] = { id: j.id || (ada && ada.id), versi: it.versi, fmt: p.fmt };
+  (ghpVerServer[it.app] = ghpVerServer[it.app] || {})[it.kunci] = { versi: it.versi };
+  ghpCekTerakhir[it.app] = Date.now();
+}
+async function ghpDriveHapusSemua(appId) {
+  let d = await ghpDriveDaftar(appId), n = 0;
+  for (let f of d.berkas) { await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + f.id, { method: 'DELETE', boleh: [404] }); n++; }
+  delete ghpDriveIdx[appId];
+  return n;
+}
 
-<script data-pwa-converter="v2">
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('[PWA] SW registered:', reg.scope))
-      .catch(err => console.error('[PWA] SW failed:', err));
+// ---- dispatcher berdasarkan pilihan penyimpanan ----
+async function ghpMuatData(appId, opsi) {
+  let m = ghpBacaMode(appId);
+  if (m === 'drive') return await ghpDriveMuat(appId, opsi);
+  if (m === 'server') return await ghpMuatServer(appId, opsi);
+  return {};
+}
+
+// ---- tombol "Hubungkan Google Drive" di bilah panel ----
+async function ghpHubungkanDrive() {
+  try { await ghpAmbilToken(true); ghpMacetIzin = false; document.getElementById('ghp-hubung').style.display = 'none'; ghpSetStatus('simpan'); ghpKuras(); }
+  catch (e) { ghToast('⚠️ ' + e.message); }
+}
+
+// ---- dialog pilihan pertama kali ----
+let _ghpTanyaRes = null;
+function ghpTanyaMode(appId) {
+  return new Promise(function (res) {
+    _ghpTanyaRes = res; window._ghpTanyaApp = appId;
+    document.getElementById('ghp-tanya-app').textContent = GH_APP_PREMIUM[appId].nama;
+    document.getElementById('gh-modal-simpan').classList.add('on');
   });
 }
+async function ghpTanyaPilih(mode) {
+  let appId = window._ghpTanyaApp;
+  if (mode === 'batal') { document.getElementById('gh-modal-simpan').classList.remove('on'); if (_ghpTanyaRes) _ghpTanyaRes(null); return; }
+  if (mode === 'drive') {
+    try { await ghpAmbilToken(true); } catch (e) { ghToast('⚠️ ' + e.message); return; }
+  }
+  ghpTulisMode(appId, mode);
+  document.getElementById('gh-modal-simpan').classList.remove('on');
+  if (_ghpTanyaRes) _ghpTanyaRes(mode);
+}
+
+// ---- panel Data & Privasi (halaman Alat Premium) ----
+function ghpRenderPrivasi() {
+  let wrap = document.getElementById('ghp-privasi-isi'); if (!wrap) return;
+  let html = '';
+  Object.keys(GH_APP_PREMIUM).forEach(function (id) {
+    let a = GH_APP_PREMIUM[id], m = ghpBacaMode(id);
+    html += '<div class="ghp-priv-app"><div class="ghp-priv-hd"><span class="ghp-ico ' + a.ikon + '"></span><b>' + ghEsc(a.nama) + '</b></div>';
+    ['drive', 'server', 'perangkat'].forEach(function (mode) {
+      let ket = mode === 'drive' ? 'Disimpan di folder tersembunyi aplikasi pada Google Drive Anda sendiri. Pengelola Guru Hub tidak menyimpan isinya, dan hanya Guru Hub yang bisa membacanya.'
+        : mode === 'server' ? 'Disimpan di server Guru Hub (Google Sheet milik pengelola). Bisa dibaca pengelola dan tidak dienkripsi.'
+        : 'Tidak ada data yang dikirim ke mana pun. Data hilang bila data browser dihapus; buat berkas cadangan dari dalam aplikasi.';
+      html += '<label class="ghp-priv-opt"><input type="radio" name="ghp-mode-' + id + '" value="' + mode + '"' + (m === mode ? ' checked' : '') + ' onchange="ghpUbahMode(\'' + id + '\',\'' + mode + '\')"><span><b>' + GHP_LABEL_MODE[mode] + '</b><br><small>' + ket + '</small></span></label>';
+    });
+    html += '<div class="ghp-priv-aksi"><button class="gh-btn gh-btn-outline" onclick="ghpUnduhData(\'' + id + '\')">⬇️ Unduh data saya</button> <button class="gh-btn gh-btn-outline" style="color:#b91c1c;border-color:#b91c1c;" onclick="ghpHapusData(\'' + id + '\')">🗑️ Hapus data saya di cloud</button></div>';
+    if (!m) html += '<div class="gh-hint" style="margin-top:6px;">Belum dipilih — akan ditanyakan saat aplikasi pertama dibuka.</div>';
+    html += '</div>';
+  });
+  wrap.innerHTML = html;
+}
+async function ghpUbahMode(appId, mode) {
+  if (ghpPanelAppId === appId) { ghToast('Tutup aplikasi dulu sebelum mengubah penyimpanan.'); ghpRenderPrivasi(); return; }
+  if (mode === 'drive') { try { await ghpAmbilToken(true); } catch (e) { ghToast('⚠️ ' + e.message); ghpRenderPrivasi(); return; } }
+  ghpTulisMode(appId, mode);
+  ghToast('✅ Penyimpanan ' + GH_APP_PREMIUM[appId].nama + ': ' + GHP_LABEL_MODE[mode] + '. Data di perangkat ini akan disamakan pada pembukaan berikutnya.');
+}
+function ghpKredLonggar() { // untuk hak data (unduh/hapus): tetap bisa walau langganan sudah berhenti
+  if (!ghProfilAktif || !ghProfilAktif.kunciGuru) throw new Error('Sesi login bermasalah -- coba logout & login ulang.');
+  return { email: ghProfilAktif.email, kunciGuru: ghProfilAktif.kunciGuru };
+}
+async function ghpUnduhData(appId) {
+  let m = ghpBacaMode(appId);
+  if (!m || m === 'perangkat') { ghToast('Data Anda hanya ada di perangkat ini. Gunakan "Simpan project (.gaib)" di dalam aplikasi untuk mengunduhnya.'); return; }
+  ghToast('⏳ Mengambil data Anda…');
+  try {
+    let isi;
+    if (m === 'drive') isi = await ghpDriveMuat(appId, {});
+    else {
+      let k = ghpKredLonggar();
+      let h = await ghFetchLisensi(GH_URL_LISENSI + '?action=muatDataApp&ekspor=1&email=' + encodeURIComponent(k.email) + '&kunciGuru=' + encodeURIComponent(k.kunciGuru) + '&app=' + encodeURIComponent(appId));
+      if (h.status !== 'ok') throw new Error(h.msg || 'Gagal mengambil data.');
+      isi = {};
+      for (let kunci of Object.keys(h.items || {})) { let it = h.items[kunci]; isi[kunci] = { versi: it.versi, nilai: it.fmt === 'kosong' ? null : await ghpBuka(it.fmt, (it.bagian || []).join('')) }; }
+    }
+    let berkas = { aplikasi: appId, diekspor: new Date().toISOString(), email: ghProfilAktif.email, penyimpanan: m, data: isi };
+    let a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(berkas, null, 1)], { type: 'application/json' }));
+    a.download = 'guruhub-' + appId + '-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    ghToast('✅ Data diunduh (' + Object.keys(isi).length + ' item).');
+  } catch (e) { ghToast('⚠️ ' + e.message); }
+}
+async function ghpHapusData(appId) {
+  let m = ghpBacaMode(appId);
+  if (!m || m === 'perangkat') { ghToast('Tidak ada data di cloud untuk dihapus. Data di perangkat ini dihapus lewat pengaturan browser atau dari dalam aplikasi.'); return; }
+  if (ghpPanelAppId === appId) { ghToast('Tutup aplikasi dulu sebelum menghapus data.'); return; }
+  if (!confirm('Hapus SEMUA data ' + GH_APP_PREMIUM[appId].nama + ' Anda dari ' + GHP_LABEL_MODE[m] + '?\n\nIni permanen. Data di perangkat ini tidak ikut terhapus, dan penyimpanan akan diubah menjadi "Hanya perangkat ini" supaya tidak terunggah lagi.')) return;
+  try {
+    if (m === 'drive') await ghpDriveHapusSemua(appId);
+    else {
+      let k = ghpKredLonggar();
+      let h = await ghFetchLisensi(GH_URL_LISENSI, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'hapusDataApp', email: k.email, kunciGuru: k.kunciGuru, app: appId }) });
+      if (h.status !== 'ok') throw new Error(h.msg || 'Gagal menghapus data.');
+    }
+    Object.keys(ghpAntrian).forEach(function (key) { if (key.indexOf(appId + '|') === 0) delete ghpAntrian[key]; });
+    ghpTulisMode(appId, 'perangkat'); ghpRenderPrivasi();
+    ghToast('🗑️ Data cloud dihapus.');
+  } catch (e) { ghToast('⚠️ ' + e.message); }
+}
+</script>
+
+<script data-pwa-converter="v2">
+// Pendaftaran service worker dilakukan di skrip utama Guru Hub (sw.js + ../sw-premium.js).
 let _pwaPrompt;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
@@ -5073,4 +5330,5 @@ function _pwaInstall() {
 window.addEventListener('appinstalled', () => {
   const b = document.getElementById('_pwa_banner');
   if (b) b.style.display = 'none';
-});</script></body></html>
+});</script></body>
+</html>
