@@ -4773,7 +4773,7 @@ function ghUiLogout() {
 // ═══════════════════════════════════════════════
 // OFFLINE (2026-10): service worker menyimpan Guru Hub + aplikasi premium supaya terbuka tanpa internet (lihat sw.js).
 // sw.js harus berada di folder yang sama dengan guru-hub.html.
-try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {}
+try { if ('serviceWorker' in navigator && location.protocol === 'https:') { navigator.serviceWorker.register('sw.js').catch(function () {}); navigator.serviceWorker.register('../sw-premium.js', { scope: '../' }).catch(function () {}); } } catch (e) {}
 const GH_APP_PREMIUM = {
   kea:    { nama: 'Smart Bloom & Topic Analyzer', url: 'https://cbtkabutdigital.com/Premium/topik-bloom-classifier_pro.html', ikon: 'ghp-ico-kea' },
   guruai: { nama: 'GuruAI Builder',               url: 'https://cbtkabutdigital.com/Premium/guruai-builder.html',            ikon: 'ghp-ico-guruai' }
