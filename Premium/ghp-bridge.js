@@ -28,6 +28,26 @@
   var IDB_KECUALI = ((script && script.getAttribute('data-idb-kecuali')) || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
   if (!IDB_STORE) IDB_NAME = '';
   var cacheTerakhir = {}, memproses = false;
+  // data-sembunyi="kunci:medan1,medan2;kunci2:medan": medan RAHASIA/PRIBADI di dalam nilai JSON suatu kunci
+  // (mis. URL & kunci rahasia cadangan pribadi guru). Medan ini TIDAK PERNAH keluar dari perangkat:
+  // dibuang sebelum dikirim, dan saat data server diterapkan, nilai lokalnya dipertahankan.
+  var SEMBUNYI = {};
+  ((script && script.getAttribute('data-sembunyi')) || '').split(';').forEach(function (r) {
+    var p = r.split(':'); if (p.length === 2 && p[0].trim()) SEMBUNYI[p[0].trim()] = p[1].split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+  });
+  function saring(k, str) {
+    if (!SEMBUNYI[k] || typeof str !== 'string') return str;
+    try { var o = JSON.parse(str); if (o && typeof o === 'object') { SEMBUNYI[k].forEach(function (f) { delete o[f]; }); return JSON.stringify(o); } } catch (e) {}
+    return str;
+  }
+  function gabung(k, nilaiServer, nilaiLokal) { // server (sudah disaring) + medan rahasia milik perangkat ini
+    if (!SEMBUNYI[k] || typeof nilaiServer !== 'string') return nilaiServer;
+    try {
+      var o = JSON.parse(saring(k, nilaiServer)), l = nilaiLokal ? JSON.parse(nilaiLokal) : {};
+      SEMBUNYI[k].forEach(function (f) { if (l && l[f] !== undefined) o[f] = l[f]; });
+      return JSON.stringify(o);
+    } catch (e) { return nilaiServer; }
+  }
   var ORIGIN_HUB = '';
   try { if (URL_HUB) ORIGIN_HUB = new URL(URL_HUB, location.href).origin; } catch (e) {}
 
@@ -88,7 +108,7 @@
   Storage.prototype.setItem = function (k, v) {
     if (!sah(this, k)) return _set.apply(this, arguments);
     var lama = _get.call(this, k); _set.call(this, k, v);
-    if (siap && lama !== String(v)) catat(k, String(v));
+    if (siap && saring(k, lama) !== saring(k, String(v))) catat(k, saring(k, String(v)));
   };
   Storage.prototype.removeItem = function (k) {
     if (!sah(this, k)) return _rem.apply(this, arguments);
@@ -199,7 +219,7 @@
           idbDaftar.push([k.slice(4), t[k].nilai]); cacheTerakhir[k] = t[k].nilai; meta[k] = t[k].versi; berubah = true; return;
         }
         if (KUNCI.indexOf(k) < 0) return;
-        try { if (t[k].nilai === null) _rem.call(localStorage, k); else _set.call(localStorage, k, t[k].nilai); } catch (e) {}
+        try { if (t[k].nilai === null) _rem.call(localStorage, k); else _set.call(localStorage, k, gabung(k, t[k].nilai, _get.call(localStorage, k))); } catch (e) {}
         meta[k] = t[k].versi; berubah = true;
       });
       var vs = d.versi || {}; Object.keys(vs).forEach(function (k) { meta[k] = vs[k]; });
@@ -208,6 +228,14 @@
         if (berubah && ss('g', SK_RELOAD) !== tiket) { ss('s', SK_RELOAD, tiket); location.reload(); return; }
         ss('r', SK_RELOAD);
         terbuka = true; siap = true; memproses = false; window.GHP.terbuka = true; window.GHP.originInduk = originInduk;
+        // Sekali saja: kirim ulang nilai yang SUDAH disaring supaya salinan lama di server (dari versi sebelum
+        // penyaringan ada) tergantikan -- medan rahasia tidak tersisa di server.
+        try {
+          if (Object.keys(SEMBUNYI).length && _get.call(localStorage, 'ghp_sanit1_' + APP) !== '1') {
+            Object.keys(SEMBUNYI).forEach(function (k) { var v = _get.call(localStorage, k); if (v !== null) catat(k, saring(k, v)); });
+            _set.call(localStorage, 'ghp_sanit1_' + APP, '1');
+          }
+        } catch (e) {}
         penunggu.splice(0).forEach(function (f) { try { f(); } catch (e) {} });
       });
     } else if (d.type === 'GHP_FLUSH') {
@@ -221,7 +249,7 @@
 
   function kirimHello() {
     var lokal = {};
-    KUNCI.forEach(function (k) { var v = _get.call(localStorage, k); lokal[k] = { versi: meta[k] || 0, nilai: v }; });
+    KUNCI.forEach(function (k) { var v = _get.call(localStorage, k); lokal[k] = { versi: meta[k] || 0, nilai: saring(k, v) }; });
     bacaIdb().then(function (idb) {
       Object.keys(idb).forEach(function (k) { cacheTerakhir['idb:' + k] = idb[k]; lokal['idb:' + k] = { versi: meta['idb:' + k] || 0, nilai: idb[k] }; });
       kePar({ type: 'GHP_HELLO', tiket: tiket, lokal: lokal });
