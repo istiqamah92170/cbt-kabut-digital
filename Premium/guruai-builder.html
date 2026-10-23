@@ -13,7 +13,7 @@
 <!DOCTYPE html>
 <html lang="id"><head>
 <!-- GERBANG PREMIUM: hanya terbuka lewat Guru Hub (tiket) -- JANGAN dipindah/dihapus, harus paling awal. API key Gemini sengaja TIDAK disinkronkan. -->
-<script src="ghp-bridge.js" data-app="guruai" data-kunci="guruai_settings" data-sembunyi="guruai_settings:cloudUrl,cloudSecret,idGuru,cloudLastBackup" data-idb="guruai_idb:1:data" data-idb-kecuali="ai_cache" data-url-server="https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec" data-url-guruhub="https://cbtkabutdigital.com/Premium/Guru-Hub/index.html"></script>
+<script src="ghp-bridge.js" data-app="guruai" data-kunci="guruai_settings" data-sembunyi="guruai_settings:cloudUrl,cloudSecret,idGuru,cloudLastBackup" data-idb="guruai_idb:1:data" data-idb-kecuali="ai_cache,active_project_id" data-tunda="_result_" data-url-server="https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec" data-url-guruhub="https://cbtkabutdigital.com/Premium/Guru-Hub/index.html"></script>
 <script>if(!window.GHP){document.addEventListener('DOMContentLoaded',function(){document.body.innerHTML='<div style="position:fixed;inset:0;background:#0b1410;color:#e8f3ee;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;text-align:center">\uD83D\uDD12 Aplikasi ini hanya bisa dibuka lewat Guru Hub dengan langganan aktif.</div>';});}</script>
 <meta name="author" content="Rapian Hasanuddin">
 <meta name="copyright" content="© 2026 Rapian Hasanuddin">
@@ -23,7 +23,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>G​‌​uruAI Builder v1.0</title>
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0074e0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1194,37 +1193,9 @@ h1,h2,h3,h4 { color: var(--text-primary); }
 
 /* _b:4eab9f */</style>
 <meta name="description" content="GuruAI Builder bantu guru menyusun RPPM, LKPD &amp; soal sesuai Kurikulum Merdeka/KBC dengan fitur AI, riwayat kerja tersimpan di HP"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="icon" href="./icons/icon-192.png" type="image/png"><link rel="apple-touch-icon" href="./icons/icon-192.png"><script data-pwa-converter="v2">
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('[PWA] SW registered:', reg.scope))
-      .catch(err => console.error('[PWA] SW failed:', err));
-  });
-}
-let _pwaPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  _pwaPrompt = e;
-  const b = document.getElementById('_pwa_banner');
-  if (b) b.style.display = 'flex';
-});
-function _pwaInstall() {
-  if (!_pwaPrompt) return;
-  _pwaPrompt.prompt();
-  _pwaPrompt.userChoice.then(r => {
-    console.log('[PWA] Install:', r.outcome);
-    _pwaPrompt = null;
-    const b = document.getElementById('_pwa_banner');
-    if (b) b.style.display = 'none';
-  });
-}
-window.addEventListener('appinstalled', () => {
-  const b = document.getElementById('_pwa_banner');
-  if (b) b.style.display = 'none';
-});</script><script data-wm-rt="1">(function(){var _id="WM-MU6834YMNWV57";var _bh="537ba3df";var _on="Rapian Hasanuddin";var _id8="WM-MU683";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
+/* Service Worker & Install bawaan dihapus: aplikasi hanya berjalan di dalam Guru Hub (sw-premium.js yang mengurus cache). */</script><script data-wm-rt="1">(function(){var _id="WM-MU6834YMNWV57";var _bh="537ba3df";var _on="Rapian Hasanuddin";var _id8="WM-MU683";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
 <body data-wm="WM-MU6834YMNWV57" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
 <!-- OWNER:WM-MU6834YMNWV57:Rapian%20Hasanuddin:2026-09-18 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MU6834YMNWV57">WM-MU6834YMNWV57</span>
-<div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0074e0;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal GuruAI Builder v1.0</span><button onclick="_pwaInstall()" style="background:#fff;color:#0074e0;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
 
 <div class="app-shell">
 
@@ -1946,13 +1917,6 @@ B. Sub-poin...
               <p id="statusPenyimpanan">Memeriksa…</p>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="_mintaPenyimpananPermanen(true)">🔒 Minta Izin</button>
-          </div>
-          <div class="settings-row">
-            <div class="settings-row-info">
-              <h4>Install sebagai Aplikasi</h4>
-              <p id="statusInstall">Memeriksa…</p>
-            </div>
-            <button class="btn btn-primary btn-sm" id="btnInstallPWA" onclick="_installPWA()" style="display:none;">📲 Install</button>
           </div>
         </div>
 
@@ -2740,7 +2704,7 @@ const IDB = {
   /* ID project aktif — diisi saat init/switch project. Semua key otomatis
      diberi awalan 'proj_<id>_' KECUALI key di GLOBAL_KEYS (dipakai bersama semua project). */
   _activeProjectId: null,
-  GLOBAL_KEYS: ['project_list', 'active_project_id', 'ai_cache', 'logo_sekolah'],
+  GLOBAL_KEYS: ['project_list', 'active_project_id', 'ai_cache', 'logo_sekolah', 'migrasi_meta'],
 
   /** Ubah key logis menjadi key fisik ber-namespace project */
   _k(key) {
@@ -2856,6 +2820,8 @@ const STORAGE = {
 const PROJECT = {
   /** Kumpulkan semua data jadi satu objek project (async — perlu baca IDB) */
   async collect() {
+    /* Isi riwayat bisa ditunda Guru Hub di perangkat baru: pastikan SEMUA sudah ada sebelum diekspor */
+    if (!(await _pastikanResult(DATABASE.history.map(h => h.id)))) throw new Error('Sebagian isi riwayat belum terunduh dari Google Drive (koneksi?). Coba lagi saat online.');
     /* Kumpulkan hasil generate lengkap (result_<id>) untuk tiap riwayat,
        supaya isi RPPM/LKPD/Soal dst (termasuk hasil AI/edit manual) ikut ke .gaib */
     const results = {};
@@ -2874,7 +2840,7 @@ const PROJECT = {
       project:  { nama: DATABASE.settings.guru || 'GuruAI', versi: CONFIG.VERSION },
       settings: DATABASE.settings,
       stats:    DATABASE.stats,
-      history:  DATABASE.history,
+      history:  DATABASE.history.map(h => { if (h && h.analisisRef) { const { analisisRef, ...r } = h; return { ...r, analisis: ANALISIS_MAP[analisisRef] || null }; } return h; }),
       results,                     /* NEW: hasil generate lengkap per riwayat */
       atpState: atpState || null,  /* NEW: progress ATP & Pertemuan */
       bankSoalPaket: bankSoalPaket || [], /* NEW: paket soal hasil RPPM di Bank Soal */
@@ -2887,7 +2853,8 @@ const PROJECT = {
   /** Unduh file .gaib */
   async save() {
     showToast('💾 Menyiapkan file project...', 'info');
-    const data    = await this.collect();
+    let data;
+    try { data = await this.collect(); } catch (e) { showToast('⚠️ ' + e.message, 'warning'); return; }
     const mapel   = data.form.mapel   || 'Proyek';
     const kelas   = data.form.kelas   || '';
     const tahun   = data.form.tahun   || new Date().getFullYear();
@@ -2901,7 +2868,7 @@ const PROJECT = {
     showToast(`💾 Project disimpan: ${name}${CONFIG.PROJECT_EXT}`);
     /* Ikut cadangkan ke cloud diam-diam (kalau sudah disetel) — tidak
        menghalangi/menunda unduhan .gaib di atas kalau gagal/offline */
-    _cadangkanKeCloud(true);
+    /* (cadangan cloud Apps Script otomatis dimatikan: penyimpanan lewat Guru Hub) */
   },
 
   /** Buka file .gaib dan restore semua state */
@@ -2937,8 +2904,6 @@ const PROJECT = {
     if (data.stats)   Object.assign(DATABASE.stats, data.stats);
     if (data.history) DATABASE.history = data.history;
 
-    /* Simpan ke IDB */
-    await IDB.set('main', { stats: DATABASE.stats, history: DATABASE.history });
 
     /* Restore hasil generate lengkap (result_<id>) — inilah yang sebelumnya
        hilang saat file .gaib dibuka di perangkat/browser lain */
@@ -2947,6 +2912,9 @@ const PROJECT = {
         await IDB.set('result_' + id, result);
       }
     }
+    await _migrasiAnalisisRiwayat(); /* analisis inline dari .gaib -> kunci per isi (sebelum main) */
+    /* Riwayat (main) ditulis SETELAH semua result_<id> */
+    await IDB.set('main', { stats: DATABASE.stats, history: DATABASE.history });
     if (data.history && data.history.length) {
       await IDB.set('last_historyId', data.history[data.history.length - 1].id);
     }
@@ -3015,7 +2983,6 @@ const PROJECT = {
 
     /* Restore RPPM jika ada */
     if (data.rppm && Object.keys(data.rppm).length) {
-      STORAGE.save(_lsKeyProject() + '_rppm', data.rppm);
       restoreRPPM?.();
     }
 
@@ -3038,14 +3005,68 @@ const PROJECT = {
    tanpa perlu export-import file .gaib tiap ganti mapel.
    File .gaib tetap tersedia untuk backup/pindah perangkat.
    ============================================================ */
+/* ============================================================
+   ANALISIS per proyek — disimpan SEKALI per isi (kunci proj_<id>_an_<ref>, berbasis hash isi),
+   riwayat hanya merujuk lewat analisisRef. Mengecilkan 'main' dan tidak bisa saling menimpa antar-perangkat.
+   ============================================================ */
+let ANALISIS_MAP = {};   /* { [ref]: {topik,tp,materi} } proyek aktif */
+function _analisisRef(a) {
+  const isi = { topik: (a && a.topik) || [], tp: (a && a.tp) || [], materi: (a && a.materi) || [] };
+  const s = JSON.stringify(isi);
+  let h1 = 5381, h2 = 0;
+  for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = ((h1 << 5) + h1 + c) | 0; h2 = (c + (h2 << 6) + (h2 << 16) - h2) | 0; }
+  const ref = 'a' + (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36) + s.length.toString(36);
+  if (!ANALISIS_MAP[ref]) { ANALISIS_MAP[ref] = isi; IDB.set('an_' + ref, isi); }
+  return ref;
+}
+function _analisisRiwayat(h) {
+  if (!h) return null;
+  return h.analisis || (h.analisisRef && ANALISIS_MAP[h.analisisRef]) || null;
+}
+async function _muatAnalisisMap() {
+  ANALISIS_MAP = {};
+  const pre = 'proj_' + (IDB._activeProjectId || 'default') + '_an_';
+  const keys = await IDB.allKeysRaw();
+  for (const k of keys) {
+    if (typeof k === 'string' && k.startsWith(pre)) { const v = await IDB.getRaw(k, null); if (v) ANALISIS_MAP[k.slice(pre.length)] = v; }
+  }
+}
+/** Pindahkan analisis inline (riwayat lama / hasil buka .gaib) ke kunci per isi. true bila ada yang diubah. */
+async function _migrasiAnalisisRiwayat() {
+  let berubah = false;
+  for (const h of DATABASE.history) {
+    if (h && h.analisis) { h.analisisRef = _analisisRef(h.analisis); delete h.analisis; berubah = true; }
+  }
+  return berubah;
+}
+/** Pastikan isi riwayat (result_<id>) yang ditunda Guru Hub sudah ada di perangkat ini. true bila lengkap. */
+async function _pastikanResult(ids) {
+  if (!ids || !ids.length || !window.GHP || typeof window.GHP.minta !== 'function') return true;
+  const perlu = [];
+  for (const id of ids) { if ((await IDB.get('result_' + id, null)) === null) perlu.push(IDB._k('result_' + id)); }
+  if (!perlu.length) return true;
+  try { return await window.GHP.minta(perlu); } catch (e) { return false; }
+}
+function _escH(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
 const PROJECT_MANAGER = {
-  /** Daftar semua project tersimpan: [{id, nama, mapel, fase, kelas, tahun, updatedAt}] */
-  async listAll() {
-    return (await IDB.get('project_list', [])) || [];
+  /* Metadata tiap proyek disimpan di kuncinya sendiri: proj_<id>_meta  {id,nama,mapel,fase,kelas,tahun,dibuat,updatedAt,hapus?,hapusPada?}.
+     Tidak ada lagi daftar tunggal — daftar proyek = semua kunci meta (dua perangkat membuat proyek berbeda tidak saling menghilangkan). */
+  _kunciMeta(id) { return 'proj_' + id + '_meta'; },
+  async _semuaMeta() {
+    const keys = await IDB.allKeysRaw(), out = [];
+    for (const k of keys) {
+      const m = typeof k === 'string' ? /^proj_(.+)_meta$/.exec(k) : null;
+      if (!m) continue;
+      const v = await IDB.getRaw(k, null);
+      if (v && typeof v === 'object' && v.id === m[1]) out.push(v);
+    }
+    return out;
   },
-  async saveList(list) {
-    await IDB.set('project_list', list);
-  },
+  /** Daftar project aktif (belum dihapus): [{id, nama, mapel, fase, kelas, tahun, updatedAt}] */
+  async listAll() { return (await this._semuaMeta()).filter(p => !p.hapus); },
+  async listTerhapus() { return (await this._semuaMeta()).filter(p => p.hapus); },
+  async saveMeta(p) { await IDB.setRaw(this._kunciMeta(p.id), p); },
   async getActiveId() {
     return await IDB.get('active_project_id', null);
   },
@@ -3056,47 +3077,38 @@ const PROJECT_MANAGER = {
 
   /** Buat project baru lalu jadikan aktif */
   async create(nama, meta = {}) {
-    const id   = UTIL.uid();
-    const list = await this.listAll();
-    list.push({
+    const id = UTIL.uid();
+    await this.saveMeta({
       id, nama,
       mapel: meta.mapel || '', fase: meta.fase || '', kelas: meta.kelas || '',
-      tahun: meta.tahun || '', updatedAt: Date.now(),
+      tahun: meta.tahun || '', dibuat: Date.now(), updatedAt: Date.now(),
     });
-    await this.saveList(list);
     await this.setActiveId(id);
     return id;
   },
 
   async rename(id, namaBaru) {
-    const list = await this.listAll();
-    const p = list.find(x => x.id === id);
-    if (p) { p.nama = namaBaru; p.updatedAt = Date.now(); await this.saveList(list); }
+    const p = await IDB.getRaw(this._kunciMeta(id), null);
+    if (p && !p.hapus) { p.nama = namaBaru; p.updatedAt = Date.now(); await this.saveMeta(p); }
   },
 
-  /** Perbarui metadata project aktif (dipanggil saat form identitas diisi) */
+  /** Perbarui metadata project aktif (dipanggil saat form identitas diisi) — hanya menulis bila ada yang benar-benar berubah */
   async touchActive(meta = {}) {
     const activeId = await this.getActiveId();
     if (!activeId) return;
-    const list = await this.listAll();
-    const p = list.find(x => x.id === activeId);
-    if (!p) return;
+    const p = await IDB.getRaw(this._kunciMeta(activeId), null);
+    if (!p || p.hapus) return;
+    const beda = Object.keys(meta).some(k => String(p[k] == null ? '' : p[k]) !== String(meta[k] == null ? '' : meta[k]));
+    if (!beda) return;
     Object.assign(p, meta, { updatedAt: Date.now() });
-    await this.saveList(list);
+    await this.saveMeta(p);
   },
 
-  /** Hapus project beserta seluruh datanya di IDB */
+  /** Hapus-lunak: project ditandai terhapus (data TIDAK dihapus) dan bisa dipulihkan 30 hari */
   async remove(id) {
-    const list  = await this.listAll();
-    const sisa  = list.filter(x => x.id !== id);
-    await this.saveList(sisa);
-
-    /* Hapus semua key milik project ini */
-    const allKeys = await IDB.allKeysRaw();
-    const prefix  = `proj_${id}_`;
-    for (const k of allKeys) {
-      if (typeof k === 'string' && k.startsWith(prefix)) await IDB.delRaw(k);
-    }
+    const p = await IDB.getRaw(this._kunciMeta(id), null);
+    if (p) { p.hapus = true; p.hapusPada = Date.now(); await this.saveMeta(p); }
+    const sisa = await this.listAll();
 
     /* Kalau project yang dihapus sedang aktif, pindah ke project lain / buat baru */
     const activeId = await this.getActiveId();
@@ -3106,6 +3118,25 @@ const PROJECT_MANAGER = {
         await this.create('Project Baru');
         await _reloadAppState();
       }
+    }
+  },
+  async pulihkan(id) {
+    const p = await IDB.getRaw(this._kunciMeta(id), null);
+    if (!p) return;
+    delete p.hapus; delete p.hapusPada; p.updatedAt = Date.now();
+    await this.saveMeta(p);
+  },
+  /** Hapus PERMANEN semua key milik project (juga dipakai pembersihan otomatis setelah 30 hari) */
+  async hapusPermanen(id) {
+    const allKeys = await IDB.allKeysRaw();
+    const prefix  = `proj_${id}_`;
+    for (const k of allKeys) {
+      if (typeof k === 'string' && k.startsWith(prefix)) await IDB.delRaw(k);
+    }
+  },
+  async bersihkanKedaluwarsa() {
+    for (const p of await this.listTerhapus()) {
+      if (Date.now() - (p.hapusPada || 0) > 30 * 86400000) await this.hapusPermanen(p.id);
     }
   },
 
@@ -3129,8 +3160,7 @@ const PROJECT_MANAGER = {
   },
 
   async promptRename(id) {
-    const list = await this.listAll();
-    const p = list.find(x => x.id === id);
+    const p = await IDB.getRaw(this._kunciMeta(id), null);
     const nama = prompt('Ganti nama project:', p?.nama || '');
     if (!nama || !nama.trim()) return;
     await this.rename(id, nama.trim());
@@ -3138,14 +3168,57 @@ const PROJECT_MANAGER = {
   },
 
   async promptRemove(id) {
-    const list = await this.listAll();
-    const p = list.find(x => x.id === id);
-    if (!confirm(`Hapus project "${p?.nama || ''}"? Semua riwayat & RPPM di project ini akan hilang permanen dari perangkat ini.`)) return;
+    const p = await IDB.getRaw(this._kunciMeta(id), null);
+    if (!confirm(`Hapus project "${p?.nama || ''}"?\n\nProject dipindahkan ke "Proyek terhapus" dan masih bisa dipulihkan selama 30 hari.`)) return;
     await this.remove(id);
     await renderProjectSwitcher();
-    showToast('🗑️ Project dihapus');
+    showToast('🗑️ Project dipindahkan ke Proyek terhapus (bisa dipulihkan 30 hari)');
+  },
+
+  /** Daftar proyek terhapus: pulihkan atau hapus permanen */
+  async bukaTerhapus() {
+    const arr = await this.listTerhapus();
+    const lama = document.getElementById('modalTerhapus'); if (lama) lama.remove();
+    const ov = document.createElement('div');
+    ov.id = 'modalTerhapus';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px';
+    const sisaHari = p => Math.max(0, 30 - Math.floor((Date.now() - (p.hapusPada || 0)) / 86400000));
+    ov.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#111);border-radius:14px;max-width:460px;width:100%;max-height:80vh;overflow:auto;padding:16px">
+      <h3 style="margin:0 0 6px">🗑️ Proyek terhapus</h3>
+      <p style="font-size:12px;opacity:.75;margin:0 0 10px">Disimpan 30 hari, setelah itu dihapus permanen.</p>`
+      + (arr.length ? arr.map(p => `<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border,#ddd)">
+          <div style="flex:1;min-width:0"><b>${_escH(p.nama)}</b><div style="font-size:11px;opacity:.7">sisa ${sisaHari(p)} hari</div></div>
+          <button class="btn btn-secondary btn-sm" onclick="PROJECT_MANAGER.promptPulihkan('${_escH(p.id)}')">↩️ Pulihkan</button>
+          <button class="btn btn-secondary btn-sm" onclick="PROJECT_MANAGER.promptHapusPermanen('${_escH(p.id)}')">🗑️</button></div>`).join('') : '<p>Tidak ada proyek terhapus.</p>')
+      + `<div style="text-align:right;margin-top:10px"><button class="btn btn-primary btn-sm" onclick="document.getElementById('modalTerhapus').remove()">Tutup</button></div></div>`;
+    document.body.appendChild(ov);
+  },
+  async promptPulihkan(id) {
+    await this.pulihkan(id);
+    await renderProjectSwitcher();
+    await this.bukaTerhapus();
+    showToast('↩️ Project dipulihkan');
+  },
+  async promptHapusPermanen(id) {
+    const p = await IDB.getRaw(this._kunciMeta(id), null);
+    if (!confirm(`Hapus PERMANEN project "${p?.nama || ''}"? Tidak bisa dipulihkan lagi.`)) return;
+    await this.hapusPermanen(id);
+    await renderProjectSwitcher();
+    await this.bukaTerhapus();
   },
 };
+
+/** Migrasi sekali: daftar proyek lama (kunci tunggal project_list) -> metadata per proyek. */
+async function _migrasiProjectList() {
+  if (await IDB.getRaw('migrasi_meta', null)) return;
+  const legacy = (await IDB.getRaw('project_list', [])) || [];
+  if (!Array.isArray(legacy) || !legacy.length) return;
+  const ada = new Set((await PROJECT_MANAGER._semuaMeta()).map(p => p.id));
+  for (const p of legacy) {
+    if (p && p.id && !ada.has(p.id)) await PROJECT_MANAGER.saveMeta({ ...p, dibuat: p.updatedAt || Date.now() });
+  }
+  await IDB.setRaw('migrasi_meta', Date.now());
+}
 
 /** Migrasi data project lama (sebelum ada Manajemen Project) — key IDB polos
  *  seperti 'main', 'form', 'rppm', 'atp_state', 'result_<id>' — ke project
@@ -3192,14 +3265,16 @@ async function _migrasiProjectLama() {
 
 /** Inisialisasi Manajemen Project — dipanggil sekali saat init() */
 async function _initProjectManager() {
+  await _migrasiProjectList();
+  await PROJECT_MANAGER.bersihkanKedaluwarsa();
   let list     = await PROJECT_MANAGER.listAll();
   let activeId = await PROJECT_MANAGER.getActiveId();
 
   if (!list.length) {
     const migrated = await _migrasiProjectLama();
     if (migrated) {
+      await PROJECT_MANAGER.saveMeta({ ...migrated, dibuat: migrated.updatedAt });
       list = [migrated];
-      await PROJECT_MANAGER.saveList(list);
       activeId = migrated.id;
       await PROJECT_MANAGER.setActiveId(activeId);
     } else {
@@ -3207,7 +3282,9 @@ async function _initProjectManager() {
       return; /* create() sudah men-set IDB._activeProjectId */
     }
   }
-  if (!activeId || !list.some(p => p.id === activeId)) activeId = list[0]?.id;
+  if (!activeId || !list.some(p => p.id === activeId)) {
+    activeId = list.slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0]?.id;
+  }
   await PROJECT_MANAGER.setActiveId(activeId);
 }
 
@@ -3235,6 +3312,8 @@ async function _reloadAppState() {
   let saved = await IDB.get('main', null);
   if (saved?.stats)   Object.assign(DATABASE.stats, saved.stats);
   if (saved?.history) DATABASE.history = saved.history;
+  await _muatAnalisisMap();
+  if (await _migrasiAnalisisRiwayat()) await IDB.set('main', { stats: DATABASE.stats, history: DATABASE.history }); /* analisis ke kunci per isi, lalu 'main' yang lebih kecil */
   await _muatBankSoal();
 
   /* Bereskan project yang sudah kadung menumpuk banyak riwayat lengkap
@@ -3270,10 +3349,11 @@ async function _reloadAppState() {
 
   const lastId = await IDB.get('last_historyId', null);
   if (lastId) {
+    await _pastikanResult([lastId]); /* isi riwayat bisa ditunda Guru Hub: minta bila belum ada */
     const savedResult = await IDB.get('result_' + lastId, null);
     const lastHistory = DATABASE.history.find(h => h.id === lastId);
     if (savedResult && lastHistory) {
-      const analisis = lastHistory.analisis || {};
+      const analisis = _analisisRiwayat(lastHistory) || {};
       const data = {
         ...lastHistory,
         tp:     (analisis.tp     || []).join('\n'),
@@ -3339,21 +3419,23 @@ async function renderProjectSwitcher() {
   const menu = document.getElementById('projectMenu');
   if (!menu) return;
 
+  const nTerhapus = (await PROJECT_MANAGER.listTerhapus()).length;
+  const linkTerhapus = nTerhapus ? `<div class="project-menu-new" onclick="event.stopPropagation();PROJECT_MANAGER.bukaTerhapus()">🗑️ Proyek terhapus (${nTerhapus})</div>` : '';
   if (!list.length) {
     menu.innerHTML = `<div class="project-menu-empty">Belum ada project</div>
-      <div class="project-menu-new" onclick="PROJECT_MANAGER.promptCreate()">+ Project Baru</div>`;
+      <div class="project-menu-new" onclick="PROJECT_MANAGER.promptCreate()">+ Project Baru</div>` + linkTerhapus;
     return;
   }
 
   menu.innerHTML = list.slice().sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0)).map(p => `
     <div class="project-menu-item ${p.id === activeId ? 'active' : ''}" onclick="PROJECT_MANAGER.switchTo('${p.id}')">
-      <span class="pm-name">${p.id === activeId ? '✓ ' : ''}${p.nama}</span>
+      <span class="pm-name">${p.id === activeId ? '✓ ' : ''}${_escH(p.nama)}</span>
       <span class="pm-actions">
         <span onclick="event.stopPropagation();PROJECT_MANAGER.promptRename('${p.id}')" title="Ganti nama">✏️</span>
         <span onclick="event.stopPropagation();PROJECT_MANAGER.promptRemove('${p.id}')" title="Hapus">🗑️</span>
       </span>
     </div>`).join('') + `<div class="project-menu-divider"></div>
-    <div class="project-menu-new" onclick="event.stopPropagation();PROJECT_MANAGER.promptCreate()">+ Project Baru</div>`;
+    <div class="project-menu-new" onclick="event.stopPropagation();PROJECT_MANAGER.promptCreate()">+ Project Baru</div>` + linkTerhapus;
 }
 
 /** Buka/tutup dropdown Project Switcher */
@@ -6035,7 +6117,7 @@ function _catatKeRiwayat(historyId, data, result, tabAktif) {
       id: historyId,
       ts: Date.now(),
       ...data,
-      analisis: { topik: STATE_ANALISIS.topik, tp: STATE_ANALISIS.tp, materi: STATE_ANALISIS.materi },
+      analisisRef: _analisisRef({ topik: STATE_ANALISIS.topik, tp: STATE_ANALISIS.tp, materi: STATE_ANALISIS.materi }),
     });
     DATABASE.stats.modul++;
     DATABASE.stats.lkpd++;
@@ -6045,7 +6127,6 @@ function _catatKeRiwayat(historyId, data, result, tabAktif) {
   }
   const payload = { stats: DATABASE.stats, history: DATABASE.history };
   IDB.set('main', payload);
-  STORAGE.save(_lsKeyProject(), payload);
 
   /* Ringankan riwayat lama SETELAH ada riwayat baru — lihat _rampingkanRiwayatAman()
      utk aturan keamanannya (tidak pernah menghapus lokal tanpa cadangan cloud dulu) */
@@ -6129,10 +6210,9 @@ function generate() {
     /* Catat ke riwayat + statistik + IDB. Tab aktif = 'rppm' (sesuai yang
        ditampilkan di preview) — Bank Soal TIDAK ikut otomatis terisi dari
        sini, cuma dari tab Soal yang benar-benar dikerjakan guru. */
-    _catatKeRiwayat(historyId, data, result, 'rppm');
-
-    /* Persist result tab ke IDB — key: result_<historyId> */
+    /* Urutan: result_<id> DULU, baru riwayat (main) yang merujuknya — supaya kegagalan di tengah sinkron tidak meninggalkan rujukan putus */
     _simpanResult(historyId, result);
+    _catatKeRiwayat(historyId, data, result, 'rppm');
 
     /* Reset tombol */
     btn.innerHTML = '✨ GENERATE PERANGKAT PEMBELAJARAN';
@@ -6163,7 +6243,6 @@ async function hapusRiwayat(id) {
   await IDB.del('result_' + id);
   const payload = { stats: DATABASE.stats, history: DATABASE.history };
   await IDB.set('main', payload);
-  STORAGE.save(_lsKeyProject(), payload);
 
   /* Kalau yang dihapus sedang ditampilkan di preview, kosongkan */
   if (currentGenerated?.historyId === id) {
@@ -6193,6 +6272,10 @@ async function hapusRiwayat(id) {
 const BATAS_RIWAYAT_LENGKAP = 3;
 
 async function _rampingkanRiwayatAman() {
+  /* DIMATIKAN: penyimpanan kini lewat Guru Hub (Google Drive guru). Pemangkasan menghapus result_<id> lokal
+     dan penghapusan itu ikut tersinkron ke Drive, jadi tidak boleh berjalan (juga untuk pengguna lama yang masih
+     menyimpan URL cadangan Apps Script). Kode di bawah dibiarkan, tidak dijalankan. */
+  return;
   const urut = DATABASE.history.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0));
   const kandidatArsip = urut.slice(BATAS_RIWAYAT_LENGKAP).filter(h => !h.arsip);
   if (!kandidatArsip.length) return; /* tidak ada yang perlu diringkas */
@@ -6336,8 +6419,9 @@ function loadHistory(id) {
   });
 
   /* 2. Restore STATE_ANALISIS dari riwayat */
-  if (h.analisis) {
-    STATE_ANALISIS = { ...h.analisis, sudahAnalisis: true };
+  const _an = _analisisRiwayat(h);
+  if (_an) {
+    STATE_ANALISIS = { ..._an, sudahAnalisis: true };
   } else if (h.tp || h.materi) {
     /* Kompatibilitas riwayat lama */
     STATE_ANALISIS = {
@@ -6378,7 +6462,7 @@ function loadHistory(id) {
 
   /* Coba muat result yang sudah dipersist (termasuk hasil AI per tab) */
   const historyId = h.id;
-  IDB.get('result_' + historyId, null).then(savedResult => {
+  _pastikanResult([historyId]).then(() => IDB.get('result_' + historyId, null)).then(savedResult => {
     /* Merge: hasil lokal sebagai base, timpa dengan yang tersimpan di IDB */
     const result = savedResult
       ? { ...resultLokal, ...savedResult }
@@ -6408,7 +6492,6 @@ function loadHistory(id) {
    ============================================================ */
 function autoSave() {
   const data = { ...UTIL.getFormData(), analisis: STATE_ANALISIS.sudahAnalisis ? STATE_ANALISIS : null };
-  STORAGE.save(_lsKeyProject() + '_form', data);
   IDB.set('form', data);
   /* Sinkronkan metadata project aktif supaya nama di daftar project tetap relevan */
   if (data.mapel) {
@@ -6463,9 +6546,6 @@ async function resetData() {
     if (typeof k === 'string' && k.startsWith(prefix)) await IDB.delRaw(k);
   }
   /* Hapus dari localStorage */
-  STORAGE.clear(_lsKeyProject());
-  STORAGE.clear(_lsKeyProject() + '_form');
-  STORAGE.clear(_lsKeyProject() + '_rppm');
   /* Reset state */
   DATABASE.history = [];
   DATABASE.stats = { modul: 0, lkpd: 0, soal: 0, asesmen: 0, tp: 0 };
@@ -7179,13 +7259,20 @@ function pilihLogoSekolah(input) {
   rd.onload = () => {
     const img = new Image();
     img.onload = async () => {
-      const sk = Math.min(1, 400 / Math.max(img.width, img.height));
-      const w = Math.max(1, Math.round(img.width * sk));
-      const h = Math.max(1, Math.round(img.height * sk));
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      await IDB.set('logo_sekolah', { dataUrl: c.toDataURL('image/png'), w, h });
+      /* Batas ukuran: dataURL maks 300 KB (disinkronkan ke Drive). Dikecilkan bertahap 400 -> 150 px. */
+      let hasil = null;
+      for (const maks of [400, 300, 200, 150]) {
+        const sk = Math.min(1, maks / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * sk));
+        const h = Math.max(1, Math.round(img.height * sk));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        const url = c.toDataURL('image/png');
+        if (url.length <= 300000) { hasil = { dataUrl: url, w, h }; break; }
+      }
+      if (!hasil) { showToast('⚠️ Logo terlalu besar (maks 300 KB). Pakai gambar yang lebih sederhana.', 'warning'); return; }
+      await IDB.set('logo_sekolah', hasil);
       _tampilkanLogoSekolah();
       showToast('✅ Logo sekolah disimpan');
     };
@@ -7387,7 +7474,6 @@ function previewRPPM() {
   document.getElementById('rppmPreviewContent').innerHTML = buildRPPMHTML(d);
   /* Simpan ke IDB (utama) dan localStorage (fallback) */
   IDB.set('rppm', d);
-  STORAGE.save(_lsKeyProject() + '_rppm', d);
 }
 
 /** Reset semua field RPPM */
@@ -7401,7 +7487,6 @@ function rppmReset() {
       <h3>Preview RPPM</h3>
       <p>Isi form di sebelah kiri — preview muncul otomatis</p>
     </div>`;
-  STORAGE.clear(_lsKeyProject() + '_rppm');
   showToast('🗑️ Form RPPM direset', 'warning');
 }
 
@@ -7548,7 +7633,6 @@ function _syncRPPMFields(f) {
 async function restoreRPPM() {
   /* IDB dulu, fallback ke localStorage */
   let saved = await IDB.get('rppm', null);
-  if (!saved) saved = STORAGE.load(_lsKeyProject() + '_rppm', null);
   if (!saved) return;
   const textFields = ['sekolah','mapel','fase','waktu','tahun','guru','peserta','materi',
     'cp','lintas','tp','topik','integrasi','model','mitra','lingkungan','digital',
@@ -9068,8 +9152,8 @@ function cgptTerapkan() {
      dipanggil di sini, jadi RPPM hasil ATP/ChatGPT tidak pernah muncul di
      riwayat, statistik tidak update, dan hilang permanen saat pindah
      project (karena tidak pernah benar-benar tercatat) */
+  _simpanResult(currentGenerated.historyId, currentGenerated.result); /* result_ dulu, baru riwayat (main) */
   _catatKeRiwayat(currentGenerated.historyId, currentGenerated.data, currentGenerated.result, cgptActiveTab);
-  _simpanResult(currentGenerated.historyId, currentGenerated.result);
 
   /* Pindah ke Modul Ajar dan tampilkan tab */
   goPage('modul');
@@ -9205,7 +9289,6 @@ function cgptParseRPPM(teks) {
   const rppmData = getRPPMData?.();
   if (rppmData) {
     IDB.set('rppm', rppmData);
-    STORAGE.save(_lsKeyProject() + '_rppm', rppmData);
   }
 
   /* Bangun HTML preview RPPM dari data yang sudah terisi */
@@ -9860,6 +9943,7 @@ function _atpRenderTimeline() {
 async function _atpMuatUntukPertemuan(sesiKe) {
   const idPertemuanIni = `atp_k${ATP_KELAS_AKTIF}_s${sesiKe}`;
   if (currentGenerated && currentGenerated.historyId === idPertemuanIni) return true;
+  await _pastikanResult([idPertemuanIni]);
   const existingResult = await IDB.get('result_' + idPertemuanIni, null);
   const existingHist   = DATABASE.history.find(h => h.id === idPertemuanIni);
   if (existingResult && existingHist) {
@@ -9968,6 +10052,7 @@ async function atpBuatRPPM(sesiKe) {
      pertemuan lain yang kebetulan sedang aktif di currentGenerated). */
   const idPertemuanIni = `atp_k${ATP_KELAS_AKTIF}_s${sesiKe}`;
   if (!currentGenerated || currentGenerated.historyId !== idPertemuanIni) {
+    await _pastikanResult([idPertemuanIni]);
     const existingResult = await IDB.get('result_' + idPertemuanIni, null);
     const existingHist   = DATABASE.history.find(h => h.id === idPertemuanIni);
     if (existingResult && existingHist) {
@@ -10312,8 +10397,6 @@ async function init() {
      butuh ruang; situs yang di-install / dapat izin permanen jauh lebih
      aman dari itu) */
   _mintaPenyimpananPermanen();
-  _daftarkanServiceWorker();
-  _pasangDeteksiInstallPWA();
 }
 
 /** Minta browser menjadikan penyimpanan situs ini PERMANEN (tidak
@@ -10344,78 +10427,12 @@ async function _mintaPenyimpananPermanen(tampilkanPesan) {
   }
 }
 
-/** Daftarkan Service Worker (syarat wajib supaya bisa "Install"/Tambah ke
- *  Layar Utama sebagai aplikasi). File sw.js & manifest.json harus ada di
- *  folder yang SAMA dengan guruai_builder_v1.html di GitHub Pages —
- *  kalau belum ada, fitur install tidak akan muncul (aplikasi tetap
- *  berfungsi normal, cuma indikator di Pengaturan akan bilang "belum aktif"). */
-async function _daftarkanServiceWorker() {
-  const elInstall = document.getElementById('statusInstall');
-  if (!('serviceWorker' in navigator)) {
-    if (elInstall) elInstall.textContent = 'Browser ini tidak mendukung instalasi';
-    return;
-  }
-  try {
-    await navigator.serviceWorker.register('sw.js');
-    if (elInstall && elInstall.textContent === 'Memeriksa…') {
-      elInstall.textContent = 'Menunggu HP mendeteksi kelayakan install…';
-    }
-  } catch (e) {
-    if (elInstall) elInstall.textContent = '⚠️ Belum bisa — file sw.js & manifest.json belum diunggah ke folder yang sama di GitHub';
-  }
+/* Jalankan init saat DOM siap DAN gerbang Guru Hub sudah terbuka (data dari Drive sudah diterapkan).
+   Bila terkunci, window.GHP tidak punya saatTerbuka -> init tidak dijalankan. */
+function _mulaiLewatGerbang() {
+  if (window.GHP && typeof window.GHP.saatTerbuka === 'function') window.GHP.saatTerbuka(init);
 }
-
-/** Tangkap event "boleh diinstall" dari Chrome, tampilkan tombol Install
- *  di Pengaturan (Chrome tidak menampilkan prompt otomatis kalau kita
- *  sudah pegang event-nya sendiri) */
-let _pwaInstallEvent = null;
-function _pasangDeteksiInstallPWA() {
-  const elInstall = document.getElementById('statusInstall');
-  const btn = document.getElementById('btnInstallPWA');
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    _pwaInstallEvent = e;
-    if (elInstall) elInstall.textContent = 'Siap di-install — data akan jauh lebih aman dari terhapus';
-    if (btn) btn.style.display = 'inline-flex';
-  });
-
-  window.addEventListener('appinstalled', () => {
-    _pwaInstallEvent = null;
-    if (elInstall) elInstall.textContent = '✅ Sudah terinstall sebagai aplikasi';
-    if (btn) btn.style.display = 'none';
-    showToast('🎉 GuruAI Builder berhasil di-install!');
-  });
-
-  /* Kalau sudah dibuka sebagai app terinstall (standalone), tandai langsung */
-  const sudahStandalone = (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches)
-    || window.navigator.standalone;
-  if (sudahStandalone) {
-    if (elInstall) elInstall.textContent = '✅ Sudah terinstall sebagai aplikasi';
-  } else {
-    setTimeout(() => {
-      if (elInstall && elInstall.textContent === 'Menunggu HP mendeteksi kelayakan install…') {
-        elInstall.textContent = 'Belum terdeteksi layak install (pastikan sw.js & manifest.json sudah diunggah, lalu muat ulang halaman)';
-      }
-    }, 3000);
-  }
-}
-
-/** Tombol "Install" di Pengaturan — memicu prompt install Chrome */
-async function _installPWA() {
-  if (!_pwaInstallEvent) {
-    showToast('Prompt install belum siap. Pastikan sw.js & manifest.json sudah diunggah ke GitHub, lalu muat ulang halaman.', 'warning');
-    return;
-  }
-  _pwaInstallEvent.prompt();
-  const hasil = await _pwaInstallEvent.userChoice;
-  _pwaInstallEvent = null;
-  document.getElementById('btnInstallPWA').style.display = 'none';
-  showToast(hasil.outcome === 'accepted' ? '🎉 Sedang menginstall…' : 'Instalasi dibatalkan');
-}
-
-/* Jalankan init saat DOM siap */
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _mulaiLewatGerbang); else _mulaiLewatGerbang();
 </script>
 
 

@@ -27,6 +27,10 @@
   var IDB_NAME = IDB_SPEC[0] || '', IDB_VER = parseInt(IDB_SPEC[1] || '1', 10), IDB_STORE = IDB_SPEC[2] || '';
   var IDB_KECUALI = ((script && script.getAttribute('data-idb-kecuali')) || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
   if (!IDB_STORE) IDB_NAME = '';
+  // data-tunda="_result_,...": kunci IDB yang mengandung teks ini TIDAK diunduh otomatis ke perangkat yang belum punya;
+  // aplikasi memintanya saat perlu lewat GHP.minta([...kunciIdb]). Menghemat unduhan saat perangkat baru memuat banyak proyek.
+  var TUNDA = ((script && script.getAttribute('data-tunda')) || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+  var permintaan = {}, ridN = 0;
   var cacheTerakhir = {}, memproses = false;
   // data-sembunyi="kunci:medan1,medan2;kunci2:medan": medan RAHASIA/PRIBADI di dalam nilai JSON suatu kunci
   // (mis. URL & kunci rahasia cadangan pribadi guru). Medan ini TIDAK PERNAH keluar dari perangkat:
@@ -67,7 +71,7 @@
     function tampil() {
       document.documentElement.style.overflow = 'hidden';
       var b = document.body || document.documentElement;
-      b.innerHTML = '<div style="position:fixed;inset:0;z-index:2147483647;background:#0b1410;color:#e8f3ee;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;text-align:center"><div style="max-width:380px"><div style="font-size:44px">🔒</div><h2 style="margin:10px 0 8px;font-size:19px">Alat Premium Guru Hub</h2><p style="line-height:1.6;color:#b9cfc5;font-size:14px">' + pesan + '</p></div></div>';
+      b.innerHTML = '<div style="position:fixed;inset:0;z-index:2147483647;background:#0b1410;color:#e8f3ee;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif;text-align:center"><div style="max-width:380px"><div style="font-size:44px">\uD83D\uDD12</div><h2 style="margin:10px 0 8px;font-size:19px">Alat Premium Guru Hub</h2><p style="line-height:1.6;color:#b9cfc5;font-size:14px">' + pesan + '</p></div></div>';
     }
     if (document.body) tampil(); else document.addEventListener('DOMContentLoaded', tampil);
   }
@@ -155,6 +159,20 @@
       });
     }, function () {});
   }
+  // Terapkan HANYA bila kunci belum ada di perangkat (jangan menimpa data yang sudah ditulis lokal).
+  function terapkanBilaKosong(daftar) {
+    if (!IDB_NAME || !daftar.length) return Promise.resolve();
+    return idbBuka().then(function (db) {
+      return new Promise(function (res) {
+        var tx = db.transaction(IDB_STORE, 'readwrite'), st = tx.objectStore(IDB_STORE);
+        daftar.forEach(function (p) {
+          try { var rq = st.get(p[0]); rq.onsuccess = function () { if (rq.result === undefined && p[1] !== null) { try { _iput.call(st, JSON.parse(p[1]), p[0]); } catch (e) {} } }; } catch (e) {}
+        });
+        tx.oncomplete = function () { db.close(); res(); };
+        tx.onerror = tx.onabort = function () { db.close(); res(); };
+      });
+    }, function () {});
+  }
   if (IDB_NAME) {
     IDBObjectStore.prototype.put = function (v, k) {
       var r = _iput.apply(this, arguments);
@@ -210,7 +228,7 @@
     if (ORIGIN_HUB && ev.origin !== ORIGIN_HUB) return;
     var d = ev.data; if (!d || d._sumber !== 'ghp-hub' || d.app !== APP) return;
     if (d.type === 'GHP_INIT') {
-      if (siap || terbuka || memproses) return;
+      if (memproses || ((siap || terbuka) && !d.ulang)) return; // INIT ulang hanya bila Hub memintanya (cocokkan ulang dengan Drive)
       memproses = true; originInduk = ev.origin; var berubah = false, idbDaftar = [];
       var t = d.terapkan || {};
       Object.keys(t).forEach(function (k) {
@@ -225,14 +243,14 @@
       var vs = d.versi || {}; Object.keys(vs).forEach(function (k) { meta[k] = vs[k]; });
       tulisMeta();
       terapkanIdb(idbDaftar).then(function () {
-        if (berubah && ss('g', SK_RELOAD) !== tiket) { ss('s', SK_RELOAD, tiket); location.reload(); return; }
+        if (berubah && (d.ulang || ss('g', SK_RELOAD) !== tiket)) { ss('s', SK_RELOAD, tiket); location.reload(); return; }
         ss('r', SK_RELOAD);
         terbuka = true; siap = true; memproses = false; window.GHP.terbuka = true; window.GHP.originInduk = originInduk;
         // Sekali saja: kirim ulang nilai yang SUDAH disaring supaya salinan lama di server (dari versi sebelum
         // penyaringan ada) tergantikan -- medan rahasia tidak tersisa di server.
         try {
           if (Object.keys(SEMBUNYI).length && _get.call(localStorage, 'ghp_sanit1_' + APP) !== '1') {
-            Object.keys(SEMBUNYI).forEach(function (k) { var v = _get.call(localStorage, k); if (v !== null) catat(k, saring(k, v)); });
+            Object.keys(SEMBUNYI).forEach(function (k) { var v = _get.call(localStorage, k); if (v !== null && saring(k, v) !== v) catat(k, saring(k, v)); }); // hanya bila nilai lokal memang memuat medan rahasia (hindari versi baru yang tidak perlu)
             _set.call(localStorage, 'ghp_sanit1_' + APP, '1');
           }
         } catch (e) {}
@@ -253,6 +271,18 @@
         });
         tulisMeta();
       });
+    } else if (d.type === 'GHP_DATA') {
+      var pm = d.rid && permintaan[d.rid]; if (!pm) return;
+      var daftarD = [], tt = d.terapkan || {};
+      Object.keys(tt).forEach(function (k) {
+        if (k.indexOf('idb:') !== 0 || !IDB_NAME || idbKecuali(k.slice(4))) return;
+        daftarD.push([k.slice(4), tt[k].nilai]); cacheTerakhir[k] = tt[k].nilai; if (!meta[k]) meta[k] = tt[k].versi;
+      });
+      tulisMeta();
+      terapkanBilaKosong(daftarD).then(function () { clearTimeout(pm.t); delete permintaan[d.rid]; pm.res(!(d.gagal && d.gagal.length)); });
+    } else if (d.type === 'GHP_ULANG') {
+      // Hub meminta pencocokan ulang dengan Drive (mis. Drive baru dihubungkan di tengah sesi). Tidak mengirim apa pun sendiri.
+      if (siap) kirimHello();
     } else if (d.type === 'GHP_FLUSH') {
       kirimPending(); kePar({ type: 'GHP_FLUSH_OK', tiket: tiket });
     } else if (d.type === 'GHP_TUTUP') {
@@ -267,14 +297,23 @@
     KUNCI.forEach(function (k) { var v = _get.call(localStorage, k); lokal[k] = { versi: meta[k] || 0, nilai: saring(k, v) }; });
     bacaIdb().then(function (idb) {
       Object.keys(idb).forEach(function (k) { cacheTerakhir['idb:' + k] = idb[k]; lokal['idb:' + k] = { versi: meta['idb:' + k] || 0, nilai: idb[k] }; });
-      kePar({ type: 'GHP_HELLO', tiket: tiket, lokal: lokal });
+      kePar({ type: 'GHP_HELLO', tiket: tiket, lokal: lokal, tunda: TUNDA });
     });
   }
 
   window.GHP = {
     app: APP, terbuka: false, originInduk: '',
     saatTerbuka: function (fn) { if (terbuka) { try { fn(); } catch (e) {} } else penunggu.push(fn); },
-    simpanSekarang: kirimPending
+    simpanSekarang: kirimPending,
+    // minta isi kunci IDB (nama fisik, tanpa awalan 'idb:') yang ditunda. Resolve true bila semua didapat/tidak ada di Drive.
+    minta: function (kunciIdb) {
+      return new Promise(function (res) {
+        if (!terbuka || !kunciIdb || !kunciIdb.length) { res(true); return; }
+        var rid = 'r' + (++ridN);
+        permintaan[rid] = { res: res, t: setTimeout(function () { delete permintaan[rid]; res(false); }, 70000) };
+        kePar({ type: 'GHP_MINTA', tiket: tiket, rid: rid, kunci: kunciIdb.map(function (k) { return 'idb:' + k; }) });
+      });
+    }
   };
 
   function mulaiHello() {

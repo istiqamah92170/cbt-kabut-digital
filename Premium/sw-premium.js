@@ -1,4 +1,4 @@
-// Service Worker — Alat Premium (Smart Bloom & Topic Analyzer, GuruAI Builder, ghp-bridge.js)
+// Service Worker - Alat Premium (Smart Bloom & Topic Analyzer, GuruAI Builder, ghp-bridge.js)
 // Letak: /Premium/sw-premium.js  (scope: /Premium/)
 // Kenapa terpisah: SW di /Premium/Guru-Hub/ hanya mengendalikan halaman di dalam folder itu. Aplikasi premium
 // dimuat dalam iframe dari /Premium/*.html (di luar folder Guru Hub) sehingga butuh SW dengan scope /Premium/.
@@ -6,7 +6,7 @@
 // Strategi: Stale-While-Revalidate. TIDAK menyimpan Apps Script, login Google, atau API Gemini.
 // Naikkan VERSI tiap kali mengunggah versi baru aplikasi premium.
 
-const VERSI = 'v3';
+const VERSI = 'v5';
 const CACHE_NAME = 'alat-premium-cbt-kabut-digital-' + VERSI;
 const STATIC_ASSETS = [
   './topik-bloom-classifier_pro.html',
@@ -41,6 +41,26 @@ self.addEventListener('fetch', event => {
   const seasal = u.origin === self.location.origin;
   if (!seasal && HOST_LUAR_BOLEH.indexOf(u.hostname) === -1) return;
   // Fragmen (#tiket=...) tidak ikut ke permintaan, jadi cocok dengan simpanan apa adanya.
+  // ghp-bridge.js adalah GERBANG & protokol sinkron: selalu coba jaringan dulu (maks 3 detik), cache hanya cadangan offline.
+  if (seasal && u.pathname.slice(-14) === '/ghp-bridge.js') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async cache => {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), 3000);
+        try {
+          const resp = await fetch(req, { signal: ac.signal });
+          clearTimeout(t);
+          if (resp && resp.status === 200) cache.put(req, resp.clone()).catch(() => {});
+          return resp;
+        } catch (e) {
+          clearTimeout(t);
+          const cached = await cache.match(req);
+          return cached || new Response('// offline', { status: 503, headers: { 'Content-Type': 'application/javascript' } });
+        }
+      })
+    );
+    return;
+  }
   event.respondWith(
     caches.open(CACHE_NAME).then(async cache => {
       const cached = await cache.match(req);
