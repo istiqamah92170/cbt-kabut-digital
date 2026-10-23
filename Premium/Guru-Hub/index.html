@@ -1646,7 +1646,9 @@ function ghSinkronJadwalkanSimpan() {
 async function ghSinkronSimpanSekarang() {
   if (!ghProfilAktif || !ghProfilAktif.kunciGuru || !ghpDriveAktif()) return false;
   try {
-    await ghpDriveSimpan({ app: 'hub', kunci: 'ghData', versi: ghHubVerLokal() || Date.now(), nilai: JSON.stringify({ ghEntri: ghEntri, ghSekolah: ghSekolah }) });
+    if (ghpTahan['hub|ghData']) return false;
+    let hs = await ghpDriveSimpan({ app: 'hub', kunci: 'ghData', versi: ghHubVerLokal() || Date.now(), nilai: JSON.stringify({ ghEntri: ghEntri, ghSekolah: ghSekolah }) });
+    if (hs === 'konflik') { ghpSetLencana(); return false; } // tetap 'belum tersimpan' sampai diselaraskan saat Guru Hub dimuat ulang
     ghHubPending = false; ghpMacetIzin = false; ghpSetLencana(); return true;
   } catch (e) {
     console.warn('Gagal menyimpan data Guru Hub ke Drive:', e.message);
@@ -1656,24 +1658,44 @@ async function ghSinkronSimpanSekarang() {
   }
 }
 // Dipanggil SEKALI tiap login penuh berhasil (lihat ghUiTampilkanApp), tidak di-await.
-async function ghSinkronMuat() {
+async function ghSinkronMuat(opsi) { // opsi.paksaDrive: pulihkan dari berkas/salinan -> Drive dipakai apa adanya
   if (!ghProfilAktif || !ghProfilAktif.kunciGuru || !ghpDriveAktif()) return;
+  delete ghpTahan['hub|ghData'];
   try {
     let d = await ghpDenganBatas(ghpDriveDaftar('hub'), 10000);
-    let s = d.idx.ghData, lv = ghHubVerLokal();
-    if (s && s.versi > lv) {
-      let m = await ghpDriveMuat('hub', { kunci: ['ghData'] });
-      let o = (m.ghData && m.ghData.nilai) ? JSON.parse(m.ghData.nilai) : null;
-      if (o && (Array.isArray(o.ghEntri) || Array.isArray(o.ghSekolah))) {
+    let s = d.idx.ghData, lv = ghHubVerLokal(), dasar = ghpDasarGet('hub', 'ghData');
+    let adaLokal = !!((ghEntri && ghEntri.length) || (ghSekolah && ghSekolah.length));
+    let nilaiLokal = JSON.stringify({ ghEntri: ghEntri, ghSekolah: ghSekolah });
+    if (!s) {
+      if (adaLokal) await ghSinkronSimpanSekarang();
+    } else if (lv === s.versi && !ghHubPending) {
+      ghpDasarSet('hub', 'ghData', s.versi);
+    } else {
+      // Tentukan siapa yang berubah sejak sinkron terakhir (versi dasar). Tanpa versi dasar: bandingkan isi.
+      let lokalBerubah = ghHubPending || (dasar !== undefined ? lv !== dasar : false);
+      let drvBerubah = dasar !== undefined ? s.versi !== dasar : s.versi !== lv;
+      if (opsi && opsi.paksaDrive) { lokalBerubah = false; drvBerubah = true; }
+      let m = null, o = null;
+      if (drvBerubah || dasar === undefined) {
+        m = await ghpDriveMuat('hub', { kunci: ['ghData'] });
+        o = (m.ghData && m.ghData.nilai) ? JSON.parse(m.ghData.nilai) : null;
+      }
+      let sama = o && JSON.stringify({ ghEntri: o.ghEntri, ghSekolah: o.ghSekolah }) === nilaiLokal;
+      if (dasar === undefined && !(opsi && opsi.paksaDrive)) lokalBerubah = adaLokal && !sama;
+      if (sama) {
+        try { localStorage.setItem(GH_KEY_HUBVER, String(s.versi)); } catch (e) {}
+        ghpDasarSet('hub', 'ghData', s.versi); ghHubPending = false;
+      } else if (lokalBerubah && !drvBerubah) {
+        await ghSinkronSimpanSekarang();
+      } else if (o && (Array.isArray(o.ghEntri) || Array.isArray(o.ghSekolah))) {
+        if (lokalBerubah && adaLokal) await ghpDriveSimpanKonflik('hub', 'ghData', nilaiLokal); // simpan dulu isi perangkat ini
         if (Array.isArray(o.ghEntri)) { ghEntri = o.ghEntri; ghSimpanEntriLokalSaja(); }
         if (Array.isArray(o.ghSekolah)) { ghSekolah = o.ghSekolah; ghSimpanSekolahLokalSaja(); }
         try { localStorage.setItem(GH_KEY_HUBVER, String(s.versi)); } catch (e) {}
+        ghpDasarSet('hub', 'ghData', s.versi); ghHubPending = false;
         ghRenderList(); ghRenderSekolah(); ghUiUpdateDashboardStats();
-        ghToast('🔄 Data Link Ujian & Sekolah disinkronkan dari Google Drive Anda.');
+        ghToast(lokalBerubah && adaLokal ? '⚠️ Data Guru Hub juga diubah di perangkat lain. Versi Drive dipakai; salinan perubahan Anda ada di ⚙️ Pengaturan > Salinan konflik.' : '🔄 Data Link Ujian & Sekolah disinkronkan dari Google Drive Anda.');
       }
-      ghHubPending = false;
-    } else if (!s || lv > s.versi || ghHubPending) {
-      if ((ghEntri && ghEntri.length) || (ghSekolah && ghSekolah.length)) await ghSinkronSimpanSekarang();
     }
     ghpSetLencana();
   } catch (e) { if (e.perluIzin) { ghpMacetIzin = true; ghpSetLencana(); } console.warn('Sinkronisasi Drive gagal:', e.message); }
@@ -4850,7 +4872,7 @@ const ghpTiketFrame = { panel: null, klasifikasi: null };   // {app, tiket}
 const ghpHelloJalan = { panel: false, klasifikasi: false };
 const ghpTerhubung = { panel: false };
 const ghpAntrian = {};            // 'app|kunci' -> {app,kunci,versi,nilai}
-let ghpTimerKirim = null, ghpSedangKirim = false, ghpGagalBeruntun = 0, ghpMacetIzin = false;
+let ghpTimerKirim = null, ghpSedangKirim = false, ghpGagalBeruntun = 0, ghpMacetIzin = false, ghpMacetKuota = false;
 
 function ghpKred() {
   if (!ghProfilAktif || !ghProfilAktif.kunciGuru || ghModeBelumAktif) throw new Error('Sesi login bermasalah -- coba logout & login ulang.');
@@ -4944,6 +4966,7 @@ async function ghpDapatkanTiket(appId) {
   }
 }
 async function ghpKirimSatu(it) {
+  if (ghpTahan[it.app + '|' + it.kunci]) return; // ditahan (konflik / data belum lengkap)
   let modeSimpan = ghpBacaMode(it.app);
   if (modeSimpan === 'drive') return ghpDriveSimpan(it);
   if (modeSimpan !== 'server') return; // 'perangkat' / belum dipilih: tidak ada yang dikirim
@@ -4970,36 +4993,43 @@ function ghpSetStatus(s) {
   let m = ghpBacaMode(ghpPanelAppId || 'kea');
   el.className = 'ghp-status ' + s;
   el.textContent = s === 'simpan' ? '⏳ Menyimpan…' : s === 'gagal' ? '⚠️ Belum tersimpan, mencoba lagi…' : s === 'perlu' ? '🔌 Belum tersimpan — tekan Simpan'
+    : s === 'kuota' ? '⚠️ Google Drive penuh — kosongkan ruang lalu tekan Simpan'
     : (m === 'drive' ? '☁️ Tersimpan di Drive Anda' : '💾 Belum terhubung ke Drive');
-  let hb = document.getElementById('ghp-simpan'); if (hb) hb.classList.toggle('perlu', s === 'perlu' || s === 'gagal');
+  let hb = document.getElementById('ghp-simpan'); if (hb) hb.classList.toggle('perlu', s === 'perlu' || s === 'gagal' || s === 'kuota');
   ghpSetLencana();
 }
 function ghpAntrikan(app, kunci, versi, nilai) {
   if (['drive', 'server'].indexOf(ghpBacaMode(app)) < 0) return;
+  if (ghpTahan[app + '|' + kunci]) return; // ditahan: Drive berubah di perangkat lain / data belum lengkap
   ghpAntrian[app + '|' + kunci] = { app, kunci, versi, nilai };
   ghpSetStatus('simpan');
   clearTimeout(ghpTimerKirim);
   ghpTimerKirim = setTimeout(ghpKuras, 1500);
 }
+// Urutan kirim: isi (result_*) lebih dulu, daftar/ringkasan (main, project_list, ghData) terakhir, supaya kegagalan di tengah tidak meninggalkan rujukan yang putus.
+function ghpPrioritas(key) { return /result_/.test(key) ? 0 : (/(_main|project_list|_meta|ghData)$/.test(key) ? 2 : 1); }
 async function ghpKuras() {
   if (ghpSedangKirim) return;
   ghpSedangKirim = true;
   try {
-    let kunciList = Object.keys(ghpAntrian);
+    let kunciList = Object.keys(ghpAntrian).sort(function (a, b) { return ghpPrioritas(a) - ghpPrioritas(b); });
     for (let key of kunciList) {
       let it = ghpAntrian[key];
       await ghpKirimSatu(it);
       if (ghpAntrian[key] === it) delete ghpAntrian[key]; // kalau sudah berganti ke versi lebih baru, biarkan untuk putaran berikut
     }
-    ghpGagalBeruntun = 0; ghpMacetIzin = false;
+    ghpGagalBeruntun = 0; ghpMacetIzin = false; ghpMacetKuota = false;
     if (Object.keys(ghpAntrian).length) { ghpSedangKirim = false; return ghpKuras(); }
     ghpSetStatus('ok');
   } catch (e) {
     console.warn('Sinkron Alat Premium gagal:', e.message);
     if (e.perluIzin) { ghpMacetIzin = true; ghpSetStatus('perlu'); ghpSedangKirim = false; return; } // menunggu guru menekan 'Hubungkan Google Drive'
+    if (e.kuota) { ghpMacetKuota = true; ghpSetStatus('kuota'); ghToast('⚠️ ' + e.message); ghpSedangKirim = false; return; } // berhenti mencoba sampai guru menekan Simpan
     ghpGagalBeruntun++; ghpSetStatus('gagal');
     clearTimeout(ghpTimerKirim);
-    ghpTimerKirim = setTimeout(ghpKuras, Math.min(60000, 5000 * Math.pow(3, Math.min(ghpGagalBeruntun - 1, 3))));
+    let tunda = Math.min(60000, 5000 * Math.pow(3, Math.min(ghpGagalBeruntun - 1, 3)));
+    if (e.laju && e.tunggu) tunda = Math.min(120000, Math.max(tunda, e.tunggu));
+    ghpTimerKirim = setTimeout(ghpKuras, tunda);
   }
   ghpSedangKirim = false;
 }
@@ -5017,12 +5047,29 @@ function ghpFrameDariSumber(src) {
   if (k && k.contentWindow === src) return 'klasifikasi';
   return null;
 }
+// Aplikasi meminta isi kunci tertentu (yang ditunda saat membuka). Dijawab dengan GHP_DATA.
+async function ghpTanganiMinta(jenis, d, ev) {
+  let info = ghpTiketFrame[jenis]; if (!info) return;
+  let app = info.app, terapkan = {}, gagal = [];
+  let kunci = d.kunci.filter(function (k) { return typeof k === 'string' && k.indexOf('idb:') === 0; }).slice(0, 300);
+  for (let x = 0; x < kunci.length; x += 6) {
+    let bagian = kunci.slice(x, x + 6), isi = null;
+    for (let t = 0; t < 3 && !isi; t++) {
+      try { isi = await ghpDenganBatas(ghpMuatData(app, { kunci: bagian, pakaiIdx: true }), 60000); }
+      catch (e) { console.warn('Unduh isi diminta gagal (percobaan ' + (t + 1) + '):', e.message); if (t < 2) await ghpTidur(1000 * (t + 1)); }
+    }
+    if (!isi) { gagal = gagal.concat(bagian); continue; }
+    bagian.forEach(function (k) { if (isi[k] && isi[k].nilai !== undefined) terapkan[k] = { versi: isi[k].versi, nilai: isi[k].nilai }; });
+  }
+  if (ev.source) ev.source.postMessage({ _sumber: 'ghp-hub', type: 'GHP_DATA', app: app, rid: d.rid, terapkan: terapkan, gagal: gagal }, ev.origin);
+}
 async function ghpTanganiHello(jenis, d, ev) {
   let info = ghpTiketFrame[jenis];
   if (ghpHelloJalan[jenis]) return;
   ghpHelloJalan[jenis] = true;
   try {
     let app = info.app, server = null, offline = false;
+    Object.keys(ghpTahan).forEach(function (k) { if (k.indexOf(app + '|') === 0) delete ghpTahan[k]; });
     if (Date.now() - (ghpCekTerakhir[app] || 0) < 120000 && ghpVerServer[app]) {
       server = ghpVerServer[app]; // baru saja dipastikan sinkron -- tidak perlu tanya server lagi
     } else {
@@ -5033,28 +5080,63 @@ async function ghpTanganiHello(jenis, d, ev) {
         ghpVerServer[app] = server; ghpCekTerakhir[app] = Date.now();
       } catch (e) { offline = true; server = ghpVerServer[app] || {}; console.warn('Cek penyimpanan dilewati (offline/lambat/izin):', e.message); if (e.perluIzin && jenis === 'panel') ghpSetStatus('perlu'); }
     }
-    let terapkan = {}, versi = {}, naik = [], perluIsi = [];
+    let terapkan = {}, versi = {}, naik = [], perluIsi = [], cek = {}, salin = [], gagal = [];
     let lokal = d.lokal || {};
     new Set(Object.keys(lokal).concat(Object.keys(server))).forEach(function (kunci) {
       let l = lokal[kunci] || null, s = server[kunci] || null;
       let lVer = l ? (l.versi || 0) : 0, lAda = l && l.nilai !== null && l.nilai !== undefined;
-      if (s) {
-        if (s.versi > lVer) { if (s.nilai !== undefined) terapkan[kunci] = { versi: s.versi, nilai: s.nilai }; else perluIsi.push(kunci); }
-        else if (lVer > s.versi && (lAda || lVer)) naik.push({ kunci, versi: lVer, nilai: lAda ? l.nilai : null });
-      } else if (lAda && !offline) {
-        let v = lVer || Date.now(); if (!lVer) versi[kunci] = v;
-        naik.push({ kunci, versi: v, nilai: l.nilai });
+      if (!s) {
+        if (lAda && !offline) { let v = lVer || Date.now(); if (!lVer) versi[kunci] = v; naik.push({ kunci, versi: v, nilai: l.nilai }); }
+        return;
       }
+      if (lVer === s.versi) { if (!offline && ghpDriveAktif()) ghpDasarSet(app, kunci, s.versi); return; } // sudah sama
+      // Kunci yang ditunda aplikasi (mis. isi riwayat besar) dan belum ada di perangkat ini: tidak diunduh sekarang, aplikasi memintanya saat perlu (GHP_MINTA).
+      if (!lAda && !offline && (d.tunda || []).some(function (t) { return typeof t === 'string' && t && kunci.indexOf(t) >= 0; })) return;
+      let dasar = ghpDasarGet(app, kunci);
+      if (dasar === undefined) {
+        // Versi dasar belum dikenal (koneksi pertama / baru pembaruan): Drive TIDAK PERNAH ditimpa diam-diam.
+        // Isi dibandingkan; bila beda, Drive dipakai dan isi perangkat ini disimpan sebagai salinan konflik.
+        perluIsi.push(kunci); if (lAda) cek[kunci] = { nilai: l.nilai };
+        return;
+      }
+      let lokalBerubah = lVer !== dasar, drvBerubah = s.versi !== dasar;
+      if (lokalBerubah && !drvBerubah) naik.push({ kunci, versi: lVer, nilai: lAda ? l.nilai : null });
+      else if (!lokalBerubah && drvBerubah) perluIsi.push(kunci);
+      else if (lokalBerubah && drvBerubah) { perluIsi.push(kunci); cek[kunci] = { nilai: lAda ? l.nilai : null, konflik: true }; }
     });
-    // Unduh isi HANYA untuk kunci yang memang lebih baru di server (biasanya kosong -> tanpa unduhan sama sekali)
-    for (let x = 0; x < perluIsi.length && !offline; x += 12) {
-      try {
-        let bagian = perluIsi.slice(x, x + 12);
-        let isi = await ghpDenganBatas(ghpMuatData(app, { kunci: bagian }), 30000);
-        bagian.forEach(function (kunci) { if (isi[kunci] && isi[kunci].nilai !== undefined) terapkan[kunci] = { versi: isi[kunci].versi, nilai: isi[kunci].nilai }; });
-      } catch (e) { console.warn('Unduh data baru gagal, dicoba lagi di pembukaan berikutnya:', e.message); }
+    // Unduh isi HANYA untuk kunci yang memang berbeda di Drive (biasanya kosong). Dicoba 3 kali per kelompok.
+    for (let x = 0; x < perluIsi.length && !offline; x += 6) {
+      let bagian = perluIsi.slice(x, x + 6), isi = null;
+      for (let t = 0; t < 3 && !isi; t++) {
+        try { isi = await ghpDenganBatas(ghpMuatData(app, { kunci: bagian, pakaiIdx: true }), 60000); }
+        catch (e) { console.warn('Unduh data baru gagal (percobaan ' + (t + 1) + '):', e.message); if (t < 2) await ghpTidur(1500 * (t + 1)); }
+      }
+      if (!isi) { gagal = gagal.concat(bagian); continue; }
+      bagian.forEach(function (kunci) {
+        let it = isi[kunci]; if (!it || it.nilai === undefined) { gagal.push(kunci); return; }
+        if (!Object.prototype.hasOwnProperty.call(cek, kunci)) { terapkan[kunci] = { versi: it.versi, nilai: it.nilai }; return; }
+        let nl = cek[kunci].nilai;
+        if (it.nilai === nl) { versi[kunci] = it.versi; ghpDasarSet(app, kunci, it.versi); return; } // isinya sama: selaraskan versi saja
+        if (nl !== null) salin.push({ kunci: kunci, nilai: nl });
+        terapkan[kunci] = { versi: it.versi, nilai: it.nilai };
+      });
     }
-    if (ev.source) ev.source.postMessage({ _sumber: 'ghp-hub', type: 'GHP_INIT', app: app, terapkan: terapkan, versi: versi, offline: offline }, ev.origin);
+    // Simpan salinan isi perangkat ini SEBELUM diganti data Drive. Bila gagal, kunci itu ditahan (tidak diganti, tidak dikirim).
+    for (let sl of salin) {
+      try { await ghpDriveSimpanKonflik(app, sl.kunci, sl.nilai); }
+      catch (e) { console.warn('Salinan konflik gagal disimpan:', e.message); delete terapkan[sl.kunci]; gagal.push(sl.kunci); }
+    }
+    gagal.forEach(function (k) { ghpTahan[app + '|' + k] = true; delete terapkan[k]; });
+    let kritis = gagal.filter(function (k) { let l = lokal[k]; return !(l && l.nilai !== null && l.nilai !== undefined) || ghpDasarGet(app, k) === undefined; }); // data belum ada di perangkat, atau belum pernah dicocokkan dengan Drive
+    if (kritis.length) {
+      // Perangkat ini belum punya data itu: JANGAN buka dengan data setengah (nanti bisa menimpa data asli di Drive).
+      if (jenis === 'panel') { let ld = document.getElementById('ghp-loading'); if (ld) { ld.style.display = 'flex'; ld.className = 'ghp-loading err'; ld.textContent = '❌ Data Anda di Google Drive belum bisa dimuat sepenuhnya (koneksi lambat?). Tutup lalu buka lagi.'; } }
+      return;
+    }
+    if (gagal.length) ghToast('⚠️ Sebagian data terbaru dari Drive belum bisa dimuat. Perubahan pada bagian itu ditahan supaya tidak menimpa data di Drive.');
+    if (salin.length && !gagal.length) ghToast('⚠️ Data di perangkat ini berbeda dengan Drive. Versi Drive dipakai; salinan perubahan Anda ada di ⚙️ Pengaturan > Salinan konflik.');
+    let ulang = ghpTerhubung[jenis] === true;
+    if (ev.source) ev.source.postMessage({ _sumber: 'ghp-hub', type: 'GHP_INIT', app: app, terapkan: terapkan, versi: versi, offline: offline, ulang: ulang }, ev.origin);
     ghpTerhubung[jenis] = true;
     naik.forEach(function (n) { ghpAntrikan(app, n.kunci, n.versi, n.nilai); });
     if (naik.length) ghpKuras();
@@ -5068,6 +5150,7 @@ window.addEventListener('message', function (ev) {
   let info = ghpTiketFrame[jenis];
   if (!info || d.app !== info.app || d.tiket !== info.tiket) return;
   if (d.type === 'GHP_HELLO') ghpTanganiHello(jenis, d, ev);
+  else if (d.type === 'GHP_MINTA' && Array.isArray(d.kunci) && typeof d.rid === 'string') ghpTanganiMinta(jenis, d, ev);
   else if (d.type === 'GHP_PERUBAHAN' && typeof d.kunci === 'string' && typeof d.versi === 'number') ghpAntrikan(info.app, d.kunci, d.versi, d.nilai === null ? null : String(d.nilai));
   else if (d.type === 'GHP_FLUSH_OK') { /* ditangani ghpTutupPanel lewat jeda tunggu */ }
 });
@@ -5149,6 +5232,7 @@ function ghpResetCache() {
   Object.keys(ghpVerServer).forEach(function (k) { delete ghpVerServer[k]; });
   Object.keys(ghpCekTerakhir).forEach(function (k) { ghpCekTerakhir[k] = 0; });
   Object.keys(ghpDriveIdx).forEach(function (k) { delete ghpDriveIdx[k]; });
+  Object.keys(ghpDriveIdxTs).forEach(function (k) { delete ghpDriveIdxTs[k]; });
   Object.keys(ghpPrefetch).forEach(function (k) { delete ghpPrefetch[k]; });
 }
 
@@ -5191,8 +5275,42 @@ async function ghpDriveFetch(url, opt) {
   opt.headers = Object.assign({ Authorization: 'Bearer ' + tok }, opt.headers || {});
   let r = await fetch(url, opt);
   if (r.status === 401) { ghpToken = null; tok = await ghpAmbilToken(false); opt.headers.Authorization = 'Bearer ' + tok; r = await fetch(url, opt); }
-  if (!r.ok && !(opt.boleh && opt.boleh.indexOf(r.status) >= 0)) throw new Error('Google Drive menjawab ' + r.status + '.');
+  if (!r.ok && !(opt.boleh && opt.boleh.indexOf(r.status) >= 0)) {
+    let alasan = '';
+    try { let j = await r.clone().json(); alasan = (((j.error || {}).errors || [])[0] || {}).reason || (j.error || {}).status || ''; } catch (e) {}
+    let e = new Error('Google Drive menjawab ' + r.status + '.');
+    if (r.status === 403 && /storageQuotaExceeded|quotaExceeded/i.test(alasan) && !/rateLimit/i.test(alasan)) { e.kuota = true; e.message = 'Penyimpanan Google Drive Anda penuh. Kosongkan ruang di Drive lalu tekan Simpan.'; }
+    else if (r.status === 429 || (r.status === 403 && /rateLimit/i.test(alasan))) { e.laju = true; let ra = Number(r.headers.get('Retry-After')); e.tunggu = ra > 0 ? ra * 1000 : 0; }
+    throw e;
+  }
   return r;
+}
+
+// ---- versi dasar: versi Drive yang terakhir DIKETAHUI sinkron di perangkat ini (per akun, aplikasi, kunci) ----
+// Dipakai untuk mendeteksi konflik: bila Drive dan perangkat sama-sama berubah sejak versi dasar, tidak ada yang ditimpa diam-diam.
+const GH_KEY_DASAR = 'guruhub_dasar_v1';
+function ghpDasarAmbil() { try { return JSON.parse(localStorage.getItem(GH_KEY_DASAR) || '{}') || {}; } catch (e) { return {}; } }
+function ghpDasarGet(app, kunci) {
+  let em = (ghProfilAktif || {}).email, o = ghpDasarAmbil();
+  let v = o[em] && o[em][app] ? o[em][app][kunci] : undefined;
+  return v === undefined ? undefined : Number(v);
+}
+function ghpDasarSet(app, kunci, v) {
+  try {
+    let em = (ghProfilAktif || {}).email; if (!em) return;
+    let o = ghpDasarAmbil(); if (!o[em]) o[em] = {}; if (!o[em][app]) o[em][app] = {};
+    o[em][app][kunci] = v; localStorage.setItem(GH_KEY_DASAR, JSON.stringify(o));
+  } catch (e) {}
+}
+function ghpDasarHapusApp(app) {
+  try { let em = (ghProfilAktif || {}).email, o = ghpDasarAmbil(); if (o[em]) { delete o[em][app]; localStorage.setItem(GH_KEY_DASAR, JSON.stringify(o)); } } catch (e) {}
+}
+const ghpTahan = {};   // 'app|kunci' -> true: kunci ditahan (konflik / unduhan gagal) -- tidak dikirim ke Drive sampai aplikasi dibuka lagi
+const ghpDriveIdxTs = {};
+
+function ghpMultipart(meta, isiTeks) {
+  let b = 'ghp' + Math.random().toString(36).slice(2);
+  return { b: b, isi: '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + '\r\n--' + b + '\r\nContent-Type: text/plain\r\n\r\n' + isiTeks + '\r\n--' + b + '--' };
 }
 async function ghpDriveDaftar(appId) {
   let hasil = [], pt = '';
@@ -5202,50 +5320,114 @@ async function ghpDriveDaftar(appId) {
     let j = await (await ghpDriveFetch(u)).json();
     hasil = hasil.concat(j.files || []); pt = j.nextPageToken || '';
   } while (pt);
-  let idx = {};
+  let idx = {}, kembar = [];
   hasil.forEach(function (f) {
     if (f.name.indexOf(appId + '|') !== 0) return;
     let k = f.name.slice(appId.length + 1), v = Number((f.appProperties || {}).v || 0);
-    if (!idx[k] || v > idx[k].versi) idx[k] = { id: f.id, versi: v, fmt: (f.appProperties || {}).f === 'k' ? 'kosong' : (f.appProperties || {}).f };
+    let baru = { id: f.id, versi: v, fmt: (f.appProperties || {}).f === 'k' ? 'kosong' : (f.appProperties || {}).f };
+    if (!idx[k]) idx[k] = baru;
+    else if (v > idx[k].versi) { kembar.push({ k: k, it: idx[k] }); idx[k] = baru; }
+    else kembar.push({ k: k, it: baru });
   });
-  ghpDriveIdx[appId] = idx;
+  ghpDriveIdx[appId] = idx; ghpDriveIdxTs[appId] = Date.now();
+  if (kembar.length) ghpBereskanKembar(appId, kembar).catch(function () {});
   return { idx: idx, berkas: hasil };
+}
+// Berkas kembar (dua perangkat membuat kunci yang sama bersamaan): yang lebih lama TIDAK dihapus, dijadikan salinan konflik.
+async function ghpBereskanKembar(appId, kembar) {
+  for (let x of kembar.slice(0, 10)) {
+    let meta = { name: 'konflik|' + appId + '|' + x.k + '|' + x.it.versi, appProperties: { a: 'x_' + appId, k: x.k, v: String(x.it.versi), f: x.it.fmt === 'kosong' ? 'k' : x.it.fmt } };
+    await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + x.it.id + '?fields=id', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(meta), boleh: [404] });
+  }
 }
 async function ghpDriveMuat(appId, opsi) {
   opsi = opsi || {};
-  let d = await ghpDriveDaftar(appId), hasil = {};
-  for (let k of Object.keys(d.idx)) {
+  let d = (opsi.pakaiIdx && ghpDriveIdx[appId] && Date.now() - (ghpDriveIdxTs[appId] || 0) < 120000) ? { idx: ghpDriveIdx[appId] } : await ghpDriveDaftar(appId), hasil = {};
+  let antri = [];
+  Object.keys(d.idx).forEach(function (k) {
+    if (opsi.kunci && opsi.kunci.indexOf(k) < 0) return;
     let it = d.idx[k];
-    if (opsi.kunci && opsi.kunci.indexOf(k) < 0) continue;
-    if (opsi.hanyaVersi) { hasil[k] = { versi: it.versi, nilai: undefined }; continue; }
-    if (it.fmt === 'kosong') { hasil[k] = { versi: it.versi, nilai: null }; continue; }
-    let teks = await (await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + it.id + '?alt=media')).text();
-    hasil[k] = { versi: it.versi, nilai: await ghpBuka(it.fmt, teks) };
+    if (opsi.hanyaVersi) { hasil[k] = { versi: it.versi, nilai: undefined }; return; }
+    if (it.fmt === 'kosong') { hasil[k] = { versi: it.versi, nilai: null }; return; }
+    antri.push(k);
+  });
+  async function kerja() {
+    while (antri.length) {
+      let k = antri.shift(), it = d.idx[k];
+      let teks = await (await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + it.id + '?alt=media')).text();
+      hasil[k] = { versi: it.versi, nilai: await ghpBuka(it.fmt, teks) };
+    }
   }
+  await Promise.all([kerja(), kerja(), kerja()]);
   return hasil;
 }
+// Simpan salinan konflik: nilai yang TIDAK dipakai disimpan di Drive supaya bisa dipulihkan dari Pengaturan.
+async function ghpDriveSimpanKonflik(app, kunci, nilai) {
+  let p = await ghpKemas(nilai), w = Date.now();
+  let meta = { name: 'konflik|' + app + '|' + kunci + '|' + w, parents: ['appDataFolder'], appProperties: { a: 'x_' + app, k: kunci, v: String(w), f: p.fmt } };
+  let mp = ghpMultipart(meta, p.b64);
+  let r = await ghpDriveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + mp.b }, body: mp.isi });
+  await r.json();
+  ghpPangkasKonflik(app).catch(function () {});
+}
+async function ghpDriveDaftarKonflik(app) {
+  let q = "'appDataFolder' in parents and appProperties has { key='a' and value='x_" + app + "' } and trashed=false";
+  let u = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=200&fields=files(id,name,appProperties)&q=' + encodeURIComponent(q);
+  let j = await (await ghpDriveFetch(u)).json();
+  return (j.files || []).map(function (f) { let ap = f.appProperties || {}; return { id: f.id, app: app, kunci: ap.k || f.name, w: Number(ap.v || 0), fmt: ap.f === 'k' ? 'kosong' : ap.f }; }).sort(function (a, b) { return b.w - a.w; });
+}
+async function ghpPangkasKonflik(app) { // simpan maks 30 salinan dan paling lama 60 hari
+  let d = await ghpDriveDaftarKonflik(app), hapus = d.slice(30);
+  d.slice(0, 30).forEach(function (x) { if (Date.now() - x.w > 60 * 86400000) hapus.push(x); });
+  for (let x of hapus) await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + x.id, { method: 'DELETE', boleh: [404] });
+}
+function ghpToastKonflik(app) {
+  let nama = (typeof GH_APP_DATA !== 'undefined' && GH_APP_DATA[app]) ? GH_APP_DATA[app].nama : app;
+  ghToast('⚠️ ' + nama + ' juga diubah di perangkat lain. Perubahan Anda di perangkat ini disimpan sebagai salinan (⚙️ Pengaturan > Salinan konflik). ' + (app === 'hub' ? 'Muat ulang halaman ini untuk memakai versi terbaru.' : 'Tutup lalu buka lagi aplikasinya untuk memuat versi terbaru.'));
+}
+// Mengembalikan 'konflik' bila perubahan TIDAK ditulis (Drive sudah diubah perangkat lain); selain itu undefined.
 async function ghpDriveSimpan(it) {
   let idx = ghpDriveIdx[it.app];
   if (!idx) { await ghpDriveDaftar(it.app); idx = ghpDriveIdx[it.app]; }
   let ada = idx[it.kunci];
-  if (ada && ada.versi >= it.versi) return; // Drive sudah punya yang sama/lebih baru
+  if (ada && !it.paksa) {
+    // Baca versi TERBARU langsung dari Drive (indeks di memori bisa basi bila perangkat lain menulis).
+    let r0 = await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + ada.id + '?fields=appProperties', { boleh: [404] });
+    if (r0.status === 404) { delete idx[it.kunci]; ada = null; }
+    else {
+      let j0 = await r0.json(), rv = Number((j0.appProperties || {}).v || 0); ada.versi = rv;
+      let dasar = ghpDasarGet(it.app, it.kunci);
+      if (rv === it.versi) { ghpDasarSet(it.app, it.kunci, rv); return; }
+      let konflik = dasar !== undefined ? rv !== dasar : rv > it.versi;
+      if (konflik) {
+        if (it.nilai !== null) await ghpDriveSimpanKonflik(it.app, it.kunci, it.nilai);
+        ghpTahan[it.app + '|' + it.kunci] = true;
+        (ghpVerServer[it.app] = ghpVerServer[it.app] || {})[it.kunci] = { versi: rv };
+        ghpToastKonflik(it.app);
+        return 'konflik';
+      }
+      if (rv > it.versi) return; // item antrean lebih tua dari yang sudah kita tulis
+    }
+  }
   let p = it.nilai === null ? { fmt: 'kosong', b64: '' } : await ghpKemas(it.nilai);
   let meta = { name: it.app + '|' + it.kunci, appProperties: { a: it.app, v: String(it.versi), f: p.fmt === 'kosong' ? 'k' : p.fmt } };
   if (!ada) meta.parents = ['appDataFolder'];
-  let b = 'ghp' + Math.random().toString(36).slice(2);
-  let isi = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta) + '\r\n--' + b + '\r\nContent-Type: text/plain\r\n\r\n' + p.b64 + '\r\n--' + b + '--';
+  let mp = ghpMultipart(meta, p.b64);
   let url = ada ? 'https://www.googleapis.com/upload/drive/v3/files/' + ada.id + '?uploadType=multipart&fields=id' : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id';
-  let r = await ghpDriveFetch(url, { method: ada ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: isi, boleh: ada ? [404] : [] });
+  let r = await ghpDriveFetch(url, { method: ada ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + mp.b }, body: mp.isi, boleh: ada ? [404] : [] });
   if (ada && r.status === 404) { delete idx[it.kunci]; return ghpDriveSimpan(it); } // berkas sudah dihapus di tempat lain
   let j = await r.json();
   idx[it.kunci] = { id: j.id || (ada && ada.id), versi: it.versi, fmt: p.fmt };
+  ghpDasarSet(it.app, it.kunci, it.versi);
   (ghpVerServer[it.app] = ghpVerServer[it.app] || {})[it.kunci] = { versi: it.versi };
   ghpCekTerakhir[it.app] = Date.now();
 }
 async function ghpDriveHapusSemua(appId) {
-  let d = await ghpDriveDaftar(appId), n = 0;
+  let d = await ghpDriveDaftar(appId), n = 0, kf = [];
+  try { kf = await ghpDriveDaftarKonflik(appId); } catch (e) {}
   for (let f of d.berkas) { await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + f.id, { method: 'DELETE', boleh: [404] }); n++; }
-  delete ghpDriveIdx[appId];
+  for (let f of kf) { await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + f.id, { method: 'DELETE', boleh: [404] }); }
+  delete ghpDriveIdx[appId]; ghpDasarHapusApp(appId);
   return n;
 }
 
@@ -5278,7 +5460,7 @@ async function ghpHubungkanDrive() { // dari tombol di dialog/pengaturan
 
 // ---- lencana peringatan pada ikon ⚙️ ----
 function ghpAdaBelumTersimpan() {
-  return ghpDriveAktif() && (Object.keys(ghpAntrian).length > 0 || ghpMacetIzin || ghHubPending);
+  return ghpDriveAktif() && (Object.keys(ghpAntrian).length > 0 || ghpMacetIzin || ghpMacetKuota || ghHubPending);
 }
 function ghpSetLencana() {
   document.querySelectorAll('.gh-gear').forEach(function (el) { el.classList.toggle('titik', ghpAdaBelumTersimpan()); });
@@ -5309,6 +5491,7 @@ async function ghpTanyaPilih(pilihan) {
 const ghpTidur = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
 async function ghpSimpanSemua(interaktif) { // hub + antrean aplikasi; true bila semua tersimpan
   if (!ghpDriveAktif()) return false;
+  ghpMacetKuota = false;
   if (ghpMacetIzin && interaktif) { try { await ghpAmbilToken(true); ghpMacetIzin = false; } catch (e) { ghToast('⚠️ ' + e.message); return false; } }
   if (ghHubPending) await ghSinkronSimpanSekarang();
   if (Object.keys(ghpAntrian).length) { clearTimeout(ghpTimerKirim); ghpKuras(); await ghpTungguAntrian(20000); }
@@ -5320,7 +5503,7 @@ async function ghpSimpanSekarang() { // tombol ☁️ Simpan di bilah panel
   let msg = function (t) { try { ifr.contentWindow.postMessage({ _sumber: 'ghp-hub', type: t, app: ghpPanelAppId }, '*'); } catch (e) {} };
   if (!ghpDriveAktif()) {
     try { await ghpHubungkan(); } catch (e) { ghToast('⚠️ ' + e.message); return false; }
-    msg('GHP_SEMUA'); await ghpTidur(700); // kirim semua data lokal aplikasi ini ke Drive
+    msg('GHP_ULANG'); await ghpTidur(2500); // cocokkan ulang dengan Drive (tidak menimpa data yang sudah ada di Drive)
   } else { msg('GHP_FLUSH'); await ghpTidur(450); }
   ghpSetStatus('simpan');
   let ok = await ghpSimpanSemua(true);
@@ -5343,7 +5526,7 @@ async function ghpMigrasiServer() {
       for (let kunci of keys) {
         let it = h.items[kunci], dv = d.idx[kunci];
         if (dv && dv.versi >= it.versi) continue;
-        await ghpDriveSimpan({ app: app, kunci: kunci, versi: it.versi, nilai: it.fmt === 'kosong' ? null : await ghpBuka(it.fmt, (it.bagian || []).join('')) });
+        await ghpDriveSimpan({ paksa: true, app: app, kunci: kunci, versi: it.versi, nilai: it.fmt === 'kosong' ? null : await ghpBuka(it.fmt, (it.bagian || []).join('')) });
         dipindah++;
       }
       let hp = await ghFetchLisensi(GH_URL_LISENSI, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'hapusDataApp', email: k.email, kunciGuru: k.kunciGuru, app: app }) });
@@ -5395,8 +5578,54 @@ function ghpRenderPengaturan() {
       + '<button class="gh-btn gh-btn-outline" onclick="ghpUnggahData(\'' + id + '\')">⬆️ Unggah</button>'
       + '<button class="gh-btn gh-btn-outline" style="color:#b91c1c;border-color:#b91c1c;" onclick="ghpHapusData(\'' + id + '\')">🗑️ Hapus</button></div>';
   });
-  dt.innerHTML = t;
+  dt.innerHTML = t + '<div id="ghp-set-konflik"></div>';
+  if (aktif) ghpMuatKonflik();
 }
+
+// ---- Salinan konflik (Pengaturan) ----
+const ghpKonflikCache = {};
+async function ghpMuatKonflik() {
+  let el = document.getElementById('ghp-set-konflik'); if (!el || !ghpDriveAktif()) return;
+  let h = '';
+  try {
+    for (let app of Object.keys(GH_APP_DATA)) {
+      let d = await ghpDriveDaftarKonflik(app);
+      d.forEach(function (x) {
+        ghpKonflikCache[x.id] = x;
+        h += '<div class="ghp-set-baris"><b>' + ghEsc(GH_APP_DATA[app].nama) + '</b><span class="gh-hint" style="flex:1;margin:0 8px;">' + ghEsc(String(x.kunci).replace(/^idb:/, '')) + ' · ' + new Date(x.w).toLocaleString('id-ID') + '</span>'
+          + '<button class="gh-btn gh-btn-outline" onclick="ghpKonflikAksi(\'unduh\',\'' + x.id + '\')">⬇️</button>'
+          + '<button class="gh-btn gh-btn-outline" onclick="ghpKonflikAksi(\'pulih\',\'' + x.id + '\')">↩️ Pulihkan</button>'
+          + '<button class="gh-btn gh-btn-outline" style="color:#b91c1c;border-color:#b91c1c;" onclick="ghpKonflikAksi(\'hapus\',\'' + x.id + '\')">🗑️</button></div>';
+      });
+    }
+  } catch (e) { h = ''; }
+  el.innerHTML = h ? '<h4 style="margin:14px 0 4px;">Salinan konflik</h4><p class="gh-hint" style="margin:0 0 6px;">Perubahan yang tidak dipakai karena data yang sama juga diubah di perangkat lain. Disimpan maksimal 60 hari.</p>' + h : '';
+}
+async function ghpKonflikAksi(aksi, id) {
+  let x = ghpKonflikCache[id]; if (!x) return;
+  try {
+    if (aksi === 'hapus') {
+      if (!confirm('Hapus salinan ini?')) return;
+      await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + id, { method: 'DELETE', boleh: [404] });
+      ghpMuatKonflik(); return;
+    }
+    let teks = await (await ghpDriveFetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media')).text();
+    let nilai = x.fmt === 'kosong' ? null : await ghpBuka(x.fmt, teks);
+    if (aksi === 'unduh') {
+      let a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify({ aplikasi: x.app, kunci: x.kunci, waktu: x.w, nilai: nilai }, null, 1)], { type: 'application/json' }));
+      a.download = 'salinan-konflik-' + x.app + '-' + x.w + '.json';
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    } else if (aksi === 'pulih') {
+      if (ghpPanelAppId === x.app) { ghToast('Tutup aplikasi dulu sebelum memulihkan salinan.'); return; }
+      if (!confirm('Pulihkan salinan ini? Versi yang sekarang ada di Google Drive untuk bagian yang sama akan DIGANTI.')) return;
+      await ghpDriveSimpan({ app: x.app, kunci: x.kunci, versi: Date.now(), nilai: nilai, paksa: true });
+      if (x.app === 'hub') { try { localStorage.setItem(GH_KEY_HUBVER, '0'); } catch (e) {} await ghSinkronMuat({ paksaDrive: true }); }
+      ghToast('✅ Salinan dipulihkan. ' + (x.app === 'hub' ? '' : 'Tampil saat aplikasi dibuka berikutnya.'));
+    }
+  } catch (e) { ghToast('⚠️ ' + e.message); }
+}
+
 async function ghpSimpanDariPengaturan() {
   ghToast('⏳ Menyimpan ke Google Drive…');
   let ok = await ghpSimpanSemua(true);
@@ -5438,13 +5667,14 @@ function ghpUnggahData(appId) {
         let kunci = Object.keys(j.data);
         if (!kunci.length) throw new Error('Berkas tidak berisi data.');
         if (!confirm('Pulihkan ' + kunci.length + ' item ke ' + GH_APP_DATA[appId].nama + '?\n\nData yang sama di Google Drive akan DITIMPA oleh isi berkas ini.')) return;
+        await ghpUnduhData(appId); // cadangan otomatis data saat ini sebelum ditimpa
         ghToast('⏳ Memulihkan…');
         let t = Date.now(), n = 0;
         for (let k of kunci) {
           let it = j.data[k]; if (!it || (it.nilai !== null && typeof it.nilai !== 'string')) continue;
-          await ghpDriveSimpan({ app: appId, kunci: k, versi: t + (n++), nilai: it.nilai });
+          await ghpDriveSimpan({ app: appId, kunci: k, versi: t + (n++), nilai: it.nilai, paksa: true });
         }
-        if (appId === 'hub') { try { localStorage.setItem(GH_KEY_HUBVER, '0'); } catch (e) {} await ghSinkronMuat(); }
+        if (appId === 'hub') { try { localStorage.setItem(GH_KEY_HUBVER, '0'); } catch (e) {} await ghSinkronMuat({ paksaDrive: true }); }
         ghToast('✅ ' + n + ' item dipulihkan. ' + (appId === 'hub' ? '' : 'Data tampil saat aplikasi dibuka berikutnya.'));
       } catch (e) { ghToast('⚠️ ' + e.message); }
     };
