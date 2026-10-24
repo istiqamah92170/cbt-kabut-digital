@@ -87,6 +87,44 @@
   .gh-paket-card .gh-paket-label { font-size:13px; font-weight:700; color:var(--gray-mid); }
   .gh-paket-card .gh-paket-harga { font-size:20px; font-weight:800; color:var(--heading); }
   .gh-paket-card .gh-paket-per-bulan { font-size:11px; color:var(--gray-soft); margin-bottom:4px; }
+
+  /* ═══ Halaman Langganan: gaya selaras landing page (hitam + emas), tetap gelap di tema terang/gelap ═══ */
+  #gh-page-langganan { --white:#27241F; --gray-bg:#0A0908; --gray-dark:#F1EDE4; --gray-mid:#CFCAC0; --gray-soft:#A9A398; --gray-line:#3F3B34; --blue-pale:#1F1D18; --blue-light:#2A2722; --heading:#E9C566; --red:#F87171; --red-light:#3A211D; }
+  #gh-page-langganan > .gh-card { background:#14120F; border:1px solid rgba(233,197,102,.22); box-shadow:0 18px 44px -12px rgba(0,0,0,.7); color:#F1EDE4; }
+  #gh-page-langganan h2, #gh-page-langganan h3 { color:#FAF6EC; }
+  #gh-page-langganan .gh-sub, #gh-page-langganan .gh-hint { color:#B2ACA1; }
+  #gh-page-langganan .gh-section-sep { border-color:#2E2B26; }
+  .lg-status { border-radius:16px; padding:18px 18px 16px; margin-bottom:18px; background:linear-gradient(180deg,#2A2722,#221F1B); border:1px solid rgba(233,197,102,.28); box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 12px 30px -10px rgba(0,0,0,.7); text-align:left; }
+  .lg-status.lg-dekat { border-color:#E9C566; box-shadow:0 0 0 1px rgba(233,197,102,.35), 0 16px 40px -10px rgba(201,162,39,.35); }
+  .lg-status.lg-habis { border-color:rgba(248,113,113,.55); }
+  .lg-row { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .lg-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:800; background:rgba(16,185,129,.16); color:#6EE7B7; border:1px solid rgba(16,185,129,.35); }
+  .lg-dekat .lg-chip { background:rgba(233,197,102,.16); color:#F5E29A; border-color:rgba(233,197,102,.45); }
+  .lg-habis .lg-chip { background:rgba(248,113,113,.14); color:#FCA5A5; border-color:rgba(248,113,113,.4); }
+  .lg-akun { font-size:12px; color:#A9A398; word-break:break-all; }
+  .lg-label { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#A9A398; font-weight:700; }
+  .lg-date { font-family:var(--font-display,Georgia,serif); font-size:28px; font-weight:700; color:#FAF6EC; line-height:1.2; margin-top:2px; }
+  .lg-sisa { font-size:14px; color:#CFCAC0; margin-top:4px; }
+  .lg-cd { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
+  .lg-cd div { background:#0F0E0D; border:1px solid rgba(233,197,102,.3); border-radius:12px; padding:10px 4px; text-align:center; }
+  .lg-cd b { display:block; font-size:24px; font-weight:800; color:#F5E29A; font-variant-numeric:tabular-nums; line-height:1.1; }
+  .lg-cd small { font-size:11px; color:#A9A398; text-transform:uppercase; letter-spacing:.06em; }
+  .lg-cd-note { font-size:13px; color:#F5E29A; margin-top:10px; }
+  .lg-pakets { display:grid; grid-template-columns:1fr; gap:16px; margin-top:6px; }
+  @media (min-width:760px) { .lg-pakets { grid-template-columns:repeat(3,1fr); align-items:stretch; } }
+  .lg-paket { position:relative; display:flex; flex-direction:column; gap:6px; border-radius:16px; padding:20px 16px 16px; background:linear-gradient(180deg,#2A2722,#221F1B); border:1px solid rgba(233,197,102,.2); box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 12px 28px -10px rgba(0,0,0,.7); text-align:left; }
+  .lg-paket.hemat { border:2px solid #C9A227; box-shadow:0 0 0 1px rgba(233,197,102,.25), 0 18px 40px -10px rgba(201,162,39,.35); }
+  .lg-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); white-space:nowrap; background:linear-gradient(135deg,#F5E29A,#C9A227 60%,#8B6B14); color:#2A2005; font-size:11px; font-weight:800; padding:3px 12px; border-radius:999px; }
+  .lg-paket-nama { font-size:15px; font-weight:800; color:#FAF6EC; }
+  .lg-paket-harga { font-family:var(--font-display,Georgia,serif); font-size:28px; font-weight:700; color:#FAF6EC; }
+  .lg-paket-per { font-size:12.5px; color:#E9C566; min-height:18px; }
+  .lg-paket ul { list-style:none; margin:8px 0 10px; padding:0; font-size:13px; color:#CFCAC0; display:grid; gap:6px; flex:1; }
+  .lg-paket li::before { content:"✓"; color:#E9C566; font-weight:800; margin-right:8px; }
+  .lg-btn { width:100%; min-height:46px; border-radius:12px; border:1px solid #4A4640; background:#35322D; color:#FAF6EC; font:700 14px var(--font-body,inherit); cursor:pointer; }
+  .lg-paket.hemat .lg-btn { background:linear-gradient(135deg,#F5E29A,#C9A227 60%,#8B6B14); color:#2A2005; border-color:transparent; box-shadow:0 6px 18px rgba(201,162,39,.35); }
+  .lg-btn:disabled { opacity:.6; cursor:not-allowed; }
+  .lg-info { font-size:13px; color:#CFCAC0; }
+  .lg-info a { color:#E9C566; }
   @media (max-width:560px) { #gh-langganan-paket-wrap.gh-form-grid.g3 { grid-template-columns:minmax(0,1fr); } }
   .gh-btn {
     display:inline-flex; align-items:center; justify-content:center; gap:6px;
@@ -498,7 +536,7 @@
       <div id="gh-google-signin-btn" class="g_id_signin" style="display:flex;justify-content:center;min-height:44px;" data-type="standard" data-size="large" data-theme="outline" data-width="300"></div>
       <div class="gh-status-msg" id="gh-login-status" style="margin-top:14px;"></div>
       <button class="gh-btn gh-btn-ghost" id="gh-btn-login-coba-lagi" style="width:100%;margin-top:6px;display:none;" onclick="ghUiCobaAkunLain()">Coba akun Google lain</button>
-      <p class="gh-hint" style="text-align:center;margin-top:14px;">Belum berlangganan? <a href="landing.html" style="color:var(--blue-main);font-weight:700;text-decoration:none;">Lihat fitur &amp; harga Guru Hub →</a></p>
+      <p class="gh-hint" style="text-align:center;margin-top:14px;">Belum berlangganan? <a href="https://cbtkabutdigital.com/Premium/landing.html" target="_blank" rel="noopener" style="color:var(--blue-main);font-weight:700;text-decoration:none;">Lihat fitur &amp; harga Guru Hub →</a></p>
     </div>
   </div>
 </div>
@@ -820,7 +858,7 @@
   <div class="gh-page" id="gh-page-langganan" style="display:none;">
   <div class="gh-card">
     <h2>Langganan Guru Hub</h2>
-    <p class="gh-sub">Perpanjang langganan Anda kapan saja lewat QRIS, VA, atau GoPay — aktif otomatis begitu pembayaran diterima, tidak perlu konfirmasi manual.</p>
+    <p class="gh-sub">Perpanjang langganan Anda kapan saja lewat QRIS, Virtual Account, atau e-wallet (Midtrans) — aktif otomatis begitu pembayaran diterima, tanpa konfirmasi manual. <a href="https://cbtkabutdigital.com/Premium/landing.html" target="_blank" rel="noopener" style="color:#E9C566;font-weight:700;">Lihat fitur &amp; harga →</a></p>
 
     <!-- FITUR (2026-09): tampil HANYA untuk guru yang baru login tapi belum
          aktif (lihat ghUiTampilkanBelumAktif) -- pesan sambutan/alasan yang
@@ -1516,41 +1554,88 @@ async function ghMuatStatusLangganan() {
       ghToast('🎉 Langganan aktif! Semua fitur Guru Hub sudah terbuka.');
     }
 
+    ghRenderStatusLangganan(hasil, aktifSekarang);
     if (!hasil.pembayaranAktif) {
-      box.innerHTML = 'Status: <b>' + ghEsc(hasil.statusLangganan || '-') + '</b><br><span style="font-size:12px;color:var(--gray-soft);">Pembayaran online belum diaktifkan -- hubungi CBT Kabut Digital untuk perpanjangan.</span>';
       wrap.innerHTML = '';
+      box.insertAdjacentHTML('beforeend', '<div class="lg-info" style="margin-top:-6px">Pembayaran online belum diaktifkan — hubungi CBT Kabut Digital untuk perpanjangan.</div>');
       return;
     }
-
-    if (hasil.masaBerlaku) {
-      let habis = hasil.sisaHari !== null && hasil.sisaHari < 0;
-      box.innerHTML = habis
-        ? ('⚠️ Langganan <b>berakhir</b> pada ' + ghEsc(hasil.masaBerlaku) + '. Perpanjang di bawah supaya akses aktif lagi.')
-        : ('✅ Langganan <b>' + ghEsc(hasil.statusLangganan) + '</b> sampai <b>' + ghEsc(hasil.masaBerlaku) + '</b> (' + hasil.sisaHari + ' hari lagi).');
-    } else {
-      box.innerHTML = 'Status: <b>' + ghEsc(hasil.statusLangganan || '-') + '</b><br><span style="font-size:12px;color:var(--gray-soft);">Dikelola manual oleh CBT Kabut Digital.</span>';
-    }
-
-    ghRenderPaketLangganan(hasil.paket || []);
+    ghRenderPaketLangganan(hasil.paket || [], aktifSekarang);
   } catch (e) {
     box.textContent = '❌ Gagal terhubung: ' + e.message;
   }
 }
 
-function ghRenderPaketLangganan(daftarPaket) {
+function ghRenderPaketLangganan(daftarPaket, aktif) {
   let wrap = document.getElementById('gh-langganan-paket-wrap');
+  wrap.className = 'lg-pakets';
   let hargaBulan = (daftarPaket.find(p => p.key === 'bulan') || {}).harga || 35000;
   wrap.innerHTML = daftarPaket.map(p => {
     let bulanSetara = p.key === 'enam_bulan' ? p.harga / 6 : (p.key === 'tahun' ? p.harga / 12 : p.harga);
     let hemat = p.key !== 'bulan' ? Math.round((1 - bulanSetara / hargaBulan) * 100) : 0;
-    return '<div class="gh-paket-card' + (hemat > 0 ? ' hemat' : '') + '">' +
-      (hemat > 0 ? '<div class="gh-paket-hemat-badge">HEMAT ' + hemat + '%</div>' : '') +
-      '<div class="gh-paket-label">' + ghEsc(p.label) + '</div>' +
-      '<div class="gh-paket-harga">Rp' + p.harga.toLocaleString('id-ID') + '</div>' +
-      (p.key !== 'bulan' ? '<div class="gh-paket-per-bulan">≈ Rp' + Math.round(bulanSetara).toLocaleString('id-ID') + '/bulan</div>' : '<div class="gh-paket-per-bulan">&nbsp;</div>') +
-      '<button class="gh-btn gh-btn-primary" onclick="ghBayarPaket(\'' + p.key + '\')">Bayar</button>' +
+    return '<div class="lg-paket' + (p.key === 'enam_bulan' ? ' hemat' : '') + '">' +
+      (p.key === 'enam_bulan' ? '<div class="lg-badge">PALING POPULER' + (hemat > 0 ? ' · HEMAT ' + hemat + '%' : '') + '</div>' : '') +
+      '<div class="lg-paket-nama">' + ghEsc(p.label) + '</div>' +
+      '<div class="lg-paket-harga">Rp' + p.harga.toLocaleString('id-ID') + '</div>' +
+      '<div class="lg-paket-per">' + (p.key !== 'bulan' ? '≈ Rp' + Math.round(bulanSetara).toLocaleString('id-ID') + '/bulan' + (p.key === 'tahun' && hemat > 0 ? ' · hemat ' + hemat + '%' : '') : '&nbsp;') + '</div>' +
+      '<ul><li>Semua fitur CBT</li><li>GuruAI Builder</li><li>Bloom &amp; Topic Analyzer</li><li>Data di Google Drive Anda</li></ul>' +
+      '<button class="lg-btn" onclick="ghBayarPaket(\'' + p.key + '\')">' + (aktif ? 'Perpanjang' : 'Pilih paket') + '</button>' +
     '</div>';
   }).join('');
+}
+
+// ── Status langganan + hitung mundur (tampil saat <= 7 hari) ──────────────
+let _lgTimer = null, _lgAkhir = null;
+function lgParseAkhir(str) {
+  // Tanggal berlaku dibaca sebagai AKHIR hari tsb (23:59:59 waktu perangkat), bukan tengah malam.
+  if (!str) return null;
+  let m = String(str).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3], 23, 59, 59);
+  let m2 = String(str).match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+  if (m2) return new Date(+m2[3], +m2[2] - 1, +m2[1], 23, 59, 59);
+  let d = new Date(str);
+  if (isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+}
+function lgTick() {
+  let el = document.getElementById('lg-cd');
+  if (!el || !_lgAkhir) { if (_lgTimer) { clearInterval(_lgTimer); _lgTimer = null; } return; }
+  let s = Math.floor((_lgAkhir.getTime() - Date.now()) / 1000);
+  if (s <= 0) {
+    clearInterval(_lgTimer); _lgTimer = null;
+    ghMuatStatusLangganan(); // segarkan: status jadi "berakhir"
+    return;
+  }
+  let d = Math.floor(s / 86400), j = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), dt = s % 60, p = n => String(n).padStart(2, '0');
+  document.getElementById('lg-cd-d').textContent = d;
+  document.getElementById('lg-cd-j').textContent = p(j);
+  document.getElementById('lg-cd-m').textContent = p(m);
+  document.getElementById('lg-cd-s').textContent = p(dt);
+}
+function ghRenderStatusLangganan(hasil, aktif) {
+  let box = document.getElementById('gh-langganan-status-box');
+  if (_lgTimer) { clearInterval(_lgTimer); _lgTimer = null; }
+  _lgAkhir = lgParseAkhir(hasil.masaBerlaku);
+  let email = (ghProfilAktif && ghProfilAktif.email) ? ghEsc(ghProfilAktif.email) : '';
+  box.className = ''; box.style.padding = '0'; box.style.margin = '0 0 18px'; box.style.background = 'none'; box.style.border = '0';
+  if (!_lgAkhir) {
+    box.innerHTML = '<div class="lg-status"><div class="lg-row"><span class="lg-chip">' + ghEsc(hasil.statusLangganan || '-') + '</span><span class="lg-akun">' + email + '</span></div><div class="lg-info">Masa aktif dikelola manual oleh CBT Kabut Digital.</div></div>';
+    return;
+  }
+  let sisaDetik = Math.floor((_lgAkhir.getTime() - Date.now()) / 1000);
+  let habis = !aktif || sisaDetik <= 0;
+  let sisaHari = Math.floor(sisaDetik / 86400);
+  let dekat = !habis && sisaHari <= 7;
+  let tglLabel = _lgAkhir.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  let cls = habis ? 'lg-habis' : (dekat ? 'lg-dekat' : '');
+  let chip = habis ? '⛔ Berakhir' : (dekat ? '⏳ Segera berakhir' : '✅ Aktif');
+  let sisaTeks = habis ? 'Perpanjang di bawah supaya akses aktif lagi.' : (sisaHari < 1 ? 'Berakhir hari ini' : sisaHari + ' hari lagi');
+  let cd = dekat
+    ? '<div class="lg-cd" id="lg-cd" role="timer" aria-label="Hitung mundur masa aktif"><div><b id="lg-cd-d">0</b><small>hari</small></div><div><b id="lg-cd-j">00</b><small>jam</small></div><div><b id="lg-cd-m">00</b><small>menit</small></div><div><b id="lg-cd-s">00</b><small>detik</small></div></div><div class="lg-cd-note">Perpanjang sebelum waktu habis agar akses tidak terputus. Perpanjangan ditambahkan di atas tanggal berlaku saat ini, sisa masa aktif tidak hangus.</div>'
+    : '';
+  box.innerHTML = '<div class="lg-status ' + cls + '"><div class="lg-row"><span class="lg-chip">' + chip + '</span><span class="lg-akun">' + email + '</span></div>' +
+    '<div class="lg-label">' + (habis ? 'Berakhir pada' : 'Berlaku sampai') + '</div><div class="lg-date">' + ghEsc(tglLabel) + '</div><div class="lg-sisa">' + ghEsc(sisaTeks) + '</div>' + cd + '</div>';
+  if (dekat) { lgTick(); _lgTimer = setInterval(lgTick, 1000); }
 }
 
 let _ghBayarSedang = false;
@@ -4586,7 +4671,7 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // kode klien seperti ini). MIDTRANS_PRODUCTION HARUS sama persis dengan
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
-const MIDTRANS_CLIENT_KEY = 'Mid-client-M0YhnqNbhFWgr7e2';
+const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
 const MIDTRANS_PRODUCTION = true;  // sama dengan server Lisensi (production). Bila server mengirim 'production', itu yang dipakai.
 
 // FITUR (2026-09): pembungkus fetch+parse KHUSUS untuk server Lisensi
