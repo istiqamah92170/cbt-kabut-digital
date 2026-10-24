@@ -1468,16 +1468,24 @@ async function ghBatalkanSesi(sesiId) {
 // ═══════════════════════════════════════════════
 //  LANGGANAN & PEMBAYARAN MIDTRANS (2026-09)
 // ═══════════════════════════════════════════════
-let _ghSnapPromise = null;
-function _ghMuatSnapJs() {
-  if (window.snap) return Promise.resolve();
-  if (_ghSnapPromise) return _ghSnapPromise;
+let _ghSnapPromise = null, _ghSnapEnv = null;
+// Muat snap.js sesuai LINGKUNGAN token (production/sandbox). Token buatan server production TIDAK dikenal oleh snap.js sandbox
+// (popup menampilkan "Transaksi tidak ditemukan"), dan sebaliknya -- jadi lingkungan mengikuti server, bukan konstanta di sini.
+function _ghMuatSnapJs(produksi) {
+  const env = produksi ? 'prod' : 'sandbox';
+  if (window.snap && _ghSnapEnv === env) return Promise.resolve();
+  if (_ghSnapPromise && _ghSnapEnv === env) return _ghSnapPromise;
+  document.querySelectorAll('script[data-gh-snap]').forEach(function (x) { x.remove(); });
+  try { delete window.snap; } catch (e) { window.snap = undefined; }
+  if (window.snap) window.snap = undefined;
+  _ghSnapEnv = env;
   _ghSnapPromise = new Promise((resolve, reject) => {
     let s = document.createElement('script');
-    s.src = (MIDTRANS_PRODUCTION ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com') + '/snap/snap.js';
+    s.src = (produksi ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com') + '/snap/snap.js';
     s.setAttribute('data-client-key', MIDTRANS_CLIENT_KEY);
+    s.setAttribute('data-gh-snap', '1');
     s.onload = resolve;
-    s.onerror = () => reject(new Error('Gagal memuat modul pembayaran (cek koneksi internet).'));
+    s.onerror = () => { _ghSnapPromise = null; reject(new Error('Gagal memuat modul pembayaran (cek koneksi internet).')); };
     document.head.appendChild(s);
   });
   return _ghSnapPromise;
@@ -1545,9 +1553,17 @@ function ghRenderPaketLangganan(daftarPaket) {
   }).join('');
 }
 
+let _ghBayarSedang = false;
+function _ghSetTombolBayar(nonaktif) {
+  document.querySelectorAll('#gh-langganan-paket-wrap button').forEach(function (b) { b.disabled = nonaktif; });
+}
 async function ghBayarPaket(paketKey) {
+  if (_ghBayarSedang) return; // cegah snap.pay dipanggil dua kali ("Invalid state transition from PopupInView to PopupInView")
   if (!ghProfilAktif || !ghProfilAktif.kunciGuru) { ghToast('Sesi login bermasalah -- coba logout & login ulang.'); return; }
   let statusEl = document.getElementById('gh-langganan-bayar-status');
+  _ghBayarSedang = true; _ghSetTombolBayar(true);
+  let popupTerbuka = false;
+  const lepas = function () { _ghBayarSedang = false; _ghSetTombolBayar(false); };
   statusEl.className = 'gh-status-msg';
   statusEl.textContent = '🔄 Menyiapkan pembayaran...';
   try {
@@ -1557,17 +1573,34 @@ async function ghBayarPaket(paketKey) {
     });
     if (hasil.status !== 'ok') { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ ' + (hasil.msg || 'Gagal membuat tagihan.'); return; }
 
-    await _ghMuatSnapJs();
+    // Lingkungan mengikuti server bila server memberi tahu (hasil.production); jika belum, pakai konstanta di atas.
+    const produksi = (typeof hasil.production === 'boolean') ? hasil.production : MIDTRANS_PRODUCTION;
+    const adaKunci = !!MIDTRANS_CLIENT_KEY && MIDTRANS_CLIENT_KEY.indexOf('GANTI_DENGAN') !== 0;
+    if (!adaKunci && hasil.redirect_url) {
+      // Tanpa Client Key popup tidak bisa dipakai: buka halaman pembayaran Midtrans (selalu cocok dengan lingkungan token).
+      statusEl.className = 'gh-status-msg ok';
+      statusEl.textContent = '↗️ Halaman pembayaran Midtrans dibuka. Setelah selesai, kembali ke Guru Hub -- status diperbarui otomatis.';
+      if (!window.open(hasil.redirect_url, '_blank')) location.href = hasil.redirect_url;
+      _ghPollingStatusLangganan();
+      return;
+    }
+
+    await _ghMuatSnapJs(produksi);
     statusEl.textContent = '';
+    try { window.snap.hide(); } catch (e) {} // pastikan tidak ada popup lama yang masih terbuka
+    popupTerbuka = true;
+    setTimeout(lepas, 15 * 60 * 1000); // pengaman: tombol pasti terbuka lagi
     window.snap.pay(hasil.snap_token, {
-      onSuccess: () => { statusEl.className = 'gh-status-msg ok'; statusEl.textContent = '✅ Pembayaran diterima, memperbarui status...'; _ghPollingStatusLangganan(); },
-      onPending: () => { statusEl.className = 'gh-status-msg'; statusEl.textContent = '⏳ Menunggu pembayaran Anda selesai (mis. transfer VA) -- status akan diperbarui otomatis begitu diterima.'; _ghPollingStatusLangganan(); },
-      onError: () => { statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Pembayaran gagal. Coba lagi atau pilih metode lain.'; },
-      onClose: () => { if (!statusEl.textContent) statusEl.textContent = 'Dibatalkan -- belum ada pembayaran diproses.'; }
+      onSuccess: () => { lepas(); statusEl.className = 'gh-status-msg ok'; statusEl.textContent = '✅ Pembayaran diterima, memperbarui status...'; _ghPollingStatusLangganan(); },
+      onPending: () => { lepas(); statusEl.className = 'gh-status-msg'; statusEl.textContent = '⏳ Menunggu pembayaran Anda selesai (mis. transfer VA) -- status akan diperbarui otomatis begitu diterima.'; _ghPollingStatusLangganan(); },
+      onError: () => { lepas(); statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Pembayaran gagal. Coba lagi atau pilih metode lain.'; },
+      onClose: () => { lepas(); if (!statusEl.textContent) statusEl.textContent = 'Dibatalkan -- belum ada pembayaran diproses.'; }
     });
   } catch (e) {
     statusEl.className = 'gh-status-msg err';
     statusEl.textContent = '❌ ' + e.message;
+  } finally {
+    if (!popupTerbuka) lepas();
   }
 }
 
@@ -4554,7 +4587,7 @@ const GH_URL_LISENSI = 'https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VP
 // nilai di Lisensi_GuruHub.gs (sandbox+sandbox atau production+production,
 // tidak boleh dicampur).
 const MIDTRANS_CLIENT_KEY = 'GANTI_DENGAN_MIDTRANS_CLIENT_KEY';
-const MIDTRANS_PRODUCTION = false;
+const MIDTRANS_PRODUCTION = true;  // sama dengan server Lisensi (production). Bila server mengirim 'production', itu yang dipakai.
 
 // FITUR (2026-09): pembungkus fetch+parse KHUSUS untuk server Lisensi
 // pusat (GH_URL_LISENSI) -- supaya SEMUA pemanggilnya memberi pesan yang
