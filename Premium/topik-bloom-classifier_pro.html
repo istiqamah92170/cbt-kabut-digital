@@ -3310,8 +3310,9 @@ function restoreDB(input) {
       DB = migrated;
       dbLog('restore_db','root',null,'v'+DB.database_version);
       saveDB(); populateMapelSelects(); renderDbMapelList(); renderDbDetail();
+      var _lh = kurAutoHubungkan();
       var sum=getDBSummary();
-      alert('Restore berhasil.\nVersi: v'+DB.database_version+'\n'+sum.materi_count+' materi | '+sum.draft_count+' draft | '+sum.verified_count+' verified');
+      alert('Restore berhasil.\nVersi: v'+DB.database_version+'\n'+sum.materi_count+' materi | '+sum.draft_count+' draft | '+sum.verified_count+' verified' + _ahRingkas(_lh));
     } catch(err) { alert('Gagal restore: ' + err.message); }
   };
   r.readAsText(file); input.value = '';
@@ -3900,7 +3901,8 @@ function kurRestore(input) {
       var parsed = JSON.parse(e.target.result);
       if (!parsed.database_version) throw new Error('Format tidak valid');
       _kurLoadFromParsed(parsed);
-      alert('Restore berhasil.');
+      var _lh = kurAutoHubungkan();
+      alert('Restore berhasil.' + _ahRingkas(_lh));
     } catch(err) { alert('Gagal restore: ' + err.message); }
   };
   r.readAsText(file); input.value = '';
@@ -6634,6 +6636,94 @@ function alUrungkan() {
   _alUndo = null; saveDB(); renderDbDetail();
 }
 
+// ══════════════════════════════════════════════════════════════
+// HUBUNGKAN OTOMATIS SETELAH RESTORE / IMPOR ATP (2026-10)
+//  Dipanggil otomatis setelah Restore Kurikulum, Restore Database Materi, dan Impor ATP.
+//  1. Materi yang sudah punya TP -> atp_id diisi dari ATP yang memuat TP itu
+//     (sekaligus melengkapi cp_id/kurikulum_id bila kosong).
+//  2. Materi yang belum terhubung (atau TP-nya sudah tidak ada) -> dicocokkan ke TP
+//     yang tercantum di ATP mapel+kelas yang sama lewat kemiripan kata (offline); hanya
+//     yang skornya meyakinkan (>=0.5 dan unggul >=0.15). Yang ragu dibiarkan.
+//  Hubungan yang sudah benar tidak ditimpa. Bisa diurungkan lewat tombol Urungkan.
+// ══════════════════════════════════════════════════════════════
+function _atpIndeksTp() {
+  var m = {};
+  Object.keys((DB_KUR && DB_KUR.atp) || {}).forEach(function (id) {
+    var a = _kurGetCurrent('atp', id); if (!a) return;
+    (a.tp_ids_urutan || []).forEach(function (t) { if (!m[t]) m[t] = id; });
+  });
+  return m;
+}
+function kurAutoHubungkan(opsi) {
+  opsi = opsi || {};
+  var lap = { total: 0, atp: 0, tp: 0, sudah: 0, belum: 0, usang: 0, atpAda: Object.keys((DB_KUR && DB_KUR.atp) || {}).length };
+  var undo = [], idx = _atpIndeksTp(), src = (DB && DB.mapel) || {};
+  function simpanSebelum(item) { undo.push({ id: item.id, sebelum: item.kurikulum_ref ? JSON.parse(JSON.stringify(item.kurikulum_ref)) : null }); }
+  function refBaru() { return { kurikulum_id: null, cp_id: null, tp_ids: [], atp_id: null, kd_ids: [], indikator_ids: [] }; }
+  if (!lap.atpAda && !Object.keys((DB_KUR && DB_KUR.tp) || {}).length) return lap;
+  Object.keys(src).forEach(function (mapel) {
+    if (opsi.mapel && mapel !== opsi.mapel) return;
+    Object.keys(src[mapel] || {}).forEach(function (kelas) {
+      if (opsi.kelas && kelas !== opsi.kelas) return;
+      var list = src[mapel][kelas]; if (!Array.isArray(list)) return;
+      var tps = null, idf = null, idfMax = 0;
+      list.forEach(function (item) {
+        if (!item || typeof item !== 'object') return;
+        lap.total++;
+        var ref = item.kurikulum_ref, tpIds = (ref && ref.tp_ids) || [];
+        var valid = tpIds.filter(function (t) { return _kurGetCurrent('tp', t); });
+        if (tpIds.length && valid.length < tpIds.length) lap.usang++;
+        if (valid.length) { // 1. sudah punya TP -> lengkapi ATP/CP/kurikulum
+          var atpId = null; valid.some(function (t) { if (idx[t]) { atpId = idx[t]; return true; } });
+          var tp0 = _kurGetCurrent('tp', valid[0]) || {}, cp0 = tp0.cp_id ? kurGetCpCurrent(tp0.cp_id) : null;
+          var butuh = (atpId && ref.atp_id !== atpId) || (!ref.cp_id && tp0.cp_id) || (!ref.kurikulum_id && cp0 && cp0.kurikulum_id);
+          if (butuh) {
+            simpanSebelum(item);
+            if (atpId && ref.atp_id !== atpId) { ref.atp_id = atpId; lap.atp++; }
+            if (!ref.cp_id && tp0.cp_id) ref.cp_id = tp0.cp_id;
+            if (!ref.kurikulum_id && cp0 && cp0.kurikulum_id) ref.kurikulum_id = cp0.kurikulum_id;
+          } else lap.sudah++;
+          return;
+        }
+        if (ref && ref.cp_id && !tpIds.length) { lap.sudah++; return; } // sengaja hanya ke CP
+        if (opsi.tebak === false) { lap.belum++; return; }
+        if (!tps) { // 2. kandidat: TP di ATP mapel+kelas ini (bila tak ada ATP, semua TP-nya)
+          tps = _alKandidatTP(mapel, kelas);
+          var diAtp = tps.filter(function (t) { return idx[t.id]; });
+          if (diAtp.length) tps = diAtp;
+          var df = {}; tps.forEach(function (t) { t.tok.forEach(function (w) { df[w] = (df[w] || 0) + 1; }); });
+          idf = {}; Object.keys(df).forEach(function (w) { idf[w] = Math.log(1 + tps.length / df[w]); });
+          idfMax = Math.log(1 + tps.length);
+        }
+        if (tps.length < 2 && !(tps.length === 1 && idx[tps[0].id])) { lap.belum++; return; }
+        var sk = _alSkor(item.materi, tps, idf, idfMax), b = sk[0], k2 = sk[1];
+        var margin = b ? b.skor - (k2 ? k2.skor : 0) : 0;
+        if (!(b && b.skor >= 0.5 && (tps.length === 1 || margin >= 0.15))) { lap.belum++; return; }
+        var tp = tps[b.i]; simpanSebelum(item);
+        item.kurikulum_ref = refBaru();
+        item.kurikulum_ref.kurikulum_id = tp.kurikulum_id; item.kurikulum_ref.cp_id = tp.cp_id;
+        item.kurikulum_ref.tp_ids = [tp.id]; item.kurikulum_ref.atp_id = idx[tp.id] || null;
+        lap.tp++;
+      });
+    });
+  });
+  if (undo.length) {
+    _alUndo = { waktu: new Date().toISOString(), mapel: opsi.mapel || 'semua', kelas: opsi.kelas || 'semua', perubahan: undo };
+    saveDB();
+    try { renderDbMapelList(); renderDbDetail(); } catch (e) {}
+  }
+  return lap;
+}
+function _ahRingkas(l) {
+  if (!l || !l.total || !l.atpAda) return '';
+  var t = '\n\nPenghubungan otomatis materi ↔ kurikulum:\n• ' + l.atp + ' materi dihubungkan/dilengkapi ke ATP' +
+    '\n• ' + l.tp + ' materi dicocokkan ke TP (dari ATP)';
+  if (l.usang) t += '\n• ' + l.usang + ' materi punya TP yang tidak ada lagi di kurikulum (dicocokkan ulang bila bisa)';
+  if (l.belum) t += '\n• ' + l.belum + ' materi belum terhubung (tidak cukup yakin) — hubungkan manual atau pakai Hubungkan Otomatis';
+  if (l.atp || l.tp) t += '\nBila keliru, buka Database Materi → Urungkan penerapan terakhir.';
+  return t;
+}
+
 // ═════════════════════════════════════════════════════════════════════
 // IMPOR ATP (.docx) → CP + TP + Materi + ATP, otomatis terhubung (2026-10)
 //  Dibaca berdasarkan JUDUL KOLOM (bukan urutan kolom): kolom TP = "Alur Tujuan
@@ -6976,6 +7066,7 @@ function atpImpor() {
   });
 
   saveDB();
+  var _lh = kurAutoHubungkan({ mapel: mapel, kelas: kelas, tebak: false }); // isi atp_id materi yang baru terhubung
   try { populateMapelSelects(); } catch (e) {}
   try { renderDbMapelList(); renderDbDetail(); } catch (e) {}
   try { kurRefreshAll(); } catch (e) {}
