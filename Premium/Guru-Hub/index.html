@@ -5110,7 +5110,7 @@ function ghpSetStatus(s) {
   let el = document.getElementById('ghp-status'); if (!el) return;
   let m = ghpBacaMode(ghpPanelAppId || 'kea');
   el.className = 'ghp-status ' + s;
-  el.textContent = s === 'simpan' ? '⏳ Menyimpan…' : s === 'gagal' ? '⚠️ Belum tersimpan, mencoba lagi…' : s === 'perlu' ? '🔌 Belum tersimpan — tekan Simpan'
+  el.textContent = s === 'simpan' ? '⏳ Menyimpan…' : s === 'offline' ? '📴 Offline — tersimpan di perangkat, dikirim otomatis saat online' : s === 'gagal' ? '⚠️ Belum tersimpan, mencoba lagi…' : s === 'perlu' ? '🔌 Belum tersimpan — tekan Simpan'
     : s === 'kuota' ? '⚠️ Google Drive penuh — kosongkan ruang lalu tekan Simpan'
     : (m === 'drive' ? '☁️ Tersimpan di Drive Anda' : '💾 Belum terhubung ke Drive');
   let hb = document.getElementById('ghp-simpan'); if (hb) hb.classList.toggle('perlu', s === 'perlu' || s === 'gagal' || s === 'kuota');
@@ -5128,6 +5128,7 @@ function ghpAntrikan(app, kunci, versi, nilai) {
 function ghpPrioritas(key) { return /result_/.test(key) ? 0 : (/(_main|project_list|_meta|ghData)$/.test(key) ? 2 : 1); }
 async function ghpKuras() {
   if (ghpSedangKirim) return;
+  if (navigator.onLine === false) { if (Object.keys(ghpAntrian).length) ghpSetStatus('offline'); return; } // dilanjutkan oleh event 'online'
   ghpSedangKirim = true;
   try {
     let kunciList = Object.keys(ghpAntrian).sort(function (a, b) { return ghpPrioritas(a) - ghpPrioritas(b); });
@@ -5141,6 +5142,7 @@ async function ghpKuras() {
     ghpSetStatus('ok');
   } catch (e) {
     console.warn('Sinkron Alat Premium gagal:', e.message);
+    if (e.offline) { ghpSetStatus('offline'); ghpSedangKirim = false; clearTimeout(ghpTimerKirim); if (navigator.onLine !== false) ghpTimerKirim = setTimeout(ghpKuras, 20000); return; }
     if (e.perluIzin) { ghpMacetIzin = true; ghpSetStatus('perlu'); ghpSedangKirim = false; return; } // menunggu guru menekan 'Hubungkan Google Drive'
     if (e.kuota) { ghpMacetKuota = true; ghpSetStatus('kuota'); ghToast('⚠️ ' + e.message); ghpSedangKirim = false; return; } // berhenti mencoba sampai guru menekan Simpan
     ghpGagalBeruntun++; ghpSetStatus('gagal');
@@ -5152,6 +5154,7 @@ async function ghpKuras() {
   ghpSedangKirim = false;
 }
 window.addEventListener('online', function () { if (Object.keys(ghpAntrian).length) { clearTimeout(ghpTimerKirim); ghpKuras(); } });
+window.addEventListener('offline', function () { if (Object.keys(ghpAntrian).length) ghpSetStatus('offline'); });
 async function ghpTungguAntrian(maksMs) {
   let mulai = Date.now();
   if (Object.keys(ghpAntrian).length) { clearTimeout(ghpTimerKirim); ghpKuras(); }
@@ -5358,10 +5361,21 @@ function ghpResetCache() {
 let ghpToken = null, ghpTokenExp = 0, ghpTokenPending = null;
 const ghpDriveIdx = {}; // app -> {kunci:{id, versi}}
 function ghpErrIzin(msg) { let e = new Error(msg); e.perluIzin = true; return e; }
+// Offline: JANGAN minta token (GIS membuka jendela popup ke accounts.google.com -> muncul halaman "tidak ada jaringan"
+// yang harus ditutup manual di setiap simpan otomatis). Cek sambungan dulu; popup hanya bila benar-benar online.
+function ghpErrOffline() { let e = new Error('Tidak ada koneksi internet.'); e.offline = true; return e; }
+function ghpCekSambungan() {
+  if (navigator.onLine === false) return Promise.resolve(false);
+  return new Promise(function (res) {
+    let c = new AbortController(), t = setTimeout(function () { c.abort(); }, 3500);
+    fetch('https://www.gstatic.com/generate_204', { mode: 'no-cors', cache: 'no-store', signal: c.signal })
+      .then(function () { clearTimeout(t); res(true); }, function () { clearTimeout(t); res(false); });
+  });
+}
 function ghpAmbilToken(interaktif) {
   if (ghpToken && Date.now() < ghpTokenExp - 60000) return Promise.resolve(ghpToken);
   if (ghpTokenPending) return ghpTokenPending;
-  ghpTokenPending = new Promise(function (res, rej) {
+  ghpTokenPending = ghpCekSambungan().then(function (ok) { if (!ok) throw ghpErrOffline(); return new Promise(function (res, rej) {
     if (!(window.google && google.accounts && google.accounts.oauth2)) { rej(ghpErrIzin('Layanan Google belum termuat (mungkin offline).')); return; }
     let batas = interaktif ? null : setTimeout(function () { rej(ghpErrIzin('Izin Google Drive perlu dikonfirmasi ulang.')); }, 5000);
     let client = google.accounts.oauth2.initTokenClient({
@@ -5384,7 +5398,7 @@ function ghpAmbilToken(interaktif) {
       error_callback: function (e) { clearTimeout(batas); rej(ghpErrIzin(e && e.type === 'popup_closed' ? 'Izin dibatalkan.' : 'Izin Google tidak bisa diminta (' + ((e && e.type) || '?') + ').')); }
     });
     client.requestAccessToken({ prompt: '' });
-  }).then(function (t) { ghpTokenPending = null; return t; }, function (e) { ghpTokenPending = null; throw e; });
+  }); }).then(function (t) { ghpTokenPending = null; return t; }, function (e) { ghpTokenPending = null; throw e; });
   return ghpTokenPending;
 }
 async function ghpDriveFetch(url, opt) {
