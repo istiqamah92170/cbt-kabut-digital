@@ -6512,7 +6512,7 @@ function _alPasangBar(listEl) {
   var bar = document.createElement('div'); bar.id = 'alBar';
   bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px';
   bar.innerHTML = '<button class="btn-sec" onclick="alMulai()" title="Cocokkan materi yang belum terhubung ke TP Database Kurikulum">&#x1F517; Hubungkan Otomatis</button>' +
-    (_alUndo && _alUndo.perubahan.length ? '<button class="btn-sec" onclick="alUrungkan()">&#x21B6; Urungkan penerapan terakhir (' + _alUndo.perubahan.length + ')</button>' : '');
+    (_alUndoJumlah() ? '<button class="btn-sec" onclick="alUrungkan()">&#x21B6; Urungkan penerapan terakhir (' + _alUndoJumlah() + ')</button>' : '');
   listEl.parentNode.insertBefore(bar, listEl);
 }
 function _alModal() {
@@ -6540,7 +6540,7 @@ async function alMulai() {
     var r = o.kurikulum_ref;
     if (r && (r.cp_id || (r.tp_ids && r.tp_ids.length))) lewat++; else baru.push(o);
   });
-  if (!baru.length) { isi.innerHTML = '<div class="info-box">Semua ' + objs.length + ' materi sudah terhubung. Tidak ada yang perlu dikerjakan.</div>'; return; }
+  // (materi yang sudah terhubung dilewati; pemilahan Elemen CP per TP tetap dikerjakan di bawah)
 
   // 1. skor kata
   var N = tps.length, df = {};
@@ -6583,57 +6583,216 @@ async function alMulai() {
   baris.forEach(function (r) {
     if (r.tp < 0 && r.lokal >= 0) { r.tp = r.lokal; r.sumber = 'Kata'; r.yakin = Math.round(100 * r.skor); r.centang = false; }
   });
-  _alState = { mapel: mapel, kelas: kelas, tps: tps, baris: baris };
+  // 3. Elemen CP per TP (kata + level Bloom KEA, diperkuat Gemini bila aktif)
+  var el = { rows: [], cps: [], sama: 0, catatan: '' };
+  try { el = await _alElemenUsul(mapel, kelas, tps, key, ($id('aModel') && $id('aModel').value) || 'gemini-2.5-flash', isi); } catch (e) { el.catatan = 'Pemilahan elemen CP gagal: ' + (e.message || e); }
+  _alState = { mapel: mapel, kelas: kelas, tps: tps, baris: baris, el: el };
   _alTampil(lewat, catatan);
 }
 
+// ── Pemilahan ELEMEN CP per TP ─────────────────────────────────────────────
+//  Tiap TP dinilai masuk ke elemen CP mana (mis. Pemahaman Konsep vs Keterampilan Proses):
+//   (1) kemiripan kata TP dengan narasi CP (bobot IDF) + nama elemen,
+//   (2) level Bloom TP (kata kerja; kamus KEA + modul TKB) dibandingkan dengan sifat elemen,
+//   (3) bila API key Gemini ada: Gemini menilai semua TP; sepakat dengan KEA -> keyakinan tinggi.
+var _alKkoPeta = null;
+function _alKkoStem(w) {
+  w = String(w || '').toLowerCase();
+  if (w.length > 5) w = w.replace(/^(meng|meny|men|mem|me|ber|ter|di|pe[nm]?)/, '');
+  if (w.length > 5) w = w.replace(/(kan|an|i)$/, '');
+  return w;
+}
+function _alKkoPetaBangun() {
+  if (_alKkoPeta) return _alKkoPeta;
+  var m = {};
+  function tambah(v, lv) { String(v || '').toLowerCase().split(/\s+/).slice(0, 1).forEach(function (x) { x = _alKkoStem(x); if (x.length >= 3 && m[x] === undefined) m[x] = lv; }); }
+  ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'].forEach(function (lv, i) {
+    ((typeof _ATP_BLOOM !== 'undefined' && _ATP_BLOOM[lv]) || []).forEach(function (v) { tambah(v, i + 1); });
+    try {
+      var mod = KELoader.registry && KELoader.registry['TKB/TKB-' + lv + '-v1.0'];
+      var kko = mod && mod.data && mod.data.strong_kko; (kko || []).forEach(function (v) { tambah(v, i + 1); });
+    } catch (e) {}
+  });
+  return (_alKkoPeta = m);
+}
+/** Rata-rata level Bloom (1..6) dari kata kerja dalam teks; 0 bila tak ada kata kerja dikenal. */
+function _alBloomRata(teks) {
+  var m = _alKkoPetaBangun(), tot = 0, n = 0;
+  String(teks || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).forEach(function (w) {
+    if (w.length < 4) return; var lv = m[_alKkoStem(w)]; if (lv) { tot += lv; n++; }
+  });
+  return n ? tot / n : 0;
+}
+function _alElemenPrior(nama) {
+  var n = String(nama || '').toLowerCase();
+  if (/keterampilan|proses|praktik|kinerja|penerapan|aplikasi|karya|produk/.test(n)) return 4;
+  if (/pemahaman|konsep|pengetahuan|fakta/.test(n)) return 2.3;
+  return 0;
+}
+function _alElemenKandidat(mapel, kurId) {
+  return kurGetCpForContext(kurId || null, mapel).filter(function (c) { return _atpNorm(c.mapel_nama) === _atpNorm(mapel); }).map(function (c) {
+    return { id: c.id, elemen: c.elemen || c.id, narasi: c.narasi || '', kurikulum_id: c.kurikulum_id || null,
+      tok: _alToken(c.narasi), namaTok: _alToken(c.elemen), prior: _alElemenPrior(c.elemen), rata: _alBloomRata(c.narasi) };
+  });
+}
+/** Skor tiap elemen untuk satu TP -> [{i, skor}] urut turun. */
+function _alElemenSkor(tp, cps, idf, idfMax) {
+  var tt = _alToken(tp.narasi), tot = 0, m = _alBloomRata(tp.narasi);
+  tt.forEach(function (t) { tot += (idf[t] !== undefined ? idf[t] : idfMax); });
+  return cps.map(function (c, i) {
+    var set = {}, nset = {}; c.tok.forEach(function (t) { set[t] = 1; }); c.namaTok.forEach(function (t) { nset[t] = 1; });
+    var sh = 0, shN = 0; tt.forEach(function (t) { var w = idf[t] !== undefined ? idf[t] : 0; if (set[t]) sh += w; if (nset[t]) shN += w; });
+    var lex = tot ? sh / tot : 0, nama = tot ? Math.min(1, shN / tot) : 0, fit = 0.5, harap = c.prior || c.rata;
+    if (m > 0 && harap > 0) fit = 1 - Math.min(1, Math.abs(m - harap) / 3);
+    return { i: i, skor: 0.6 * lex + 0.15 * nama + 0.25 * fit };
+  }).sort(function (a, b) { return b.skor - a.skor; });
+}
+async function _alElemenUsul(mapel, kelas, tps, key, model, isi) {
+  var hasil = { rows: [], cps: [], sama: 0, catatan: '' };
+  if (!tps.length) return hasil;
+  var kur = tps[0].kurikulum_id, cps = _alElemenKandidat(mapel, kur);
+  hasil.cps = cps;
+  if (cps.length < 2) { hasil.catatan = 'Pemilahan elemen dilewati: mapel ini hanya punya ' + cps.length + ' CP/elemen di Database Kurikulum.'; return hasil; }
+  var N = cps.length, df = {};
+  cps.forEach(function (c) { var u = {}; c.tok.concat(c.namaTok).forEach(function (t) { u[t] = 1; }); Object.keys(u).forEach(function (t) { df[t] = (df[t] || 0) + 1; }); });
+  var idf = {}; Object.keys(df).forEach(function (t) { idf[t] = Math.log(1 + N / df[t]); });
+  var idfMax = Math.log(1 + N);
+  var idxCp = {}; cps.forEach(function (c, i) { idxCp[c.id] = i; });
+  var rows = tps.filter(function (tp) { return idxCp[tp.cp_id] !== undefined; }).map(function (tp) {
+    var sk = _alElemenSkor(tp, cps, idf, idfMax), b = sk[0], k2 = sk[1], margin = b.skor - (k2 ? k2.skor : 0);
+    return { tp: tp, asal: idxCp[tp.cp_id], kea: b.i, keaMargin: margin, keaYakin: Math.round(Math.min(95, 50 + margin * 250)), ai: -1, aiYakin: 0, rata: _alBloomRata(tp.narasi) };
+  });
+  var catatan = '';
+  if (key && rows.length) {
+    var dCp = cps.map(function (c, i) { return (i + 1) + '. ELEMEN "' + c.elemen + '": ' + c.narasi.replace(/\s+/g, ' ').slice(0, 450); }).join('\n');
+    for (var a = 0; a < rows.length; a += 25) {
+      var grup = rows.slice(a, a + 25);
+      if (isi) isi.innerHTML = '<div class="info-box">&#x23F3; Memilah elemen CP: Gemini menilai ' + Math.min(a + 25, rows.length) + '/' + rows.length + ' TP…</div>';
+      var prompt = 'Kamu ahli kurikulum Kemenag MTs (Kurikulum Merdeka/Deep Learning). Tentukan SATU ELEMEN Capaian Pembelajaran (CP) yang paling tepat untuk setiap TP.\n' +
+        'Mata pelajaran: ' + mapel + '\nKelas: ' + kelas + '\n\nDAFTAR ELEMEN CP:\n' + dCp + '\n\nDAFTAR TP:\n' +
+        grup.map(function (r, i) { return (i + 1) + '. ' + r.tp.narasi.replace(/\s+/g, ' ').slice(0, 300); }).join('\n') +
+        '\n\nAturan: nilai isi materi/kompetensi pada TP dan jenis kemampuan pada kata kerjanya (pemahaman konsep vs keterampilan proses/penerapan), cocokkan dengan narasi elemen. ' +
+        'Isi tp = nomor ELEMEN (bukan nomor TP); "materi" = nomor TP. Bila benar-benar tidak bisa ditentukan, tp = 0. keyakinan = 0-100.\n' +
+        'Jawab HANYA array JSON: [{"materi":1,"tp":2,"keyakinan":85}, ...]';
+      var r = await _alGemini(key, model, prompt, grup.length);
+      if (r.error) { catatan = 'Gemini tidak bisa dipakai untuk pemilahan elemen (' + r.error + '). Usulan memakai kecerdasan KEA saja.'; break; }
+      r.hasil.forEach(function (h) {
+        var row = grup[(h.materi | 0) - 1], e = (h.tp | 0) - 1; if (!row || e < 0 || e >= N) return;
+        row.ai = e; row.aiYakin = Math.max(0, Math.min(100, h.keyakinan | 0));
+      });
+    }
+  } else if (!key) catatan = 'API key Gemini belum diisi: pemilahan elemen memakai kecerdasan KEA (kata + level Bloom). Dengan Gemini aktif hasilnya lebih kuat.';
+  rows.forEach(function (r) {
+    if (r.ai >= 0) {
+      if (r.ai === r.kea) { r.usul = r.ai; r.sumber = 'KEA + Gemini sepakat'; r.yakin = Math.max(r.aiYakin, r.keaYakin, 90); r.centang = true; }
+      else if (r.aiYakin >= 75) { r.usul = r.ai; r.sumber = 'Gemini (beda dari KEA)'; r.yakin = r.aiYakin; r.centang = r.aiYakin >= 85 || r.keaMargin < 0.08; }
+      else { r.usul = r.kea; r.sumber = 'KEA (Gemini ragu)'; r.yakin = r.keaYakin; r.centang = r.keaMargin >= 0.15; }
+    } else { r.usul = r.kea; r.sumber = 'KEA'; r.yakin = r.keaYakin; r.centang = r.keaMargin >= 0.15; }
+  });
+  hasil.sama = rows.filter(function (r) { return r.usul === r.asal; }).length;
+  hasil.rows = rows.filter(function (r) { return r.usul !== r.asal; });
+  hasil.catatan = catatan;
+  return hasil;
+}
+
 function _alTampil(lewat, catatan) {
-  var S = _alState, isi = _alModal();
+  var S = _alState, isi = _alModal(), E = S.el || { rows: [], cps: [], sama: 0, catatan: '' };
   var opsi = '<option value="-1">— jangan hubungkan —</option>' + S.tps.map(function (tp, i) {
     return '<option value="' + i + '">[Smt ' + kurEsc(String(tp.semester)) + '] ' + kurEsc(tp.narasi.slice(0, 70)) + (tp.narasi.length > 70 ? '…' : '') + ' · ' + kurEsc(tp.elemen) + '</option>';
   }).join('');
   var h = '<div style="font-size:12px;color:var(--text2);margin-bottom:8px"><strong>' + kurEsc(S.mapel) + '</strong> · Kelas ' + kurEsc(S.kelas) + ' · ' + S.baris.length +
     ' materi diusulkan' + (lewat ? ', ' + lewat + ' sudah terhubung (dilewati)' : '') + '</div>';
   if (catatan) h += '<div class="info-box" style="margin-bottom:8px">' + kurEsc(catatan) + '</div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Centang yang benar, ubah pilihan TP bila perlu, lalu klik Terapkan. Yang keyakinannya rendah sengaja tidak dicentang.</div>';
-  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text3)"><th></th><th>Materi</th><th>TP yang diusulkan</th><th>Sumber</th><th>Yakin</th></tr></thead><tbody>';
-  S.baris.forEach(function (r, i) {
-    h += '<tr style="border-top:1px solid var(--border)"><td style="padding:6px"><input type="checkbox" id="alChk' + i + '"' + (r.centang ? ' checked' : '') + '></td>' +
-      '<td style="padding:6px;min-width:150px">' + kurEsc(r.obj.materi) + '</td>' +
-      '<td style="padding:6px"><select id="alSel' + i + '" style="max-width:420px;width:100%">' + opsi.replace('value="' + r.tp + '"', 'value="' + r.tp + '" selected') + '</select></td>' +
-      '<td style="padding:6px">' + r.sumber + '</td><td style="padding:6px">' + (r.sumber === '-' ? '—' : r.yakin + '%') + '</td></tr>';
-  });
-  h += '</tbody></table></div><div class="row-btns" style="margin-top:14px"><button class="btn-run" style="margin-top:0" onclick="alTerapkan()">&#x1F4BE; Terapkan yang dicentang</button>' +
+  if (S.baris.length) {
+    h += '<div class="lbl" style="margin-top:4px">1. Materi &rarr; TP</div>';
+    h += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Centang yang benar, ubah pilihan TP bila perlu, lalu klik Terapkan. Yang keyakinannya rendah sengaja tidak dicentang.</div>';
+    h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text3)"><th></th><th>Materi</th><th>TP yang diusulkan</th><th>Sumber</th><th>Keyakinan</th></tr></thead><tbody>';
+    S.baris.forEach(function (r, i) {
+      h += '<tr style="border-top:1px solid var(--border)"><td style="padding:6px"><input type="checkbox" id="alChk' + i + '"' + (r.centang ? ' checked' : '') + '></td>' +
+        '<td style="padding:6px;min-width:150px">' + kurEsc(r.obj.materi) + '</td>' +
+        '<td style="padding:6px"><select id="alSel' + i + '" style="max-width:420px;width:100%">' + opsi.replace('value="' + r.tp + '"', 'value="' + r.tp + '" selected') + '</select></td>' +
+        '<td style="padding:6px">' + r.sumber + '</td><td style="padding:6px">' + (r.sumber === '-' ? '—' : r.yakin + '%') + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+  } else if (!E.rows.length) {
+    h += '<div class="info-box">Semua materi sudah terhubung.</div>';
+  }
+  h += '<div class="lbl" style="margin-top:14px">2. TP &rarr; Elemen CP</div>';
+  if (E.catatan) h += '<div class="info-box" style="margin-bottom:8px">' + kurEsc(E.catatan) + '</div>';
+  if (E.rows.length) {
+    var elOpsi = E.cps.map(function (c, i) { return '<option value="' + i + '">' + kurEsc(c.elemen) + '</option>'; }).join('');
+    h += '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">' + E.rows.length + ' TP diusulkan pindah elemen' + (E.sama ? ', ' + E.sama + ' TP sudah di elemen yang tepat' : '') +
+      '. Perubahan tercatat sebagai versi baru TP dan bisa diurungkan.</div>';
+    h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text3)"><th></th><th>TP</th><th>Elemen sekarang</th><th>Elemen usulan</th><th>Sumber</th><th>Keyakinan</th></tr></thead><tbody>';
+    E.rows.forEach(function (r, i) {
+      h += '<tr style="border-top:1px solid var(--border)"><td style="padding:6px"><input type="checkbox" id="alElChk' + i + '"' + (r.centang ? ' checked' : '') + '></td>' +
+        '<td style="padding:6px;min-width:200px">[Smt ' + kurEsc(String(r.tp.semester)) + '] ' + kurEsc(r.tp.narasi.slice(0, 110)) + (r.tp.narasi.length > 110 ? '…' : '') + '</td>' +
+        '<td style="padding:6px">' + kurEsc(E.cps[r.asal].elemen) + '</td>' +
+        '<td style="padding:6px"><select id="alElSel' + i + '">' + elOpsi.replace('value="' + r.usul + '"', 'value="' + r.usul + '" selected') + '</select></td>' +
+        '<td style="padding:6px">' + kurEsc(r.sumber) + '</td><td style="padding:6px">' + r.yakin + '%</td></tr>';
+    });
+    h += '</tbody></table></div>';
+  } else if (E.cps.length >= 2) {
+    h += '<div class="info-box">Semua ' + E.sama + ' TP sudah berada di elemen CP yang tepat.</div>';
+  }
+  h += '<div class="row-btns" style="margin-top:14px"><button class="btn-run" style="margin-top:0" onclick="alTerapkan()">&#x1F4BE; Terapkan yang dicentang</button>' +
     '<button class="btn-sec" onclick="closeModal(\'modalAutoLink\')">Batal</button></div>';
   isi.innerHTML = h;
 }
 
 function alTerapkan() {
   var S = _alState; if (!S) return;
-  var perubahan = [], n = 0;
+  var perubahan = [], tpUbah = [], n = 0, nEl = 0, hariIni = new Date().toISOString().slice(0, 10), E = S.el || { rows: [], cps: [] };
+  // (a) Elemen CP per TP dulu, supaya hubungan materi di bawah memakai CP yang baru
+  E.rows.forEach(function (r, i) {
+    var chk = $id('alElChk' + i), sel = $id('alElSel' + i); if (!chk || !chk.checked || !sel) return;
+    var e = parseInt(sel.value, 10), cp = E.cps[e], cur = _kurGetCurrent('tp', r.tp.id); if (isNaN(e) || !cp || !cur || cur.cp_id === cp.id) return;
+    tpUbah.push({ id: r.tp.id, data: JSON.parse(JSON.stringify(cur)) });
+    var data = Object.assign({}, cur, { cp_id: cp.id, kurikulum_id: cp.kurikulum_id || cur.kurikulum_id, berlaku_mulai: hariIni, berlaku_sampai: null });
+    kurUpdateTp(r.tp.id, data, 'Hubungkan Otomatis: elemen CP -> ' + cp.elemen);
+    // materi yang sudah terhubung ke TP ini ikut pindah elemen
+    Object.keys((DB && DB.mapel) || {}).forEach(function (mp) { Object.keys(DB.mapel[mp] || {}).forEach(function (kl) {
+      (DB.mapel[mp][kl] || []).forEach(function (it) {
+        if (it && typeof it === 'object' && it.kurikulum_ref && (it.kurikulum_ref.tp_ids || []).indexOf(r.tp.id) >= 0 && it.kurikulum_ref.cp_id !== cp.id) {
+          perubahan.push({ id: it.id, sebelum: JSON.parse(JSON.stringify(it.kurikulum_ref)) });
+          it.kurikulum_ref.cp_id = cp.id; if (cp.kurikulum_id) it.kurikulum_ref.kurikulum_id = cp.kurikulum_id;
+        }
+      });
+    }); });
+    nEl++;
+  });
+  // (b) materi -> TP
   S.baris.forEach(function (r, i) {
     var chk = $id('alChk' + i), sel = $id('alSel' + i);
     if (!chk || !chk.checked || !sel) return;
     var t = parseInt(sel.value, 10); if (isNaN(t) || t < 0) return;
     var tp = S.tps[t], item = getMateriById(r.obj.id); if (!item) return;
+    var tpCur = _kurGetCurrent('tp', tp.id) || {}, cpId = tpCur.cp_id || tp.cp_id, cpC = kurGetCpCurrent(cpId);
     perubahan.push({ id: r.obj.id, sebelum: item.kurikulum_ref ? JSON.parse(JSON.stringify(item.kurikulum_ref)) : null });
     if (!item.kurikulum_ref) item.kurikulum_ref = { kurikulum_id: null, cp_id: null, tp_ids: [], atp_id: null, kd_ids: [], indikator_ids: [] };
-    item.kurikulum_ref.cp_id = tp.cp_id; item.kurikulum_ref.tp_ids = [tp.id]; item.kurikulum_ref.kurikulum_id = tp.kurikulum_id;
+    item.kurikulum_ref.cp_id = cpId; item.kurikulum_ref.tp_ids = [tp.id]; item.kurikulum_ref.kurikulum_id = (cpC && cpC.kurikulum_id) || tp.kurikulum_id;
     n++;
   });
-  if (!n) { alert('Tidak ada materi yang dicentang.'); return; }
-  _alUndo = { waktu: new Date().toISOString(), mapel: S.mapel, kelas: S.kelas, perubahan: perubahan };
-  saveDB(); closeModal('modalAutoLink'); renderDbDetail();
-  alert(n + ' materi berhasil dihubungkan ke kurikulum. Bila keliru, pakai tombol Urungkan.');
+  if (!n && !nEl) { alert('Tidak ada yang dicentang.'); return; }
+  _alUndo = { waktu: new Date().toISOString(), mapel: S.mapel, kelas: S.kelas, perubahan: perubahan, tpUbah: tpUbah };
+  saveDB(); saveKurDB(); closeModal('modalAutoLink'); renderDbDetail();
+  try { kurRefreshAll(); } catch (e) {}
+  alert((n ? n + ' materi berhasil dihubungkan ke kurikulum.' : '') + (n && nEl ? '\n' : '') + (nEl ? nEl + ' TP dipindahkan ke elemen CP yang tepat.' : '') + '\nBila keliru, pakai tombol Urungkan.');
 }
+function _alUndoJumlah() { return _alUndo ? (_alUndo.perubahan || []).length + (_alUndo.tpUbah || []).length : 0; }
 function alUrungkan() {
-  if (!_alUndo || !_alUndo.perubahan.length) return;
-  if (!confirm('Urungkan ' + _alUndo.perubahan.length + ' hubungan yang diterapkan terakhir?')) return;
-  _alUndo.perubahan.forEach(function (p) {
+  var tot = _alUndoJumlah(); if (!tot) return;
+  if (!confirm('Urungkan ' + tot + ' perubahan yang diterapkan terakhir?')) return;
+  (_alUndo.tpUbah || []).forEach(function (p) {
+    var cur = _kurGetCurrent('tp', p.id); if (!cur) return;
+    kurUpdateTp(p.id, Object.assign({}, p.data, { berlaku_mulai: new Date().toISOString().slice(0, 10), berlaku_sampai: null }), 'Urungkan Hubungkan Otomatis');
+  });
+  (_alUndo.perubahan || []).slice().reverse().forEach(function (p) {
     var item = getMateriById(p.id); if (!item) return;
     item.kurikulum_ref = p.sebelum;
   });
-  _alUndo = null; saveDB(); renderDbDetail();
+  _alUndo = null; saveDB(); saveKurDB(); renderDbDetail();
+  try { kurRefreshAll(); } catch (e) {}
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -6708,7 +6867,7 @@ function kurAutoHubungkan(opsi) {
     });
   });
   if (undo.length) {
-    _alUndo = { waktu: new Date().toISOString(), mapel: opsi.mapel || 'semua', kelas: opsi.kelas || 'semua', perubahan: undo };
+    _alUndo = { waktu: new Date().toISOString(), mapel: opsi.mapel || 'semua', kelas: opsi.kelas || 'semua', perubahan: undo, tpUbah: [] };
     saveDB();
     try { renderDbMapelList(); renderDbDetail(); } catch (e) {}
   }
