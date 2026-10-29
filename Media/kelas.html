@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id"><head><title>Media Pembelajaran</title><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<html lang="id"><head><title>Media Pembelajaran</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root{--c:#1E3A8A;--l:color-mix(in srgb,var(--c) 9%,#fff);--t:#1e293b;--m:#64748b;--b:#dbe1ea;--bg:#f6f8fb;--sf:#fff;--ct:var(--c);--c2t:var(--c2)}
@@ -126,7 +126,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='siswa',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT=(new URLSearchParams(location.search)).get('t')||'',TK='';
+var API='GANTI_URL_API_MEDIA',MT=(new URLSearchParams(location.search)).get('t')||'',TK='';
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
