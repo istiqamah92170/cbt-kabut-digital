@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id"><head><script src="ghp-bridge.js" data-app="media" data-url-server="https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec" data-url-guruhub="https://cbtkabutdigital.com/Premium/Guru-Hub/index.html"></script><title>Media Interaktif</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<html lang="id"><head><script src="ghp-bridge.js" data-app="media" data-url-server="https://script.google.com/macros/s/AKfycbwt3_2vHymQRR5VPcyvLZsaze5CKi-7f6VeFSCFjKnRWhg4RtY3RqOndrQtFC_qOlkbNQ/exec" data-url-guruhub="https://cbtkabutdigital.com/Premium/Guru-Hub/index.html"></script><script src="https://accounts.google.com/gsi/client" async defer></script><title>Media Interaktif</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root{--c:#1E3A8A;--l:color-mix(in srgb,var(--c) 9%,#fff);--t:#1e293b;--m:#64748b;--b:#dbe1ea;--bg:#f6f8fb;--sf:#fff;--ct:var(--c);--c2t:var(--c2)}
@@ -100,8 +100,12 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 
 <section id="gl" class="card"><h3>Media Interaktif Saya</h3><div id="am" class="m">Memuat...</div>
   <hr style="border:0;border-top:1px solid var(--b)"><h3>Tambah media (1 Sheet = 1 kelas)</h3>
-  <p class="m">1) Buat Google Sheet kosong. 2) Bagikan sebagai <b>Editor</b> ke: <b id="al"></b> <button class="btn o sm" onclick="salinTeks($('al').textContent,function(o){T(o?'Email disalin.':'Salin manual.')})">Salin</button> 3) Tempel tautannya di bawah. Data siswa tersimpan di Sheet Anda, bukan di server Guru Hub.</p>
-  <input id="mn" placeholder="Nama kelas, contoh: IPS 7B"><input id="mu" placeholder="Tautan Google Sheet"><button class="btn" onclick="akunTambah()">Tambah media</button></section>
+  <input id="mn" placeholder="Nama kelas, contoh: IPS 7B">
+  <button class="btn" onclick="buatSheetOtomatis()">Buat Sheet otomatis (disarankan)</button>
+  <p class="m">Sheet baru dibuat di Google Drive Anda dan dibagikan otomatis ke akun layanan. Anda diminta menyetujui izin "file yang dibuat aplikasi ini" satu kali; file Drive Anda yang lain tidak bisa dibaca. Data siswa tersimpan di Sheet itu, bukan di server Guru Hub.</p>
+  <details><summary class="m">Atau pakai Sheet yang sudah ada (manual)</summary>
+  <p class="m">1) Bagikan Sheet sebagai <b>Editor</b> ke: <b id="al"></b> <button class="btn o sm" onclick="salinTeks($('al').textContent,function(o){T(o?'Email disalin.':'Salin manual.')})">Salin</button> 2) Tempel tautannya di bawah.</p>
+  <input id="mu" placeholder="Tautan Google Sheet"><button class="btn o" onclick="akunTambah()">Tambah media</button></details></section>
 <section id="gv" class="hide"><button class="btn o sm" onclick="balikMedia()">Kembali ke daftar media</button>
   <div class="card"><h3>1. Pengaturan</h3>
     <div class="row"><input id="p_judul" placeholder="Judul"><input id="p_mapel" placeholder="Mata pelajaran"></div>
@@ -136,7 +140,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -411,6 +415,27 @@ function hapusMedia(t){if(confirm('Hapus media ini dari daftar? Data di Sheet ti
 function salinTaut(t){var u=(ACC.urlSiswa||'')+'?t='+t;salinTeks(u,function(o){T(o?'Tautan siswa disalin. Tempel di Google Sites (Sematkan > URL).':'Salin manual: '+u)})}
 function bukaMedia(t){MT=t;gMasuk()}
 function balikMedia(){MT='';$('gv').classList.add('hide');$('gl').classList.remove('hide');akunMuat()}
+
+var GIS_ID='822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com',GIS_SC='https://www.googleapis.com/auth/drive.file';
+function dapatToken(){return new Promise(function(ok,no){
+ if(!window.google||!google.accounts||!google.accounts.oauth2){no(new Error('Layanan masuk Google belum siap. Muat ulang halaman.'));return}
+ var c=google.accounts.oauth2.initTokenClient({client_id:GIS_ID,scope:GIS_SC,hint:(ACC&&ACC.email)||undefined,
+  callback:function(r){if(r.error||!r.access_token||(google.accounts.oauth2.hasGrantedAllScopes&&!google.accounts.oauth2.hasGrantedAllScopes(r,GIS_SC))){no(new Error('Izin Google Drive tidak diberikan.'));return}ok(r.access_token)},
+  error_callback:function(){no(new Error('Jendela izin Google ditutup atau diblokir. Izinkan pop-up lalu coba lagi.'))}});
+ c.requestAccessToken({prompt:''})})}
+function gj(u,tk,o){return fetch(u,{method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json'},body:JSON.stringify(o)})}
+function buatSheetOtomatis(){
+ var nama=($('mn').value||'').trim();
+ if(!nama){T('Isi nama kelas dulu.');return}
+ if(!ACC){T('Data akun belum dimuat.');return}
+ if(ACC.media.length>=ACC.kuota){T('Kuota media paket Anda sudah terpakai.');return}
+ var tk;lod(1);
+ dapatToken().then(function(t){tk=t;return gj('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',tk,{name:'Media Interaktif - '+nama,mimeType:'application/vnd.google-apps.spreadsheet'})})
+ .then(function(r){if(!r.ok)throw new Error('Gagal membuat Sheet di Drive Anda ('+r.status+').');return r.json()})
+ .then(function(f){return gj('https://www.googleapis.com/drive/v3/files/'+f.id+'/permissions?sendNotificationEmail=false',tk,{type:'user',role:'writer',emailAddress:ACC.layanan}).then(function(r){if(!r.ok)throw new Error('Gagal membagikan Sheet ke akun layanan ('+r.status+').');return f})})
+ .then(function(f){return run('akunTambahMedia',f.webViewLink||f.id,nama)})
+ .then(function(){lod(-1);$('mn').value='';T('Sheet "Media Interaktif - '+nama+'" dibuat di Drive Anda dan dihubungkan.');akunMuat()})
+ .catch(function(e){lod(-1);er(e)})}
 akunMuat();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
