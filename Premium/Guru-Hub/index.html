@@ -5116,6 +5116,11 @@ async function ghpKirimSatu(it) {
 // ---- antrian simpan (debounce + ulang) ----
 function ghpSetStatus(s) {
   let el = document.getElementById('ghp-status'); if (!el) return;
+  let hbm = document.getElementById('ghp-simpan');
+  if (GH_APP_PREMIUM[ghpPanelAppId] && GH_APP_PREMIUM[ghpPanelAppId].gratis) { // Media Interaktif: data siswa ada di Google Sheet guru, tidak disinkron
+    el.className = 'ghp-status ok'; el.textContent = '📗 Data siswa di Google Sheet Anda'; if (hbm) hbm.style.display = 'none'; return;
+  }
+  if (hbm) hbm.style.display = '';
   let m = ghpBacaMode(ghpPanelAppId || 'kea');
   el.className = 'ghp-status ' + s;
   el.textContent = s === 'simpan' ? '⏳ Menyimpan…' : s === 'offline' ? '📴 Offline — tersimpan di perangkat, dikirim otomatis saat online' : s === 'gagal' ? '⚠️ Belum tersimpan, mencoba lagi…' : s === 'perlu' ? '🔌 Belum tersimpan — tekan Simpan'
