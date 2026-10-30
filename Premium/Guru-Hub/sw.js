@@ -6,7 +6,7 @@
 // Aplikasi premium (/Premium/*.html) ditangani sw-premium.js (scope /Premium/), bukan berkas ini.
 // Naikkan VERSI setiap kali Anda mengunggah index.html baru supaya simpanan lama dibersihkan.
 
-const VERSI = 'v13';
+const VERSI = 'v14';
 const CACHE_NAME = 'guru-hub-cbt-kabut-digital-' + VERSI;
 const STATIC_ASSETS = [
   './', './index.html', './manifest.json', './offline.html',
