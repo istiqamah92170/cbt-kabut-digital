@@ -140,7 +140,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -429,13 +429,13 @@ function buatSheetOtomatis(){
  if(!nama){T('Isi nama kelas dulu.');return}
  if(!ACC){T('Data akun belum dimuat.');return}
  if(ACC.media.length>=ACC.kuota){T('Kuota media paket Anda sudah terpakai.');return}
- var tk;lod(1);
- dapatToken().then(function(t){tk=t;return gj('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',tk,{name:'Media Interaktif - '+nama,mimeType:'application/vnd.google-apps.spreadsheet'})})
- .then(function(r){if(!r.ok)throw new Error('Gagal membuat Sheet di Drive Anda ('+r.status+').');return r.json()})
- .then(function(f){return gj('https://www.googleapis.com/drive/v3/files/'+f.id+'/permissions?sendNotificationEmail=false',tk,{type:'user',role:'writer',emailAddress:ACC.layanan}).then(function(r){if(!r.ok)throw new Error('Gagal membagikan Sheet ke akun layanan ('+r.status+').');return f})})
- .then(function(f){return run('akunTambahMedia',f.webViewLink||f.id,nama)})
+ var tk,L='meminta izin Google';lod(1);
+ dapatToken().then(function(t){tk=t;L='membuat Sheet di Drive';return gj('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',tk,{name:'Media Interaktif - '+nama,mimeType:'application/vnd.google-apps.spreadsheet'})})
+ .then(function(r){if(!r.ok)throw new Error('Gagal membuat Sheet di Drive Anda (kode '+r.status+').');return r.json()})
+ .then(function(f){L='membagikan Sheet ke akun layanan';return gj('https://www.googleapis.com/drive/v3/files/'+f.id+'/permissions?sendNotificationEmail=false',tk,{type:'user',role:'writer',emailAddress:ACC.layanan}).then(function(r){if(!r.ok)throw new Error('Gagal membagikan Sheet ke akun layanan (kode '+r.status+').');return f})})
+ .then(function(f){L='mendaftarkan media di server';return run('akunTambahMedia',f.webViewLink||f.id,nama)})
  .then(function(){lod(-1);$('mn').value='';T('Sheet "Media Interaktif - '+nama+'" dibuat di Drive Anda dan dihubungkan.');akunMuat()})
- .catch(function(e){lod(-1);er(e)})}
+ .catch(function(e){lod(-1);er(e instanceof TypeError||/failed to fetch|networkerror/i.test(String(e&&e.message))?new Error('Gagal pada tahap: '+L+'. Koneksi ke Google terputus atau diblokir (periksa internet, pemblokir iklan, atau pop-up), lalu coba lagi.'):e)})}
 akunMuat();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
