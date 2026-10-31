@@ -4901,7 +4901,7 @@ async function ghProsesLoginGoogle(response) {
         return;
       }
       statusEl.className = 'gh-status-msg err';
-      statusEl.textContent = '❌ ' + (hasil.alasan || 'Gagal memverifikasi akun.') + ' Hubungi CBT Kabut Digital kalau ini terus terjadi.';
+      statusEl.textContent = '❌ ' + (hasil.alasan || hasil.msg || 'Gagal memverifikasi akun.') + ' Hubungi CBT Kabut Digital kalau ini terus terjadi.';
       document.getElementById('gh-btn-login-coba-lagi').style.display = 'block';
       return;
     }
@@ -5082,7 +5082,8 @@ function ghpSimpanTiketCache(appId, tiket) {
 }
 async function ghpDapatkanTiket(appId) {
   let c = ghpBacaTiketCache(appId);
-  if (c && Date.now() - c.ts < 5 * 3600 * 1000) return c.tiket;
+  // Tiket berlaku 6 jam di server. Media Interaktif dipakai lama (menempel JSON, mengisi pengaturan), jadi tiketnya dipakai ulang maks 2 jam supaya tidak kedaluwarsa di tengah sesi.
+  if (c && Date.now() - c.ts < (appId === 'media' ? 2 : 5) * 3600 * 1000) return c.tiket;
   try {
     let t = await ghMintaTiket(appId); ghpSimpanTiketCache(appId, t); return t;
   } catch (e) {
