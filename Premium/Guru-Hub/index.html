@@ -2727,6 +2727,7 @@ function ghHubungkanGoogle() {
   ghTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GH_CLIENT_ID,
     scope: GH_SCOPES,
+    hint: (ghProfilAktif || {}).email || undefined,
     callback: (resp) => {
       if (resp.error) {
         statusEl.className = 'gh-status-msg err';
@@ -2740,7 +2741,7 @@ function ghHubungkanGoogle() {
       ghMuatBankSoalTersimpan();
     }
   });
-  ghTokenClient.requestAccessToken();
+  ghTokenClient.requestAccessToken({ prompt: '' }); // izin hanya ditanyakan pertama kali (bukan pemilih akun tiap kali)
 }
 
 function ghHeaderAuth() {
@@ -4901,7 +4902,9 @@ async function ghProsesLoginGoogle(response) {
         return;
       }
       statusEl.className = 'gh-status-msg err';
-      statusEl.textContent = '❌ ' + (hasil.alasan || hasil.msg || 'Gagal memverifikasi akun.') + ' Hubungi CBT Kabut Digital kalau ini terus terjadi.';
+      let pesanGagal = hasil.alasan || hasil.msg || 'Gagal memverifikasi akun.';
+      if (/UrlFetchApp|script\.external_request|belum diotorisasi/i.test(pesanGagal)) pesanGagal = 'Izin server Lisensi hilang (bukan salah akun Anda). Admin: buka Apps Script proyek Lisensi, jalankan ghOtorisasiUlang > Allow, lalu Deploy > Manage deployments > pensil > New version.';
+      statusEl.textContent = '❌ ' + pesanGagal + ' Hubungi CBT Kabut Digital kalau ini terus terjadi.';
       document.getElementById('gh-btn-login-coba-lagi').style.display = 'block';
       return;
     }
@@ -4932,8 +4935,9 @@ async function ghUiLogout() {
   if (!confirm('Keluar dari Guru Hub?')) return;
   (document.getElementById('gh-premium-panel') || {style:{}}).style.visibility = 'hidden';
   try { localStorage.removeItem(GH_KEY_TIKET_CACHE); } catch (e) {}
-  try { if (ghpToken && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(ghpToken, function () {}); } catch (e) {}
-  ghpToken = null; ghpTokenExp = 0;
+  // TIDAK memanggil oauth2.revoke: revoke menghapus SELURUH izin Google (Bank Soal, Drive, Media) sehingga login berikutnya
+  // meminta semua izin lagi. Cukup buang token di memori (berumur ~1 jam).
+  ghpToken = null; ghpTokenExp = 0; ghAccessToken = null;
   ghpTutupPanel(true); // simpan sisa perubahan Alat Premium lalu tutup panel (kredensial masih ada sampai selesai)
   try { google.accounts.id.disableAutoSelect(); } catch (e) {}
   localStorage.removeItem(GH_KEY_SESI_LISENSI);
@@ -5407,7 +5411,6 @@ function ghpAmbilToken(interaktif) {
           let ui = await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + r.access_token } })).json();
           let em = String(ui.email || '').toLowerCase();
           if (!em || em !== String((ghProfilAktif || {}).email || '').toLowerCase()) {
-            try { google.accounts.oauth2.revoke(r.access_token, function () {}); } catch (e) {}
             rej(ghpErrIzin('Akun Google yang dipilih (' + (ui.email || '?') + ') berbeda dengan akun Guru Hub (' + ((ghProfilAktif || {}).email || '?') + '). Pilih akun yang sama.')); return;
           }
           ghpToken = r.access_token; ghpTokenExp = Date.now() + parseInt(r.expires_in || '3600', 10) * 1000;
@@ -5601,7 +5604,7 @@ async function ghpHubungkan() {
 async function ghpPutuskan() {
   if (ghpPanelAppId) { ghToast('Tutup aplikasi premium dulu.'); return; }
   if (!confirm('Putuskan Google Drive?\n\nData Anda di Drive TIDAK dihapus. Perubahan berikutnya hanya tersimpan di perangkat ini sampai Anda menghubungkan lagi.')) return;
-  try { if (ghpToken && window.google && google.accounts && google.accounts.oauth2) google.accounts.oauth2.revoke(ghpToken, function () {}); } catch (e) {}
+  // Tanpa oauth2.revoke (menghapus semua izin, termasuk Bank Soal). Izin bisa dicabut manual di myaccount.google.com/permissions.
   ghpToken = null; ghpTokenExp = 0; ghpSetDrive({ aktif: false }); ghpMacetIzin = false; ghpResetCache();
   ghpSetLencana(); ghpRenderPengaturan(); ghToast('Google Drive diputuskan.');
 }
