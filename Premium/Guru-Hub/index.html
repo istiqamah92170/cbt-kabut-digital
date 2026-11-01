@@ -945,10 +945,10 @@
      (bisa beda domain). Lihat ghBukaKlasifikasi() dkk di script bawah. -->
 <div class="gh-modal-bg" id="gh-modal-simpan" style="z-index:500;">
   <div class="gh-card" style="max-width:440px;width:calc(100% - 32px);max-height:92vh;overflow:auto;">
-    <h3 style="margin:0 0 6px;">Simpan &amp; sinkronkan lewat Google Drive?</h3>
-    <p class="gh-sub" style="margin-bottom:12px;">Data <b id="ghp-tanya-app"></b> dan Guru Hub akan disimpan di folder tersembunyi pada <b>Google Drive Anda sendiri</b>, sehingga bisa dilanjutkan di perangkat lain. Pengelola tidak menyimpan isinya. Perlu satu kali izin Google.</p>
-    <button class="gh-btn gh-btn-primary" style="width:100%;margin-bottom:8px;" onclick="ghpTanyaPilih('hubung')">☁️ Hubungkan Google Drive</button>
-    <button class="gh-btn gh-btn-outline" style="width:100%;margin-bottom:8px;" onclick="ghpTanyaPilih('nanti')">Nanti saja (data hanya di perangkat ini)</button>
+    <h3 style="margin:0 0 6px;" id="ghp-tanya-judul">Hubungkan Google Drive</h3>
+    <p class="gh-sub" style="margin-bottom:12px;" id="ghp-tanya-isi"></p><b id="ghp-tanya-app" style="display:none;"></b>
+    <button class="gh-btn gh-btn-primary" style="width:100%;margin-bottom:8px;" id="ghp-tanya-btn-hubung" onclick="ghpTanyaPilih('hubung')">☁️ Hubungkan Google Drive</button>
+    <button class="gh-btn gh-btn-outline" style="width:100%;margin-bottom:8px;" id="ghp-tanya-btn-nanti" onclick="ghpTanyaPilih('nanti')">Nanti saja (data hanya di perangkat ini)</button>
     <button class="gh-btn gh-btn-ghost" style="width:100%;" onclick="ghpTanyaPilih('batal')">Batal</button>
   </div>
 </div>
@@ -5137,6 +5137,9 @@ function ghpSetStatus(s) {
 function ghpAntrikan(app, kunci, versi, nilai) {
   if (['drive', 'server'].indexOf(ghpBacaMode(app)) < 0) return;
   if (ghpTahan[app + '|' + kunci]) return; // ditahan: Drive berubah di perangkat lain / data belum lengkap
+  // Pencocokan dengan Drive belum selesai pada pembukaan ini DAN kunci ini belum pernah disinkronkan: jangan kirim
+  // (data awal/kosong di perangkat bisa menimpa data asli di Drive). Versi lokal tetap tercatat; dicocokkan saat dibuka lagi.
+  if (ghpBacaMode(app) === 'drive' && !ghpSinkronOk[app] && ghpDasarGet(app, kunci) === undefined) return;
   ghpAntrian[app + '|' + kunci] = { app, kunci, versi, nilai };
   ghpSetStatus('simpan');
   clearTimeout(ghpTimerKirim);
@@ -5202,7 +5205,21 @@ async function ghpTanganiMinta(jenis, d, ev) {
   }
   if (ev.source) ev.source.postMessage({ _sumber: 'ghp-hub', type: 'GHP_DATA', app: app, rid: d.rid, terapkan: terapkan, gagal: gagal }, ev.origin);
 }
+const ghpSinkronOk = {};   // app -> true bila pencocokan dengan Drive pada pembukaan ini SELESAI (bukan offline / gagal)
 async function ghpTanganiHello(jenis, d, ev) {
+  try { await ghpTanganiHelloInti(jenis, d, ev); }
+  catch (e) { // galat tak terduga: tetap buka aplikasi (mode aman), jangan diam sampai "tidak merespons"
+    console.warn('Pencocokan data gagal:', e && e.message);
+    let info = ghpTiketFrame[jenis];
+    if (info) ghpSinkronOk[info.app] = false;
+    if (info && !ghpTerhubung[jenis]) {
+      if (ev.source) ev.source.postMessage({ _sumber: 'ghp-hub', type: 'GHP_INIT', app: info.app, terapkan: {}, versi: {}, offline: true, ulang: false }, ev.origin);
+      ghpTerhubung[jenis] = true;
+      ghToast('⚠️ Data dari Google Drive belum bisa dicocokkan. Perubahan baru ditahan supaya tidak menimpa data Anda di Drive.');
+    }
+  }
+}
+async function ghpTanganiHelloInti(jenis, d, ev) {
   let info = ghpTiketFrame[jenis];
   if (info && info.app === 'media') { // tanpa sinkron Drive/server: cukup izinkan gerbang terbuka
     if (ev.source) ev.source.postMessage({ _sumber: 'ghp-hub', type: 'GHP_INIT', app: 'media', terapkan: {}, versi: {}, offline: false, ulang: ghpTerhubung[jenis] === true }, ev.origin);
@@ -5213,6 +5230,7 @@ async function ghpTanganiHello(jenis, d, ev) {
   ghpHelloJalan[jenis] = true;
   try {
     let app = info.app, server = null, offline = false;
+    ghpSinkronOk[app] = false;
     Object.keys(ghpTahan).forEach(function (k) { if (k.indexOf(app + '|') === 0) delete ghpTahan[k]; });
     if (Date.now() - (ghpCekTerakhir[app] || 0) < 120000 && ghpVerServer[app]) {
       server = ghpVerServer[app]; // baru saja dipastikan sinkron -- tidak perlu tanya server lagi
@@ -5280,6 +5298,7 @@ async function ghpTanganiHello(jenis, d, ev) {
     if (gagal.length) ghToast('⚠️ Sebagian data terbaru dari Drive belum bisa dimuat. Perubahan pada bagian itu ditahan supaya tidak menimpa data di Drive.');
     if (salin.length && !gagal.length) ghToast('⚠️ Data di perangkat ini berbeda dengan Drive. Versi Drive dipakai; salinan perubahan Anda ada di ⚙️ Pengaturan > Salinan konflik.');
     let ulang = ghpTerhubung[jenis] === true;
+    ghpSinkronOk[app] = !offline;
     if (ev.source) ev.source.postMessage({ _sumber: 'ghp-hub', type: 'GHP_INIT', app: app, terapkan: terapkan, versi: versi, offline: offline, ulang: ulang }, ev.origin);
     ghpTerhubung[jenis] = true;
     naik.forEach(function (n) { ghpAntrikan(app, n.kunci, n.versi, n.nilai); });
@@ -5303,7 +5322,10 @@ window.addEventListener('message', function (ev) {
 async function ghpBukaApp(appId) {
   let app = GH_APP_PREMIUM[appId]; if (!app) return;
   if (ghModeBelumAktif && !app.gratis) { ghToast('🔒 Aktifkan langganan dulu untuk membuka alat premium.'); ghUiGotoPage('langganan'); return; }
-  if (!app.gratis && !ghpDriveAktif() && ghpDriveStatus().aktif !== 'nanti') { let pilih = await ghpTanyaHubung(appId); if (!pilih) return; }
+  if (!app.gratis) { // gerbang Google Drive: tampil di mana pun alat premium dibuka bila belum ada izin yang sah di sesi ini
+    let stD = ghpDriveStatus().aktif;
+    if (stD !== 'nanti' && !ghpTokenSah()) { let pilih = await ghpTanyaHubung(appId, stD === true); if (!pilih) return; }
+  }
   let panel = document.getElementById('gh-premium-panel');
   document.getElementById('ghp-judul').textContent = app.nama;
   document.getElementById('ghp-ico').className = 'ghp-ico ' + app.ikon;
@@ -5324,9 +5346,11 @@ async function ghpBukaApp(appId) {
     let mulai = Date.now();
     (function tunggu() {
       if (ghpPanelAppId !== appId) return;
-      if (ghpTerhubung.panel) { load.style.display = 'none'; ifr.style.visibility = 'visible'; return; }
-      if (Date.now() - mulai > 25000) { load.className = 'ghp-loading err'; load.textContent = '❌ ' + app.nama + ' tidak merespons. Periksa koneksi lalu coba lagi.'; return; }
-      setTimeout(tunggu, 200);
+      if (ghpTerhubung.panel) { load.style.display = 'none'; load.className = 'ghp-loading'; ifr.style.visibility = 'visible'; return; }
+      let lama = Date.now() - mulai, sinkron = ghpHelloJalan.panel;
+      if (sinkron && lama > 6000) { load.className = 'ghp-loading'; load.textContent = '☁️ Menyinkronkan data dari Google Drive Anda… Pertama kali di perangkat ini bisa agak lama, mohon jangan ditutup.'; }
+      else if (lama > (sinkron ? 240000 : 25000)) { load.className = 'ghp-loading err'; load.textContent = '❌ ' + app.nama + ' tidak merespons. Periksa koneksi lalu coba lagi.'; }
+      setTimeout(tunggu, 300); // terus memantau: bila jawaban datang terlambat, aplikasi tetap ditampilkan
     })();
   } catch (e) {
     load.className = 'ghp-loading err'; load.textContent = '❌ ' + e.message;
@@ -5382,6 +5406,7 @@ function ghpResetCache() {
 
 // ---- token Google Drive (hanya di memori; berlaku ~1 jam) ----
 let ghpToken = null, ghpTokenExp = 0, ghpTokenPending = null;
+function ghpTokenSah() { return !!ghpToken && Date.now() < ghpTokenExp - 60000; }
 const ghpDriveIdx = {}; // app -> {kunci:{id, versi}}
 function ghpErrIzin(msg) { let e = new Error(msg); e.perluIzin = true; return e; }
 // Offline: JANGAN minta token (GIS membuka jendela popup ke accounts.google.com -> muncul halaman "tidak ada jaringan"
@@ -5398,7 +5423,7 @@ function ghpCekSambungan() {
 function ghpAmbilToken(interaktif) {
   if (ghpToken && Date.now() < ghpTokenExp - 60000) return Promise.resolve(ghpToken);
   if (ghpTokenPending) return ghpTokenPending;
-  ghpTokenPending = ghpCekSambungan().then(function (ok) { if (!ok) throw ghpErrOffline(); return new Promise(function (res, rej) {
+  ghpTokenPending = (interaktif ? Promise.resolve(true) : ghpCekSambungan()).then(function (ok) { if (!ok) throw ghpErrOffline(); return new Promise(function (res, rej) {
     if (!(window.google && google.accounts && google.accounts.oauth2)) { rej(ghpErrIzin('Layanan Google belum termuat (mungkin offline).')); return; }
     let batas = interaktif ? null : setTimeout(function () { rej(ghpErrIzin('Izin Google Drive perlu dikonfirmasi ulang.')); }, 5000);
     let client = google.accounts.oauth2.initTokenClient({
@@ -5552,7 +5577,7 @@ async function ghpDriveSimpan(it) {
       let j0 = await r0.json(), rv = Number((j0.appProperties || {}).v || 0); ada.versi = rv;
       let dasar = ghpDasarGet(it.app, it.kunci);
       if (rv === it.versi) { ghpDasarSet(it.app, it.kunci, rv); return; }
-      let konflik = dasar !== undefined ? rv !== dasar : rv > it.versi;
+      let konflik = dasar !== undefined ? rv !== dasar : true; // dasar tidak dikenal = perangkat ini belum pernah melihat versi Drive: JANGAN menimpa
       if (konflik) {
         if (it.nilai !== null) await ghpDriveSimpanKonflik(it.app, it.kunci, it.nilai);
         ghpTahan[it.app + '|' + it.kunci] = true;
@@ -5624,19 +5649,28 @@ window.addEventListener('beforeunload', function (e) {
 });
 
 // ---- dialog ajakan hubungkan (muncul saat aplikasi premium pertama dibuka & belum memilih) ----
-let _ghpTanyaRes = null;
-function ghpTanyaHubung(appId) {
+let _ghpTanyaRes = null, _ghpTanyaMode = 'baru';
+function ghpTanyaHubung(appId, sudahTerhubung) {
   return new Promise(function (res) {
-    _ghpTanyaRes = res;
+    _ghpTanyaRes = res; _ghpTanyaMode = sudahTerhubung ? 'ulang' : 'baru';
+    let nama = ghEsc(GH_APP_PREMIUM[appId].nama);
     document.getElementById('ghp-tanya-app').textContent = GH_APP_PREMIUM[appId].nama;
+    document.getElementById('ghp-tanya-judul').textContent = sudahTerhubung ? 'Sambungkan lagi ke Google Drive Anda' : 'Hubungkan Google Drive Anda';
+    document.getElementById('ghp-tanya-isi').innerHTML = sudahTerhubung
+      ? 'Agar data <b>' + nama + '</b> tersinkron dan tidak saling menimpa, sambungan ke Google Drive Anda perlu dikonfirmasi (berlaku sekitar 1 jam per sesi). <b>Cukup satu ketukan</b>; Anda tidak diminta memilih izin lagi.'
+      : '<b>' + nama + '</b> menyimpan data (proyek, hasil, pengaturan) di folder tersembunyi pada <b>Google Drive Anda sendiri</b> supaya aman dan bisa dilanjutkan di perangkat lain. Pengelola tidak menyimpan isinya. <b>Izin Google hanya diminta sekali</b>; berikutnya cukup satu ketukan.';
+    document.getElementById('ghp-tanya-btn-nanti').textContent = sudahTerhubung ? 'Buka tanpa Drive dulu (belum disimpan ke Drive)' : 'Nanti saja (data hanya di perangkat ini)';
     document.getElementById('gh-modal-simpan').classList.add('on');
   });
 }
 async function ghpTanyaPilih(pilihan) {
   if (pilihan === 'batal') { document.getElementById('gh-modal-simpan').classList.remove('on'); if (_ghpTanyaRes) _ghpTanyaRes(null); return; }
   if (pilihan === 'hubung') {
-    try { await ghpHubungkan(); } catch (e) { ghToast('⚠️ ' + e.message); return; }
-  } else ghpSetDrive({ aktif: 'nanti' });
+    try {
+      if (_ghpTanyaMode === 'ulang') { await ghpAmbilToken(true); ghpMacetIzin = false; ghpResetCache(); ghpSetLencana(); } // hanya ambil token baru
+      else await ghpHubungkan();
+    } catch (e) { ghToast('⚠️ ' + e.message); return; }
+  } else if (_ghpTanyaMode === 'baru') ghpSetDrive({ aktif: 'nanti' });
   document.getElementById('gh-modal-simpan').classList.remove('on');
   if (_ghpTanyaRes) _ghpTanyaRes(pilihan);
 }
