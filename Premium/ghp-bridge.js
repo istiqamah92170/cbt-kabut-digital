@@ -56,7 +56,7 @@
   try { if (URL_HUB) ORIGIN_HUB = new URL(URL_HUB, location.href).origin; } catch (e) {}
 
   var SK_TIKET = 'ghp_tiket_' + APP, LK_OK = 'ghp_ok_' + APP, SK_RELOAD = 'ghp_reload_' + APP, LK_META = 'ghp_meta_' + APP;
-  var GRACE_OFFLINE_MS = 3 * 24 * 3600 * 1000, VERIF_ULANG_MS = 20 * 60 * 1000, TUNGGU_INIT_MS = 15000;
+  var GRACE_OFFLINE_MS = 3 * 24 * 3600 * 1000, VERIF_ULANG_MS = 20 * 60 * 1000, TUNGGU_INIT_MS = 240000; // Hub bisa lama mencocokkan data besar dengan Drive (pertama kali di perangkat baru)
 
   var _get = Storage.prototype.getItem, _set = Storage.prototype.setItem, _rem = Storage.prototype.removeItem;
   var siap = false, terbuka = false, terkunci = false, originInduk = '', tiket = '';
@@ -317,11 +317,12 @@
   };
 
   function mulaiHello() {
-    var n = 0;
+    var mulai0 = Date.now();
     (function ulang() {
       if (terbuka || terkunci) return;
-      if (n++ * 2000 >= TUNGGU_INIT_MS) { kunci('Tidak terhubung ke Guru Hub. Tutup lalu buka lagi lewat menu <b>Alat Premium</b>.'); return; }
-      kirimHello(); setTimeout(ulang, 2000);
+      var lama = Date.now() - mulai0;
+      if (lama >= TUNGGU_INIT_MS) { kunci('Tidak terhubung ke Guru Hub. Tutup lalu buka lagi lewat menu <b>Alat Premium</b>.'); return; }
+      kirimHello(); setTimeout(ulang, lama < 12000 ? 2000 : 15000); // jarang-jarang setelah 12 detik (Hub mengabaikan HELLO ganda; membaca IndexedDB besar itu berat)
     })();
     setInterval(function () { verifikasi().then(null, function (e) { if (e && e.tolak) gagalVerif(e); }); }, VERIF_ULANG_MS);
   }
