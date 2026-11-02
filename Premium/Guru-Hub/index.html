@@ -966,6 +966,10 @@
       </button>
     </div>
     <div class="ghp-set-sec">
+      <div class="ghp-set-jdl">Izin Google Drive untuk Media Interaktif</div>
+      <div id="ghp-set-media"></div>
+    </div>
+    <div class="ghp-set-sec">
       <div class="ghp-set-jdl">Penyimpanan &amp; sinkron (Google Drive)</div>
       <div id="ghp-set-drive"></div>
     </div>
@@ -5383,7 +5387,7 @@ async function ghpTutupPanel(tanpaTanya) {
 //  Pilihan disimpan per email & aplikasi; belum dipilih -> ditanyakan saat aplikasi pertama dibuka.
 // ═══════════════════════════════════════════════
 const GH_KEY_DRIVE = 'guruhub_drive_v1';   // {email:{aktif:true|false|'nanti', migrasi:bool, terakhir:ms}}
-const GHP_SCOPE = 'https://www.googleapis.com/auth/drive.appdata openid email';
+const GHP_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file openid email'; // satu persetujuan: sinkron data (appdata) + membuat Sheet Media (file)
 function ghpDriveStatus() {
   try { return (JSON.parse(localStorage.getItem(GH_KEY_DRIVE) || '{}')[(ghProfilAktif || {}).email]) || {}; } catch (e) { return {}; }
 }
@@ -5439,6 +5443,7 @@ function ghpAmbilToken(interaktif) {
             rej(ghpErrIzin('Akun Google yang dipilih (' + (ui.email || '?') + ') berbeda dengan akun Guru Hub (' + ((ghProfilAktif || {}).email || '?') + '). Pilih akun yang sama.')); return;
           }
           ghpToken = r.access_token; ghpTokenExp = Date.now() + parseInt(r.expires_in || '3600', 10) * 1000;
+          if ((r.scope || '').indexOf('drive.file') >= 0) ghpCatatIzinMedia();
           res(ghpToken);
         } catch (e) { rej(ghpErrIzin('Gagal memeriksa akun Google.')); }
       },
@@ -5748,8 +5753,47 @@ const GH_APP_DATA = {
 };
 function ghBukaPengaturan() { ghpRenderPengaturan(); document.getElementById('gh-modal-pengaturan').classList.add('on'); ghUiCloseSidebar(); }
 function ghTutupPengaturan() { document.getElementById('gh-modal-pengaturan').classList.remove('on'); }
+const GH_KEY_IZIN_MEDIA = 'guruhub_izin_media_v1'; // {email: ms} -- terakhir izin drive.file dikonfirmasi dari Guru Hub
+function ghpIzinMediaTercatat() { try { return (JSON.parse(localStorage.getItem(GH_KEY_IZIN_MEDIA) || '{}')[(ghProfilAktif || {}).email]) || 0; } catch (e) { return 0; } }
+function ghpCatatIzinMedia() { try { let o = JSON.parse(localStorage.getItem(GH_KEY_IZIN_MEDIA) || '{}'), em = (ghProfilAktif || {}).email; if (!em) return; o[em] = Date.now(); localStorage.setItem(GH_KEY_IZIN_MEDIA, JSON.stringify(o)); } catch (e) {} }
+// Minta izin drive.file (membuat Sheet Media Interaktif di Drive guru). Dipanggil dari tombol, jadi popup tidak diblokir. Berlaku untuk SEMUA akun, termasuk gratis.
+function ghpMintaIzinMedia() {
+  return new Promise(function (res, rej) {
+    if (!(window.google && google.accounts && google.accounts.oauth2)) { rej(new Error('Layanan Google belum termuat. Periksa koneksi lalu coba lagi.')); return; }
+    let sc = 'https://www.googleapis.com/auth/drive.file openid email';
+    let c = google.accounts.oauth2.initTokenClient({
+      client_id: GH_CLIENT_ID, scope: sc, hint: (ghProfilAktif || {}).email || undefined,
+      callback: async function (r) {
+        if (r.error || !r.access_token || (r.scope || '').indexOf('drive.file') < 0) { rej(new Error('Izin Google Drive tidak diberikan.')); return; }
+        try {
+          let ui = await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + r.access_token } })).json();
+          if (String(ui.email || '').toLowerCase() !== String((ghProfilAktif || {}).email || '').toLowerCase()) { rej(new Error('Akun Google yang dipilih (' + (ui.email || '?') + ') berbeda dengan akun Guru Hub (' + ((ghProfilAktif || {}).email || '?') + '). Pilih akun yang sama.')); return; }
+        } catch (e) { rej(new Error('Gagal memeriksa akun Google.')); return; }
+        ghpCatatIzinMedia(); res(true);
+      },
+      error_callback: function (e) { rej(new Error(e && e.type === 'popup_closed' ? 'Izin dibatalkan.' : 'Jendela izin Google ditutup atau diblokir. Izinkan pop-up lalu coba lagi.')); }
+    });
+    c.requestAccessToken({ prompt: '' });
+  });
+}
+async function ghpIzinMediaKlik() {
+  try { await ghpMintaIzinMedia(); ghToast('✅ Izin Google Drive untuk Media Interaktif sudah diberikan.'); } catch (e) { ghToast('⚠️ ' + e.message); }
+  ghpRenderPengaturan();
+}
+function ghpRenderIzinMedia() {
+  let el = document.getElementById('ghp-set-media'); if (!el) return;
+  let t = ghpIzinMediaTercatat();
+  el.innerHTML = '<p class="gh-hint" style="margin:0 0 8px;">Diperlukan sekali untuk tombol <b>Buat Sheet otomatis</b> di Media Interaktif. Aplikasi hanya bisa mengakses berkas yang ia buat sendiri; file Drive Anda yang lain tidak bisa dibaca. Berlaku untuk semua akun, termasuk akun gratis.</p>'
+    + '<div class="ghp-set-baris"><b>' + (t ? '✅ Sudah diberikan (dikonfirmasi ' + ghEsc(new Date(t).toLocaleDateString('id-ID')) + ')' : '🔒 Belum diberikan') + '</b>'
+    + '<button class="gh-btn ' + (t ? 'gh-btn-outline' : 'gh-btn-primary') + '" onclick="ghpIzinMediaKlik()">' + (t ? 'Periksa / perbarui izin' : '☁️ Berikan izin Google Drive') + '</button></div>';
+}
 function ghpRenderPengaturan() {
   let el = document.getElementById('ghp-set-drive'), dt = document.getElementById('ghp-set-data'); if (!el || !dt) return;
+  ghpRenderIzinMedia();
+  if (ghModeBelumAktif) { // akun gratis: sinkron data Alat Premium belum tersedia
+    el.innerHTML = '<p class="gh-hint" style="margin:0;">Sinkron data Alat Premium lewat Google Drive tersedia untuk pelanggan aktif. Izin untuk Media Interaktif ada di bagian atas.</p>';
+    dt.innerHTML = ''; return;
+  }
   let aktif = ghpDriveAktif(), pend = ghpAdaBelumTersimpan();
   let h = '<p class="gh-hint" style="margin:0 0 8px;">Data Guru Hub dan Alat Premium disimpan di folder tersembunyi pada Google Drive Anda sendiri dan tersinkron antar-perangkat. Pengelola Guru Hub tidak menyimpan isinya, dan hanya Guru Hub yang bisa membacanya.</p>';
   if (aktif) {
