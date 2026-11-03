@@ -147,7 +147,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -167,7 +167,7 @@ function B(b,i,g){
  if(b.tipe=='linimasa')return b.item.map(function(x){return'<div class="tl"><b>'+E(x.waktu)+'</b> '+E(x.judul)+'<br><span class="m">'+E(x.isi)+'</span></div>'}).join('');
  if(b.tipe=='tabel')return '<div class="sc"><table><tr>'+b.kolom.map(function(k){return'<th>'+E(k)+'</th>'}).join('')+'</tr>'+b.baris.map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</table></div>';
  if(b.tipe=='skenario')return '<p>'+nl(b.kasus)+'</p>'+b.opsi.map(function(x,j){return'<button class="op" data-i="'+i+'" data-j="'+j+'" onclick="'+(g?'':'pilihS(this)')+'">'+E(x.teks)+(g&&x.benar?' <b class="ok">(benar)</b>':'')+'</button>'}).join('')+(g?'':'<label class="m">Alasan jawabanmu<textarea id="as'+i+'" rows="2" placeholder="Jelaskan alasanmu memilih jawaban ini..."></textarea></label><button class="btn sm" id="ks'+i+'" onclick="kirimS('+i+')">Kirim Jawaban Studi Kasus</button>')+'<div id="fs'+i+'"></div>';
- if(b.tipe=='aktivitas')return '<p>'+nl(b.instruksi)+'</p>'+(g?'':'<textarea id="ta'+i+'" rows="3" placeholder="Tuliskan jawabanmu..."></textarea><button class="btn sm" onclick="simpanA('+i+')">Simpan Aktivitas</button> <span class="ok" id="am'+i+'"></span>');
+ if(b.tipe=='aktivitas')return '<p>'+nl(b.instruksi)+'</p>'+(g?'':'<textarea id="ta'+i+'" rows="3" placeholder="Tuliskan jawabanmu..."></textarea><button class="btn sm" id="ba'+i+'" onclick="simpanA('+i+')">Kirim Aktivitas</button> <span class="ok" id="am'+i+'"></span>');
  if(b.tipe=='media')return '<p class="m">Cari materi pendukung:</p>'+(b.kata_kunci_pencarian||[]).map(function(k){var j=mJenis(b,k),n={video:'Video',infografis:'Infografis',gambar:'Gambar',artikel:'Artikel'}[j],l='<b>'+n+':</b> '+E(k)+' &rarr; ';if(j=='video')return'<p>'+l+'<a href="'+mUrl(j,k,0)+'" target="_blank" rel="noopener">YouTube</a></p>';return'<p>'+l+'<a href="'+mUrl(j,k,1)+'" target="_blank" rel="noopener">Sumber terpercaya (.go.id, .ac.id, .edu)</a> | <a href="'+mUrl(j,k,0)+'" target="_blank" rel="noopener">Semua web</a></p>'}).join('');
  return '';
 }
@@ -176,8 +176,8 @@ function H3(i,t){return'<h3><i class="fa-solid fa-'+i+'"></i> '+E(t)+'</h3>'}
 function R(o,g){
  var h='<h2>'+E(o.judul)+'</h2><p class="m">'+E(o.ringkasan)+'</p><div class="obj">'+H3('bullseye','Tujuan Pembelajaran')+'<ul>'+(o.tujuan||[]).map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul></div>';
  (o.blok||[]).forEach(function(b,i){h+='<div class="card">'+(b.judul?H3(IC[b.tipe],b.judul):'')+B(b,i,g)+'</div>'});
- h+='<div class="card">'+H3('gamepad','Kuis')+(o.kuis||[]).map(function(q,i){return'<div><p><b>'+(i+1)+'.</b> '+E(q.q)+'</p>'+q.opsi.map(function(x,j){return'<label class="op"><input type="radio" name="k'+i+'" value="'+j+'">'+E(x)+(g&&q.jawaban===j?' <b class="ok">(benar)</b>':'')+'</label>'}).join('')+'<p id="fk'+i+'" class="m"></p></div>'}).join('')+(g?'':'<button class="btn" onclick="kirim()">Kirim jawaban</button><p id="sk"></p>')+'</div>';
- if((o.refleksi||[]).length)h+='<div class="card">'+H3('hands-praying','Lembar Refleksi')+(g?'<ul>'+o.refleksi.map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul>':o.refleksi.map(function(x,i){return'<label><b>'+(i+1)+'. '+E(x)+'</b><textarea id="tr'+i+'" rows="2" placeholder="Tuliskan pendapatmu..."></textarea></label>'}).join('')+'<button class="btn" onclick="simpanR('+o.refleksi.length+')">Simpan Lembar Refleksi</button> <span class="ok" id="rm"></span>')+'</div>';
+ h+='<div class="card">'+H3('gamepad','Kuis')+(o.kuis||[]).map(function(q,i){return'<div><p><b>'+(i+1)+'.</b> '+E(q.q)+'</p>'+q.opsi.map(function(x,j){return'<label class="op"><input type="radio" name="k'+i+'" value="'+j+'">'+E(x)+(g&&q.jawaban===j?' <b class="ok">(benar)</b>':'')+'</label>'}).join('')+'<p id="fk'+i+'" class="m"></p></div>'}).join('')+(g?'':'<button class="btn" id="bk" onclick="kirim()">Kirim jawaban</button><p id="sk"></p>')+'</div>';
+ if((o.refleksi||[]).length)h+='<div class="card">'+H3('hands-praying','Lembar Refleksi')+(g?'<ul>'+o.refleksi.map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul>':o.refleksi.map(function(x,i){return'<label><b>'+(i+1)+'. '+E(x)+'</b><textarea id="tr'+i+'" rows="2" placeholder="Tuliskan pendapatmu..."></textarea></label>'}).join('')+'<button class="btn" id="br" onclick="simpanR('+o.refleksi.length+')">Kirim Lembar Refleksi</button> <span class="ok" id="rm"></span>')+'</div>';
  if((o.glosarium||[]).length)h+='<div class="card">'+H3('book-bookmark','Glosarium')+o.glosarium.map(function(x){return'<p><b>'+E(x.istilah)+'</b>: '+E(x.arti)+'</p>'}).join('')+'</div>';
  return h;
 }
@@ -215,9 +215,9 @@ function mulaiSiswa(){
  kunci();
  run('info').then(function(d){INFO=d;tema(d);$('jd').textContent=d.judul;$('hj').textContent=d.judul;$('hsub').textContent=d.kerangka||'';$('kl').innerHTML='<option value="">Pilih kelas</option>'+d.kelas.map(function(x){return'<option>'+E(x)+'</option>'}).join('');isiNama();$('kl').onchange=isiNama;$('nm').oninput=cariN;$('pl').classList.toggle('hide',!d.pin);show('vl')}).catch(er)
 }
-function masuk(){if(!$('kl').value||!$('nm').value.trim()){T('Pilih kelas dan ketik namamu dulu.');return}fsMasuk();T('Memeriksa...');run('masuk',$('kl').value,$('nm').value,$('pn').value).then(function(r){if(!r.ok){T(r.msg);return}T('');S.tk=r.token;S.d=r.daftar;S.u=r.nama;S.g=null;$('jd').classList.add('hide');$('hd').classList.remove('hide');$('gp').classList.remove('hide');$('hn').textContent=S.u;tab0('vb')}).catch(er)}
+function masuk(){if(!$('kl').value||!$('nm').value.trim()){T('Pilih kelas dan ketik namamu dulu.');return}fsMasuk();T('Memeriksa...');run('masuk',$('kl').value,$('nm').value,$('pn').value).then(function(r){if(!r.ok){T(r.msg);return}T('');S.tk=r.token;S.d=r.daftar;S.u=r.nama;S.kl=$('kl').value;S.g=null;$('jd').classList.add('hide');$('hd').classList.remove('hide');$('gp').classList.remove('hide');$('hn').textContent=S.u;tab0('vb');obFlush()}).catch(er)}
 function keluar(){cek(keluar0)}
-function keluar0(){S.tk='';S.g=null;try{if(document.fullscreenElement)document.exitFullscreen()}catch(x){}$('fw').classList.add('hide');$('hd').classList.add('hide');$('gp').classList.add('hide');$('nv').classList.remove('open');$('jd').classList.remove('hide');$('pn').value='';show('vl')}
+function keluar0(){S.tk='';obBanner();S.g=null;try{if(document.fullscreenElement)document.exitFullscreen()}catch(x){}$('fw').classList.add('hide');$('hd').classList.add('hide');$('gp').classList.add('hide');$('nv').classList.remove('open');$('jd').classList.remove('hide');$('pn').value='';show('vl')}
 function prog(){var n=S.d.length,s=S.d.filter(function(p){return p.selesai}).length,p=n?Math.round(s/n*100):0;$('gpt').textContent=s+' dari '+n+' pertemuan selesai';$('gpb').style.width=p+'%';$('gpp').textContent=p+'%'}
 function grup(){var o=[],ix={};S.d.forEach(function(p){var k=p.bab||'Pertemuan';if(ix[k]===undefined){ix[k]=o.length;o.push({k:k,l:[]})}o[ix[k]].l.push(p)});return o}
 function beranda(){
@@ -239,23 +239,64 @@ function glos(){if(S.g){glosTampil();return}$('gl2').innerHTML='<p class="m">Mem
 function glosTampil(){var q=($('gq').value||'').toLowerCase();$('gl2').innerHTML=(S.g||[]).filter(function(x){return!q||(x.istilah+' '+x.arti).toLowerCase().indexOf(q)>=0}).map(function(x){return'<div class="card"><b>'+E(x.istilah)+'</b><br>'+E(x.arti)+'</div>'}).join('')||'<p class="m">Belum ada istilah.</p>'}
 function kembali(){cek(kembali0)}
 function kembali0(){T('');run('siswaDaftar',S.tk).then(function(d){S.d=d;tab0('vd')}).catch(function(e){er(e);keluar0()})}
-function buka(no){S.no=no;S.s={};S.sv={};S.kirim=!!(S.d.filter(function(p){return p.no==no})[0]||{}).selesai;T('Memuat...');run('siswaBuka',S.tk,no).then(function(r){if(!r.ok){T(r.msg);return}T('');$('isi').innerHTML=R(r.data,false);isiJawab(r.jawab);show('vi');tumbuhSemua();window.scrollTo(0,0)}).catch(function(e){er(e)})}
+function buka(no){S.no=no;S.s={};S.sv={};S.kirim=!!(S.d.filter(function(p){return p.no==no})[0]||{}).selesai;T('Memuat...');run('siswaBuka',S.tk,no).then(function(r){if(!r.ok){T(r.msg);return}T('');$('isi').innerHTML=R(r.data,false);isiJawab(r.jawab);if(r.hasil)tampilHasil(r.hasil,1);show('vi');tumbuhSemua();window.scrollTo(0,0)}).catch(function(e){er(e)})}
+/* ---- ANTREAN KIRIM: jawaban disimpan di perangkat sampai server mengonfirmasi ---- */
+var OBK='mi_ob_'+(typeof MT=='undefined'?'':MT),OBM=[];
+function obAll(){try{var v=JSON.parse(localStorage.getItem(OBK)||'null');if(v)return v}catch(x){}return OBM}
+function obSet(a){OBM=a;try{localStorage.setItem(OBK,JSON.stringify(a))}catch(x){}}
+function obTambah(it){it.id=Date.now()+'-'+Math.random().toString(36).slice(2,7);it.nm=S.u;it.kls=S.kl;obSet(obAll().filter(function(x){return!(x.key===it.key&&x.nm===it.nm&&x.kls===it.kls)}).concat([it]));return it}
+function obHapus(id){obSet(obAll().filter(function(x){return x.id!==id}))}
+function obBanner(){var n=obAll().filter(function(x){return x.nm===S.u&&x.kls===S.kl}).length,e=$('ob'),on=n&&S.u&&!$('hd').classList.contains('hide');
+ if(!e){e=document.createElement('div');e.id='ob';e.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:60;background:#fef3c7;color:#78350f;border:1px solid #f59e0b;border-radius:10px;padding:10px 12px;font-size:14px;display:none';e.innerHTML='<span id="obt"></span> <button class="btn sm" onclick="obKlik()">Kirim ulang</button>';document.body.appendChild(e)}
+ $('obt').textContent=n+' jawaban belum terkirim ke server.';e.style.display=on?'block':'none'}
+function obKlik(){if(!S.tk){T('Sesi habis. Masuk lagi, jawabanmu akan terkirim otomatis.');return}T('Mengirim...');obFlush().then(function(){if(!obAll().filter(function(x){return x.nm===S.u&&x.kls===S.kl}).length)T('Semua jawaban sudah terkirim.')})}
+var OB_SESI='Sesi habis. Masuk lagi; jawabanmu tersimpan di perangkat ini dan akan terkirim otomatis.';
+function obKirim(it,n){n=n||0;
+ if(!S.tk)return Promise.reject({tunda:1,msg:OB_SESI});
+ if(n)T('Mengirim ulang... (percobaan '+(n+1)+')');
+ return run.apply(null,[it.fn,S.tk].concat(it.a)).then(function(v){obHapus(it.id);obBanner();return v},function(e){
+  var m=String((e&&e.message)||e);
+  if(/Sesi habis/i.test(m)){S.tk='';return Promise.reject({tunda:1,msg:OB_SESI})}
+  if(/terhubung|lock|kunci|timeout|waktu|sibuk|belum tercatat|network|fetch|^Gagal\.?$/i.test(m)){
+   if(n<3)return new Promise(function(ok){setTimeout(ok,[1500,4000,9000][n])}).then(function(){return obKirim(it,n+1)});
+   return Promise.reject({tunda:1,msg:'Koneksi bermasalah. Jawabanmu tersimpan di perangkat ini dan BELUM terkirim. Tekan "Kirim ulang" saat sinyal membaik.'})}
+  obHapus(it.id);obBanner();return Promise.reject(e)})}
+function kirimAndal(it){obTambah(it);obBanner();T('Mengirim...');return obKirim(it).then(function(v){obBanner();return v},function(e){obBanner();throw e})}
+function gagalKirim(e){T((e&&e.msg)||String((e&&e.message)||e).replace(/^Error:\s*/,''))}
+function obFlush(){var L=obAll().filter(function(x){return x.nm===S.u&&x.kls===S.kl});if(!L.length||!S.tk){obBanner();return Promise.resolve()}
+ var p=Promise.resolve();
+ L.forEach(function(it){p=p.then(function(){return obKirim(it).then(function(v){if(it.fn=='siswaKirim'&&v&&v.ok&&S.no==it.no&&$('bk'))tampilHasil(v)},function(){})})});
+ return p.then(function(){obBanner();return run('siswaDaftar',S.tk)}).then(function(d){S.d=d;try{prog();daftar();beranda();nilai()}catch(x){}}).catch(function(){obBanner()})}
+function tampilHasil(r,diam){T('');S.kirim=true;
+ r.k.forEach(function(x,i){var rd=document.getElementsByName('k'+i);if(x.d!==null&&x.d!==undefined&&rd[x.d])rd[x.d].checked=true;
+  var kt=rd[x.j]?rd[x.j].parentNode.textContent.trim():'';
+  $('fk'+i).innerHTML=(x.b?'<b class="ok">Benar.</b> ':'<b class="no">Belum tepat.</b> Jawaban: '+E(kt)+'. ')+E(x.p)});
+ $('sk').innerHTML='<b>Nilai kuis: '+r.skor+'</b>'+(r.sudah&&!diam?'<br><span class="m">Kuis ini sudah terkirim sebelumnya; hanya pengiriman pertama yang dihitung. Untuk mengulang, mintalah izin kepada gurumu.</span>':'<br><span class="m">Kuis hanya bisa dikirim satu kali. Untuk mengulang, mintalah izin kepada gurumu.</span>');
+ document.querySelectorAll('input[type=radio]').forEach(function(x){x.disabled=true});var b=$('bk');if(b)b.style.display='none';
+ var q=S.d.filter(function(p){return p.no==S.no})[0];if(q){q.selesai=true;q.skor=r.skor}}
 function pilihS(b){var i=b.dataset.i;S.s[i]=+b.dataset.j;[].forEach.call(document.querySelectorAll('[data-i="'+i+'"]'),function(x){x.classList.toggle('sel',x===b)})}
 function kirimS(i){var a=$('as'+i).value.trim();if(S.s[i]===undefined){alert('Pilih salah satu jawaban dulu.');return}if(a.length<3){alert('Tuliskan alasanmu dulu.');return}
- var L=document.querySelectorAll('[data-i="'+i+'"]');run('siswaSkenario',S.tk,S.no,i,S.s[i],a).then(function(r){if(!r.ok){T(r.msg||'Gagal menyimpan jawaban.');return}[].forEach.call(L,function(x){x.disabled=true});$('as'+i).disabled=true;$('ks'+i).style.display='none';$('fs'+i).innerHTML='<p>'+(r.b?'<b class="ok">Tepat.</b> ':'<b class="no">Kurang tepat.</b> ')+E(r.p||r.t||'Jawabanmu tersimpan.')+'</p>'}).catch(er)}
-function simpanA(i){var t=$('ta'+i).value;if(!t.trim()){alert('Silakan isi jawabanmu dulu.');return}run('siswaSimpanTulis',S.tk,S.no,'aktivitas',[{i:i,t:t}]).then(function(r){if(r.ok)S.sv['ta'+i]=t;$('am'+i).textContent=r.ok?'Tersimpan.':(r.msg||'Gagal.')}).catch(er)}
-function simpanR(n){var it=[];for(var i=0;i<n;i++){var t=$('tr'+i).value;if(!t.trim()){alert('Silakan isi semua kolom refleksi.');return}it.push({i:i,t:t})}run('siswaSimpanTulis',S.tk,S.no,'refleksi',it).then(function(r){if(r.ok)it.forEach(function(x){S.sv['tr'+x.i]=x.t});$('rm').textContent=r.ok?'Refleksi berhasil disimpan.':(r.msg||'Gagal.')}).catch(er)}
-function isiJawab(a){(a||[]).forEach(function(x){if(x.j=='aktivitas'&&$('ta'+x.i)){$('ta'+x.i).value=x.t;S.sv['ta'+x.i]=x.t}if(x.j=='refleksi'&&$('tr'+x.i)){$('tr'+x.i).value=x.t;S.sv['tr'+x.i]=x.t}if(x.j=='alasan'&&$('as'+x.i))$('as'+x.i).value=x.t;if(x.j=='skenario'){[].forEach.call(document.querySelectorAll('[data-i="'+x.i+'"]'),function(b){b.disabled=true;b.classList.toggle('sel',b.textContent.trim()==x.t.trim())});var al=$('as'+x.i),kb=$('ks'+x.i);if(al)al.disabled=true;if(kb)kb.style.display='none';$('fs'+x.i).innerHTML='<p>Jawabanmu tersimpan: '+(+x.s==1?'<b class="ok">Tepat</b>':'<b class="no">Kurang tepat</b>')+'</p>'}})}
+ if(!confirm('Jawaban studi kasus hanya bisa dikirim satu kali. Kirim sekarang?'))return;
+ var L=document.querySelectorAll('[data-i="'+i+'"]'),kb=$('ks'+i);kb.disabled=true;
+ kirimAndal({fn:'siswaSkenario',a:[S.no,i,S.s[i],a],key:'sk|'+S.no+'|'+i,no:S.no}).then(function(r){if(!r.ok){T(r.msg||'Gagal menyimpan jawaban.');kb.disabled=false;return}T('');[].forEach.call(L,function(x){x.disabled=true});$('as'+i).disabled=true;kb.style.display='none';$('fs'+i).innerHTML='<p>'+(r.b?'<b class="ok">Tepat.</b> ':'<b class="no">Kurang tepat.</b> ')+E(r.p||r.t||'Jawabanmu tersimpan.')+'</p>'}).catch(function(e){kb.disabled=false;gagalKirim(e)})}
+function simpanA(i){var t=$('ta'+i).value;if(!t.trim()){alert('Silakan isi jawabanmu dulu.');return}
+ if(!confirm('Jawaban aktivitas hanya bisa dikirim satu kali dan tidak dapat diubah. Kirim sekarang?'))return;
+ var bt=$('ba'+i);bt.disabled=true;
+ kirimAndal({fn:'siswaSimpanTulis',a:[S.no,'aktivitas',[{i:i,t:t}]],key:'ak|'+S.no+'|'+i,no:S.no}).then(function(r){T('');if(r.ok){S.sv['ta'+i]=t;$('ta'+i).disabled=true;bt.style.display='none';$('am'+i).textContent='Terkirim dan tersimpan di server.'}else{$('am'+i).textContent=r.msg||'Gagal.';bt.disabled=false}}).catch(function(e){bt.disabled=false;gagalKirim(e)})}
+function simpanR(n){var it=[];for(var i=0;i<n;i++){var t=$('tr'+i).value;if(!t.trim()){alert('Silakan isi semua kolom refleksi.');return}it.push({i:i,t:t})}
+ if(!confirm('Lembar refleksi hanya bisa dikirim satu kali dan tidak dapat diubah. Kirim sekarang?'))return;
+ var bt=$('br');bt.disabled=true;
+ kirimAndal({fn:'siswaSimpanTulis',a:[S.no,'refleksi',it],key:'rf|'+S.no,no:S.no}).then(function(r){T('');if(r.ok){it.forEach(function(x){S.sv['tr'+x.i]=x.t;$('tr'+x.i).disabled=true});bt.style.display='none';$('rm').textContent='Refleksi terkirim dan tersimpan di server.'}else{$('rm').textContent=r.msg||'Gagal.';bt.disabled=false}}).catch(function(e){bt.disabled=false;gagalKirim(e)})}
+function isiJawab(a){(a||[]).forEach(function(x){if(x.j=='aktivitas'&&$('ta'+x.i)){$('ta'+x.i).value=x.t;S.sv['ta'+x.i]=x.t;$('ta'+x.i).disabled=true;var ba=$('ba'+x.i);if(ba)ba.style.display='none';if($('am'+x.i))$('am'+x.i).textContent='Terkirim.'}if(x.j=='refleksi'&&$('tr'+x.i)){$('tr'+x.i).value=x.t;S.sv['tr'+x.i]=x.t;$('tr'+x.i).disabled=true;var br=$('br');if(br)br.style.display='none';if($('rm'))$('rm').textContent='Refleksi terkirim.'}if(x.j=='alasan'&&$('as'+x.i))$('as'+x.i).value=x.t;if(x.j=='skenario'){[].forEach.call(document.querySelectorAll('[data-i="'+x.i+'"]'),function(b){b.disabled=true;b.classList.toggle('sel',b.textContent.trim()==x.t.trim())});var al=$('as'+x.i),kb=$('ks'+x.i);if(al)al.disabled=true;if(kb)kb.style.display='none';$('fs'+x.i).innerHTML='<p>Jawabanmu tersimpan: '+(+x.s==1?'<b class="ok">Tepat</b>':'<b class="no">Kurang tepat</b>')+'</p>'}})}
 function kirim(){
  var k=[];
  for(var i=0;document.getElementsByName('k'+i).length;i++){var c=document.querySelector('input[name=k'+i+']:checked');k.push(c?+c.value:null)}
- if(k.some(function(x){return x===null})&&!confirm('Ada soal yang belum dijawab. Tetap kirim?'))return;
- T('Mengirim...');run('siswaKirim',S.tk,S.no,{k:k,s:{}}).then(function(r){
-  if(!r.ok){T('Gagal mengirim.');return}T('');S.kirim=true;
-  r.k.forEach(function(x,i){$('fk'+i).innerHTML=(x.b?'<b class="ok">Benar.</b> ':'<b class="no">Belum tepat.</b> Jawaban: '+'ABCD'.charAt(x.j)+'. ')+E(x.p)});
-  Object.keys(r.s).forEach(function(i){$('fs'+i).innerHTML='<p>'+(r.s[i].b?'<b class="ok">Tepat.</b> ':'<b class="no">Kurang tepat.</b> ')+E(r.s[i].p)+'</p>'});
-  $('sk').innerHTML='<b>Nilai kuis: '+r.skor+'</b>';
-  document.querySelectorAll('input[type=radio]').forEach(function(x){x.disabled=true})}).catch(er)
+ var kosong=k.some(function(x){return x===null});
+ if(!confirm((kosong?'Ada soal yang belum dijawab. ':'')+'Kuis hanya bisa dikirim satu kali. Kirim sekarang?'))return;
+ var b=$('bk');if(b)b.disabled=true;
+ kirimAndal({fn:'siswaKirim',a:[S.no,{k:k,s:{}}],key:'kuis|'+S.no,no:S.no}).then(function(r){
+  if(!r.ok){T(r.msg||'Gagal mengirim.');if(b)b.disabled=false;return}
+  tampilHasil(r)}).catch(function(e){if(b)b.disabled=false;gagalKirim(e)})
 }
 
 /* ---- GURU ---- */
@@ -346,7 +387,7 @@ function P(d,no){
  if(dl)L.push('KERANGKA PEMBELAJARAN MENDALAM (Deep Learning):','- Prinsip: berkesadaran (mindful), bermakna (meaningful), menggembirakan (joyful).','- Urutkan tiga pengalaman belajar: (1) MEMAHAMI: jelaskan konsep inti sampai ke "mengapa" dan "bagaimana", lengkap dengan contoh dan non-contoh; (2) MENGAPLIKASI: studi kasus atau tantangan kontekstual yang menuntut penalaran; (3) MEREFLEKSI: pertanyaan yang menghubungkan materi dengan pengalaman dan tindakan siswa.','- Awali dengan satu blok "aktivitas" pembuka singkat yang menenangkan atau memantik rasa ingin tahu, dan tulis satu pertanyaan pemantik di "ringkasan".','');
  L.push('ATURAN ISI:','1. Akurat, runtut, bahasa sesuai usia siswa kelas '+CFG.kelas+'.','2. JANGAN mengarang fakta, angka, tanggal, nama, kutipan, atau URL. Jika tidak yakin, tulis di "catatan_verifikasi".','3. Untuk media pendukung jangan beri URL. Isi "jenis" dengan salah satu: video, infografis, gambar, atau artikel (pilih infografis atau gambar untuk bagan, peta, dan diagram; artikel untuk data dan referensi tertulis), lalu isi "kata_kunci_pencarian" dengan kata kunci yang spesifik dan akurat.',
   (kb||dl)?'4. Pendalaman: minimal 5 blok materi dengan tipe bervariasi; setiap blok "teks" minimal 120 kata, menjelaskan sebab-akibat dan memberi contoh konkret dari konteks Indonesia dan lingkungan siswa; hindari kalimat umum. Sertakan 1 skenario kasus (tepat satu opsi benar), 1 aktivitas, 8 soal kuis (4 opsi, jawaban = indeks 0-3, ada penjelasan; campurkan soal mengingat, memahami, menerapkan, dan menalar), 3 pertanyaan refleksi, glosarium minimal 6 istilah. Total keluaran maksimal sekitar 4500 kata.':'4. Minimal 3 blok materi (variasikan tipenya), 1 skenario kasus (tepat satu opsi benar), 1 aktivitas, 8 soal kuis (4 opsi, jawaban = indeks 0-3, ada penjelasan), 3 pertanyaan refleksi, glosarium istilah penting.',
-  '5. Beri contoh yang dekat dengan kehidupan siswa.','6. Skenario kasus harus menuntut penalaran tingkat tinggi (menganalisis konteks masalah nyata dan menentukan solusi beserta alasannya). Pertanyaan refleksi bersifat penghayatan, kejujuran diri, dan komitmen tindakan atau akhlak (tidak ada jawaban benar atau salah).','7. Blok "aktivitas" dan setiap instruksi menulis harus berupa kalimat perintah langsung (contoh: "Tuliskan ...", "Jelaskan ...") tanpa menyebut kata siswa, guru, bapak, atau ibu. Ini media interaktif: jangan menyebut kertas, buku, atau lembar; rujuk "kolom yang disediakan" (contoh: "Tuliskan jawabanmu pada kolom yang disediakan").','','FORMAT KELUARAN: balas HANYA satu objek JSON valid. Tanpa kata pembuka/penutup, tanpa tanda ```, tanpa komentar. Gunakan kutip ganda; escape tanda kutip dan baris baru. Ikuti skema ini persis:',SK);
+  '5. Beri contoh yang dekat dengan kehidupan siswa.','6. Skenario kasus harus menuntut penalaran tingkat tinggi (menganalisis konteks masalah nyata dan menentukan solusi beserta alasannya). Pertanyaan refleksi bersifat penghayatan, kejujuran diri, dan komitmen tindakan atau akhlak (tidak ada jawaban benar atau salah).','7. Blok "aktivitas" dan setiap instruksi menulis harus berupa kalimat perintah langsung (contoh: "Tuliskan ...", "Jelaskan ...") tanpa menyebut kata siswa, guru, bapak, atau ibu. Ini media interaktif: jangan menyebut kertas, buku, atau lembar; rujuk "kolom yang disediakan" (contoh: "Tuliskan jawabanmu pada kolom yang disediakan").','8. KUALITAS KUIS (wajib): tingkat sedang sampai sulit, minimal separuh soal berupa penalaran atau penerapan pada kasus nyata, bukan hafalan. Empat opsi harus sama-sama masuk akal: pengecoh dibuat dari miskonsepsi yang umum, panjang dan gaya kalimat semua opsi harus sepadan (jangan buat jawaban benar paling panjang atau paling lengkap), tidak ada petunjuk kata seperti selalu, tidak pernah, hanya pada pengecoh. Dilarang memakai opsi "semua jawaban benar", "semua salah", "A dan B benar", atau sejenisnya. Posisi jawaban benar tidak perlu diatur karena sistem mengacaknya otomatis; tulis saja jawaban benar pada indeks 0 sesuai format.','','FORMAT KELUARAN: balas HANYA satu objek JSON valid. Tanpa kata pembuka/penutup, tanpa tanda ```, tanpa komentar. Gunakan kutip ganda; escape tanda kutip dan baris baru. Ikuti skema ini persis:',SK);
  return L.join('\n')}
 function rkOpsi(){var v=$('rn').value;$('rn').innerHTML='<option value="">Pilih pertemuan</option>'+D.map(function(p){return'<option value="'+p.no+'">'+p.no+'. '+E(p.judul)+'</option>'}).join('');$('rn').value=v}
 function gTgl(){run('guruAtur',K,NO,'tanggal',$('dtg').value).then(function(x){D=x;gDaftar();T('Tanggal diperbarui.')}).catch(er)}
@@ -361,7 +402,7 @@ function gNilai(i){var s=RK.siswa[i],q=RK.soal,t=RK.tot,c=s.sc,h='<div class="ca
  s.teks.forEach(function(x){if(x.j=='aktivitas')h+='<p class="m">Aktivitas: '+E(q.a[x.i]||'')+'</p><p>'+nl(x.t)+'</p>'});
  h+='<p class="m"><b>Rubrik refleksi:</b> 5 = sangat mendalam dan aplikatif (jujur, berkesadaran, komitmen aksi atau akhlak yang konkret); 3-4 = cukup mendalam (komitmen masih umum); 1-2 = dangkal (1-2 kata, asal, atau mengulang soal).</p>';
  s.teks.forEach(function(x){if(x.j=='refleksi')h+='<p class="m">Refleksi '+(+x.i+1)+': '+E(q.r[x.i]||'')+'</p><p>'+nl(x.t)+'</p><label class="m">Skala 1-5<select id="nr'+x.i+'"><option value="">Belum dinilai</option>'+[1,2,3,4,5].map(function(v){return'<option'+(x.n!==''&&+x.n===v?' selected':'')+'>'+v+'</option>'}).join('')+'</select></label>'});
- $('rj').innerHTML=h+'<button class="btn" onclick="gSimpanNilai('+i+')">Simpan nilai</button></div>';$('rj').scrollIntoView()}
+ $('rj').innerHTML=h+'<button class="btn" onclick="gSimpanNilai('+i+')">Simpan nilai</button> <button class="btn o" onclick="gIzinUlang('+i+')">Izinkan siswa mengulang</button><p class="m">Izin mengulang memindahkan semua jawaban siswa ini di pertemuan ini ke sheet Arsip, lalu siswa bisa mengerjakan lagi dari awal.</p></div>';$('rj').scrollIntoView()}
 var GB=null;
 function gGambar(){
  if(!RK||!RK.siswa||!RK.siswa.length){T('Tampilkan rekap dulu.');return}
@@ -469,6 +510,7 @@ function sGambar(){
 }
 if(MODE=='guru'&&$('rk')){try{var q=localStorage.getItem('ambang');if(q!==null&&q!=='')$('ab').value=q}catch(x){}
  var ob=new MutationObserver(function(){akIsi();akRentang()});ob.observe($('rk'),{childList:true});ob.observe($('rn'),{childList:true})}
+function gIzinUlang(i){var s=RK.siswa[i];if(!confirm('Izinkan '+s.nama+' mengulang pertemuan '+RKN+'? Jawaban dan nilai sekarang dipindah ke sheet Arsip.'))return;run('guruIzinUlang',K,RKK,s.nama,RKN).then(function(r){T(r.n?'Diizinkan. '+s.nama+' bisa mengerjakan ulang.':'Siswa ini belum mengerjakan apa pun.');$('rj').innerHTML='';gRekap()}).catch(er)}
 function gSimpanNilai(i){var s=RK.siswa[i],it=[];s.kasus.forEach(function(x){it.push({j:'skenario',i:x.i,n:$('nk'+x.i).value})});s.teks.forEach(function(x){if(x.j=='refleksi')it.push({j:'refleksi',i:x.i,n:$('nr'+x.i).value})});run('guruNilai',K,RKK,s.nama,RKN,it).then(function(){T('Nilai tersimpan.');gRekap(i)}).catch(er)}
 function pOpsi(){var d=D.filter(function(x){return x.no==NO})[0];if(d){$('pr').value=P(d,NO);tumbuh($('pr'))}run('guruSimpanPengaturan',K,{kbc:$('o_kbc').checked?'ya':'tidak',dl:$('o_dl').checked?'ya':'tidak'}).catch(function(){})}
 function tumbuhAll(){[].forEach.call(document.querySelectorAll('textarea'),tumbuh)}
