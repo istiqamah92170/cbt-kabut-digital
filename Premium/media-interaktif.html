@@ -133,6 +133,13 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
   <div class="card"><h3>4. Rekap Siswa</h3>
     <div class="row"><select id="rk"></select><select id="rn"></select><button class="btn" onclick="gRekap()">Tampilkan</button></div>
     <div id="rh"></div></div>
+  <div class="card"><h3>5. Rekap Keseluruhan (siapa yang belum tuntas)</h3>
+    <p class="m">Pilih kelas dan rentang pertemuan. Hanya pertemuan yang sudah terbuka untuk siswa yang dihitung.</p>
+    <select id="ak"></select>
+    <div class="row"><label class="m" style="flex:1;min-width:140px">Dari pertemuan<select id="ad"></select></label><label class="m" style="flex:1;min-width:140px">Sampai pertemuan<select id="as"></select></label></div>
+    <div class="row"><label class="m" style="flex:1;min-width:140px">Tuntas bila nilai minimal (0 = cukup sudah mengerjakan kuis)<input type="number" id="ab" min="0" max="100" step="1" value="61" onchange="sUbah()"></label><label class="m" style="flex:1;min-width:140px">Tampilkan<select id="af" onchange="sRender()"><option value="semua">Semua siswa</option><option value="belum">Hanya yang belum tuntas</option></select></label></div>
+    <button class="btn" onclick="gSemua()">Tampilkan rekap keseluruhan</button>
+    <div id="ah"></div></div>
 </section>
 
 
@@ -140,7 +147,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -393,6 +400,75 @@ function gGambar(){
   $('rg').innerHTML='<p class="m">Pratinjau gambar. Jika tombol unduh tidak bekerja, tekan lama (HP) atau klik kanan (komputer) pada gambar lalu simpan.</p><img src="'+u+'" alt="Rekap nilai" style="max-width:100%;border:1px solid var(--b);border-radius:8px"><br><a class="btn" style="display:inline-block;text-decoration:none" download="'+fn+'" href="'+u+'">Unduh PNG</a>'+(sh?'<button class="btn o" onclick="gBagi()">Bagikan</button>':'');$('rg').scrollIntoView()})
 }
 function gBagi(){if(GB&&navigator.share)navigator.share({files:[GB],title:'Rekap Nilai'}).catch(function(){})}
+
+/* ---- Rekap keseluruhan: siapa yang belum tuntas, rentang pertemuan, dan gambar ---- */
+var RS=null,RSK='';
+function akIsi(){var a=$('ak');if(!a)return;var v=a.value;a.innerHTML=$('rk').innerHTML;if(v)a.value=v}
+function akRentang(){var hi=hariIni(),l=(typeof D!='undefined'&&D?D:[]).filter(function(x){return x.status=='terbit'&&x.override!='kunci'&&(x.override=='buka'||(x.tanggal&&x.tanggal<=hi))}),o=l.map(function(x){return'<option value="'+x.no+'">P'+E(x.no)+' - '+E(x.judul)+'</option>'}).join(''),d=$('ad'),s=$('as'),vd=d.value,vs=s.value;d.innerHTML=o;s.innerHTML=o;if(vd)d.value=vd;if(vs)s.value=vs;else if(l.length)s.value=l[l.length-1].no}
+function sUbah(){try{localStorage.setItem('ambang',$('ab').value)}catch(x){}sRender()}
+function gSemua(){var k=$('ak').value,a=+$('ad').value,b=+$('as').value;if(!k){T('Pilih kelas dulu.');return}if(!a||!b){T('Belum ada pertemuan yang terbuka untuk direkap.');return}if(a>b){var t=a;a=b;b=t}
+ RSK=k;run('guruRekapSemua',K,k,a,b).then(function(r){RS=r;RS.a=a;RS.b=b;sRender()}).catch(er)}
+function sHitung(){var amb=Math.max(0,Math.min(100,+$('ab').value||0)),P=RS.per.length;
+ return RS.siswa.map(function(s){var tun=0,bel=[],rem=[],sum=0,nn=0;
+  s.n.forEach(function(c,i){var no=RS.per[i].no;if(!c||!c.k){bel.push(no);return}sum+=c.t;nn++;if(c.t>=amb)tun++;else rem.push(no)});
+  var blm=bel.concat(rem).sort(function(a,b){return a-b});
+  return{nama:s.nama,n:s.n,tun:tun,bel:bel,rem:rem,blm:blm,rata:nn?Math.round(sum/nn*10)/10:null,ok:P>0&&tun==P}})}
+function sKet(h){if(h.ok)return'Tuntas semua';var t='Belum tuntas: '+h.blm.map(function(n){return'P'+n}).join(', ');return t}
+function sRender(){if(!RS)return;var o=$('ah');
+ if(!RS.per.length){o.innerHTML='<p class="m">Belum ada pertemuan yang terbuka pada rentang ini (terbit dan sudah tiba tanggalnya).</p>';return}
+ if(!RS.siswa.length){o.innerHTML='<p class="m">Belum ada siswa di kelas ini.</p>';return}
+ var amb=Math.max(0,Math.min(100,+$('ab').value||0)),H=sHitung(),f=$('af').value=='belum',rows=H.filter(function(x){return!f||!x.ok}),nOk=H.filter(function(x){return x.ok}).length;
+ var th='<tr><th>No</th><th>Nama</th>'+RS.per.map(function(p){return'<th title="'+E(p.judul)+'">P'+E(p.no)+'</th>'}).join('')+'<th>Tuntas</th><th>Rata-rata</th><th>Keterangan</th></tr>';
+ var tb=rows.map(function(x,i){return'<tr><td>'+(i+1)+'</td><td>'+E(x.nama)+'</td>'+x.n.map(function(c){if(!c||!c.k)return'<td class="no">Blm</td>';return'<td style="color:'+(c.t>=amb?'#047857':'#d97706')+'"><b>'+c.t+'</b>'+(c.m?'*':'')+'</td>'}).join('')+'<td>'+x.tun+'/'+RS.per.length+'</td><td>'+(x.rata===null?'-':x.rata)+'</td><td class="'+(x.ok?'ok':'no')+'">'+E(sKet(x))+'</td></tr>'}).join('');
+ o.innerHTML='<p><b>Kelas '+E(RSK)+'</b> | Pertemuan terbuka: '+RS.per.length+' (P'+E(RS.per[0].no)+' - P'+E(RS.per[RS.per.length-1].no)+') | Siswa: '+H.length+' | Tuntas semua: <b class="ok">'+nOk+'</b> | Belum tuntas: <b class="no">'+(H.length-nOk)+'</b></p>'
+  +(rows.length?'<div class="sc"><table>'+th+tb+'</table></div>':'<p class="ok"><b>Semua siswa sudah tuntas pada rentang ini.</b></p>')
+  +'<p class="m">Hijau = tuntas (nilai '+(amb?'minimal '+amb:'berapa pun, kuis sudah dikirim')+'); oranye = di bawah nilai tuntas; Blm = belum mengerjakan kuis; * = ada refleksi yang belum dinilai (nilai bisa naik).</p>'
+  +'<button class="btn" onclick="sGambar()">Buat gambar rekap (PNG)</button><button class="btn o" onclick="sSalin()">Salin daftar belum tuntas</button><div id="ag"></div>'}
+function sSalin(){if(!RS)return;var H=sHitung().filter(function(x){return!x.ok});if(!H.length){T('Semua siswa sudah tuntas.');return}
+ var t='Siswa yang belum tuntas - Kelas '+RSK+' (P'+RS.per[0].no+' - P'+RS.per[RS.per.length-1].no+'):\n'+H.map(function(x,i){var p=[];if(x.bel.length)p.push('belum mengerjakan '+x.bel.map(function(n){return'P'+n}).join(', '));if(x.rem.length)p.push('di bawah nilai tuntas '+x.rem.map(function(n){return'P'+n}).join(', '));return(i+1)+'. '+x.nama+': '+p.join('; ')}).join('\n');
+ salinTeks(t,function(ok){T(ok?'Daftar belum tuntas disalin ('+H.length+' siswa).':'Penyalinan gagal. Gunakan gambar rekap.')})}
+function sGambar(){
+ if(!RS||!RS.per.length||!RS.siswa.length){T('Tampilkan rekap dulu.');return}
+ var amb=Math.max(0,Math.min(100,+$('ab').value||0)),H=sHitung(),f=$('af').value=='belum',rows=H.filter(function(x){return!f||!x.ok}),nOk=H.filter(function(x){return x.ok}).length;
+ if(!rows.length){T('Semua siswa sudah tuntas, tidak ada daftar untuk digambar.');return}
+ var np=RS.per.length,P=40,SC=2,FN='Inter,Arial,sans-serif',cN=48,cNm=300,cP=58,cT=90,cR=90,cK=340,W=2*P+cN+cNm+np*cP+cT+cR+cK;W=Math.max(W,1000);
+ var bln=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],hr=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],now=new Date(),cetak=hr[now.getDay()]+', '+now.getDate()+' '+bln[now.getMonth()]+' '+now.getFullYear();
+ var cp=(getComputedStyle(document.documentElement).getPropertyValue('--c')||'').trim()||'#1E3A8A';
+ var cw=[cN,cNm].concat(RS.per.map(function(){return cP}),[cT,cR,cK]),xs=[P];cw.forEach(function(w,i){xs.push(xs[i]+w)});
+ var hd=['No','Nama'].concat(RS.per.map(function(p){return'P'+p.no}),['Tuntas','Rata-rata','Keterangan']);
+ var inf=[['Kelas',String(RSK)],['Rentang','Pertemuan '+RS.per[0].no+' - '+RS.per[np-1].no+' ('+np+' pertemuan terbuka)'],['Kriteria tuntas',amb?'Nilai minimal '+amb+' pada setiap pertemuan':'Sudah mengerjakan kuis setiap pertemuan'],['Dicetak',cetak]];
+ var c=document.createElement('canvas'),x=c.getContext('2d');
+ function wrap(t,w){var ws=String(t||'').split(/\s+/),L=[],cur='';ws.forEach(function(a){var tt=cur?cur+' '+a:a;if(x.measureText(tt).width>w&&cur){L.push(cur);cur=a}else cur=tt});if(cur)L.push(cur);return L}
+ function cut(s,w){x.font='400 16px '+FN;if(x.measureText(s).width<=w)return s;while(s.length>1&&x.measureText(s+'...').width>w)s=s.slice(0,-1);return s+'...'}
+ function lay(dr){var y=P;
+  function tx(t,fo,col,xx,w,lh){x.font=fo;var L=wrap(t,w);if(dr){x.fillStyle=col;L.forEach(function(s,i){x.fillText(s,xx,y+lh*i+lh-7)})}y+=lh*L.length}
+  tx(CFG.judul||'Media Pembelajaran','700 30px '+FN,cp,P,W-2*P,38);
+  tx('Rekap Keseluruhan - Siapa yang Belum Tuntas'+(CFG.mapel?' - '+CFG.mapel:''),'600 20px '+FN,'#334155',P,W-2*P,28);
+  y+=10;if(dr){x.fillStyle=cp;x.fillRect(P,y,W-2*P,3)}y+=16;
+  inf.forEach(function(r){var y0=y;if(dr){x.font='600 17px '+FN;x.fillStyle='#475569';x.fillText(r[0],P,y+18)}tx(r[1],'400 17px '+FN,'#0f172a',P+200,W-2*P-200,25);if(y<y0+25)y=y0+25});
+  y+=14;
+  if(dr){x.fillStyle=cp;x.fillRect(P,y,W-2*P,40);x.fillStyle='#fff';x.font='700 16px '+FN;hd.forEach(function(t,i){x.textAlign=(i==1||i==hd.length-1)?'left':'center';x.fillText(t,(i==1||i==hd.length-1)?xs[i]+12:xs[i]+cw[i]/2,y+26)});x.textAlign='left'}
+  y+=40;
+  rows.forEach(function(r,ri){
+   if(dr){if(ri%2==0){x.fillStyle='#f1f5f9';x.fillRect(P,y,W-2*P,34)}
+    x.font='400 16px '+FN;x.fillStyle='#1e293b';x.textAlign='center';x.fillText(String(ri+1),xs[0]+cN/2,y+23);
+    x.textAlign='left';x.fillText(cut(r.nama,cNm-24),xs[1]+12,y+23);
+    r.n.forEach(function(cc,i){var ok=cc&&cc.k,tt=ok?String(cc.t)+(cc.m?'*':''):'Blm';x.fillStyle=!ok?'#dc2626':(cc.t>=amb?'#059669':'#d97706');x.font=(ok?'700 ':'400 ')+'16px '+FN;x.textAlign='center';x.fillText(tt,xs[2+i]+cP/2,y+23)});
+    var j=2+np;x.fillStyle='#1e293b';x.font='400 16px '+FN;x.textAlign='center';x.fillText(r.tun+'/'+np,xs[j]+cT/2,y+23);x.fillText(r.rata===null?'-':String(r.rata),xs[j+1]+cR/2,y+23);
+    x.textAlign='left';x.fillStyle=r.ok?'#059669':'#dc2626';x.fillText(cut(sKet(r),cK-24),xs[j+2]+12,y+23);
+    x.strokeStyle='#e2e8f0';x.beginPath();x.moveTo(P,y+34);x.lineTo(W-P,y+34);x.stroke()}
+   y+=34});
+  y+=16;
+  tx('Siswa: '+H.length+'   |   Tuntas semua: '+nOk+'   |   Belum tuntas: '+(H.length-nOk)+(f?'   |   (hanya yang belum tuntas ditampilkan)':''),'600 16px '+FN,'#0f172a',P,W-2*P,24);
+  tx('Angka hijau = tuntas; oranye = di bawah nilai tuntas; Blm = belum mengerjakan kuis; * = ada refleksi yang belum dinilai guru (nilai bisa naik). Nilai per pertemuan: Kuis PG 60 + Studi kasus 25 + Refleksi 15 = 100.','400 14px '+FN,'#475569',P,W-2*P,21);
+  return y+P-10}
+ c.width=W;var Hh=lay(false);c.width=W*SC;c.height=Hh*SC;x.scale(SC,SC);x.fillStyle='#fff';x.fillRect(0,0,W,Hh);lay(true);
+ var u=c.toDataURL('image/png'),fn='rekap-keseluruhan-'+String(RSK).replace(/[^A-Za-z0-9]+/g,'')+'-P'+RS.per[0].no+'-P'+RS.per[np-1].no+'.png';
+ c.toBlob(function(b){var fl=b?new File([b],fn,{type:'image/png'}):null,sh=!!(fl&&navigator.canShare&&navigator.canShare({files:[fl]}));GB=fl;
+  $('ag').innerHTML='<p class="m">Pratinjau gambar. Jika tombol unduh tidak bekerja, tekan lama (HP) atau klik kanan (komputer) pada gambar lalu simpan.</p><img src="'+u+'" alt="Rekap keseluruhan" style="max-width:100%;border:1px solid var(--b);border-radius:8px"><br><a class="btn" style="display:inline-block;text-decoration:none" download="'+fn+'" href="'+u+'">Unduh PNG</a>'+(sh?'<button class="btn o" onclick="gBagi()">Bagikan</button>':'');$('ag').scrollIntoView()})
+}
+if(MODE=='guru'&&$('rk')){try{var q=localStorage.getItem('ambang');if(q!==null&&q!=='')$('ab').value=q}catch(x){}
+ var ob=new MutationObserver(function(){akIsi();akRentang()});ob.observe($('rk'),{childList:true});ob.observe($('rn'),{childList:true})}
 function gSimpanNilai(i){var s=RK.siswa[i],it=[];s.kasus.forEach(function(x){it.push({j:'skenario',i:x.i,n:$('nk'+x.i).value})});s.teks.forEach(function(x){if(x.j=='refleksi')it.push({j:'refleksi',i:x.i,n:$('nr'+x.i).value})});run('guruNilai',K,RKK,s.nama,RKN,it).then(function(){T('Nilai tersimpan.');gRekap(i)}).catch(er)}
 function pOpsi(){var d=D.filter(function(x){return x.no==NO})[0];if(d){$('pr').value=P(d,NO);tumbuh($('pr'))}run('guruSimpanPengaturan',K,{kbc:$('o_kbc').checked?'ya':'tidak',dl:$('o_dl').checked?'ya':'tidak'}).catch(function(){})}
 function tumbuhAll(){[].forEach.call(document.querySelectorAll('textarea'),tumbuh)}
