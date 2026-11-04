@@ -147,7 +147,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -279,7 +279,7 @@ var AW=0,AWOFF=0,LG={};
 (function(){var c=window.confirm,a=window.alert;
  window.confirm=function(m){AWOFF=1;try{return c.call(window,m)}finally{AWOFF=0;AW=0;document.body.classList.remove('blr')}};
  window.alert=function(m){AWOFF=1;try{return a.call(window,m)}finally{AWOFF=0;AW=0;document.body.classList.remove('blr')}}})();
-function awasAktif(){return !!S.tk&&!!S.no&&!S.kirim&&!$('vi').classList.contains('hide')&&document.getElementsByName('k0').length>0}
+function awasAktif(){return !!S.tk&&!!S.no&&!$('vi').classList.contains('hide')&&document.getElementsByName('k0').length>0&&(!S.kirim||[].some.call(document.querySelectorAll('[id^="ks"]'),function(b){return b.style.display!='none'}))}
 function awasKeluar(){if(AW||AWOFF||!awasAktif())return;AW=Date.now();document.body.classList.add('blr')}
 function awasKembali(){if(!AW)return;var d=Math.round((Date.now()-AW)/1000);AW=0;document.body.classList.remove('blr');if(d<1||!awasAktif())return;
  LG[S.no]=(LG[S.no]||0)+1;
