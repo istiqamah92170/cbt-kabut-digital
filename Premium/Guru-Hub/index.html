@@ -1776,6 +1776,8 @@ async function ghSinkronSimpanSekarang() {
   if (!ghProfilAktif || !ghProfilAktif.kunciGuru || !ghpDriveAktif()) return false;
   try {
     if (ghpTahan['hub|ghData']) return false;
+    // Daftar kosong + belum pernah sinkron dengan Drive ini = jangan tulis apa pun (bisa menimpa daftar asli di Drive/perangkat lain dengan yang kosong)
+    if (!(ghEntri && ghEntri.length) && !(ghSekolah && ghSekolah.length) && ghpDasarGet('hub', 'ghData') === undefined) { ghHubPending = false; return false; }
     let hs = await ghpDriveSimpan({ app: 'hub', kunci: 'ghData', versi: ghHubVerLokal() || Date.now(), nilai: JSON.stringify({ ghEntri: ghEntri, ghSekolah: ghSekolah }) });
     if (hs === 'konflik') { ghpSetLencana(); return false; } // tetap 'belum tersimpan' sampai diselaraskan saat Guru Hub dimuat ulang
     ghHubPending = false; ghpMacetIzin = false; ghpSetLencana(); return true;
@@ -1814,6 +1816,13 @@ async function ghSinkronMuat(opsi) { // opsi.paksaDrive: pulihkan dari berkas/sa
       if (sama) {
         try { localStorage.setItem(GH_KEY_HUBVER, String(s.versi)); } catch (e) {}
         ghpDasarSet('hub', 'ghData', s.versi); ghHubPending = false;
+      } else if (m && !(opsi && opsi.paksaDrive) && adaLokal && (dasar === undefined || lokalBerubah) && !(o && ((o.ghEntri && o.ghEntri.length) || (o.ghSekolah && o.ghSekolah.length)))) {
+        // Drive berisi daftar KOSONG sedangkan perangkat ini punya data: data perangkat ini dipakai & dikirim ke Drive (bukan sebaliknya)
+        let v = Math.max(Date.now(), lv + 1);
+        try { localStorage.setItem(GH_KEY_HUBVER, String(v)); } catch (e) {}
+        await ghpDriveSimpan({ paksa: true, app: 'hub', kunci: 'ghData', versi: v, nilai: nilaiLokal });
+        ghpDasarSet('hub', 'ghData', v); ghHubPending = false;
+        ghToast('🔄 Daftar Link Ujian di Drive kosong, jadi data di perangkat ini dikirim ke Drive.');
       } else if (lokalBerubah && !drvBerubah) {
         await ghSinkronSimpanSekarang();
       } else if (o && (Array.isArray(o.ghEntri) || Array.isArray(o.ghSekolah))) {
@@ -5728,15 +5737,24 @@ async function ghpMigrasiServer() {
     // data Guru Hub (Link Ujian & Sekolah) lama di server
     let hg = await ghFetchLisensi(GH_URL_LISENSI + '?action=muatDataGuru&email=' + encodeURIComponent(k.email) + '&kunciGuru=' + encodeURIComponent(k.kunciGuru));
     if (hg.status === 'ok' && hg.data && (Array.isArray(hg.data.ghEntri) || Array.isArray(hg.data.ghSekolah))) {
-      let d = await ghpDriveDaftar('hub');
-      if (!d.idx.ghData) {
-        if ((!ghEntri || !ghEntri.length) && (!ghSekolah || !ghSekolah.length)) {
-          if (Array.isArray(hg.data.ghEntri)) { ghEntri = hg.data.ghEntri; ghSimpanEntriLokalSaja(); }
-          if (Array.isArray(hg.data.ghSekolah)) { ghSekolah = hg.data.ghSekolah; ghSimpanSekolahLokalSaja(); }
-          ghRenderList(); ghRenderSekolah(); ghUiUpdateDashboardStats();
-        }
-        try { localStorage.setItem(GH_KEY_HUBVER, String(Math.max(Date.now(), ghHubVerLokal() + 1))); } catch (e) {}
-        if (!(await ghSinkronSimpanSekarang())) throw new Error('gagal menyalin data Guru Hub ke Drive');
+      // Gabungkan (lokal + Drive + server) tanpa menimpa; data server baru dihapus SETELAH tersalin ke Drive.
+      let d = await ghpDriveDaftar('hub'), dE = [], dS = [], adaF = !!d.idx.ghData;
+      if (adaF) {
+        let m = await ghpDriveMuat('hub', { kunci: ['ghData'] });
+        let o = (m.ghData && m.ghData.nilai) ? JSON.parse(m.ghData.nilai) : null;
+        if (o) { dE = Array.isArray(o.ghEntri) ? o.ghEntri : []; dS = Array.isArray(o.ghSekolah) ? o.ghSekolah : []; }
+      }
+      let gab = function (a, b, c) { let r = []; [a, b, c].forEach(function (l) { (l || []).forEach(function (x) { let j = JSON.stringify(x); if (!r.some(function (y) { return JSON.stringify(y) === j; })) r.push(x); }); }); return r; };
+      let mE = gab(ghEntri, dE, hg.data.ghEntri), mS = gab(ghSekolah, dS, hg.data.ghSekolah);
+      if (JSON.stringify([mE, mS]) !== JSON.stringify([ghEntri || [], ghSekolah || []])) {
+        ghEntri = mE; ghSimpanEntriLokalSaja(); ghSekolah = mS; ghSimpanSekolahLokalSaja();
+        ghRenderList(); ghRenderSekolah(); ghUiUpdateDashboardStats();
+      }
+      if (!adaF || JSON.stringify([mE, mS]) !== JSON.stringify([dE, dS])) {
+        let v = Math.max(Date.now(), ghHubVerLokal() + 1);
+        try { localStorage.setItem(GH_KEY_HUBVER, String(v)); } catch (e) {}
+        await ghpDriveSimpan({ paksa: true, app: 'hub', kunci: 'ghData', versi: v, nilai: JSON.stringify({ ghEntri: mE, ghSekolah: mS }) });
+        ghpDasarSet('hub', 'ghData', v); ghHubPending = false; ghpSetLencana();
         dipindah++;
       }
       await ghFetchLisensi(GH_URL_LISENSI, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'simpanDataGuru', email: k.email, kunciGuru: k.kunciGuru, data: {} }) });
