@@ -141,6 +141,13 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
     <div class="row"><label class="m" style="flex:1;min-width:140px">Tuntas bila nilai minimal (0 = cukup sudah mengerjakan kuis)<input type="number" id="ab" min="0" max="100" step="1" value="61" onchange="sUbah()"></label><label class="m" style="flex:1;min-width:140px">Tampilkan<select id="af" onchange="sRender()"><option value="semua">Semua siswa</option><option value="belum">Hanya yang belum tuntas</option></select></label></div>
     <button class="btn" onclick="gSemua()">Tampilkan rekap keseluruhan</button>
     <div id="ah"></div></div>
+  <div class="card"><h3>6. Ekspor Kuis dan Studi Kasus ke Bank Soal CBT</h3>
+    <p class="m">Kuis dan studi kasus dari semua pertemuan dikumpulkan di satu tempat (tab Soal pada Sheet kelas ini) dengan format spreadsheet CBT. Posisi kunci jawaban diacak, dan bisa ditambah bertahap: soal yang sudah diekspor tidak diganda.</p>
+    <div class="row"><label class="m" style="flex:1;min-width:140px">Dari pertemuan<select id="xd"></select></label><label class="m" style="flex:1;min-width:140px">Sampai pertemuan<select id="xs"></select></label></div>
+    <label class="m">Poin tiap soal<input type="number" id="xp" min="1" max="100" step="1" value="2"></label>
+    <label class="m"><input type="checkbox" id="xu"> Ekspor ulang dari awal (mengganti seluruh isi tab Soal)</label>
+    <button class="btn" onclick="xEkspor()">Tambahkan ke Bank Soal CBT</button> <button class="btn o" onclick="xUnduh()">Unduh .xlsx (format CBT)</button>
+    <div id="xh"></div></div>
 </section>
 
 
@@ -148,7 +155,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -402,7 +409,32 @@ function pvTampil(){
 function gSimpanDaftar(){run('guruSimpanDaftar',K,PL).then(function(d){D=d;gDaftar();T('Daftar tersimpan.')}).catch(er)}
 function hariIni(){try{return new Date().toLocaleDateString('sv-SE')}catch(e){return new Date().toISOString().slice(0,10)}}
 function stat(p){var t=hariIni();if(p.override=='kunci')return'Dikunci';if(p.status=='terbit')return(p.override=='buka'||(p.tanggal&&p.tanggal<=t))?'Terbuka':'Terjadwal';return p.status=='draft'?'Draft':'Kosong'}
-function gDaftar(){rkOpsi();
+function xIsi(){var o=D.map(function(p){return'<option value="'+p.no+'">P'+p.no+' - '+E(String(p.judul||'').slice(0,40))+'</option>'}).join(''),a=$('xd').value,b=$('xs').value;$('xd').innerHTML=o;$('xs').innerHTML=o;if(D.length){$('xd').value=a||D[0].no;$('xs').value=b||D[D.length-1].no}}
+function xEkspor(){var a=+$('xd').value,b=+$('xs').value,u=$('xu').checked;if(!a||!b){T('Belum ada pertemuan.');return}if(a>b){var t=a;a=b;b=t}
+ if(u&&!confirm('Ekspor ulang akan MENGGANTI seluruh isi tab Soal (termasuk perubahan manual di Sheet). Lanjutkan?'))return;
+ run('guruEksporKuis',K,a,b,+$('xp').value||2,u).then(function(r){T('');$('xh').innerHTML='<p class="ok"><b>'+r.tambah+' soal ditambahkan</b>'+(r.lewat?', '+r.lewat+' soal sudah ada sebelumnya (dilewati)':'')+'. Total di bank soal: <b>'+r.total+'</b>.</p>'+(r.url?'<p><a href="'+E(r.url)+'" target="_blank" rel="noopener">Buka tab Soal di Google Sheet</a></p>':'')}).catch(er)}
+function crc32(u){var t=crc32.t;if(!t){t=crc32.t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}}var c=0xFFFFFFFF;for(var i=0;i<u.length;i++)c=t[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function zipBuat(files){var en=new TextEncoder(),parts=[],cd=[],off=0;
+ files.forEach(function(f){var nm=en.encode(f.n),crc=crc32(f.d),h=new DataView(new ArrayBuffer(30));
+  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,f.d.length,true);h.setUint32(22,f.d.length,true);h.setUint16(26,nm.length,true);
+  parts.push(new Uint8Array(h.buffer),nm,f.d);
+  var c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,f.d.length,true);c.setUint32(24,f.d.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+  cd.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+f.d.length});
+ var cs=0;cd.forEach(function(x){cs+=x.length});var e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+ return new Blob(parts.concat(cd,[new Uint8Array(e.buffer)]),{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+function xlsxBuat(aoa){var en=new TextEncoder(),X=function(t){return String(t).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
+ var rows=aoa.map(function(r,i){return'<row r="'+(i+1)+'">'+r.map(function(c,j){if(c===null||c===undefined||c==='')return'';var ref=String.fromCharCode(65+j)+(i+1);return typeof c=='number'?'<c r="'+ref+'"><v>'+c+'</v></c>':'<c r="'+ref+'" t="inlineStr"><is><t xml:space="preserve">'+X(c)+'</t></is></c>'}).join('')+'</row>'}).join('');
+ var H='<'+'?xml version="1.0" encoding="UTF-8" standalone="yes"?'+'>',N='http://schemas.openxmlformats.org/',R=N+'officeDocument/2006/relationships';
+ var F=[['[Content_Types].xml',H+'<Types xmlns="'+N+'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],
+  ['_rels/.rels',H+'<Relationships xmlns="'+N+'package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+  ['xl/workbook.xml',H+'<workbook xmlns="'+N+'spreadsheetml/2006/main" xmlns:r="'+R+'"><sheets><sheet name="Soal" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+  ['xl/_rels/workbook.xml.rels',H+'<Relationships xmlns="'+N+'package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'],
+  ['xl/worksheets/sheet1.xml',H+'<worksheet xmlns="'+N+'spreadsheetml/2006/main"><sheetData>'+rows+'</sheetData></worksheet>']];
+ return zipBuat(F.map(function(f){return{n:f[0],d:en.encode(f[1])}}))}
+function xUnduh(){T('Menyiapkan file...');run('guruAmbilSoalCbt',K).then(function(r){if(!r.rows.length){T('Belum ada soal. Tekan Tambahkan ke Bank Soal CBT dulu.');return}
+  var H=['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar','Opsi_E'],bl=xlsxBuat([H].concat(r.rows)),a=document.createElement('a');
+  a.href=URL.createObjectURL(bl);a.download='Soal_CBT_'+String((CFG&&CFG.judul)||'media').replace(/[^A-Za-z0-9]+/g,'_').slice(0,30)+'.xlsx';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000);T('File diunduh: '+r.rows.length+' soal.')}).catch(er)}
+function gDaftar(){rkOpsi();xIsi();
  var c={Terbuka:0,Terjadwal:0,Dikunci:0};D.forEach(function(p){var k=stat(p);if(c[k]!==undefined)c[k]++});
  $('gd').innerHTML=(D.length?'<p class="m"><b style="color:#16a34a">Terbuka: '+c.Terbuka+'</b> | <b style="color:#d97706">Terjadwal (belum terbuka): '+c.Terjadwal+'</b> | <b style="color:#dc2626">Dikunci: '+c.Dikunci+'</b> | Belum terbit: '+(D.length-c.Terbuka-c.Terjadwal-c.Dikunci)+'</p>':'')+D.map(function(p){var k=stat(p);return'<div class="row item pt s-'+k+'" onclick="gPilih('+p.no+')"><span>'+p.no+'. '+E(p.judul)+'</span><span><span class="chip s-'+k+'">'+k+'</span> <span class="chip">'+(p.tanggal?(k=='Terbuka'?'Terbit ':'Dibuka ')+p.tanggal:'tanpa tanggal')+'</span></span></div>'}).join('<hr style="border:0;border-top:1px solid var(--b)">')||'<p class="m">Belum ada. Unggah ATP di langkah 2.</p>'
 }
