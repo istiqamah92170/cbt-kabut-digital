@@ -126,7 +126,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='siswa',$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT=(new URLSearchParams(location.search)).get('t')||'',TK='';
+var API='GANTI_URL_API_MEDIA',MT=(new URLSearchParams(location.search)).get('t')||'',TK='';
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -455,10 +455,10 @@ function sUbah(){try{localStorage.setItem('ambang',$('ab').value)}catch(x){}sRen
 function gSemua(){var k=$('ak').value,a=+$('ad').value,b=+$('as').value;if(!k){T('Pilih kelas dulu.');return}if(!a||!b){T('Belum ada pertemuan yang terbuka untuk direkap.');return}if(a>b){var t=a;a=b;b=t}
  RSK=k;run('guruRekapSemua',K,k,a,b).then(function(r){RS=r;RS.a=a;RS.b=b;sRender()}).catch(er)}
 function sHitung(){var amb=Math.max(0,Math.min(100,+$('ab').value||0)),P=RS.per.length;
- return RS.siswa.map(function(s){var tun=0,bel=[],rem=[],sum=0,nn=0;
-  s.n.forEach(function(c,i){var no=RS.per[i].no;if(!c||!c.k){bel.push(no);return}sum+=c.t;nn++;if(c.t>=amb)tun++;else rem.push(no)});
+ return RS.siswa.map(function(s){var tun=0,bel=[],rem=[],rem2=[],sum=0,nn=0;
+  s.n.forEach(function(c,i){var no=RS.per[i].no;if(!c||!c.k){bel.push(no);return}sum+=c.t;nn++;if(c.t>=amb)tun++;else{rem.push(no);if(!c.m)rem2.push(no)}});
   var blm=bel.concat(rem).sort(function(a,b){return a-b});
-  return{nama:s.nama,n:s.n,tun:tun,bel:bel,rem:rem,blm:blm,rata:nn?Math.round(sum/nn*10)/10:null,ok:P>0&&tun==P}})}
+  return{nama:s.nama,n:s.n,tun:tun,bel:bel,rem:rem,rem2:rem2,blm:blm,rata:nn?Math.round(sum/nn*10)/10:null,ok:P>0&&tun==P}})}
 function sKet(h){if(h.ok)return'Tuntas semua';var t='Belum tuntas: '+h.blm.map(function(n){return'P'+n}).join(', ');return t}
 function sRender(){if(!RS)return;var o=$('ah');
  if(!RS.per.length){o.innerHTML='<p class="m">Belum ada pertemuan yang terbuka pada rentang ini (terbit dan sudah tiba tanggalnya).</p>';return}
@@ -469,7 +469,14 @@ function sRender(){if(!RS)return;var o=$('ah');
  o.innerHTML='<p><b>Kelas '+E(RSK)+'</b> | Pertemuan terbuka: '+RS.per.length+' (P'+E(RS.per[0].no)+' - P'+E(RS.per[RS.per.length-1].no)+') | Siswa: '+H.length+' | Tuntas semua: <b class="ok">'+nOk+'</b> | Belum tuntas: <b class="no">'+(H.length-nOk)+'</b></p>'
   +(rows.length?'<div class="sc"><table>'+th+tb+'</table></div>':'<p class="ok"><b>Semua siswa sudah tuntas pada rentang ini.</b></p>')
   +'<p class="m">Hijau = tuntas (nilai '+(amb?'minimal '+amb:'berapa pun, kuis sudah dikirim')+'); oranye = di bawah nilai tuntas; Blm = belum mengerjakan kuis; * = ada refleksi yang belum dinilai (nilai bisa naik).</p>'
-  +'<button class="btn" onclick="sGambar()">Buat gambar rekap (PNG)</button><button class="btn o" onclick="sSalin()">Salin daftar belum tuntas</button><div id="ag"></div>'}
+  +'<button class="btn" onclick="sGambar()">Buat gambar rekap (PNG)</button><button class="btn o" onclick="sSalin()">Salin daftar belum tuntas</button>'+sMassal(H,amb)+'<div id="ag"></div>'}
+function sMassal(H,amb){var ps=0,sw=0,tn=0;H.forEach(function(x){if(x.rem2.length){ps+=x.rem2.length;sw++}tn+=x.rem.length-x.rem2.length});
+ if(!amb)return'<p class="m">Isi nilai tuntas minimal (di atas 0) untuk memakai izin mengulang massal.</p>';
+ if(!ps)return'<p class="m">Tidak ada siswa yang sudah mengerjakan dan nilainya di bawah '+amb+'.'+(tn?' ('+tn+' pertemuan menunggu penilaian refleksi dan dilewati.)':'')+'</p>';
+ return'<div class="card" style="margin-top:10px"><b>Izin mengulang massal</b><p class="m">Siswa yang sudah mengerjakan dengan nilai di bawah '+amb+' pada P'+E(RS.per[0].no)+' - P'+E(RS.per[RS.per.length-1].no)+': <b>'+sw+' siswa ('+ps+' pertemuan)</b>.'+(tn?' '+tn+' pertemuan yang refleksinya belum dinilai dilewati.':'')+' Siswa yang belum mengerjakan tidak perlu izin.</p><button class="btn o" onclick="sIzinMassal()">Izinkan '+sw+' siswa mengulang</button></div>'}
+function sIzinMassal(){if(!RS)return;var amb=Math.max(0,Math.min(100,+$('ab').value||0)),H=sHitung(),ps=0,sw=0;H.forEach(function(x){if(x.rem2.length){ps+=x.rem2.length;sw++}});if(!ps)return;
+ if(!confirm('Izinkan '+sw+' siswa ('+ps+' pertemuan) mengulang? Jawaban, nilai, dan catatan pelanggaran lama mereka dipindahkan ke sheet Arsip. Siswa langsung bisa mengerjakan ulang dari awal.'))return;
+ run('guruIzinUlangBanyak',K,RSK,RS.a,RS.b,amb).then(function(r){T(r.pasang?'Selesai: '+r.siswa+' siswa ('+r.pasang+' pertemuan) boleh mengulang.':'Tidak ada yang perlu diizinkan.');gSemua()}).catch(er)}
 function sSalin(){if(!RS)return;var H=sHitung().filter(function(x){return!x.ok});if(!H.length){T('Semua siswa sudah tuntas.');return}
  var t='Siswa yang belum tuntas - Kelas '+RSK+' (P'+RS.per[0].no+' - P'+RS.per[RS.per.length-1].no+'):\n'+H.map(function(x,i){var p=[];if(x.bel.length)p.push('belum mengerjakan '+x.bel.map(function(n){return'P'+n}).join(', '));if(x.rem.length)p.push('di bawah nilai tuntas '+x.rem.map(function(n){return'P'+n}).join(', '));return(i+1)+'. '+x.nama+': '+p.join('; ')}).join('\n');
  salinTeks(t,function(ok){T(ok?'Daftar belum tuntas disalin ('+H.length+' siswa).':'Penyalinan gagal. Gunakan gambar rekap.')})}
