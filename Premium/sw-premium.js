@@ -6,12 +6,13 @@
 // Strategi: Stale-While-Revalidate. TIDAK menyimpan Apps Script, login Google, atau API Gemini.
 // Naikkan VERSI tiap kali mengunggah versi baru aplikasi premium.
 
-const VERSI = 'v19';
+const VERSI = 'v20';
 const CACHE_NAME = 'alat-premium-cbt-kabut-digital-' + VERSI;
 const STATIC_ASSETS = [
   './topik-bloom-classifier_pro.html',
   './guruai-builder.html',
   './media-interaktif.html',
+  './media-interaktif-gratis.html',
   './ghp-bridge.js',
   'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
 ];
