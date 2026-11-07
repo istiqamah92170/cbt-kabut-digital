@@ -5007,7 +5007,7 @@ try {
 const GH_APP_PREMIUM = {
   kea:    { nama: 'Smart Bloom & Topic Analyzer', url: 'https://cbtkabutdigital.com/Premium/topik-bloom-classifier_pro.html', ikon: 'ghp-ico-kea' },
   guruai: { nama: 'GuruAI Builder',               url: 'https://cbtkabutdigital.com/Premium/guruai-builder.html',            ikon: 'ghp-ico-guruai' },
-  media:  { nama: 'Media Interaktif',             url: 'https://cbtkabutdigital.com/Premium/media-interaktif.html',          ikon: 'ghp-ico-media', gratis: true }
+  media:  { nama: 'Media Interaktif',             url: 'https://cbtkabutdigital.com/Premium/media-interaktif.html', urlGratis: 'https://cbtkabutdigital.com/Premium/media-interaktif-gratis.html',          ikon: 'ghp-ico-media', gratis: true }
 };
 const GHP_POTONG = 40000;
 let ghpPanelAppId = null;
@@ -5354,7 +5354,7 @@ async function ghpBukaApp(appId) {
     ghpTiketFrame.panel = { app: appId, tiket: tiket };
     load.textContent = '⏳ Membuka ' + app.nama + '…';
     ifr.onload = function () { /* tampil setelah handshake selesai, lihat timer di bawah */ };
-    ifr.src = app.url + '#tiket=' + encodeURIComponent(tiket);
+    ifr.src = ((ghModeBelumAktif && app.urlGratis) ? app.urlGratis : app.url) + '#tiket=' + encodeURIComponent(tiket);
     // tampilkan setelah aplikasi menyatakan terbuka (INIT terkirim) -- cukup jeda singkat + batas waktu
     let mulai = Date.now();
     (function tunggu() {
