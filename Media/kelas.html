@@ -52,7 +52,7 @@ header::before{content:"";position:absolute;inset:0 -100vw;background:var(--sf);
 .ib{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
 .gp .ib{margin:0;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--ct)}.ic1{background:#d1fae5;color:#059669}.ic2{background:#dbeafe;color:var(--c2t)}.ic3{background:#fef3c7;color:#d97706}
 .pl{margin:0}.pl:hover,.item:hover{box-shadow:0 4px 12px rgba(15,23,42,.08)}.st{padding:14px;border-radius:12px;background:var(--bg);border:1px solid var(--b)}.st b{display:block;margin-bottom:4px}
-.fade{animation:fi .3s ease-in-out}@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fade{animation:fi .3s ease-in-out}body.pv .fade{animation:none}@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 body{font-family:Inter,system-ui,"Segoe UI",sans-serif;background:var(--bg)}
 :root{--s:color-mix(in srgb,var(--c) 55%,#000);--a:#F59E0B}
@@ -142,7 +142,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='siswa',EDISI='premium',FIT={},$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT=(new URLSearchParams(location.search)).get('m')||(new URLSearchParams(location.search)).get('t')||'',TK='';
+var API='GANTI_URL_API_MEDIA',MT=(new URLSearchParams(location.search)).get('m')||(new URLSearchParams(location.search)).get('t')||'',TK='';
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -165,6 +165,21 @@ function bagiSalin(){var k=window.KODE_BAGI||'';if(!k){T('Hidupkan kode berbagi 
 function bagiLapor(r){if(r.daftar){D=r.daftar;try{gDaftar()}catch(x){}}CFG.sumber_materi=CFG.sumber_materi||'1';T('Selesai: '+r.baru+' pertemuan baru, '+r.diperbarui+' diperbarui, '+r.dilewati+' dilewati.');$('bg_h').textContent='Sinkron terakhir: '+r.baru+' baru, '+r.diperbarui+' diperbarui.'}
 function bagiAmbil(sink){var k=($('bg_i').value||'').trim();if(sink&&!k&&!CFG.sumber_materi){T('Ambil materi dulu dengan kode berbagi.');return}var go=function(){run('guruImporMateri',K,k,!!sink).then(function(r){CFG.sumber_materi=k||CFG.sumber_materi;$('bg_i').value='';bagiLapor(r)}).catch(er)};if(sink)ask('Perbarui isi materi pertemuan yang nomornya sama dengan versi pemilik? Jadwal dan status Anda tidak berubah.',go);else go()}
 function bagiLepas(){run('guruLepasMateri',K).then(function(){CFG.sumber_materi='';bagiIsi();T('Tersambung dilepas. Pertemuan yang sudah diambil tetap ada.')}).catch(er)}
+
+var PV={mode:'hp',ok:false,fs:false,t:0};
+function pvBuka(){var A=typeof ACC!='undefined'&&ACC?ACC:null;if(!A||!A.urlSiswa){T('Alamat halaman siswa belum diisi di Guru Hub.');return}var f=$('pv_f');$('pv_box').classList.remove('hide');
+ if(!f.dataset.s){f.dataset.s=1;PV.ok=false;$('pv_h').textContent='Memuat pratinjau...';window.addEventListener('message',function(e){if(e.source===f.contentWindow&&e.data&&e.data.tipe==='pratinjau-siap'){PV.ok=true;$('pv_h').textContent='';pvKirim()}});
+  document.addEventListener('input',function(e){if(e.target&&/^p_/.test(e.target.id||''))pvTunda()});window.addEventListener('resize',pvUkur);
+  f.src=A.urlSiswa+(A.urlSiswa.indexOf('?')<0?'?':'&')+'pratinjau=1';setTimeout(function(){if(!PV.ok)$('pv_h').textContent='Pratinjau tidak bisa dimuat. Pastikan kelas.html versi terbaru sudah diunggah dan alamatnya benar.'},10000)}
+ pvUkur();pvKirim()}
+function pvMode(m){PV.mode=m;$('pv_hp').classList.toggle('o',m!='hp');$('pv_dk').classList.toggle('o',m!='dk');pvUkur()}
+function pvUkur(){var f=$('pv_f'),w=$('pv_w'),hp=PV.mode=='hp',W=hp?390:1200,H=hp?780:760;
+ if(PV.fs){H=hp?Math.max(400,innerHeight-60):Math.max(400,innerHeight-60);f.style.cssText='border:0;background:#fff;display:block;width:'+W+'px;height:'+H+'px;margin:0 auto';return}
+ var s=Math.min(1,(w.clientWidth||W)/W);f.style.cssText='border:0;background:#fff;display:block;transform-origin:0 0;width:'+W+'px;height:'+H+'px;transform:scale('+s+')';w.style.height=Math.round(H*s)+'px'}
+function pvFull(on){PV.fs=!!on;var w=$('pv_w');w.style.cssText=on?'position:fixed;inset:0;z-index:90;background:#1f2937;overflow:auto;padding-top:48px':'overflow:hidden;border:1px solid var(--b);border-radius:12px;background:#e5e7eb;margin-top:6px';$('pv_x').classList.toggle('hide',!on);pvUkur()}
+function pvTunda(){clearTimeout(PV.t);PV.t=setTimeout(pvKirim,250)}
+function pvInfo(){var c=tCur(),o={};PK.forEach(function(k){o[k]=$('p_'+k).value});o.kelas=['Kelas'];o.pin=false;o.tema={id:TID,ornamen:c.ornamen,gaya:c.gaya,huruf:c.huruf,sudut:c.sudut,ikonBawaan:c.ikon_bawaan!=='tidak',ikon:c.ornamen_ikon,publik:false,deskripsi:''};return o}
+function pvKirim(){if(!PV.ok)return;var d=(D||[]).map(function(p){return{no:p.no,judul:p.judul,bab:p.bab,buka:p.status=='terbit',selesai:false}});try{$('pv_f').contentWindow.postMessage({tipe:'pratinjau',info:pvInfo(),nama:'Nama Siswa',daftar:d},'*')}catch(x){}}
 function tema(d){var s=document.documentElement.style;if(d&&d.warna)s.setProperty('--c',d.warna);s.setProperty('--c2',(d&&d.warna2)||'#1E3A8A');s.setProperty('--c3',(d&&d.warna3)||'#F59E0B');
  var q=d&&d.tema&&typeof d.tema=='object'?{ornamen:d.tema.ornamen,gaya:d.tema.gaya,huruf:d.tema.huruf,sudut:d.tema.sudut,ikon_bawaan:d.tema.ikonBawaan===false?'tidak':'ya',ornamen_ikon:d.tema.ikon}:(d&&typeof d.tema!='object'?d:{}),b=document.body;if(!b)return;
  ['ornamen','gaya','huruf','sudut'].forEach(function(k){var a={ornamen:'orn',gaya:'gaya',huruf:'huruf',sudut:'sudut'}[k];if(q[k])b.setAttribute('data-'+a,q[k]);else b.removeAttribute('data-'+a)});
@@ -235,7 +250,13 @@ function cek(fn){if(!S.tk||$('vi').classList.contains('hide')){fn();return}var b
 function lwTutup(ya){$('lw').classList.add('hide');var f=PEND;PEND=null;if(ya&&f)f()}
 function fsMasuk(){try{var e=document.documentElement,p=e.requestFullscreen&&e.requestFullscreen();if(p&&p.catch)p.catch(function(){})}catch(x){}}
 document.addEventListener('fullscreenchange',function(){if(MODE=='siswa'&&S.tk){$('fw').classList.toggle('hide',!!document.fullscreenElement);if(document.fullscreenElement)$('fwp').style.display='none'}});
+function pratinjauSiswa(){document.body.classList.add('pv');document.addEventListener('click',function(e){e.preventDefault();e.stopPropagation()},true);
+ window.addEventListener('message',function(ev){var m=ev.data;if(ev.source!==window.parent||!m||m.tipe!=='pratinjau'||!m.info)return;
+  INFO=m.info;S.tk='';S.d=Array.isArray(m.daftar)?m.daftar:[];S.u=String(m.nama||'Nama Siswa');S.kl='';tema(INFO);
+  $('jd').classList.add('hide');$('hj').textContent=INFO.judul||'';$('hsub').textContent=INFO.kerangka||'';$('hn').textContent=S.u;$('hd').classList.remove('hide');tab0('vb')});
+ try{window.parent.postMessage({tipe:'pratinjau-siap'},'*')}catch(x){}}
 function mulaiSiswa(){
+ if(/[?&]pratinjau=1/.test(location.search)&&window.parent!==window){pratinjauSiswa();return}
  kunci();
  run('info').then(function(d){INFO=d;if(d.watermark)document.body.insertAdjacentHTML('beforeend','<p class="m" style="text-align:center;margin:24px 0 70px">Dibuat dengan Guru Hub - cbtkabutdigital.com</p>');tema(d);seoSiswa(d);$('jd').textContent=d.judul;$('hj').textContent=d.judul;$('hsub').textContent=d.kerangka||'';$('kl').innerHTML='<option value="">Pilih kelas</option>'+d.kelas.map(function(x){return'<option>'+E(x)+'</option>'}).join('');isiNama();$('kl').onchange=isiNama;$('nm').oninput=cariN;$('pl').classList.toggle('hide',!d.pin);show('vl')}).catch(er)
 }
@@ -355,7 +376,7 @@ function gMasuk(){K=$('kd').value.trim();T('Memeriksa...');run('guruMasuk',K).th
 
 var TPL=[{id:'bawaan',n:'Bawaan',c:'#DE2828',c2:'#1E3A8A',c3:'#F59E0B'},{id:'laut',n:'Laut',c:'#0E7490',c2:'#1E3A8A',c3:'#F59E0B'},{id:'hutan',n:'Hutan',c:'#15803D',c2:'#14532D',c3:'#EAB308'},{id:'senja',n:'Senja',c:'#C2410C',c2:'#7C2D12',c3:'#FACC15'},{id:'ungu',n:'Ungu',c:'#7E22CE',c2:'#3730A3',c3:'#F472B6'},{id:'mawar',n:'Mawar',c:'#BE185D',c2:'#831843',c3:'#FBBF24'},{id:'tanah',n:'Tanah',c:'#92400E',c2:'#451A03',c3:'#65A30D'},{id:'malam',n:'Malam',c:'#1E293B',c2:'#0F172A',c3:'#38BDF8'}],TID='';
 function tCur(){return{warna:$('p_warna').value,warna2:$('p_warna2').value,warna3:$('p_warna3').value,ornamen:$('p_ornamen').value,gaya:$('p_gaya').value,huruf:$('p_huruf').value,sudut:$('p_sudut').value,ikon_bawaan:$('p_ikonb').checked?'ya':'tidak',ornamen_ikon:JSON.stringify(ORN)}}
-function tPrev(){if(fiturOn('tema'))tema(tCur())}
+function tPrev(){if(fiturOn('tema')){tema(tCur());pvTunda()}}
 function tPilih(id){var t=TPL.filter(function(x){return x.id==id})[0];if(!t)return;TID=id;$('p_warna').value=t.c;$('p_warna2').value=t.c2;$('p_warna3').value=t.c3;tBangun();tPrev()}
 function tBangun(){$('tpl').innerHTML=TPL.map(function(t){return'<button type="button" class="'+(t.id==TID?'on':'')+'" onclick="tPilih(\''+t.id+'\')"><i style="background:linear-gradient(90deg,'+t.c+','+t.c2+' 70%,'+t.c3+')"></i>'+t.n+'</button>'}).join('')}
 function temaIsi(){var lama=EDISI=='premium'&&!('tema' in FIT),A=typeof ACC!='undefined'&&ACC?ACC:null;
