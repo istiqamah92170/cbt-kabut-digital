@@ -661,7 +661,7 @@
           </div>
           <div class="gh-quick-card" onclick="ghpBukaApp('media')">
             <span class="ghp-ico ghp-ico-media"></span>
-            <div><div class="gh-quick-title">Media Interaktif</div><div class="gh-quick-sub">Media belajar untuk Google Sites · 1 kelas gratis</div></div>
+            <div><div class="gh-quick-title">Media Interaktif</div><div class="gh-quick-sub">Gratis 1 kelas · Premium: tema ceria, tautan kustom, materi bersama</div></div>
           </div>
         </div>
       </div>
@@ -857,7 +857,7 @@
     <div class="ghp-grid">
       <button class="ghp-tile" onclick="ghpBukaApp('kea')"><span class="ghp-ico ghp-ico-kea"></span><b>Smart Bloom &amp; Topic Analyzer</b><span class="ghp-sub">Klasifikasi topik, level Bloom &amp; kesulitan soal, plus Database Materi Anda.</span></button>
       <button class="ghp-tile" onclick="ghpBukaApp('guruai')"><span class="ghp-ico ghp-ico-guruai"></span><b>GuruAI Builder</b><span class="ghp-sub">Susun perangkat ajar dan konten dengan bantuan AI.</span></button>
-      <button class="ghp-tile" onclick="ghpBukaApp('media')"><span class="ghp-ico ghp-ico-media"></span><b>Media Interaktif</b><span class="ghp-sub">Ubah ATP jadi media belajar interaktif untuk Google Sites. Gratis 1 kelas; 3, 6, atau tanpa batas sesuai paket.</span></button>
+      <button class="ghp-tile" onclick="ghpBukaApp('media')"><span class="ghp-ico ghp-ico-media"></span><b>Media Interaktif</b><span class="ghp-sub">Ubah ATP jadi media belajar interaktif: kuis teracak, studi kasus, mode tamu, ekspor soal CBT. Premium: 16 tema ceria 5 warna + ornamen, tautan kustom terbaca Google, tautkan siswa dari Sheet luar, materi bersama antar guru, nilai refleksi otomatis, izin ulang massal. Gratis 1 kelas; 3, 6, atau tanpa batas sesuai paket.</span></button>
     </div>
   </div>
   </div><!-- /gh-page-premium -->
@@ -1589,7 +1589,7 @@ function ghRenderPaketLangganan(daftarPaket, aktif) {
       '<div class="lg-paket-nama">' + ghEsc(p.label) + '</div>' +
       '<div class="lg-paket-harga">Rp' + p.harga.toLocaleString('id-ID') + '</div>' +
       '<div class="lg-paket-per">' + (p.key !== 'bulan' ? '≈ Rp' + Math.round(bulanSetara).toLocaleString('id-ID') + '/bulan' + (p.key === 'tahun' && hemat > 0 ? ' · hemat ' + hemat + '%' : '') : '&nbsp;') + '</div>' +
-      '<ul><li>Semua fitur CBT</li><li>GuruAI Builder</li><li>Bloom &amp; Topic Analyzer</li><li>Media Interaktif: <b>' + ({ bulan: '3 kelas', enam_bulan: '6 kelas', tahun: 'tanpa batas' }[p.key] || '') + '</b></li><li>Data di Google Drive Anda</li></ul>' +
+      '<ul><li>Semua fitur CBT</li><li>GuruAI Builder</li><li>Bloom &amp; Topic Analyzer</li><li>Media Interaktif: <b>' + ({ bulan: '3 kelas', enam_bulan: '6 kelas', tahun: 'tanpa batas' }[p.key] || '') + '</b> + tema &amp; ornamen, tautan kustom, materi bersama guru</li><li>Data di Google Drive Anda</li></ul>' +
       '<button class="lg-btn" onclick="ghBayarPaket(\'' + p.key + '\')">' + (aktif ? 'Perpanjang' : 'Pilih paket') + '</button>' +
     '</div>';
   }).join('');
