@@ -1,0 +1,3734 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penjelajah Kondisi Alam 6 Benua Dunia - Simulasi IPS Kelas IX</title>
+<style>
+  :root {
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --primary: #0f766e;
+    --primary-dark: #064e3b;
+    --primary-hover: #0d5e58;
+    --primary-light: #e6f4f1;
+    --accent: #b45309;
+    --border: #cbd5e1;
+    --focus-ring: #0284c7;
+    --radius: 12px;
+    --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-size: 16px;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+
+  header {
+    background: linear-gradient(135deg, #064e3b 0%, #0f766e 100%);
+    color: #ffffff;
+    padding: 16px 20px;
+    border-bottom: 4px solid #d97706;
+  }
+
+  .header-inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-title h1 {
+    font-size: 1.32rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .header-title p {
+    font-size: 0.94rem;
+    color: #d1fae5;
+    margin-top: 2px;
+  }
+
+  .badge-kbc {
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 18px 16px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  @media (min-width: 960px) {
+    .container {
+      grid-template-columns: 1.42fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .card-title {
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .canvas-box {
+    position: relative;
+    width: 100%;
+    background: #0a2540;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #94a3b8;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  canvas:active {
+    cursor: grabbing;
+  }
+
+  .map-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    border-top: 1px solid #334155;
+  }
+
+  .map-toolbar-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-mini {
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid #5eead4;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .btn-mini:hover {
+    background: #0f766e;
+  }
+
+  .canvas-hint {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .coord-badge {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.88rem;
+  }
+
+  .readout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  @media (min-width: 540px) {
+    .readout-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .readout-item {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .readout-label {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .readout-value {
+    font-size: 1.06rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-top: 2px;
+  }
+
+  .detail-panel {
+    margin-top: 14px;
+    background: var(--primary-light);
+    border: 1px solid #99f6e4;
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .detail-panel h3 {
+    font-size: 1.08rem;
+    color: #064e3b;
+    margin-bottom: 6px;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  @media (min-width: 600px) {
+    .detail-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .detail-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .detail-box strong {
+    display: block;
+    font-size: 0.94rem;
+    color: var(--primary);
+    margin-bottom: 4px;
+  }
+
+  .countries-box {
+    background: #ffffff;
+    border: 1px solid #99f6e4;
+    border-left: 4px solid #0f766e;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 0.93rem;
+  }
+
+  .countries-box strong {
+    color: #064e3b;
+  }
+
+  .kbc-reflection {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    color: #064e3b;
+    font-size: 0.95rem;
+  }
+
+  .control-group {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .control-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-main);
+    gap: 6px;
+  }
+
+  .val-pill {
+    background: var(--primary-light);
+    color: #064e3b;
+    border: 1px solid #5eead4;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .btn-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .btn-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  button.ctrl-btn {
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    min-height: 48px;
+    padding: 10px 10px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: #ffffff;
+    color: var(--text-main);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+
+  button.ctrl-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+  }
+
+  button:focus-visible, input:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  button.ctrl-btn[aria-pressed="true"], button.ctrl-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: #064e3b;
+  }
+
+  .btn-action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .btn-primary {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border-color: #064e3b !important;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-hover) !important;
+  }
+
+  .btn-reset {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border-color: #f59e0b !important;
+  }
+
+  .btn-reset:hover {
+    background: #fef3c7 !important;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 38px;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+
+  .range-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: -4px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 6px 0;
+    cursor: pointer;
+  }
+
+  .toggle-row input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    text-align: left;
+  }
+
+  th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+
+  th {
+    background: #f1f5f9;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  tr.row-selected {
+    background: #ccfbf1;
+    font-weight: 700;
+  }
+
+  details {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  summary {
+    min-height: 52px;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 1.04rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    color: #064e3b;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: "▼";
+    font-size: 0.85rem;
+    transition: transform 0.2s;
+  }
+
+  details[open] summary::after {
+    transform: rotate(180deg);
+  }
+
+  .details-body {
+    padding: 12px 16px 16px 16px;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .task-item {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 5px solid #d97706;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .task-step {
+    font-weight: 700;
+    color: #92400e;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .model-note {
+    background: #fefce8;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.9rem;
+    color: #713f12;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>🌍 Penjelajah Kondisi Alam 6 Benua Dunia</h1>
+      <p>IPS Kelas IX (Fase D) &bull; Bab 1: Interaksi Antarnegara Benua Asia dan Benua Lainnya</p>
+    </div>
+    <div class="badge-kbc" aria-label="Nilai Kurikulum Berbasis Cinta">
+      🌿 Cinta Alam &amp; Syukur Keragaman Ciptaan Allah SWT
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!-- KOLOM KIRI / ATAS: VISUALISASI PETA & DETAIL REGION -->
+  <section aria-label="Area Visualisasi Peta dan Kondisi Alam Benua">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title" id="vizTitle">🗺️ Peta Kondisi Alam &amp; Region: Benua Asia</h2>
+        <span class="val-pill" id="continentSummaryPill">±44,58 juta km²</span>
+      </div>
+
+      <div class="canvas-box">
+        <canvas id="worldCanvas" aria-label="Peta interaktif Benua Asia, Amerika, dan Eropa yang menampilkan pembagian region, kursor lintang-bujur, jalur pegunungan, serta arah angin muson atau aliran udara."></canvas>
+        <div class="map-toolbar">
+          <span>🖐️ Geser peta (kiri/kanan/atas/bawah) &bull; Ketuk region untuk memilih</span>
+          <div class="map-toolbar-btns">
+            <button type="button" class="btn-mini" onclick="adjustZoom(1.28)" aria-label="Perbesar Peta">➕ Zoom</button>
+            <button type="button" class="btn-mini" onclick="adjustZoom(0.78)" aria-label="Perkecil Peta">➖ Zoom</button>
+            <button type="button" class="btn-mini" onclick="fitContinentView(true)" aria-label="Fokus Benua Terpilih">🎯 Fokus Benua</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-hint">
+        <span>💡 <strong>Petunjuk:</strong> Pilih benua di panel kontrol untuk <em>auto-zoom</em> penuh; ketuk atau arahkan kursor pada peta untuk melihat pertemuan lintang &amp; bujur.</span>
+        <span class="coord-badge" id="coordReadout">Koordinat: 6° LS, 106° BT</span>
+      </div>
+
+      <!-- READOUT ANGKA REAL-TIME -->
+      <div class="readout-grid" aria-live="polite">
+        <div class="readout-item">
+          <div class="readout-label">Luas Region Terpilih</div>
+          <div class="readout-value" id="roArea">4,50 juta km²</div>
+        </div>
+        <div class="readout-item">
+          <div class="readout-label">Suhu Rata-rata</div>
+          <div class="readout-value" id="roTemp">27,2 °C</div>
+        </div>
+        <div class="readout-item">
+          <div class="readout-label">Curah Hujan Bulanan</div>
+          <div class="readout-value" id="roRain">265 mm/bln</div>
+        </div>
+        <div class="readout-item">
+          <div class="readout-label">Puncak Tertinggi</div>
+          <div class="readout-value" id="roPeak">5.881 mdpl</div>
+        </div>
+      </div>
+
+      <!-- KARTU ANALISIS REGION & KETERKAITAN DENGAN INDONESIA -->
+      <div class="detail-panel" id="regionDetailBox" aria-live="polite">
+        <h3 id="regTitle">📍 Asia Tenggara (Termasuk Indonesia)</h3>
+        <p id="regCoords"><strong>Letak Astronomis:</strong> 28° LU – 11° LS dan 92° BT – 141° BT &bull; <strong>Proporsi Luas Asia:</strong> 10,1% dari total ±44,58 juta km²</p>
+
+        <div class="countries-box" id="regCountriesBox">
+          <strong>🏳️ Negara-negara di Region Ini (<span id="regCountryCount">11</span> Negara):</strong>
+          <p id="regCountriesList" style="margin-top:4px; line-height:1.5;">Indonesia, Malaysia, Singapura, Brunei Darussalam, Thailand, Vietnam, Laos, Kamboja, Myanmar, Filipina, Timor Leste.</p>
+        </div>
+
+        <div class="countries-box" id="regWaterwaysBox" style="border-left-color: #0284c7; border-color: #bae6fd;">
+          <strong>🌊 Perairan Utama (Sungai, Danau, Teluk &amp; Selat):</strong>
+          <p id="regWaterwaysList" style="margin-top:4px; line-height:1.5;">Sungai Mekong, Sungai Irrawaddy, Sungai Kapuas; Danau Tonle Sap &amp; Danau Toba; Teluk Thailand &amp; Teluk Tonkin; Selat Malaka, Selat Sunda, &amp; Selat Makassar.</p>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-box">
+            <strong>🏔️ Bentang Alam &amp; Geologi</strong>
+            <p id="regLandform">Kepulauan vulkanik (pertemuan Lempeng Eurasia, Indo-Australia, Pasifik), pegunungan lipatan muda, serta lembah sungai subur (Mekong, Irrawaddy, Kapuas).</p>
+          </div>
+          <div class="detail-box">
+            <strong>🌦️ Iklim &amp; Pengaruh Musim</strong>
+            <p id="regClimate">Iklim tropis basah dan muson. Pada Oktober–Maret, Angin Muson Barat dari Asia membawa uap air dari Samudra Hindia sehingga memicu musim hujan lebat.</p>
+          </div>
+          <div class="detail-box">
+            <strong>🌱 Flora, Fauna &amp; Sumber Daya</strong>
+            <p id="regBio">Hutan hujan tropis lebat (meranti, jati, anggrek), fauna Asiatis &amp; Peralihan (orangutan, gajah, komodo), serta kaya timah, nikel, dan gas alam.</p>
+          </div>
+          <div class="detail-box">
+            <strong>🇮🇩 Keterkaitan dengan Kehidupan di Indonesia</strong>
+            <p id="regIndoLink">Indonesia terletak di jantung Asia Tenggara. Posisi silang ini memberi dua musim utama yang mendukung pertanian padi, perkebunan, dan keanekaragaman hayati laut.</p>
+          </div>
+        </div>
+
+        <div class="kbc-reflection">
+          <strong>🤲 Refleksi Syukur (Cinta Alam):</strong>
+          <span id="regSyukur">Kesuburan tanah vulkanik dan limpahan hujan di Asia Tenggara adalah karunia Allah SWT yang patut disyukuri dengan menjaga hutan dan daerah aliran sungai.</span>
+        </div>
+      </div>
+
+      <!-- TABEL PERBANDINGAN REGION DALAM BENUA TERPILIH -->
+      <div class="table-wrap">
+        <table aria-label="Tabel perbandingan pembagian region pada benua terpilih">
+          <thead>
+            <tr>
+              <th>Region</th>
+              <th>Rentang Lintang</th>
+              <th>Luas (juta km²)</th>
+              <th>Iklim Dominan</th>
+              <th>Bentang Alam Khas</th>
+            </tr>
+          </thead>
+          <tbody id="regionTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- TABEL RINGKAS PERBANDINGAN ANTARBENUA -->
+      <div class="table-wrap">
+        <table aria-label="Tabel perbandingan 6 benua di dunia">
+          <thead>
+            <tr>
+              <th>Benua</th>
+              <th>Letak Astronomis</th>
+              <th>Luas (juta km²)</th>
+              <th>Puncak Tertinggi</th>
+              <th>Ciri Alam Khas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="compRow_asia">
+              <td><strong>Asia</strong></td>
+              <td>26° BT–170° BT &amp; 11° LS–80° LU</td>
+              <td>± 44,58 (Ke-1)</td>
+              <td>G. Everest (8.848 m)</td>
+              <td>Benua terluas, sistem muson, Himalaya</td>
+            </tr>
+            <tr id="compRow_amerika">
+              <td><strong>Amerika</strong></td>
+              <td>170° BB–35° BB &amp; 83° LU–55° LS</td>
+              <td>± 42,06 (Ke-2)</td>
+              <td>G. Aconcagua (6.960 m)</td>
+              <td>Memanjang utara-selatan, Andes, Amazon</td>
+            </tr>
+            <tr id="compRow_afrika">
+              <td><strong>Afrika</strong></td>
+              <td>17° BB–51° BT &amp; 37° LU–35° LS</td>
+              <td>± 30,37 (Ke-3)</td>
+              <td>G. Kilimanjaro (5.895 m)</td>
+              <td>Benua hitam/plato, Gurun Sahara, S. Nil</td>
+            </tr>
+            <tr id="compRow_antartika">
+              <td><strong>Antartika</strong></td>
+              <td>60° LS–90° LS (Melingkari Kutub Selatan)</td>
+              <td>± 14,20 (Ke-4)</td>
+              <td>Vinson Massif (4.892 m)</td>
+              <td>Tertutup lapisan es abadi, paling dingin</td>
+            </tr>
+            <tr id="compRow_eropa">
+              <td><strong>Eropa</strong></td>
+              <td>9° BB–66° BT &amp; 35° LU–71° LU</td>
+              <td>± 10,36 (Ke-5)</td>
+              <td>G. Elbrus (5.642 m)</td>
+              <td>Menyatu dengan Asia (Eurasia), 4 musim</td>
+            </tr>
+            <tr id="compRow_australia">
+              <td><strong>Australia</strong></td>
+              <td>113° BT–153° BT &amp; 10° LS–43° LS</td>
+              <td>± 7,69 (Ke-6)</td>
+              <td>G. Kosciuszko (2.228 m)</td>
+              <td>Benua terkecil &amp; terdatar, fauna marsupial</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- KOLOM KANAN / BAWAH: PANEL KONTROL & PEDAGOGI -->
+  <aside aria-label="Panel Kontrol Variabel dan Panduan Eksplorasi">
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="card-header">
+        <h2 class="card-title">🎛️ Panel Kontrol Eksplorasi</h2>
+      </div>
+
+      <!-- KONTROL 1: PILIH BENUA (AUTO-ZOOM KE BENUA TERPILIH) -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>1. Pilih Benua Fokus (Auto-Zoom)</span>
+          <span class="val-pill" id="selectedContinentPill">Benua Asia</span>
+        </div>
+        <div class="btn-grid btn-grid-3" role="group" aria-label="Pilihan 6 Benua Dunia">
+          <button type="button" class="ctrl-btn cont-btn active" data-continent="asia" aria-pressed="true">🌏 Asia</button>
+          <button type="button" class="ctrl-btn cont-btn" data-continent="amerika" aria-pressed="false">🌎 Amerika</button>
+          <button type="button" class="ctrl-btn cont-btn" data-continent="afrika" aria-pressed="false">🦁 Afrika</button>
+          <button type="button" class="ctrl-btn cont-btn" data-continent="antartika" aria-pressed="false">🐧 Antartika</button>
+          <button type="button" class="ctrl-btn cont-btn" data-continent="eropa" aria-pressed="false">🏰 Eropa</button>
+          <button type="button" class="ctrl-btn cont-btn" data-continent="australia" aria-pressed="false">🦘 Australia</button>
+        </div>
+      </div>
+
+      <!-- KONTROL 2: PILIH REGION DALAM BENUA -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>2. Pembagian Region Benua</span>
+          <span class="val-pill" id="selectedRegionPill">Asia Tenggara</span>
+        </div>
+        <div class="btn-grid" id="regionBtnContainer" role="group" aria-label="Pilihan region dalam benua terpilih"></div>
+      </div>
+
+      <!-- KONTROL 3: BULAN & MUSIM -->
+      <div class="control-group">
+        <label class="control-label" for="monthSlider">
+          <span>3. Bulan &amp; Pola Musim</span>
+          <span class="val-pill" id="monthLabel">Januari (Muson Barat / Dingin BBU)</span>
+        </label>
+        <input type="range" id="monthSlider" min="1" max="12" step="1" value="1">
+        <div class="range-ticks">
+          <span>Jan (Musim Dingin BBU)</span>
+          <span>Apr (Semi/Peralihan)</span>
+          <span>Jul (Musim Panas BBU)</span>
+          <span>Okt (Gugur/Peralihan)</span>
+        </div>
+      </div>
+
+      <!-- KONTROL 4: GARIS LINTANG PENGAMATAN -->
+      <div class="control-group">
+        <label class="control-label" for="latSlider">
+          <span>4. Garis Lintang Pengamatan (°)</span>
+          <span class="val-pill" id="latLabel">0° (Khatulistiwa)</span>
+        </label>
+        <input type="range" id="latSlider" min="-11" max="80" step="1" value="0">
+        <div class="range-ticks" id="latTicks">
+          <span>11° LS</span>
+          <span>23,5° LU</span>
+          <span>50° LU</span>
+          <span>80° LU</span>
+        </div>
+      </div>
+
+      <!-- KONTROL 5: LAPISAN VISUAL & ELEMEN TAK KASATMATA -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>5. Lapisan Visual &amp; Elemen Tak Kasatmata</span>
+        </div>
+        <label class="toggle-row" for="toggleBorders">
+          <span>🗺️ Tampilkan Garis Batas &amp; Nama Negara</span>
+          <input type="checkbox" id="toggleBorders" checked>
+        </label>
+        <label class="toggle-row" for="toggleWaterways">
+          <span>🌊 Tampilkan Nama Sungai, Danau, Teluk &amp; Selat</span>
+          <input type="checkbox" id="toggleWaterways" checked>
+        </label>
+        <label class="toggle-row" for="toggleMonsoon">
+          <span>💨 Tampilkan Aliran Angin Muson / Angin Global</span>
+          <input type="checkbox" id="toggleMonsoon" checked>
+        </label>
+        <label class="toggle-row" for="toggleGrid">
+          <span>🌐 Tampilkan Jaringan Garis Lintang &amp; Bujur</span>
+          <input type="checkbox" id="toggleGrid" checked>
+        </label>
+        <label class="toggle-row" for="toggleRing">
+          <span>🌋 Tampilkan Jalur Pegunungan Muda &amp; Puncak</span>
+          <input type="checkbox" id="toggleRing" checked>
+        </label>
+      </div>
+
+      <!-- TOMBOL KONTROL ANIMASI & RESET -->
+      <div class="btn-action-row">
+        <button type="button" id="playPauseBtn" class="ctrl-btn btn-primary" aria-pressed="true">
+          ⏸️ Jeda Angin
+        </button>
+        <button type="button" id="resetBtn" class="ctrl-btn btn-reset">
+          🔄 Reset Awal
+        </button>
+      </div>
+
+      <div class="model-note">
+        <strong>📌 Catatan Model:</strong> Peta menggunakan proyeksi silinder agar garis lintang lurus dan mudah dibandingkan antarbenua. Benua yang tidak dipilih ditampilkan berwarna abu-abu sebagai konteks geografis dunia. Suhu dan curah hujan bulanan merupakan nilai representatif wilayah untuk mengamati pengaruh lintang dan pergantian musim.
+      </div>
+    </div>
+
+    <!-- PANEL PEDAGOGI 1: RINGKASAN KONSEP -->
+    <details open>
+      <summary>📘 Ringkasan Konsep 6 Benua (Buka / Tutup)</summary>
+      <div class="details-body">
+        <p style="margin-bottom: 8px;">
+          <strong>1. Benua Asia (±44,58 juta km²):</strong> Benua terluas di dunia (<strong>26° BT–170° BT</strong> dan <strong>11° LS–80° LU</strong>) dengan 6 region, puncak tertinggi dunia (Gunung Everest, 8.848 mdpl), serta sistem angin muson yang memengaruhi iklim Indonesia.
+        </p>
+        <p style="margin-bottom: 8px;">
+          <strong>2. Benua Amerika (±42,06 juta km²):</strong> Membentang dari <strong>83° LU hingga 55° LS</strong> sehingga memiliki seluruh zona iklim matahari (kutub hingga tropis), dengan pegunungan muda Rocky–Andes di barat dan Sungai Amazon di selatan.
+        </p>
+        <p style="margin-bottom: 8px;">
+          <strong>3. Benua Afrika (±30,37 juta km²):</strong> Terletak di <strong>37° LU – 35° LS</strong> (dilalui khatulistiwa dan kedua garis balik), didominasi dataran tinggi (plato), Gurun Sahara terluas di dunia, Lembah Retak Besar, serta Sungai Nil terpanjang di dunia.
+        </p>
+        <p style="margin-bottom: 8px;">
+          <strong>4. Benua Antartika (±14,20 juta km²):</strong> Melingkari Kutub Selatan (<strong>60° LS – 90° LS</strong>), hampir seluruh permukaannya tertutup lapisan es abadi setebal rata-rata 2 km, beriklim kutub paling dingin dan berangin kencang, serta menjadi kawasan penelitian damai tanpa penduduk tetap.
+        </p>
+        <p style="margin-bottom: 8px;">
+          <strong>5. Benua Eropa (±10,36 juta km²):</strong> Terletak di <strong>35° LU – 71° LU</strong>, menyatu daratannya dengan Asia (<em>Eurasia</em>) dengan batas Pegunungan Ural, dan didominasi iklim sedang, Mediterania, serta dingin.
+        </p>
+        <p>
+          <strong>6. Benua Australia (±7,69 juta km²):</strong> Benua terkecil sekaligus paling datar dan kering (<strong>10° LS – 43° LS</strong>), terbagi menjadi Plato Barat, Dataran Rendah Tengah, dan Dataran Tinggi Timur (Great Dividing Range), serta memiliki fauna khas berkantung (marsupial).
+        </p>
+      </div>
+    </details>
+
+    <!-- PANEL PEDAGOGI 2: COBA INI (TUGAS EKSPLORASI) -->
+    <details open>
+      <summary>🧭 Coba Ini: Panduan Eksplorasi Konsep</summary>
+      <div class="details-body">
+        <ul class="task-list">
+          <li class="task-item">
+            <span class="task-step">Eksplorasi 1: Angin Muson di Benua Asia &amp; Indonesia</span>
+            Pilih benua <strong>Asia</strong> dan region <strong>Asia Tenggara</strong>. Geser slider <strong>Bulan &amp; Pola Musim</strong> dari <strong>Januari</strong> ke <strong>Juli</strong>, lalu amati arah panah angin muson serta perubahan curah hujan bulanan di Indonesia.
+          </li>
+          <li class="task-item">
+            <span class="task-step">Eksplorasi 2: Simetri Iklim Benua Afrika terhadap Khatulistiwa</span>
+            Klik tombol <strong>Afrika</strong>. Amati garis khatulistiwa (0°) yang membelah Afrika Tengah, lalu bandingkan kondisi alam <strong>Afrika Utara</strong> (Gurun Sahara) dan <strong>Afrika Selatan</strong> (Gurun Kalahari). Mengapa zona iklim Afrika tampak simetris ke utara dan selatan?
+          </li>
+          <li class="task-item">
+            <span class="task-step">Eksplorasi 3: Benua Australia sebagai Tetangga Terdekat Indonesia</span>
+            Klik tombol <strong>Australia</strong> dan amati jaraknya dengan Kepulauan Nusa Tenggara &amp; Papua di Indonesia. Bandingkan <strong>Pantai Timur</strong> (lembap di balik Great Dividing Range) dengan <strong>Pedalaman Tengah</strong> (gurun kering/outback).
+          </li>
+          <li class="task-item">
+            <span class="task-step">Eksplorasi 4: Perbandingan Kutub Utara (Asia/Amerika) dan Benua Antartika</span>
+            Klik tombol <strong>Antartika</strong>, lalu geser bulan antara <strong>Januari</strong> (musim panas kutub selatan) dan <strong>Juli</strong> (musim dingin gelap kutub selatan). Amati suhu ekstremnya dibandingkan benua berpenghuni lainnya!
+          </li>
+        </ul>
+      </div>
+    </details>
+  </aside>
+</main>
+
+<script>
+(function() {
+  "use strict";
+
+  // =========================================================================
+  // 1. DATA KOMPREHENSIF 6 BENUA DUNIA (ASIA, AMERIKA, AFRIKA, ANTARTIKA, EROPA, AUSTRALIA)
+  // =========================================================================
+  const CONTINENT_META = {
+    asia: {
+      id: "asia",
+      name: "Benua Asia",
+      totalAreaText: "±44,58 juta km²",
+      astroSummary: "26° BT–170° BT & 11° LS–80° LU",
+      latMin: -11,
+      latMax: 80,
+      defaultRegion: "tenggara",
+      defaultLat: 0,
+      defaultCursor: [106, -6],
+      // Bounding box fokus untuk auto-zoom selebar layar
+      viewCenterLon: 98,
+      viewCenterLat: 34,
+      viewLonSpan: 156,
+      latTicks: ["11° LS", "23,5° LU", "50° LU", "80° LU"],
+      regions: {
+        tenggara: {
+          id: "tenggara",
+          name: "Asia Tenggara",
+          shortName: "Tenggara",
+          coords: "28° LU – 11° LS dan 92° BT – 141° BT",
+          countries: ["Indonesia", "Malaysia", "Singapura", "Brunei Darussalam", "Thailand", "Vietnam", "Laos", "Kamboja", "Myanmar", "Filipina", "Timor Leste"],
+          waterwaysSummary: "Sungai Mekong, Sungai Irrawaddy, Sungai Chao Phraya, Sungai Kapuas; Danau Tonle Sap & Danau Toba; Teluk Thailand, Teluk Tonkin, & Teluk Bone; Selat Malaka, Selat Sunda, Selat Lombok, & Selat Makassar.",
+          waterPins: [
+            { name: "S. Mekong", lon: 105.5, lat: 14.5, kind: "river" },
+            { name: "S. Irrawaddy", lon: 95.5, lat: 19.5, kind: "river" },
+            { name: "S. Kapuas", lon: 111.2, lat: 0.3, kind: "river" },
+            { name: "D. Toba", lon: 98.8, lat: 2.6, kind: "lake" },
+            { name: "D. Tonle Sap", lon: 104.1, lat: 12.9, kind: "lake" },
+            { name: "Teluk Thailand", lon: 101.8, lat: 10.2, kind: "gulf" },
+            { name: "Teluk Tonkin", lon: 107.8, lat: 19.8, kind: "gulf" },
+            { name: "Selat Malaka", lon: 100.2, lat: 3.8, kind: "strait" },
+            { name: "Selat Sunda", lon: 105.6, lat: -6.0, kind: "strait" },
+            { name: "Selat Makassar", lon: 117.8, lat: -1.5, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Indonesia", lon: 114, lat: -2.5 },
+            { name: "Malaysia", lon: 102, lat: 4 },
+            { name: "Singapura", lon: 103.8, lat: 1.3 },
+            { name: "Brunei", lon: 114.7, lat: 4.5 },
+            { name: "Thailand", lon: 101, lat: 15.5 },
+            { name: "Vietnam", lon: 107.5, lat: 16 },
+            { name: "Laos", lon: 103.5, lat: 19.5 },
+            { name: "Kamboja", lon: 105, lat: 12.5 },
+            { name: "Myanmar", lon: 96.5, lat: 21 },
+            { name: "Filipina", lon: 122.5, lat: 12.5 },
+            { name: "Timor Leste", lon: 125.8, lat: -8.8 }
+          ],
+          borders: [
+            [[97, 20], [100.5, 20.5], [103.5, 22.5]], // Batas Myanmar-Laos-Tiongkok
+            [[98, 18], [99, 10]], // Batas Myanmar-Thailand
+            [[101, 20], [104.5, 17.5], [105.5, 14.5]], // Batas Thailand-Laos
+            [[104, 21.5], [106, 18], [107.5, 14.5]], // Batas Laos-Vietnam
+            [[102.5, 13.5], [106.5, 13.5]], // Batas Thailand-Kamboja
+            [[104.5, 10.5], [106.8, 12]], // Batas Kamboja-Vietnam
+            [[99.5, 6.2], [102.2, 5.8]], // Batas Thailand-Malaysia
+            [[109.5, 1.2], [114.5, 3.2], [118, 4.2]], // Batas Indonesia-Malaysia (Kalimantan)
+            [[114.2, 4.3], [115.2, 4.7]], // Batas Brunei
+            [[124.8, -9.2], [125.4, -8.8]], // Batas Indonesia-Timor Leste
+            [[141, -2.6], [141, -8.5]] // Batas Indonesia-Papua Nugini
+          ],
+          areaMillionKm2: 4.50,
+          areaPercent: "10,1% dari luas Asia",
+          peak: "5.881 mdpl (Hkakabo Razi)",
+          baseTemp: 27.2,
+          baseRainJan: 265,
+          baseRainJul: 115,
+          climateSummary: "Tropis Basah & Muson",
+          landformShort: "Kepulauan vulkanik & lembah sungai",
+          landform: "Kepulauan vulkanik (pertemuan Lempeng Eurasia, Indo-Australia, Pasifik), pegunungan lipatan muda, serta lembah sungai subur (Mekong, Irrawaddy, Kapuas).",
+          climate: "Iklim tropis basah dan muson. Pada Oktober–Maret, Angin Muson Barat dari Asia membawa uap air dari Samudra Hindia sehingga memicu musim hujan lebat.",
+          bio: "Hutan hujan tropis lebat (meranti, jati, anggrek), fauna Asiatis & Peralihan (orangutan, gajah, komodo), serta kaya timah, nikel, dan gas alam.",
+          indoLink: "Indonesia terletak di jantung Asia Tenggara. Posisi silang ini memberi dua musim utama yang mendukung pertanian padi, perkebunan, dan keanekaragaman hayati laut.",
+          syukur: "Kesuburan tanah vulkanik dan limpahan hujan di Asia Tenggara adalah karunia Allah SWT yang patut disyukuri dengan menjaga hutan dan daerah aliran sungai.",
+          color: "#10b981",
+          patternType: "stripes",
+          labelPos: [109, 4],
+          polygons: [
+            [[92, 22], [94.5, 25], [97, 28], [100, 25.5], [102, 23], [105.5, 22.5], [108, 21.5], [106.5, 19.5], [109.2, 16], [109.5, 13], [107, 10.2], [105, 8.8], [103.5, 10.8], [101.5, 12.8], [100.5, 13.5], [100, 10.5], [99, 8], [101.2, 5.2], [103.8, 1.3], [102.2, 2.1], [100.2, 4.5], [98.5, 8], [98.2, 12.5], [97.5, 16.5], [95.5, 16.2], [94.3, 16], [93.5, 18.5], [92.5, 20.5]],
+            [[95.3, 5.5], [97.5, 4.8], [99.5, 3.2], [102.5, 0.5], [104.5, -1.5], [105.8, -5.8], [104.2, -5.5], [102.2, -3.8], [100.2, -1.2], [98.2, 1.2], [96.2, 3.8]],
+            [[105.5, -6.2], [108.5, -6.4], [111.5, -6.8], [114.5, -7.8], [116.5, -8.5], [120, -9.5], [123.5, -10.2], [124.5, -8.8], [119.5, -8.4], [115, -8.2], [111, -7.8], [106.5, -7.2]],
+            [[109, 1.8], [111.5, 2.8], [114.2, 4.5], [116.8, 6.2], [118.5, 6.8], [118.8, 4.2], [117.8, 1], [116.5, -3.5], [114, -3.6], [111.5, -3.2], [109.8, -1.8], [109.2, 0.2]],
+            [[119, -5.2], [119.5, -2.5], [120.5, -0.8], [122.8, 0.8], [124.8, 1.5], [123.5, 0.2], [121.8, -1.2], [122.8, -3.2], [122.5, -4.8], [120.8, -3.5], [120, -4.8]],
+            [[131, -1.2], [134, -1.5], [136.5, -2.2], [141, -2.6], [141, -8.5], [138.5, -7.2], [136.5, -5.2], [133.5, -3.5], [131.5, -2.5]],
+            [[120, 18.2], [122.2, 18], [122.5, 15.5], [124.2, 13], [125.8, 11], [126.4, 7.2], [124.5, 6.5], [122.2, 7.2], [123.2, 9.5], [121.5, 12.5], [120.2, 15.2]]
+          ]
+        },
+        timur: {
+          id: "timur",
+          name: "Asia Timur",
+          shortName: "Timur",
+          coords: "18° LU – 53° LU dan 73° BT – 150° BT",
+          countries: ["Tiongkok (RRT)", "Jepang", "Korea Selatan", "Korea Utara", "Mongolia", "Taiwan"],
+          waterwaysSummary: "Sungai Yangtze (terpanjang di Asia), Sungai Kuning (Huang He), Sungai Amur; Danau Qinghai & Danau Poyang; Teluk Bohai & Teluk Korea; Selat Taiwan, Selat Korea, & Selat Tsugaru.",
+          waterPins: [
+            { name: "S. Yangtze", lon: 113.5, lat: 30.5, kind: "river" },
+            { name: "S. Kuning (Huang He)", lon: 111.5, lat: 36.5, kind: "river" },
+            { name: "S. Amur", lon: 128.5, lat: 49.5, kind: "river" },
+            { name: "D. Qinghai", lon: 100.2, lat: 36.8, kind: "lake" },
+            { name: "Teluk Bohai", lon: 119.5, lat: 38.6, kind: "gulf" },
+            { name: "Teluk Korea", lon: 124.2, lat: 39.2, kind: "gulf" },
+            { name: "Selat Taiwan", lon: 119.6, lat: 24.2, kind: "strait" },
+            { name: "Selat Korea", lon: 129.2, lat: 34.4, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Tiongkok", lon: 104, lat: 35 },
+            { name: "Mongolia", lon: 103, lat: 46.8 },
+            { name: "Korea Utara", lon: 127, lat: 40 },
+            { name: "Korea Selatan", lon: 127.8, lat: 36.2 },
+            { name: "Jepang", lon: 138, lat: 36.5 },
+            { name: "Taiwan", lon: 121, lat: 23.6 }
+          ],
+          borders: [
+            [[88, 49], [96, 44], [105, 42], [116, 44], [119, 49.5]], // Batas Mongolia-Tiongkok
+            [[124.5, 40], [128, 41.5], [130.5, 42.3]], // Batas Tiongkok-Korea Utara
+            [[126, 38], [128.5, 38.3]] // Batas Korea Utara-Korea Selatan
+          ],
+          areaMillionKm2: 11.84,
+          areaPercent: "26,6% dari luas Asia",
+          peak: "8.848 mdpl (Gunung Everest - batas Tibet)",
+          baseTemp: 14.5,
+          baseRainJan: 42,
+          baseRainJul: 185,
+          climateSummary: "Subtropis Muson & Sedang",
+          landformShort: "Dataran tinggi Tibet, Gurun Gobi & kepulauan",
+          landform: "Dataran Tinggi Tibet di barat, Gurun Gobi di utara, dataran rendah aluvial Sungai Kuning (Huang He) & Yangtze di timur, serta kepulauan vulkanik Jepang.",
+          climate: "Iklim subtropis dan sedang yang dipengaruhi angin muson. Musim panas (Juli) hangat dan lembap akibat angin dari Samudra Pasifik; musim dingin (Januari) kering dan sejuk.",
+          bio: "Hutan gugur daun lebar, hutan bambu (habitat panda raksasa), padang rumput stepa, serta sumber daya batu bara dan tanah jarang.",
+          indoLink: "Angin Muson dari daratan Asia Timur saat musim dingin (Januari) bergerak menuju belahan bumi selatan dan menjadi Angin Muson Barat yang membawa hujan ke Indonesia.",
+          syukur: "Keseimbangan empat musim dan aliran sungai besar di Asia Timur mengajarkan pentingnya pengelolaan air yang bijak dan harmonis dengan alam.",
+          color: "#3b82f6",
+          patternType: "dots",
+          labelPos: [106, 36],
+          polygons: [
+            [[74, 37], [77, 40.5], [80, 44], [84, 47], [88, 49], [93, 50.5], [98, 51.5], [105, 50.5], [112, 49.5], [116, 51.5], [120, 53], [127, 50.5], [134, 48], [132.5, 45], [130.8, 42.5], [129.2, 38.5], [129.2, 35.2], [126.4, 34.8], [126, 37.5], [124.8, 39.8], [122, 39.2], [118.5, 38.8], [120, 37.5], [122.4, 37], [120.5, 34.5], [121.8, 31.2], [121.2, 28], [119.5, 25.5], [116.5, 23.2], [113.5, 22.2], [110, 20.5], [108, 21.5], [105.5, 22.5], [102, 23], [99.5, 25.5], [97, 28], [94.5, 28.2], [92.5, 27.8], [88, 27.8], [83.5, 29.5], [79, 31], [76.5, 34]],
+            [[141, 45.2], [145.2, 43.8], [143, 42.2], [140.5, 42.2], [141.2, 40.8], [140.8, 36.2], [138.5, 34.8], [135.5, 33.8], [132.5, 32.8], [130.5, 31.5], [130, 33.5], [133.2, 34.8], [136.8, 36.5], [139.5, 38.5], [140.2, 41.2]],
+            [[120.3, 22.2], [121.8, 25.1], [122, 23.5], [121.2, 22.0]]
+          ]
+        },
+        selatan: {
+          id: "selatan",
+          name: "Asia Selatan",
+          shortName: "Selatan",
+          coords: "5° LU – 37° LU dan 60° BT – 97° BT",
+          countries: ["India", "Pakistan", "Bangladesh", "Nepal", "Bhutan", "Sri Lanka", "Maladewa", "Afganistan"],
+          waterwaysSummary: "Sungai Gangga, Sungai Indus, Sungai Brahmaputra; Danau Chilika & Danau Wular; Teluk Benggala, Teluk Khambhat, & Teluk Mannar; Selat Palk (pemisah India–Sri Lanka).",
+          waterPins: [
+            { name: "S. Gangga", lon: 83.5, lat: 25.5, kind: "river" },
+            { name: "S. Indus", lon: 69.5, lat: 27.5, kind: "river" },
+            { name: "S. Brahmaputra", lon: 91.5, lat: 26.2, kind: "river" },
+            { name: "Teluk Benggala", lon: 88.5, lat: 15.5, kind: "gulf" },
+            { name: "Teluk Khambhat", lon: 72.2, lat: 21.2, kind: "gulf" },
+            { name: "Selat Palk", lon: 79.4, lat: 9.8, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "India", lon: 79, lat: 22 },
+            { name: "Pakistan", lon: 69, lat: 30 },
+            { name: "Afganistan", lon: 66, lat: 34 },
+            { name: "Nepal", lon: 84, lat: 28.2 },
+            { name: "Bhutan", lon: 90.4, lat: 27.4 },
+            { name: "Bangladesh", lon: 90.2, lat: 24 },
+            { name: "Sri Lanka", lon: 80.7, lat: 7.7 },
+            { name: "Maladewa", lon: 73.5, lat: 4.2 }
+          ],
+          borders: [
+            [[61.5, 29.5], [66, 31], [70, 34.5]], // Batas Pakistan-Afganistan
+            [[68.5, 24], [71, 27], [74.5, 31.5], [76, 35.5]], // Batas Pakistan-India
+            [[80.2, 29.8], [84, 27.5], [88, 27]], // Batas India-Nepal
+            [[89, 27], [91.8, 27]], // Batas Bhutan
+            [[88.5, 22], [89, 25.5], [92, 24.5], [92.2, 21.5]] // Batas India-Bangladesh
+          ],
+          areaMillionKm2: 4.49,
+          areaPercent: "10,1% dari luas Asia",
+          peak: "8.848 mdpl (Gunung Everest)",
+          baseTemp: 25.0,
+          baseRainJan: 28,
+          baseRainJul: 290,
+          climateSummary: "Tropis Muson & Pegunungan",
+          landformShort: "Pegunungan Himalaya & Dataran Gangga",
+          landform: "Dibatasi tembok raksasa Pegunungan Himalaya di utara, Dataran Rendah Indo-Gangga yang sangat subur di tengah, dan Dataran Tinggi Dekkan di semenanjung selatan.",
+          climate: "Iklim muson tropis ekstrem. Pegunungan Himalaya menahan angin lembap dari Samudra Hindia pada Juni–September sehingga memicu hujan muson sangat tinggi.",
+          bio: "Hutan bakau Sundarbans terbesar di dunia, harimau Benggala, badak bercula satu, serta lahan pertanian gandum, teh, dan kapas yang luas.",
+          indoLink: "Asia Selatan dan Indonesia sama-sama menghadap Samudra Hindia dan dipengaruhi sistem angin muson yang menentukan musim tanam petani.",
+          syukur: "Gletser Himalaya yang mencair secara teratur mengaliri sungai-sungai besar bagi ratusan juta jiwa—tanda keteraturan ciptaan Allah SWT.",
+          color: "#f59e0b",
+          patternType: "cross",
+          labelPos: [78, 22],
+          polygons: [
+            [[61.5, 25.2], [61.8, 27.5], [62, 29.5], [61, 31], [60.5, 36.5], [62, 35.5], [70, 34.5], [74, 37], [76.5, 34], [79, 31], [83.5, 29.5], [88, 27.8], [92.5, 27.8], [94.5, 28.2], [97, 28], [94.5, 25], [92, 22], [90.2, 22.2], [88.5, 21.8], [86.5, 20.2], [84.5, 18.5], [81.8, 16.2], [80.3, 13], [79.2, 10.2], [77.5, 8.1], [76.2, 10.5], [74.5, 15], [73, 19.2], [72.6, 21.5], [70.2, 21.2], [68.5, 23.8], [65, 25]],
+            [[79.8, 9.6], [81.2, 8.8], [81.8, 7.2], [80.5, 6.0], [79.8, 7.5]]
+          ]
+        },
+        barat: {
+          id: "barat",
+          name: "Asia Barat",
+          shortName: "Barat",
+          coords: "12° LU – 42° LU dan 26° BT – 63° BT",
+          countries: ["Arab Saudi", "Turki", "Iran", "Irak", "Suriah", "Yordania", "Lebanon", "Israel", "Palestina", "Kuwait", "Bahrain", "Qatar", "Uni Emirat Arab", "Oman", "Yaman", "Georgia", "Armenia", "Azerbaijan", "Siprus"],
+          waterwaysSummary: "Sungai Eufrat & Sungai Tigris (Mesopotamia); Laut Mati (danau hipersalin terendah di bumi), Danau Van, & Danau Urmia; Teluk Persia, Teluk Oman, & Teluk Aden; Selat Hormuz, Selat Bosporus, & Selat Bab el-Mandeb.",
+          waterPins: [
+            { name: "S. Eufrat", lon: 41.5, lat: 34.5, kind: "river" },
+            { name: "S. Tigris", lon: 44.2, lat: 34.2, kind: "river" },
+            { name: "Laut Mati", lon: 35.5, lat: 31.5, kind: "lake" },
+            { name: "D. Van", lon: 43.0, lat: 38.6, kind: "lake" },
+            { name: "Teluk Persia", lon: 51.5, lat: 27.2, kind: "gulf" },
+            { name: "Teluk Aden", lon: 47.5, lat: 12.2, kind: "gulf" },
+            { name: "Selat Hormuz", lon: 56.3, lat: 26.5, kind: "strait" },
+            { name: "Selat Bosporus", lon: 29.0, lat: 41.1, kind: "strait" },
+            { name: "Selat Bab el-Mandeb", lon: 43.3, lat: 12.6, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Arab Saudi", lon: 44.5, lat: 24 },
+            { name: "Turki", lon: 35, lat: 39 },
+            { name: "Iran", lon: 53.5, lat: 32.5 },
+            { name: "Irak", lon: 43.5, lat: 33 },
+            { name: "Suriah", lon: 38.5, lat: 35 },
+            { name: "Yordania", lon: 36.8, lat: 31 },
+            { name: "Palestina/Israel", lon: 35.1, lat: 31.8 },
+            { name: "Lebanon", lon: 35.8, lat: 33.9 },
+            { name: "Kuwait", lon: 47.6, lat: 29.3 },
+            { name: "Qatar", lon: 51.2, lat: 25.3 },
+            { name: "Bahrain", lon: 50.5, lat: 26.1 },
+            { name: "UEA", lon: 54.2, lat: 24 },
+            { name: "Oman", lon: 57, lat: 21 },
+            { name: "Yaman", lon: 47.5, lat: 15.5 },
+            { name: "Georgia", lon: 43.5, lat: 42 },
+            { name: "Armenia", lon: 44.8, lat: 40.2 },
+            { name: "Azerbaijan", lon: 47.8, lat: 40.3 },
+            { name: "Siprus", lon: 33.2, lat: 35 }
+          ],
+          borders: [
+            [[36, 36.8], [42, 37.2], [44.5, 39.5]], // Batas Turki-Suriah-Irak-Iran
+            [[44.5, 39.5], [46, 35], [48, 30.5]], // Batas Irak-Iran
+            [[36.5, 33.5], [41, 34]], // Batas Suriah-Irak
+            [[36, 32.5], [39, 32], [47.5, 29.5]], // Batas Yordania-Irak-Saudi
+            [[43, 16.5], [48, 16], [52.5, 18.5]], // Batas Saudi-Yaman
+            [[52.5, 18.5], [55.5, 22], [56, 24.5]], // Batas Saudi-Oman-UEA
+            [[51.5, 24.2], [55, 24.5]] // Batas Saudi-UEA
+          ],
+          areaMillionKm2: 6.25,
+          areaPercent: "14,0% dari luas Asia",
+          peak: "5.610 mdpl (Gunung Damavand)",
+          baseTemp: 26.5,
+          baseRainJan: 35,
+          baseRainJul: 8,
+          climateSummary: "Gurun (Arid) & Mediterania",
+          landformShort: "Gurun pasir luas, plato & Lembah Tigris",
+          landform: "Semenanjung Arab yang didominasi gurun pasir luas (Rub' al Khali), Plato Anatolia & Iran, serta lembah subur Sungai Tigris dan Eufrat (Mesopotamia).",
+          climate: "Didominasi iklim gurun yang panas dan sangat kering dengan perbedaan suhu siang-malam yang tajam; wilayah pesisir Laut Tengah beriklim Mediterania.",
+          bio: "Tumbuhan tahan kering (kurma, akasia), unta berpunuk satu, serta cadangan minyak bumi dan gas alam terbesar di dunia.",
+          indoLink: "Kondisi iklim kering Asia Barat sangat kontras dengan Indonesia yang berhutan hujan lebat, sehingga kedua kawasan saling melengkapi dalam perdagangan energi dan hasil pertanian.",
+          syukur: "Di balik hamparan gurun yang tandus, Allah SWT menyimpan kekayaan energi melimpah dan mata air oasis yang menopang peradaban manusia.",
+          color: "#d97706",
+          patternType: "grid",
+          labelPos: [45, 28],
+          polygons: [
+            [[26.5, 40.5], [30.5, 41.5], [35, 42], [40, 41.5], [44, 41.5], [48.5, 40.2], [49.5, 38.2], [53.5, 36.8], [54, 37.5], [60.5, 36.5], [61, 31], [61.5, 25.2], [58.5, 25.5], [56.3, 26.4], [54.5, 24.4], [51.5, 25.2], [50, 27.5], [48, 30], [51, 29.5], [54.5, 27], [57, 25.8], [59.8, 22.5], [57.5, 19.5], [54, 17], [49, 14.5], [44, 12.8], [41.5, 16.5], [39, 21.5], [36.8, 25.2], [34.8, 28.0], [34.2, 27.9], [33.6, 29.4], [32.6, 31.2], [34.4, 31.5], [35.5, 34.5], [36, 36.8], [32, 36.6], [27.5, 37]]
+          ]
+        },
+        tengah: {
+          id: "tengah",
+          name: "Asia Tengah",
+          shortName: "Tengah",
+          coords: "35° LU – 55° LU dan 46° BT – 87° BT",
+          countries: ["Kazakhstan", "Uzbekistan", "Turkmenistan", "Kirgizstan", "Tajikistan"],
+          waterwaysSummary: "Sungai Amu Darya, Sungai Syr Darya, & Sungai Irtysh; Laut Kaspia (danau/perairan pedalaman terluas di dunia), Laut Aral, Danau Balkhash, & Danau Issyk-Kul; Teluk Kara-Bogaz-Gol.",
+          waterPins: [
+            { name: "S. Amu Darya", lon: 61.5, lat: 40.5, kind: "river" },
+            { name: "S. Syr Darya", lon: 65.5, lat: 44.2, kind: "river" },
+            { name: "Laut Kaspia", lon: 51.0, lat: 42.0, kind: "lake" },
+            { name: "Laut Aral", lon: 59.5, lat: 45.2, kind: "lake" },
+            { name: "D. Balkhash", lon: 75.5, lat: 46.2, kind: "lake" },
+            { name: "D. Issyk-Kul", lon: 77.3, lat: 42.4, kind: "lake" }
+          ],
+          countryPins: [
+            { name: "Kazakhstan", lon: 67, lat: 48 },
+            { name: "Uzbekistan", lon: 63.5, lat: 41.5 },
+            { name: "Turkmenistan", lon: 59, lat: 39 },
+            { name: "Kirgizstan", lon: 74.5, lat: 41.5 },
+            { name: "Tajikistan", lon: 71, lat: 38.8 }
+          ],
+          borders: [
+            [[53, 45], [60, 45], [66, 43], [70, 42.5], [80, 43]], // Batas Selatan Kazakhstan
+            [[53.5, 41.5], [60, 41], [65, 38]], // Batas Uzbekistan-Turkmenistan
+            [[70, 41], [74, 40], [78, 41.5]], // Batas Kirgizstan
+            [[68, 39.5], [73, 39.5]] // Batas Tajikistan
+          ],
+          areaMillionKm2: 4.00,
+          areaPercent: "9,0% dari luas Asia",
+          peak: "7.495 mdpl (Puncak Ismoil Somoni)",
+          baseTemp: 10.5,
+          baseRainJan: 22,
+          baseRainJul: 25,
+          climateSummary: "Kontinental Kering & Stepa",
+          landformShort: "Stepa luas, gurun pedalaman & pegunungan",
+          landform: "Kawasan terkurung daratan (landlocked) tanpa akses langsung ke samudra, terdiri dari padang rumput stepa, Gurun Karakum & Kyzylkum, serta Pegunungan Tian Shan.",
+          climate: "Iklim kontinental (darat) karena letaknya jauh dari pengaruh angin laut yang lembap. Musim panas sangat terik dan musim dingin sangat membeku.",
+          bio: "Padang rumput stepa luas yang mendukung peternakan kuda dan domba nomaden, serta kekayaan mineral logam dan gas alam.",
+          indoLink: "Berbeda jauh dari Indonesia yang merupakan negara kepulauan maritim, Asia Tengah menunjukkan bagaimana jarak dari laut memengaruhi rendahnya curah hujan.",
+          syukur: "Keragaman bentang stepa dan pegunungan di jantung benua mengingatkan kita bahwa setiap wilayah memiliki keunikan ekosistem yang saling terhubung.",
+          color: "#8b5cf6",
+          patternType: "diag",
+          labelPos: [66, 45],
+          polygons: [
+            [[50, 47], [53, 49.5], [56, 51], [60, 55], [64, 54.8], [68, 54.5], [73, 54], [78, 53.5], [82, 51.5], [86.5, 49.5], [84, 47], [80, 44], [77, 40.5], [74, 37], [70, 34.5], [66, 35], [62, 35.5], [60.5, 36.5], [54, 37.5], [53.2, 40.5], [52.5, 43.5], [51, 45.5]]
+          ]
+        },
+        utara: {
+          id: "utara",
+          name: "Asia Utara (Siberia)",
+          shortName: "Utara",
+          coords: "50° LU – 80° LU dan 60° BT – 170° BT",
+          countries: ["Rusia (Wilayah Siberia & Timur Jauh)"],
+          waterwaysSummary: "Sungai Ob, Sungai Yenisei, & Sungai Lena (bermuara ke Samudra Arktik); Danau Baikal (danau terdalam dan tertua di dunia); Teluk Ob & Teluk Khatanga; Selat Bering (pemisah Asia–Amerika) & Selat Tatar.",
+          waterPins: [
+            { name: "S. Ob", lon: 71.0, lat: 61.0, kind: "river" },
+            { name: "S. Yenisei", lon: 89.5, lat: 64.0, kind: "river" },
+            { name: "S. Lena", lon: 126.5, lat: 64.5, kind: "river" },
+            { name: "D. Baikal", lon: 108.0, lat: 53.5, kind: "lake" },
+            { name: "Teluk Ob", lon: 73.5, lat: 68.5, kind: "gulf" },
+            { name: "Selat Bering", lon: 170.5, lat: 65.8, kind: "strait" },
+            { name: "Selat Tatar", lon: 141.2, lat: 52.0, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Rusia (Siberia Barat)", lon: 76, lat: 62 },
+            { name: "Rusia (Siberia Tengah)", lon: 105, lat: 63 },
+            { name: "Rusia (Timur Jauh)", lon: 142, lat: 63 }
+          ],
+          borders: [
+            [[60, 55], [60, 68]], // Batas Pegunungan Ural (Eropa-Asia)
+            [[88, 52], [88, 72]], // Batas wilayah Siberia Barat-Tengah
+            [[125, 53], [125, 72]] // Batas wilayah Siberia Tengah-Timur Jauh
+          ],
+          areaMillionKm2: 13.50,
+          areaPercent: "30,2% dari luas Asia",
+          peak: "4.750 mdpl (Klyuchevskaya Sopka)",
+          baseTemp: -5.5,
+          baseRainJan: 18,
+          baseRainJul: 55,
+          climateSummary: "Subarktik & Kutub (Tundra)",
+          landformShort: "Dataran rendah Siberia, taiga & tundra",
+          landform: "Dataran rendah Siberia Barat yang sangat luas, Plato Siberia Tengah, pegunungan di timur jauh, serta sungai-sungai panjang yang bermuara ke Samudra Arktik (Ob, Yenisei, Lena).",
+          climate: "Iklim subarktik dan kutub karena berada di lintang tinggi mendekati Lingkar Arktik. Musim dingin berlangsung panjang dengan tanah membeku (permafrost).",
+          bio: "Hutan konifer/berdaun jarum terluas di dunia (Taiga), lumut Tundra di pesisir utara, beruang kutub, rusa kutub, serta cadangan kayu dan mineral besar.",
+          indoLink: "Asia Utara berada di lintang tinggi yang dingin, sedangkan Indonesia berada di lintang rendah Khatulistiwa yang hangat sepanjang tahun.",
+          syukur: "Hutan Taiga di utara dan hutan hujan tropis di Indonesia bersama-sama berfungsi sebagai paru-paru bumi yang menjaga keseimbangan iklim global.",
+          color: "#0284c7",
+          patternType: "waves",
+          labelPos: [104, 62],
+          polygons: [
+            [[60, 55], [61, 61.5], [62, 68], [67, 70.5], [72, 72.5], [79, 73.5], [86, 74.5], [95, 76], [104, 77.5], [113, 75.5], [122, 73.5], [132, 72.5], [142, 71.5], [153, 70.2], [164, 69], [172, 65.5], [167, 62.2], [162, 59], [161.5, 55.5], [161, 52], [156, 51.5], [156, 55], [156, 58], [149, 58.5], [142, 59], [139, 56.5], [136, 54], [135, 51], [134, 48], [127, 50.5], [120, 53], [116, 51.5], [112, 49.5], [105, 50.5], [98, 51.5], [93, 50.5], [88, 49], [86.5, 49.5], [82, 51.5], [78, 53.5], [73, 54], [68, 54.5], [64, 54.8]]
+          ]
+        }
+      },
+      mountains: {
+        chains: [
+          [[32, 38], [46, 36], [56, 30], [74, 35], [86, 28], [96, 22], [97, 3], [106, -6.5], [116, -8.5], [127, -7]],
+          [[160, 56], [142, 42], [138, 35], [121.5, 24], [123, 13], [125, 2], [128, -4]]
+        ],
+        peakCoord: [86.9, 27.9],
+        peakLabel: "▲ Everest (8.848 m)"
+      }
+    },
+
+    amerika: {
+      id: "amerika",
+      name: "Benua Amerika",
+      totalAreaText: "±42,06 juta km²",
+      astroSummary: "170° BB–35° BB & 83° LU–55° LS",
+      latMin: -55,
+      latMax: 83,
+      defaultRegion: "am_selatan",
+      defaultLat: -5,
+      defaultCursor: [-60, -5],
+      viewCenterLon: -96,
+      viewCenterLat: 14,
+      viewLonSpan: 152,
+      latTicks: ["55° LS", "0°", "40° LU", "83° LU"],
+      regions: {
+        am_utara: {
+          id: "am_utara",
+          name: "Amerika Utara",
+          shortName: "Am. Utara",
+          coords: "25° LU – 83° LU dan 170° BB – 52° BB",
+          countries: ["Kanada", "Amerika Serikat", "Meksiko (Utara)", "Greenland (Wilayah Otonom Denmark)"],
+          waterwaysSummary: "Sungai Mississippi-Missouri, Sungai Mackenzie, Sungai St. Lawrence, & Sungai Colorado; Gugusan Great Lakes (Superior, Huron, Michigan, Erie, Ontario), Danau Great Bear, & Danau Great Slave; Teluk Hudson, Teluk Alaska, & Teluk St. Lawrence; Selat Bering & Selat Davis.",
+          waterPins: [
+            { name: "S. Mississippi", lon: -91.0, lat: 35.5, kind: "river" },
+            { name: "S. Mackenzie", lon: -126.0, lat: 64.5, kind: "river" },
+            { name: "S. St. Lawrence", lon: -71.5, lat: 47.5, kind: "river" },
+            { name: "Great Lakes (D. Superior)", lon: -87.5, lat: 47.5, kind: "lake" },
+            { name: "D. Great Bear", lon: -121.0, lat: 66.0, kind: "lake" },
+            { name: "Teluk Hudson", lon: -85.0, lat: 60.0, kind: "gulf" },
+            { name: "Teluk Alaska", lon: -145.0, lat: 57.5, kind: "gulf" },
+            { name: "Selat Bering", lon: -168.5, lat: 65.8, kind: "strait" },
+            { name: "Selat Davis", lon: -58.0, lat: 66.5, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Kanada", lon: -106, lat: 57 },
+            { name: "Amerika Serikat", lon: -99, lat: 39 },
+            { name: "Alaska (AS)", lon: -152, lat: 64 },
+            { name: "Greenland", lon: -42, lat: 72 }
+          ],
+          borders: [
+            [[-141, 60], [-141, 69.5]], // Batas Alaska-Kanada
+            [[-123, 49], [-95, 49], [-83, 43], [-75, 45], [-67, 45]], // Batas Kanada-AS
+            [[-117, 32.5], [-106, 31.8], [-97, 26]] // Batas AS-Meksiko
+          ],
+          areaMillionKm2: 21.78,
+          areaPercent: "51,8% dari luas Amerika",
+          peak: "6.190 mdpl (Gunung Denali)",
+          baseTemp: 8.5,
+          baseRainJan: 55,
+          baseRainJul: 85,
+          climateSummary: "Sedang, Subarktik & Kutub",
+          landformShort: "Pegunungan Rocky, Great Plains & Great Lakes",
+          landform: "Bagian barat didominasi Pegunungan Rocky (Sirkum Pasifik), bagian tengah berupa dataran rendah luas (Great Plains) dialiri Sungai Mississippi-Missouri, dan bagian timur Pegunungan Appalachia.",
+          climate: "Beragam dari iklim subtropis di selatan AS, iklim sedang kontinental dengan 4 musim di tengah, hingga iklim subarktik dan kutub (tundra) di Kanada Utara dan Alaska.",
+          bio: "Hutan konifer/taiga luas di Kanada, padang rumput Prairie (habitat bison), hutan gugur, beruang grizzly, karibu, serta kaya batu bara, minyak bumi, dan gandum.",
+          indoLink: "Berbeda dengan Indonesia yang hanya memiliki dua musim di garis khatulistiwa, Amerika Utara mengalami empat musim dengan perbedaan suhu musim panas dan musim dingin yang mencolok.",
+          syukur: "Luasnya danau-danau air tawar (Great Lakes) dan lahan pertanian di Amerika Utara menunjukkan betapa pentingnya menjaga kelestarian sumber air bagi pangan dunia.",
+          color: "#0ea5e9",
+          patternType: "dots",
+          labelPos: [102, 47],
+          polygons: [
+            [[-168,66],[-164,69],[-158,71.2],[-150,70.5],[-138,69.5],[-128,70.5],[-120,74],[-108,77],[-95,81],[-75,82],[-64,76],[-72,73],[-80,71],[-82,65],[-88,63],[-92,60],[-91,56],[-82,52],[-79,55],[-78,61],[-70,60],[-64,59],[-56,52],[-60,46],[-65,45],[-70,42],[-74,40],[-76,35],[-80,31],[-81,25.5],[-82.8,26],[-83.5,29.8],[-89.5,29.2],[-95,29],[-97,26],[-105,31],[-114,31],[-118,34],[-121.5,37],[-123.5,41],[-124.2,48],[-128,52],[-133,56],[-138,59.5],[-146,60.8],[-151,59.5],[-156,57],[-162,55],[-164,58.5],[-166,62]],
+            [[-52,60],[-44,60],[-38,64],[-32,68],[-22,71],[-18,77],[-26,82],[-42,83],[-58,81],[-68,77],[-60,74],[-55,69],[-53,64]]
+          ]
+        },
+        am_tengah: {
+          id: "am_tengah",
+          name: "Amerika Tengah & Karibia",
+          shortName: "Am. Tengah",
+          coords: "8° LU – 31° LU dan 115° BB – 60° BB",
+          countries: ["Meksiko", "Guatemala", "Belize", "Honduras", "El Salvador", "Nikaragua", "Kosta Rika", "Panama", "Kuba", "Haiti", "Republik Dominika", "Jamaika", "Bahama", "Trinidad & Tobago", "Barbados", "Saint Lucia", "Grenada", "Saint Vincent & Grenadines", "Antigua & Barbuda", "Dominika", "Saint Kitts & Nevis"],
+          waterwaysSummary: "Sungai Rio Grande & Sungai Usumacinta; Danau Nikaragua (terbesar di Amerika Tengah) & Danau Gatun (Terusan Panama); Teluk Meksiko, Teluk California, & Teluk Panama; Selat Yucatan & Selat Florida.",
+          waterPins: [
+            { name: "S. Rio Grande", lon: -101.5, lat: 29.5, kind: "river" },
+            { name: "D. Nikaragua", lon: -85.4, lat: 11.5, kind: "lake" },
+            { name: "Teluk Meksiko", lon: -91.5, lat: 24.5, kind: "gulf" },
+            { name: "Teluk California", lon: -111.5, lat: 27.5, kind: "gulf" },
+            { name: "Teluk Panama", lon: -79.2, lat: 8.2, kind: "gulf" },
+            { name: "Selat Yucatan", lon: -85.8, lat: 21.6, kind: "strait" },
+            { name: "Selat Florida", lon: -80.5, lat: 24.2, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Meksiko", lon: -102, lat: 23.5 },
+            { name: "Guatemala", lon: -90.3, lat: 15.5 },
+            { name: "Belize", lon: -88.7, lat: 17.2 },
+            { name: "Honduras", lon: -86.5, lat: 14.8 },
+            { name: "El Salvador", lon: -88.9, lat: 13.7 },
+            { name: "Nikaragua", lon: -85, lat: 12.8 },
+            { name: "Kosta Rika", lon: -84, lat: 9.9 },
+            { name: "Panama", lon: -80.2, lat: 8.6 },
+            { name: "Kuba", lon: -79, lat: 21.8 },
+            { name: "Jamaika", lon: -77.3, lat: 18.1 },
+            { name: "Haiti", lon: -72.5, lat: 19 },
+            { name: "Rep. Dominika", lon: -70.2, lat: 18.9 },
+            { name: "Bahama", lon: -77.5, lat: 24.5 }
+          ],
+          borders: [
+            [[-92, 14.8], [-91, 17.8], [-88.3, 18]], // Batas Meksiko-Guatemala-Belize
+            [[-89.3, 14.4], [-87.5, 13.2]], // Batas Guatemala-Honduras-El Salvador
+            [[-87.2, 13.2], [-83.5, 14.8]], // Batas Honduras-Nikaragua
+            [[-85.6, 11], [-83.7, 10.8]], // Batas Nikaragua-Kosta Rika
+            [[-82.8, 8.5], [-82.5, 9.5]], // Batas Kosta Rika-Panama
+            [[-71.7, 18.1], [-71.7, 19.8]] // Batas Haiti-Rep. Dominika
+          ],
+          areaMillionKm2: 2.48,
+          areaPercent: "5,9% dari luas Amerika",
+          peak: "5.636 mdpl (Pico de Orizaba)",
+          baseTemp: 25.5,
+          baseRainJan: 65,
+          baseRainJul: 210,
+          climateSummary: "Tropis Basah & Tropis Kering",
+          landformShort: "Tanah genting vulkanik & Kepulauan Karibia",
+          landform: "Berupa tanah genting sempit yang menghubungkan Amerika Utara dan Amerika Selatan (meliputi Meksiko hingga Terusan Panama) serta gugusan pulau-pulau Karibia.",
+          climate: "Didominasi iklim tropis dengan pengaruh angin pasat timur laut; wilayah pesisir Karibia lembap dan sering dilanda badai tropis (hurikan), sedangkan bagian utara Meksiko cenderung kering.",
+          bio: "Hutan hujan tropis, hutan bakau pesisir, tumbuhan kaktus/agave di dataran tinggi kering Meksiko, jaguar, burung quetzal, serta hasil kopi, pisang, dan tebu.",
+          indoLink: "Seperti Indonesia yang berada di jalur Cincin Api Pasifik, Amerika Tengah memiliki banyak gunung api aktif akibat pertemuan lempeng tektonik sehingga tanahnya subur namun rawan gempa.",
+          syukur: "Keindahan kepulauan tropis dan kesuburan tanah vulkanik mengingatkan kita untuk selalu siaga bencana sekaligus bersyukur atas kekayaan alam ciptaan Tuhan.",
+          color: "#f59e0b",
+          patternType: "diag",
+          labelPos: [-96, 20],
+          polygons: [
+            [[-114,31],[-105,31],[-97,26],[-97.5,22],[-96,19],[-92,18.2],[-90.5,21.2],[-87,21.4],[-87.8,18.2],[-85.5,15.8],[-83.3,15],[-83.8,11],[-82.5,9.2],[-78,8],[-80,8.8],[-83,9.5],[-86.5,12.2],[-90,13.8],[-94,15.8],[-100,17.5],[-105.5,20.5],[-109,24.5],[-112,29],[-114.5,30.5],[-112,25],[-110,23],[-111.5,25],[-115,28.5],[-117,32]],
+            [[-84.8,22],[-81,23.1],[-77.5,21.8],[-74.2,20.1],[-77.5,19.9],[-82,21.8]],
+            [[-74.2,18.5],[-71.5,19.8],[-68.5,18.6],[-71.2,17.8]]
+          ]
+        },
+        am_selatan: {
+          id: "am_selatan",
+          name: "Amerika Selatan",
+          shortName: "Am. Selatan",
+          coords: "12° LU – 55° LS dan 81° BB – 35° BB",
+          countries: ["Brasil", "Argentina", "Peru", "Kolombia", "Bolivia", "Venezuela", "Chili", "Ekuador", "Guyana", "Suriname", "Uruguay", "Paraguay"],
+          waterwaysSummary: "Sungai Amazon (debit terbesar di dunia), Sungai Paraná-La Plata, & Sungai Orinoco; Danau Titicaca (danau tertinggi di dunia yang dapat dilayari) & Danau Maracaibo; Teluk Guayaquil & Teluk San Jorge; Selat Magellan & Selat Drake.",
+          waterPins: [
+            { name: "S. Amazon", lon: -60.0, lat: -3.2, kind: "river" },
+            { name: "S. Paraná", lon: -58.5, lat: -27.5, kind: "river" },
+            { name: "S. Orinoco", lon: -64.5, lat: 7.5, kind: "river" },
+            { name: "D. Titicaca", lon: -69.4, lat: -15.8, kind: "lake" },
+            { name: "D. Maracaibo", lon: -71.5, lat: 9.8, kind: "lake" },
+            { name: "Teluk Guayaquil", lon: -80.6, lat: -2.8, kind: "gulf" },
+            { name: "Selat Magellan", lon: -70.8, lat: -53.5, kind: "strait" },
+            { name: "Selat Drake", lon: -68.0, lat: -56.5, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Brasil", lon: -52, lat: -10 },
+            { name: "Argentina", lon: -65, lat: -35 },
+            { name: "Peru", lon: -75.5, lat: -9.5 },
+            { name: "Kolombia", lon: -73.5, lat: 4 },
+            { name: "Bolivia", lon: -64.5, lat: -16.5 },
+            { name: "Venezuela", lon: -66, lat: 7.5 },
+            { name: "Chili", lon: -71, lat: -31 },
+            { name: "Ekuador", lon: -78.5, lat: -1.5 },
+            { name: "Guyana", lon: -59, lat: 5 },
+            { name: "Suriname", lon: -56, lat: 4 },
+            { name: "Paraguay", lon: -58, lat: -23.5 },
+            { name: "Uruguay", lon: -56, lat: -32.8 }
+          ],
+          borders: [
+            [[-72, 11], [-67, 6], [-61, 4.5]], // Batas Kolombia-Venezuela
+            [[-78.5, 1], [-75.5, -0.5], [-80, -4]], // Batas Kolombia-Ekuador-Peru
+            [[-70, -1], [-70, -10], [-68.5, -17.5]], // Batas Kolombia-Peru-Brasil-Bolivia
+            [[-69.5, -18], [-70, -33], [-70.5, -52]], // Batas Chili-Bolivia-Argentina
+            [[-65, -22], [-58, -20], [-54, -25.5], [-57.5, -30]], // Batas Bolivia-Paraguay-Brasil-Argentina
+            [[-58, -30.5], [-53.5, -33.5]], // Batas Brasil-Uruguay
+            [[-60, 1.5], [-57.5, 5.5]], // Batas Guyana
+            [[-57.5, 2], [-54.5, 5.5]] // Batas Suriname
+          ],
+          areaMillionKm2: 17.80,
+          areaPercent: "42,3% dari luas Amerika",
+          peak: "6.960 mdpl (Gunung Aconcagua)",
+          baseTemp: 24.8,
+          baseRainJan: 240,
+          baseRainJul: 120,
+          climateSummary: "Tropis Basah, Gurun & Sedang",
+          landformShort: "Pegunungan Andes, Lembah Amazon & Pampas",
+          landform: "Pegunungan Andes memanjang di pantai barat (terpanjang di dunia dengan puncak Aconcagua 6.960 m), Cekungan Sungai Amazon yang sangat luas di utara-tengah, serta dataran tinggi Brasil dan padang rumput Pampas di selatan.",
+          climate: "Iklim tropis basah di lembah Amazon sepanjang tahun, iklim gurun sangat kering di Gurun Atacama (Chili) akibat bayangan hujan Pegunungan Andes, serta iklim sedang hingga dingin di Patagonia selatan.",
+          bio: "Hutan hujan tropis Amazon (hutan tropis terluas di dunia, 'paru-paru bumi'), jaguar, anakonda, llama, kondor Andes, serta kaya bijih besi, tembaga, dan keanekaragaman hayati.",
+          indoLink: "Lembah Amazon di Amerika Selatan berada pada garis lintang khatulistiwa yang sama dengan Kalimantan dan Sumatera di Indonesia, sehingga keduanya memiliki ekosistem hutan hujan tropis yang serupa.",
+          syukur: "Hutan Amazon dan hutan tropis Indonesia sama-sama menyuplai oksigen dan menyerap karbon dunia—amanah besar dari Allah SWT untuk dijaga bersama.",
+          color: "#10b981",
+          patternType: "stripes",
+          labelPos: [-58, -14],
+          polygons: [
+            [[-78,8],[-76,10.5],[-72,12.2],[-68,11.2],[-62,10.4],[-56,6.2],[-51,2.2],[-49.5,-0.5],[-46,-1.5],[-41,-2.8],[-35.2,-5.8],[-35,-8.5],[-38.5,-13.5],[-39.5,-18.5],[-41,-22.2],[-45,-23.8],[-48.5,-27],[-52,-32.5],[-55,-35],[-58,-38],[-62.5,-39.5],[-64,-42.5],[-66,-46.5],[-68.5,-52.5],[-66.5,-54.8],[-71.5,-54.2],[-74.5,-49.5],[-74,-43],[-72.5,-37],[-71.2,-30],[-70.4,-22],[-71.5,-17.5],[-76.2,-14],[-79.5,-8.5],[-81.2,-4.8],[-80.2,0.5],[-78.5,4.5]]
+          ]
+        }
+      },
+      mountains: {
+        chains: [
+          [[-135, 60], [-122, 53], [-114, 46], [-108, 39], [-105, 31], [-100, 22]],
+          [[-75, 5], [-77, -5], [-71, -15], [-69, -25], [-70, -35], [-71, -46]]
+        ],
+        peakCoord: [-70.0, -32.6],
+        peakLabel: "▲ Aconcagua (6.960 m)"
+      }
+    },
+
+    eropa: {
+      id: "eropa",
+      name: "Benua Eropa",
+      totalAreaText: "±10,36 juta km²",
+      astroSummary: "9° BB–66° BT & 35° LU–71° LU",
+      latMin: 35,
+      latMax: 71,
+      defaultRegion: "eu_barat",
+      defaultLat: 49,
+      defaultCursor: [3, 49],
+      viewCenterLon: 24,
+      viewCenterLat: 54,
+      viewLonSpan: 86,
+      latTicks: ["35° LU", "47° LU", "59° LU", "71° LU"],
+      regions: {
+        eu_utara: {
+          id: "eu_utara",
+          name: "Eropa Utara (Skandinavia & Baltik)",
+          shortName: "Er. Utara",
+          coords: "54° LU – 71° LU dan 24° BB – 31° BT",
+          countries: ["Norwegia", "Swedia", "Finlandia", "Denmark", "Islandia", "Estonia", "Latvia", "Lituania"],
+          waterwaysSummary: "Sungai Klarälven-Göta & Sungai Kemijoki; Danau Vänern, Danau Vättern, & Danau Saimaa (negeri seribu danau Finlandia); Teluk Bothnia, Teluk Finlandia, & Teluk Riga; Selat Skagerrak, Selat Kattegat, & Selat Denmark.",
+          waterPins: [
+            { name: "D. Vänern", lon: 13.5, lat: 58.9, kind: "lake" },
+            { name: "D. Saimaa", lon: 28.2, lat: 61.5, kind: "lake" },
+            { name: "Teluk Bothnia", lon: 20.0, lat: 63.0, kind: "gulf" },
+            { name: "Teluk Finlandia", lon: 26.5, lat: 59.8, kind: "gulf" },
+            { name: "Selat Skagerrak", lon: 9.2, lat: 57.9, kind: "strait" },
+            { name: "Selat Denmark", lon: -26.5, lat: 66.0, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Norwegia", lon: 8.5, lat: 61.5 },
+            { name: "Swedia", lon: 15.5, lat: 62 },
+            { name: "Finlandia", lon: 26, lat: 64 },
+            { name: "Denmark", lon: 9.5, lat: 56 },
+            { name: "Islandia", lon: -19, lat: 65 },
+            { name: "Estonia", lon: 25.5, lat: 58.8 },
+            { name: "Latvia", lon: 25, lat: 57 },
+            { name: "Lituania", lon: 24, lat: 55.3 }
+          ],
+          borders: [
+            [[5.5, 59], [12, 61.5], [16, 66], [21, 69]], // Batas Norwegia-Swedia
+            [[21, 69], [24, 66]], // Batas Swedia-Finlandia
+            [[22, 57.8], [27.5, 57.6]], // Batas Estonia-Latvia
+            [[21.5, 56.2], [26.5, 56]] // Batas Latvia-Lituania
+          ],
+          areaMillionKm2: 1.75,
+          areaPercent: "16,9% dari luas Eropa",
+          peak: "2.469 mdpl (Galdhøpiggen)",
+          baseTemp: 4.5,
+          baseRainJan: 65,
+          baseRainJul: 75,
+          climateSummary: "Sedang Dingin & Subarktik",
+          landformShort: "Pantai fyord, pegunungan tua & ribuan danau",
+          landform: "Meliputi Semenanjung Skandinavia (Norwegia, Swedia, Finlandia), Denmark, Islandia, dan negara Baltik. Bentang alamnya berupa pegunungan tua yang terkikis gletser membentuk teluk curam (fyord) serta ribuan danau di Finlandia.",
+          climate: "Iklim sedang maritim di pesisir barat Norwegia (dihangatkan arus laut hangat Gulf Stream) hingga iklim subarktik dan kutub di bagian utara dengan fenomena matahari tengah malam saat musim panas.",
+          bio: "Hutan konifer/taiga (pinus dan cemara), lumut tundra di ujung utara, rusa kutub (reindeer), rubah arktik, serta sumber energi air (PLTA) dan hasil laut melimpah.",
+          indoLink: "Berbeda dengan Indonesia yang durasi siang dan malamnya hampir selalu 12 jam sepanjang tahun, Eropa Utara mengalami siang sangat panjang di musim panas dan malam sangat panjang di musim dingin.",
+          syukur: "Arus laut hangat yang mencegah pelabuhan Norwegia membeku di lintang tinggi adalah bukti keteraturan sistem alam ciptaan Allah SWT.",
+          color: "#0284c7",
+          patternType: "waves",
+          labelPos: [16, 63],
+          polygons: [
+            [[5,60],[5.5,62.5],[9,64.5],[14,68],[20,70.2],[26,71.2],[30.5,70.2],[31,66],[30,60],[24,60],[21,56],[19.5,54.5],[15,54.5],[13,55.5],[12.5,57.5],[10.5,57.8],[8.5,57],[8.2,54.5],[9,54.8],[10.5,59],[8,58.2]],
+            [[-24,64.2],[-19,63.5],[-14,64.3],[-14.5,66.2],[-20,66.3],[-23.5,65.5]]
+          ]
+        },
+        eu_barat: {
+          id: "eu_barat",
+          name: "Eropa Barat",
+          shortName: "Er. Barat",
+          coords: "42° LU – 58° LU dan 10° BB – 16° BT",
+          countries: ["Inggris (Britania Raya)", "Irlandia", "Prancis", "Jerman", "Belanda", "Belgia", "Luksemburg", "Swiss", "Austria", "Liechtenstein", "Monako"],
+          waterwaysSummary: "Sungai Rhine, Sungai Seine, Sungai Loire, Sungai Elbe, & Sungai Thames; Danau Jenewa (Léman) & Danau Constance (Bodensee); Teluk Biscay & Teluk Zuiderzee (IJsselmeer); Selat Inggris (English Channel) & Selat Dover.",
+          waterPins: [
+            { name: "S. Rhine", lon: 7.5, lat: 50.5, kind: "river" },
+            { name: "S. Seine", lon: 2.2, lat: 48.8, kind: "river" },
+            { name: "S. Thames", lon: -0.8, lat: 51.5, kind: "river" },
+            { name: "D. Jenewa", lon: 6.5, lat: 46.4, kind: "lake" },
+            { name: "Teluk Biscay", lon: -4.2, lat: 45.5, kind: "gulf" },
+            { name: "Selat Inggris", lon: -1.8, lat: 50.0, kind: "strait" },
+            { name: "Selat Dover", lon: 1.4, lat: 51.0, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Inggris", lon: -2, lat: 53.5 },
+            { name: "Irlandia", lon: -8, lat: 53.2 },
+            { name: "Prancis", lon: 2.3, lat: 46.8 },
+            { name: "Jerman", lon: 10.3, lat: 51.2 },
+            { name: "Belanda", lon: 5.5, lat: 52.3 },
+            { name: "Belgia", lon: 4.5, lat: 50.6 },
+            { name: "Luksemburg", lon: 6.1, lat: 49.8 },
+            { name: "Swiss", lon: 8.2, lat: 46.8 },
+            { name: "Austria", lon: 14, lat: 47.5 }
+          ],
+          borders: [
+            [[-7.5, 54.2], [-6, 54.5]], // Batas Irlandia-Irlandia Utara
+            [[2.5, 51], [6, 49.5], [8, 49]], // Batas Prancis-Belgia-Jerman
+            [[3.5, 51.3], [6.8, 51.8], [7, 53.3]], // Batas Belanda-Belgia-Jerman
+            [[6, 46.5], [7.5, 47.5], [9.8, 47.4]], // Batas Swiss
+            [[9.8, 47.4], [13.5, 48.2], [16.5, 48]] // Batas Austria-Jerman
+          ],
+          areaMillionKm2: 1.11,
+          areaPercent: "10,7% dari luas Eropa",
+          peak: "4.808 mdpl (Mont Blanc - Alpen)",
+          baseTemp: 11.2,
+          baseRainJan: 72,
+          baseRainJul: 68,
+          climateSummary: "Sedang Maritim (4 Musim)",
+          landformShort: "Dataran rendah subur, Sungai Rhine & Peg. Alpen",
+          landform: "Meliputi Inggris, Irlandia, Prancis, Belanda, Belgia, Jerman, Swiss, dan Austria. Terdiri atas Dataran Rendah Eropa yang subur, lembah Sungai Rhine, Seine, dan Thames, serta Pegunungan Alpen yang menjulang tinggi di bagian selatan.",
+          climate: "Iklim sedang maritim yang dipengaruhi angin barat dari Samudra Atlantik dan arus hangat Gulf Stream, sehingga curah hujan merata sepanjang tahun dengan 4 musim yang sejuk.",
+          bio: "Hutan gugur berdaun lebar (pohon ek, beech, maple) yang daunnya menguning dan gugur pada musim gugur, rusa merah, rubah, serta pertanian modern dan industri maju.",
+          indoLink: "Eropa Barat memiliki hubungan dagang historis dan modern yang erat dengan Indonesia, terutama dalam ekspor komoditas tropis Indonesia (kopi, kakao, karet) yang tidak dapat tumbuh di iklim sedang Eropa.",
+          syukur: "Sungai-sungai besar yang tenang dan dapat dilayari jauh ke pedalaman menjadi jalur transportasi alami yang memudahkan interaksi antarbangsa.",
+          color: "#10b981",
+          patternType: "stripes",
+          labelPos: [3, 49],
+          polygons: [
+            [[-4.8,48.2],[-1.5,49.5],[2,51],[4.5,52.5],[7.5,53.8],[9,54.8],[11.5,54.6],[14,55],[14.5,51.5],[15,48],[16,47],[10,46],[6.5,43.2],[3.2,42.5],[-1.8,43.3],[-3.2,45.5],[-4.5,47.5]],
+            [[-5.6,50.1],[-1.5,50.7],[1.4,51.2],[1.6,52.6],[-0.5,53.8],[-2,55.8],[-2.2,57.6],[-4.8,58.5],[-5.8,56.5],[-4.8,54.5],[-3.2,53.4],[-4.8,52],[-4.5,50.8]],
+            [[-10.2,51.8],[-8.2,51.8],[-6.2,52.3],[-6,54.8],[-8.5,55.3],[-10.1,53.8]]
+          ]
+        },
+        eu_timur: {
+          id: "eu_timur",
+          name: "Eropa Timur",
+          shortName: "Er. Timur",
+          coords: "44° LU – 70° LU dan 14° BT – 66° BT",
+          countries: ["Rusia (Wilayah Eropa)", "Ukraina", "Polandia", "Belarus", "Rumania", "Ceko", "Slowakia", "Hungaria", "Bulgaria", "Moldova"],
+          waterwaysSummary: "Sungai Volga (terpanjang di Eropa), Sungai Danube, Sungai Dnieper, & Sungai Vistula; Danau Ladoga (terluas di Eropa), Danau Onega, & Danau Balaton; Teluk Gdansk & Laut Azov; Selat Kerch.",
+          waterPins: [
+            { name: "S. Volga", lon: 46.0, lat: 52.0, kind: "river" },
+            { name: "S. Danube", lon: 23.5, lat: 44.2, kind: "river" },
+            { name: "S. Dnieper", lon: 32.5, lat: 49.5, kind: "river" },
+            { name: "D. Ladoga", lon: 31.5, lat: 60.8, kind: "lake" },
+            { name: "D. Balaton", lon: 17.7, lat: 46.8, kind: "lake" },
+            { name: "Laut Azov", lon: 36.8, lat: 46.0, kind: "gulf" },
+            { name: "Selat Kerch", lon: 36.5, lat: 45.2, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Rusia (Eropa)", lon: 41, lat: 57 },
+            { name: "Ukraina", lon: 31.5, lat: 49 },
+            { name: "Polandia", lon: 19.5, lat: 52.2 },
+            { name: "Belarus", lon: 28, lat: 53.5 },
+            { name: "Rumania", lon: 25, lat: 46 },
+            { name: "Ceko", lon: 15.5, lat: 49.8 },
+            { name: "Slowakia", lon: 19.5, lat: 48.7 },
+            { name: "Hungaria", lon: 19.3, lat: 47.2 },
+            { name: "Bulgaria", lon: 25.3, lat: 42.8 },
+            { name: "Moldova", lon: 28.5, lat: 47.2 }
+          ],
+          borders: [
+            [[23.5, 54], [24, 51.5], [22.5, 49.2]], // Batas Polandia-Belarus-Ukraina
+            [[24, 51.5], [31, 52.2], [38, 49.5]], // Batas Belarus-Ukraina-Rusia
+            [[28, 56], [32, 54], [38, 50]], // Batas Belarus-Rusia
+            [[15, 50.8], [18.5, 49.6], [22.5, 49.2]], // Batas Polandia-Ceko-Slowakia
+            [[17, 48], [22.5, 48.2]], // Batas Slowakia-Hungaria
+            [[22, 47.8], [26.5, 48], [28.5, 45.5]], // Batas Rumania-Ukraina-Moldova
+            [[22.8, 44], [28, 43.8]] // Batas Rumania-Bulgaria
+          ],
+          areaMillionKm2: 6.18,
+          areaPercent: "59,6% dari luas Eropa",
+          peak: "5.642 mdpl (Gunung Elbrus - Kaukasus)",
+          baseTemp: 6.8,
+          baseRainJan: 38,
+          baseRainJul: 74,
+          climateSummary: "Sedang Kontinental (Darat)",
+          landformShort: "Dataran rendah luas, Sungai Volga & Peg. Ural",
+          landform: "Region terluas di Eropa (mencakup Rusia bagian Eropa, Ukraina, Polandia, Belarus, Rumania, Hungaria). Berupa dataran rendah luas yang dialiri Sungai Volga dan Danube, dibatasi Pegunungan Ural (batas dengan Asia) di timur dan Pegunungan Kaukasus di tenggara.",
+          climate: "Iklim kontinental (darat) karena jaraknya jauh dari Samudra Atlantik. Musim dingin berlangsung dingin dan bersalju tebal, sedangkan musim panas hangat.",
+          bio: "Hutan campuran dan hutan taiga di utara, padang rumput subur ('tanah hitam' chernozem di Ukraina) sebagai lumbung gandum dan bunga matahari dunia.",
+          indoLink: "Kesuburan tanah hitam di Eropa Timur menjadikan kawasan ini pemasok utama gandum dunia, termasuk memenuhi kebutuhan tepung terigu yang dikonsumsi masyarakat Indonesia.",
+          syukur: "Keragaman sumber pangan pokok antarbenua (padi di Asia Tenggara dan gandum di Eropa Timur) mendorong kerja sama saling menguntungkan antarnegara.",
+          color: "#8b5cf6",
+          patternType: "grid",
+          labelPos: [38, 54],
+          polygons: [
+            [[14,55],[17.5,55.5],[21,56],[22.5,58],[24,60],[27,60],[30,60],[30.5,65],[31,70],[35.5,68.5],[40,67],[42,67.5],[44,68],[51,68.5],[58,69],[65,68],[63.5,63],[62,58],[61,54.5],[60,51],[56,49],[52,47],[48,46],[44,45],[40,44],[38,45],[35.5,45.5],[33,46],[29,45],[28.5,44.5],[22,45],[16,47],[15,48],[14.5,51.5]]
+          ]
+        },
+        eu_selatan: {
+          id: "eu_selatan",
+          name: "Eropa Selatan (Mediterania)",
+          shortName: "Er. Selatan",
+          coords: "35° LU – 47° LU dan 9° BB – 29° BT",
+          countries: ["Spanyol", "Portugal", "Italia", "Yunani", "Kroasia", "Serbia", "Bosnia & Herzegovina", "Slovenia", "Albania", "Makedonia Utara", "Montenegro", "Malta", "Andorra", "San Marino", "Vatikan"],
+          waterwaysSummary: "Sungai Po, Sungai Tiber, Sungai Ebro, & Sungai Tagus; Danau Garda, Danau Como, & Danau Ohrid; Teluk Venesia, Teluk Taranto, & Teluk Korintus; Selat Gibraltar (pintu Atlantik–Mediterania), Selat Messina, & Selat Dardanella.",
+          waterPins: [
+            { name: "S. Po", lon: 11.2, lat: 45.0, kind: "river" },
+            { name: "S. Ebro", lon: -0.5, lat: 41.5, kind: "river" },
+            { name: "D. Garda", lon: 10.6, lat: 45.6, kind: "lake" },
+            { name: "Teluk Venesia", lon: 12.8, lat: 45.2, kind: "gulf" },
+            { name: "Teluk Taranto", lon: 17.2, lat: 39.8, kind: "gulf" },
+            { name: "Selat Gibraltar", lon: -5.6, lat: 36.0, kind: "strait" },
+            { name: "Selat Messina", lon: 15.6, lat: 38.2, kind: "strait" },
+            { name: "Selat Dardanella", lon: 26.4, lat: 40.2, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Spanyol", lon: -4, lat: 40.3 },
+            { name: "Portugal", lon: -8.2, lat: 39.8 },
+            { name: "Italia", lon: 12.6, lat: 42.8 },
+            { name: "Yunani", lon: 22, lat: 39.5 },
+            { name: "Kroasia", lon: 16, lat: 45.3 },
+            { name: "Bosnia", lon: 17.8, lat: 44.1 },
+            { name: "Serbia", lon: 20.8, lat: 44.2 },
+            { name: "Albania", lon: 20, lat: 41.1 },
+            { name: "Makedonia Ut.", lon: 21.7, lat: 41.6 },
+            { name: "Slovenia", lon: 14.8, lat: 46.1 },
+            { name: "Montenegro", lon: 19.3, lat: 42.7 },
+            { name: "Malta", lon: 14.4, lat: 35.9 }
+          ],
+          borders: [
+            [[-7.2, 41.8], [-7.2, 37.2]], // Batas Spanyol-Portugal
+            [[7, 45.5], [10.5, 46.5], [13.5, 46.5]], // Batas Italia Utara
+            [[14, 45.6], [16.5, 46], [19, 45]], // Batas Slovenia-Kroasia
+            [[16.2, 45], [19.2, 44.5], [18.5, 42.8]], // Batas Bosnia-Serbia
+            [[19.5, 42.5], [20.5, 41], [21, 39.8]], // Batas Albania-Yunani
+            [[21, 41.3], [22.8, 41.3]] // Batas Makedonia Utara-Yunani
+          ],
+          areaMillionKm2: 1.32,
+          areaPercent: "12,8% dari luas Eropa",
+          peak: "4.808 mdpl (Mont Blanc - perbatasan Alpen)",
+          baseTemp: 16.5,
+          baseRainJan: 82,
+          baseRainJul: 18,
+          climateSummary: "Iklim Mediterania",
+          landformShort: "Tiga semenanjung besar & pegunungan lipatan",
+          landform: "Terdiri atas tiga semenanjung utama di tepi Laut Tengah (Mediterania): Semenanjung Iberia (Spanyol-Portugal), Semenanjung Italia (Apenina), dan Semenanjung Balkan (Yunani-Kroasia), dengan bentang alam bergunung dan banyak pulau.",
+          climate: "Iklim Mediterania yang khas: musim panas terasa hangat, cerah, dan sangat kering, sedangkan musim dingin sejuk dan banyak turun hujan.",
+          bio: "Tumbuhan berdaun keras dan berakar dalam untuk menahan kekeringan musim panas seperti pohon zaitun, anggur, jeruk, dan ek gabus.",
+          indoLink: "Berbeda dengan Indonesia yang curah hujannya tinggi saat matahari berada di atas kepala, wilayah Mediterania justru mengalami musim kering saat musim panas dan hujan saat musim dingin.",
+          syukur: "Adaptasi tanaman zaitun dan anggur terhadap iklim kering Mediterania menunjukkan hikmah penciptaan Allah SWT yang menyesuaikan makhluk dengan lingkungannya.",
+          color: "#f59e0b",
+          patternType: "cross",
+          labelPos: [14, 41],
+          polygons: [
+            [[-9.2,37.1],[-9.3,41.8],[-8.5,43.3],[-5.2,43.4],[-1.8,43.3],[3.2,42.5],[6.5,43.2],[9.2,44.2],[10.8,42.5],[13.5,40.8],[15.6,38.1],[18.2,40.1],[16.2,41.8],[13.8,43.6],[12.5,45.3],[14.2,45.2],[16.5,43.5],[19.2,42],[20.2,39.5],[22.5,36.8],[24,38.2],[23.5,40.5],[26.5,40.8],[28.8,41.4],[28.5,44.5],[22,45],[16,47],[10,46],[6.5,43.2],[3.2,42.5],[0.5,40.5],[-0.8,37.6],[-5.4,36.1],[-7.5,37]]
+          ]
+        }
+      },
+      mountains: {
+        chains: [
+          [[-1, 42.5], [7, 46], [11, 46.5], [15, 47], [22, 43]],
+          [[60, 65], [60, 59], [59, 53]]
+        ],
+        peakCoord: [42.4, 43.3],
+        peakLabel: "▲ Elbrus (5.642 m)"
+      }
+    },
+
+    afrika: {
+      id: "afrika",
+      name: "Benua Afrika",
+      totalAreaText: "±30,37 juta km²",
+      astroSummary: "17° BB–51° BT & 37° LU–35° LS",
+      latMin: -35,
+      latMax: 37,
+      defaultRegion: "af_utara",
+      defaultLat: 22,
+      defaultCursor: [15, 22],
+      viewCenterLon: 18,
+      viewCenterLat: 2,
+      viewLonSpan: 86,
+      latTicks: ["35° LS", "0°", "18° LU", "37° LU"],
+      regions: {
+        af_utara: {
+          id: "af_utara",
+          name: "Afrika Utara (Sahara & Lembah Nil)",
+          shortName: "Af. Utara",
+          coords: "15° LU – 37° LU dan 17° BB – 37° BT",
+          countries: ["Mesir", "Libya", "Aljazair", "Maroko", "Tunisia", "Sudan"],
+          waterwaysSummary: "Sungai Nil (sungai terpanjang di dunia, ±6.650 km) & Sungai Nil Biru; Danau Nasser (bendungan Aswan) & Chott el Djerid; Teluk Sidra (Sirte) & Teluk Suez; Selat Gibraltar & Terusan Suez (penghubung Laut Tengah–Laut Merah).",
+          waterPins: [
+            { name: "S. Nil", lon: 31.2, lat: 26.0, kind: "river" },
+            { name: "D. Nasser", lon: 32.8, lat: 23.2, kind: "lake" },
+            { name: "Teluk Sidra", lon: 18.0, lat: 31.5, kind: "gulf" },
+            { name: "Terusan Suez", lon: 32.3, lat: 30.5, kind: "strait" },
+            { name: "Selat Gibraltar", lon: -5.6, lat: 35.9, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Mesir", lon: 29.5, lat: 26.5 },
+            { name: "Libya", lon: 17.5, lat: 27 },
+            { name: "Aljazair", lon: 2.5, lat: 28 },
+            { name: "Maroko", lon: -6.5, lat: 32 },
+            { name: "Tunisia", lon: 9.5, lat: 34 },
+            { name: "Sudan", lon: 30, lat: 16.5 }
+          ],
+          borders: [
+            [[-8.5, 27.5], [-2, 32], [-2, 35]], // Batas Maroko-Aljazair
+            [[8.5, 36.8], [9.5, 30.2]], // Batas Tunisia-Aljazair-Libya
+            [[9.5, 30], [11.5, 23.5], [24, 20]], // Batas Aljazair-Libya
+            [[25, 31.5], [25, 22], [35, 22]], // Batas Libya-Mesir-Sudan
+            [[24, 20], [24, 15.5]] // Batas Libya-Sudan
+          ],
+          areaMillionKm2: 8.53,
+          areaPercent: "28,1% dari luas Afrika",
+          peak: "4.167 mdpl (Gunung Toubkal - Atlas)",
+          baseTemp: 28.5,
+          baseRainJan: 18,
+          baseRainJul: 12,
+          climateSummary: "Iklim Gurun (Arid) & Mediterania",
+          landformShort: "Gurun Sahara, Pegunungan Atlas & Lembah Nil",
+          landform: "Didominasi Gurun Sahara (±9 juta km², gurun pasir panas terluas di dunia), Pegunungan Atlas di barat laut, serta lembah dan delta Sungai Nil yang subur di Mesir dan Sudan.",
+          climate: "Iklim gurun sangat kering dengan amplitudo suhu harian tajam (panas terik di siang hari, dingin di malam hari), kecuali pesisir Laut Tengah yang beriklim Mediterania.",
+          bio: "Tumbuhan xerofit tahan kering (kurma oasis, kaktus, semak berduri), unta berpunuk satu, rubah fennec, serta cadangan minyak bumi, gas alam, dan fosfat.",
+          indoLink: "Sungai Nil menjadi sumber kehidupan di tengah gurun Afrika Utara, serupa dengan peran sungai-sungai besar di Indonesia sebagai pusat permukiman dan pertanian.",
+          syukur: "Keberadaan Sungai Nil dan mata air oasis di tengah luasnya Gurun Sahara merupakan tanda kasih sayang Allah SWT yang menjaga kelangsungan hidup manusia.",
+          color: "#f59e0b",
+          patternType: "grid",
+          labelPos: [14, 24],
+          polygons: [
+            [[-17,15],[-16.8,19.5],[-15.5,23.5],[-13.2,27.5],[-9.5,31.5],[-5.8,35.8],[-1,35.6],[3.5,36.8],[9.5,37.2],[11,34.5],[12.5,32.8],[16,31.5],[20,32.5],[24.5,31.8],[30,31.4],[32.6,31.2],[33.6,29.4],[34.2,27.9],[34.8,28.0],[32.8,29.6],[34.5,27.8],[36.8,23.5],[38.5,19.5],[36.5,15],[30,15],[24,15],[14,14],[7,14.5],[0,15],[-6,15],[-12,15]]
+          ]
+        },
+        af_barat: {
+          id: "af_barat",
+          name: "Afrika Barat",
+          shortName: "Af. Barat",
+          coords: "4° LU – 25° LU dan 17° BB – 16° BT",
+          countries: ["Nigeria", "Ghana", "Pantai Gading", "Mali", "Niger", "Burkina Faso", "Senegal", "Guinea", "Benin", "Togo", "Sierra Leone", "Liberia", "Mauritania", "Gambia", "Guinea-Bissau", "Tanjung Verde"],
+          waterwaysSummary: "Sungai Niger, Sungai Senegal, & Sungai Volta; Danau Volta (waduk terbesar berdasarkan luas permukaan) & Danau Chad; Teluk Guinea, Teluk Benin, & Teluk Biafra.",
+          waterPins: [
+            { name: "S. Niger", lon: 3.5, lat: 12.5, kind: "river" },
+            { name: "S. Senegal", lon: -13.5, lat: 15.8, kind: "river" },
+            { name: "D. Volta", lon: 0.0, lat: 7.5, kind: "lake" },
+            { name: "D. Chad", lon: 14.0, lat: 13.2, kind: "lake" },
+            { name: "Teluk Guinea", lon: 2.5, lat: 3.5, kind: "gulf" }
+          ],
+          countryPins: [
+            { name: "Nigeria", lon: 8, lat: 9.5 },
+            { name: "Niger", lon: 9, lat: 17 },
+            { name: "Mali", lon: -3.5, lat: 17 },
+            { name: "Mauritania", lon: -10.5, lat: 20 },
+            { name: "Senegal", lon: -14.5, lat: 14.5 },
+            { name: "Guinea", lon: -11, lat: 10.8 },
+            { name: "Pantai Gading", lon: -5.5, lat: 7.5 },
+            { name: "Ghana", lon: -1.2, lat: 7.8 },
+            { name: "Burkina Faso", lon: -1.8, lat: 12.3 },
+            { name: "Benin", lon: 2.3, lat: 9.5 },
+            { name: "Togo", lon: 1, lat: 8.5 },
+            { name: "Liberia", lon: -9.5, lat: 6.4 },
+            { name: "Sierra Leone", lon: -11.8, lat: 8.5 }
+          ],
+          borders: [
+            [[-16, 16.5], [-12, 15], [-5.5, 15.5], [-5, 24]], // Batas Mauritania-Senegal-Mali
+            [[-12, 12.5], [-8, 11], [-8, 7.5]], // Batas Guinea-Mali-Pantai Gading
+            [[-5.5, 10.5], [2.5, 11.5]], // Batas Burkina Faso
+            [[-3, 11], [-3, 5.2]], // Batas Pantai Gading-Ghana
+            [[1.2, 11], [1.2, 6.2]], // Batas Ghana-Togo-Benin
+            [[3.5, 13.5], [3.5, 6.5]], // Batas Benin-Nigeria
+            [[3.5, 13.5], [13.5, 13.5]] // Batas Niger-Nigeria
+          ],
+          areaMillionKm2: 6.14,
+          areaPercent: "20,2% dari luas Afrika",
+          peak: "4.095 mdpl (Gunung Kamerun)",
+          baseTemp: 27.6,
+          baseRainJan: 24,
+          baseRainJul: 215,
+          climateSummary: "Tropis Sabana & Hutan Hujan Pesisir",
+          landformShort: "Zona transisi Sahel, Sungai Niger & Teluk Guinea",
+          landform: "Terbentang dari zona semikering Sahel di selatan Sahara hingga dataran rendah pesisir Teluk Guinea yang dialiri Sungai Niger dan Sungai Volta.",
+          climate: "Iklim tropis basah di pesisir selatan (curah hujan tinggi saat angin muson barat daya berembus dari Atlantik) dan iklim tropis kering/sabana di bagian utara.",
+          bio: "Sabana dengan pohon baobab dan akasia di utara, hutan hujan tropis di pesisir Guinea, gajah afrika, singa, serta kaya kakao, emas, dan minyak bumi.",
+          indoLink: "Afrika Barat (seperti Pantai Gading dan Ghana) bersama Indonesia merupakan penghasil utama biji kakao dunia yang diolah menjadi cokelat.",
+          syukur: "Perubahan bertahap dari padang pasir ke sabana hingga hutan hujan menunjukkan keteraturan zona iklim bumi ciptaan Allah SWT.",
+          color: "#10b981",
+          patternType: "stripes",
+          labelPos: [-3, 11],
+          polygons: [
+            [[-17,15],[-12,15],[-6,15],[0,15],[7,14.5],[14,14],[14,9.5],[14,5],[11.5,4.5],[9,4],[6,5],[3,6],[-0.5,5.5],[-4,5],[-6,4.5],[-8,4],[-10.5,6.5],[-13,9],[-15.5,12]]
+          ]
+        },
+        af_tengah: {
+          id: "af_tengah",
+          name: "Afrika Tengah (Cekungan Kongo)",
+          shortName: "Af. Tengah",
+          coords: "13° LS – 15° LU dan 9° BT – 31° BT",
+          countries: ["Republik Demokratik Kongo", "Republik Kongo", "Kamerun", "Chad", "Republik Afrika Tengah", "Gabon", "Guinea Khatulistiwa", "Angola", "Sao Tome & Principe"],
+          waterwaysSummary: "Sungai Kongo (sungai terdalam di dunia), Sungai Ubangi, & Sungai Kasai; Danau Mai-Ndombe & Danau Tumba; Teluk Biafra & Muara Kongo.",
+          waterPins: [
+            { name: "S. Kongo", lon: 21.5, lat: 1.5, kind: "river" },
+            { name: "S. Ubangi", lon: 19.0, lat: 4.2, kind: "river" },
+            { name: "D. Mai-Ndombe", lon: 18.3, lat: -2.0, kind: "lake" },
+            { name: "Teluk Biafra", lon: 8.8, lat: 3.2, kind: "gulf" }
+          ],
+          countryPins: [
+            { name: "RD Kongo", lon: 23.5, lat: -2.5 },
+            { name: "Rep. Kongo", lon: 15.5, lat: -1 },
+            { name: "Kamerun", lon: 12.5, lat: 5.5 },
+            { name: "Chad", lon: 18.5, lat: 15 },
+            { name: "Rep. Afrika Tengah", lon: 20.5, lat: 6.5 },
+            { name: "Gabon", lon: 11.8, lat: -0.8 },
+            { name: "Angola", lon: 17.5, lat: -11.5 }
+          ],
+          borders: [
+            [[14, 13.5], [15, 8], [23.5, 10.5]], // Batas Chad-Kamerun-Rep. Afrika Tengah
+            [[10, 2.2], [15, 2.2], [16, 4]], // Batas Gabon-Kamerun-Rep. Kongo
+            [[15, 4.5], [27, 4.5]], // Batas Rep. Afrika Tengah-RD Kongo
+            [[12.5, -5], [16, -2], [17.8, 3.5]], // Batas Rep. Kongo-RD Kongo
+            [[12.5, -6], [22, -7.5], [24, -11]] // Batas Angola-RD Kongo
+          ],
+          areaMillionKm2: 6.61,
+          areaPercent: "21,8% dari luas Afrika",
+          peak: "5.109 mdpl (Gunung Stanley - Rwenzori)",
+          baseTemp: 26.2,
+          baseRainJan: 185,
+          baseRainJul: 165,
+          climateSummary: "Tropis Khatulistiwa Basah",
+          landformShort: "Cekungan Sungai Kongo & hutan hujan tropis",
+          landform: "Berupa cekungan raksasa (Basin Kongo) yang dikelilingi dataran tinggi dan dialiri Sungai Kongo—sungai terdalam di dunia dengan debit air terbesar kedua setelah Amazon.",
+          climate: "Iklim tropis khatulistiwa yang panas dan lembap sepanjang tahun dengan curah hujan konvektif tinggi hampir setiap bulan.",
+          bio: "Hutan hujan tropis terbesar kedua di dunia setelah Amazon; habitat gorila dataran rendah, simpanse, okapi, gajah hutan, serta kaya tembaga, kobalt, dan intan.",
+          indoLink: "Afrika Tengah dilalui garis khatulistiwa (0°) persis seperti Sumatera, Kalimantan, Sulawesi, dan Papua di Indonesia sehingga memiliki tipe hutan hujan tropis yang sejenis.",
+          syukur: "Hutan hujan Cekungan Kongo bersama Amazon dan Nusantara menjadi penyangga oksigen dan keanekaragaman hayati planet bumi.",
+          color: "#059669",
+          patternType: "dots",
+          labelPos: [21, 1],
+          polygons: [
+            [[14,14],[24,15],[26.5,9.5],[29,4],[29.5,-1],[30,-6],[29,-9],[28,-12],[23,-12],[18,-12],[15,-12],[12,-12],[12,-9],[12,-6],[10.5,-1],[9,4],[11.5,4.5],[14,5],[14,9.5]]
+          ]
+        },
+        af_timur: {
+          id: "af_timur",
+          name: "Afrika Timur (Lembah Retak Besar)",
+          shortName: "Af. Timur",
+          coords: "12° LS – 18° LU dan 29° BT – 51° BT",
+          countries: ["Etiopia", "Kenya", "Tanzania", "Uganda", "Somalia", "Sudan Selatan", "Eritrea", "Djibouti", "Rwanda", "Burundi", "Malawi", "Zambia", "Mozambik", "Madagaskar", "Komoro", "Mauritius", "Seychelles"],
+          waterwaysSummary: "Sungai Zambezi (Air Terjun Victoria) & Sungai Nil Putih; Danau Victoria (terluas di Afrika), Danau Tanganyika (terdalam ke-2 di dunia), Danau Malawi, & Danau Turkana; Teluk Aden; Selat Mozambik & Selat Bab el-Mandeb.",
+          waterPins: [
+            { name: "S. Zambezi", lon: 29.5, lat: -15.8, kind: "river" },
+            { name: "D. Victoria", lon: 33.2, lat: -1.2, kind: "lake" },
+            { name: "D. Tanganyika", lon: 29.6, lat: -6.2, kind: "lake" },
+            { name: "D. Malawi", lon: 34.5, lat: -12.0, kind: "lake" },
+            { name: "D. Turkana", lon: 36.0, lat: 3.6, kind: "lake" },
+            { name: "Selat Mozambik", lon: 41.5, lat: -17.5, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Etiopia", lon: 39.5, lat: 9 },
+            { name: "Kenya", lon: 38, lat: 0.5 },
+            { name: "Tanzania", lon: 34.8, lat: -6.2 },
+            { name: "Uganda", lon: 32.3, lat: 1.3 },
+            { name: "Somalia", lon: 46, lat: 5.5 },
+            { name: "Sudan Selatan", lon: 30.5, lat: 7.5 },
+            { name: "Eritrea", lon: 38.5, lat: 15.3 },
+            { name: "Rwanda", lon: 29.9, lat: -1.9 },
+            { name: "Burundi", lon: 29.9, lat: -3.4 },
+            { name: "Zambia", lon: 28, lat: -13.5 },
+            { name: "Malawi", lon: 34, lat: -13.2 },
+            { name: "Mozambik", lon: 35.5, lat: -17 },
+            { name: "Madagaskar", lon: 46.8, lat: -19.5 }
+          ],
+          borders: [
+            [[25, 10], [34, 10], [35, 4.5]], // Batas Sudan-Sudan Selatan-Etiopia
+            [[36.5, 14.5], [42, 12.5]], // Batas Etiopia-Eritrea
+            [[41.5, 10], [47, 8], [41, 4]], // Batas Etiopia-Somalia
+            [[34.5, 4.2], [41, 4], [41, -1.5]], // Batas Kenya-Etiopia-Somalia
+            [[30, -1], [34, -1], [40, -4.5]], // Batas Uganda-Kenya-Tanzania
+            [[30, -11], [35, -11.5], [40.2, -10.8]] // Batas Tanzania-Zambia-Mozambik
+          ],
+          areaMillionKm2: 6.36,
+          areaPercent: "20,9% dari luas Afrika",
+          peak: "5.895 mdpl (Gunung Kilimanjaro)",
+          baseTemp: 23.4,
+          baseRainJan: 95,
+          baseRainJul: 65,
+          climateSummary: "Tropis Dataran Tinggi & Sabana",
+          landformShort: "Great Rift Valley, Danau Victoria & Kilimanjaro",
+          landform: "Dilalui Lembah Retak Besar (Great Rift Valley) akibat pergerakan lempeng tektonik yang membentuk deretan danau besar (Victoria, Tanganyika, Malawi) dan gunung api tertinggi di Afrika (Kilimanjaro & Kenya).",
+          climate: "Meskipun berada di garis khatulistiwa, suhu udara di Afrika Timur relatif sejuk karena ketinggian plato (1.000–2.000 mdpl), dengan dua musim hujan dan sabana luas.",
+          bio: "Padang rumput sabana Serengeti yang terkenal dengan migrasi jutaan zebra, wildebeest, jerapah, singa, dan cheetah, serta perkebunan kopi dan teh.",
+          indoLink: "Seperti dataran tinggi di Indonesia (misalnya Dieng atau Bandung), ketinggian tempat di Afrika Timur membuat iklim khatulistiwa terasa sejuk dan cocok untuk budi daya kopi.",
+          syukur: "Puncak bersalju Gunung Kilimanjaro di dekat garis khatulistiwa adalah fenomena alam menakjubkan yang menunjukkan kebesaran ciptaan Allah SWT.",
+          color: "#0284c7",
+          patternType: "diag",
+          labelPos: [37, 2],
+          polygons: [
+            [[24,15],[30,15],[36.5,15],[38.5,19.5],[40.5,15.5],[43.2,12.2],[48,11.5],[51.2,11.8],[49.5,7.5],[45.5,2.5],[41.2,-1.5],[39.8,-6.5],[40.4,-10.8],[35,-11.5],[30,-11],[30,-6],[29.5,-1],[29,4],[26.5,9.5]]
+          ]
+        },
+        af_selatan: {
+          id: "af_selatan",
+          name: "Afrika Selatan",
+          shortName: "Af. Selatan",
+          coords: "12° LS – 35° LS dan 12° BT – 36° BT",
+          countries: ["Afrika Selatan", "Namibia", "Botswana", "Zimbabwe", "Lesotho", "Eswatini (Swaziland)"],
+          waterwaysSummary: "Sungai Orange & Sungai Limpopo; Delta Okavango (lahan basah pedalaman terbesar di Botswana) & Danau Ngami; Teluk Walvis, Teluk St. Helena, & Teluk Algoa.",
+          waterPins: [
+            { name: "S. Orange", lon: 20.5, lat: -28.6, kind: "river" },
+            { name: "S. Limpopo", lon: 29.5, lat: -22.2, kind: "river" },
+            { name: "Delta Okavango", lon: 22.8, lat: -19.3, kind: "lake" },
+            { name: "Teluk Walvis", lon: 14.3, lat: -22.9, kind: "gulf" },
+            { name: "Teluk Algoa", lon: 25.8, lat: -33.8, kind: "gulf" }
+          ],
+          countryPins: [
+            { name: "Afrika Selatan", lon: 24.5, lat: -29.5 },
+            { name: "Namibia", lon: 17.5, lat: -22 },
+            { name: "Botswana", lon: 24, lat: -22 },
+            { name: "Zimbabwe", lon: 29.8, lat: -19 },
+            { name: "Lesotho", lon: 28.2, lat: -29.6 },
+            { name: "Eswatini", lon: 31.5, lat: -26.5 }
+          ],
+          borders: [
+            [[13, -17.3], [21, -17.8]], // Batas Angola-Namibia
+            [[20, -18], [20, -24.5], [20, -28.5]], // Batas Namibia-Botswana-Afrika Selatan
+            [[25, -18], [28, -22], [32, -22]], // Batas Botswana-Zimbabwe
+            [[20, -28.5], [26, -25.5], [31, -22.5]] // Batas Utara Afrika Selatan
+          ],
+          areaMillionKm2: 2.73,
+          areaPercent: "9,0% dari luas Afrika",
+          peak: "3.482 mdpl (Thabana Ntlenyana - Drakensberg)",
+          baseTemp: 19.2,
+          baseRainJan: 90,
+          baseRainJul: 25,
+          climateSummary: "Subtropis, Sabana & Gurun Kalahari",
+          landformShort: "Plato tinggi (Highveld), Gurun Kalahari & Drakensberg",
+          landform: "Berupa dataran tinggi luas (Highveld) yang dikelilingi tebing curam Pegunungan Drakensberg, Gurun Kalahari dan Gurun Namib di barat, serta Tanjung Harapan di ujung selatan.",
+          climate: "Iklim subtropis dengan musim panas hangat-basah (Januari) dan musim dingin sejuk-kering (Juli); wilayah barat sangat kering sedangkan ujung barat daya beriklim Mediterania.",
+          bio: "Padang rumput veld, semak fynbos unik di Tanjung Harapan, badak putih, gajah, penguin afrika di pesisir dingin, serta kaya emas, intan, dan platina.",
+          indoLink: "Karena berada di Belahan Bumi Selatan (BBS), musim panas di Afrika Selatan berlangsung pada Desember–Februari, berkebalikan dengan negara-negara di Eropa dan Amerika Utara.",
+          syukur: "Kekayaan mineral dan keunikan ekosistem ujung selatan benua mengajarkan kita untuk mengelola sumber daya alam secara adil dan berkelanjutan.",
+          color: "#8b5cf6",
+          patternType: "cross",
+          labelPos: [24, -23],
+          polygons: [
+            [[12,-12],[15,-12],[18,-12],[23,-12],[28,-12],[30,-11],[35,-11.5],[40.4,-10.8],[37.5,-15.5],[35.2,-18.5],[35.4,-23.5],[32.5,-26.5],[30.5,-30.5],[27.5,-33.2],[23.5,-34.2],[19.8,-34.7],[18.2,-33.8],[17.5,-29.5],[15.2,-26.5],[14.2,-22],[12.4,-17.2]],
+            [[44.2,-25.2],[47,-25],[48.8,-20],[50.2,-15.2],[49.2,-12.2],[46.8,-15.5],[44.2,-19.8]]
+          ]
+        }
+      },
+      mountains: {
+        chains: [
+          [[-6, 32], [2, 35], [9, 36]],
+          [[39, 9], [37, -1], [35, -9], [33, -16]],
+          [[29, -28], [24, -32]]
+        ],
+        peakCoord: [37.3, -3.1],
+        peakLabel: "▲ Kilimanjaro (5.895 m)"
+      }
+    },
+
+    antartika: {
+      id: "antartika",
+      name: "Benua Antartika",
+      totalAreaText: "±14,20 juta km²",
+      astroSummary: "60° LS–90° LS (Melingkari Kutub Selatan)",
+      latMin: -90,
+      latMax: -60,
+      defaultRegion: "ant_timur",
+      defaultLat: -76,
+      defaultCursor: [75, -76],
+      viewCenterLon: 10,
+      viewCenterLat: -74,
+      viewLonSpan: 340,
+      latTicks: ["90° LS", "80° LS", "70° LS", "60° LS"],
+      regions: {
+        ant_timur: {
+          id: "ant_timur",
+          name: "Antartika Timur (Greater Antarctica)",
+          shortName: "Ant. Timur",
+          coords: "65° LS – 90° LS dan 30° BB – 170° BT",
+          countries: ["Tidak ada negara berdaulat (Kawasan Penelitian Damai Internasional - Traktat Antartika 1959)"],
+          waterwaysSummary: "Sungai Onyx (sungai terpanjang di Antartika, mengalir saat musim panas); Danau Vostok (danau subglasial raksasa di bawah es setebal 4 km); Teluk Prydz & Teluk Lützow-Holm.",
+          waterPins: [
+            { name: "D. Vostok (Subglasial)", lon: 106.8, lat: -77.5, kind: "lake" },
+            { name: "S. Onyx", lon: 161.8, lat: -77.5, kind: "river" },
+            { name: "Teluk Prydz", lon: 75.0, lat: -68.5, kind: "gulf" }
+          ],
+          countryPins: [
+            { name: "Wilayah Queen Maud", lon: 10, lat: -74 },
+            { name: "Wilayah Enderby & Wilkes", lon: 95, lat: -73 },
+            { name: "Stasiun Vostok (Rusia)", lon: 106.8, lat: -78.5 },
+            { name: "Kutub Selatan (Amundsen-Scott)", lon: 0, lat: -86 }
+          ],
+          borders: [
+            [[-30, -75], [-30, -88]] // Batas sektor Antartika Timur-Barat
+          ],
+          areaMillionKm2: 10.20,
+          areaPercent: "71,8% dari luas Antartika",
+          peak: "4.093 mdpl (Dome A - Lapisan Es)",
+          baseTemp: -34.0,
+          baseRainJan: 14,
+          baseRainJul: 8,
+          climateSummary: "Iklim Kutub Ekstrem (Tudung Es)",
+          landformShort: "Lapisan es benua tebal (hingga 4,8 km) & Plato Kutub",
+          landform: "Mencakup lebih dari dua pertiga luas Antartika, berupa perisai batuan purba yang tertutup lapisan es abadi (ice sheet) dengan ketebalan rata-rata lebih dari 2.000 meter dan ketinggian permukaan di atas 3.000 mdpl.",
+          climate: "Wilayah terdingin, terkering, dan paling berangin di bumi. Suhu di Stasiun Vostok pernah mencapai -89,2 °C; curah salju sangat rendah sehingga digolongkan sebagai gurun kutub.",
+          bio: "Hampir tidak ada tumbuhan berpembuluh di daratan es; kehidupan terbatas pada lumut kerak (lichen), alga salju, mikroorganisme ekstremofil, serta penguin kaisar di tepi paparan es.",
+          indoLink: "Meski jauh dari Indonesia, pencairan lapisan es Antartika akibat pemanasan global berdampak langsung pada kenaikan permukaan air laut yang mengancam pulau-pulau kecil dan pesisir Indonesia.",
+          syukur: "Lapisan es Antartika menyimpan sekitar 70% cadangan air tawar dunia dan memantulkan panas matahari—bukti keseimbangan iklim bumi ciptaan Allah SWT.",
+          color: "#0284c7",
+          patternType: "waves",
+          labelPos: [82, -76],
+          polygons: [
+            [[-30,-75],[-15,-72.5],[0,-70],[18,-69.5],[35,-69],[52,-68.5],[70,-68],[90,-67],[110,-66],[130,-67],[150,-68],[160,-70],[170,-72],[170,-80],[170,-88],[70,-88],[-30,-88],[-30,-81.5]]
+          ]
+        },
+        ant_barat: {
+          id: "ant_barat",
+          name: "Antartika Barat & Semenanjung Antartika",
+          shortName: "Ant. Barat",
+          coords: "63° LS – 90° LS dan 170° BT – 30° BB",
+          countries: ["Tidak ada negara berdaulat (Kawasan Penelitian Damai Internasional - Traktat Antartika 1959)"],
+          waterwaysSummary: "Laut Ross & Laut Weddell (paparan es terapung raksasa); Teluk Marguerite & Teluk Pine Island; Selat Drake (pemisah Antartika–Amerika Selatan) & Selat Bransfield.",
+          waterPins: [
+            { name: "Laut Weddell", lon: -45.0, lat: -71.0, kind: "gulf" },
+            { name: "Laut Ross", lon: -175.0, lat: -73.5, kind: "gulf" },
+            { name: "Selat Drake", lon: -64.0, lat: -60.5, kind: "strait" },
+            { name: "Selat Bransfield", lon: -58.5, lat: -63.0, kind: "strait" }
+          ],
+          countryPins: [
+            { name: "Semenanjung Antartika", lon: -63, lat: -68 },
+            { name: "Wilayah Marie Byrd", lon: -125, lat: -78 },
+            { name: "Stasiun McMurdo (AS)", lon: 166.6, lat: -77.8 }
+          ],
+          borders: [
+            [[-170, -74], [-170, -88]] // Batas sektor Ross
+          ],
+          areaMillionKm2: 4.00,
+          areaPercent: "28,2% dari luas Antartika",
+          peak: "4.892 mdpl (Vinson Massif)",
+          baseTemp: -18.5,
+          baseRainJan: 32,
+          baseRainJul: 22,
+          climateSummary: "Iklim Kutub Maritim & Tundra Pesisir",
+          landformShort: "Pegunungan Transantartika, Vinson Massif & Semenanjung",
+          landform: "Dipisahkan dari Antartika Timur oleh Pegunungan Transantartika. Memiliki puncak tertinggi benua (Vinson Massif, 4.892 m), gunung api aktif Gunung Erebus, serta Semenanjung Antartika yang menjulur ke arah Amerika Selatan.",
+          climate: "Relatif lebih hangat dan lembap dibandingkan Antartika Timur karena pengaruh lautan di sekitarnya; pada musim panas (Januari) suhu pesisir dapat mendekati 0 °C.",
+          bio: "Lumut hijau dan rumput rambut antartika di pesisir semenanjung, koloni penguin Adélie dan Gentoo, anjing laut Weddell, paus biru, serta krill yang melimpah di Samudra Selatan.",
+          indoLink: "Berdasarkan Traktat Antartika (1959), benua ini dilindungi sebagai kawasan damai untuk penelitian ilmiah internasional dan bebas dari kegiatan militer maupun pertambangan.",
+          syukur: "Kerja sama ilmuwan berbagai bangsa di Antartika untuk menjaga lingkungan kutub menjadi teladan kepedulian bersama terhadap bumi.",
+          color: "#38bdf8",
+          patternType: "dots",
+          labelPos: [-95, -76],
+          polygons: [
+            [[-180,-74],[-160,-74],[-140,-74],[-120,-73],[-100,-72],[-81,-68],[-62,-64],[-56,-65],[-60.5,-69.5],[-65,-74],[-47.5,-74.5],[-30,-75],[-30,-81.5],[-30,-88],[-105,-88],[-180,-88]]
+          ]
+        }
+      },
+      mountains: {
+        chains: [
+          [[-60, -66], [-75, -74], [-90, -79], [165, -78], [155, -72]]
+        ],
+        peakCoord: [-85.6, -78.5],
+        peakLabel: "▲ Vinson Massif (4.892 m)"
+      }
+    },
+
+    australia: {
+      id: "australia",
+      name: "Benua Australia",
+      totalAreaText: "±7,69 juta km²",
+      astroSummary: "113° BT–153° BT & 10° LS–43° LS",
+      latMin: -43,
+      latMax: -10,
+      defaultRegion: "aus_timur",
+      defaultLat: -32,
+      defaultCursor: [148, -32],
+      viewCenterLon: 134,
+      viewCenterLat: -26,
+      viewLonSpan: 56,
+      latTicks: ["43° LS", "32° LS", "21° LS", "10° LS"],
+      regions: {
+        aus_barat: {
+          id: "aus_barat",
+          name: "Plato Barat (Western Plateau)",
+          shortName: "Plato Barat",
+          coords: "14° LS – 35° LS dan 113° BT – 132° BT",
+          countries: ["Australia (Negara Bagian Australia Barat & sebagian Australia Selatan / Teritori Utara)"],
+          waterwaysSummary: "Sungai Swan (Perth), Sungai Fitzroy, & Sungai Murchison; Danau Mackay & Danau Disappointment (danau garam musiman); Teluk Shark & Teluk Joseph Bonaparte.",
+          waterPins: [
+            { name: "S. Fitzroy", lon: 124.5, lat: -18.0, kind: "river" },
+            { name: "S. Swan", lon: 116.2, lat: -31.9, kind: "river" },
+            { name: "D. Mackay", lon: 128.7, lat: -22.5, kind: "lake" },
+            { name: "Teluk Shark", lon: 113.6, lat: -25.8, kind: "gulf" }
+          ],
+          countryPins: [
+            { name: "Australia (Australia Barat)", lon: 121.5, lat: -25.5 },
+            { name: "Perth", lon: 116, lat: -32 }
+          ],
+          borders: [
+            [[129, -14.8], [129, -31.8]] // Batas negara bagian Australia Barat
+          ],
+          areaMillionKm2: 3.85,
+          areaPercent: "50,1% dari luas Australia",
+          peak: "1.249 mdpl (Gunung Meharry)",
+          baseTemp: 24.5,
+          baseRainJan: 38,
+          baseRainJul: 22,
+          climateSummary: "Iklim Gurun & Semikering (Stepa)",
+          landformShort: "Perisai batuan tua, Gurun Gibson & Great Victoria",
+          landform: "Mencakup hampir separuh daratan Australia berupa dataran tinggi batu purba yang sangat datar dan stabil (jarang gempa), meliputi Gurun Great Sandy, Gurun Gibson, dan Gurun Great Victoria.",
+          climate: "Didominasi iklim gurun dan semikering karena terletak di sekitar Garis Balik Selatan (23,5° LS) tempat udara kering turun, kecuali ujung barat daya (sekitar Perth) yang beriklim Mediterania.",
+          bio: "Semak belukar berduri (spinifex), pohon eukaliptus tahan kering, kanguru merah, dingo, serta cadangan bijih besi, emas, dan nikel terbesar di Australia.",
+          indoLink: "Australia Barat berhadapan langsung dengan wilayah selatan Jawa dan Nusa Tenggara melintasi Samudra Hindia, sehingga pergerakan angin dari Australia memengaruhi musim kemarau di Indonesia.",
+          syukur: "Meski sebagian besar berupa gurun kering, Plato Barat menyimpan kekayaan mineral yang bermanfaat bagi pembangunan teknologi manusia.",
+          color: "#d97706",
+          patternType: "grid",
+          labelPos: [122, -25],
+          polygons: [
+            [[114,-22],[117.5,-20.5],[121.5,-18.5],[123.5,-16.2],[126.5,-13.8],[129.5,-14.8],[131,-12.5],[131.5,-19],[132,-26],[132,-29],[132,-31.8],[128.5,-32.2],[124,-33.8],[119.5,-34.5],[115.2,-34.2],[114.8,-30.5],[113.5,-26]]
+          ]
+        },
+        aus_tengah: {
+          id: "aus_tengah",
+          name: "Dataran Rendah Tengah (Central Lowlands)",
+          shortName: "Dataran Tengah",
+          coords: "11° LS – 38° LS dan 132° BT – 144° BT",
+          countries: ["Australia (Teritori Utara, Australia Selatan, sebagian Queensland & New South Wales)"],
+          waterwaysSummary: "Sungai Cooper Creek & Sungai Flinders; Danau Eyre (titik terendah Australia, -15 m) & Danau Torrens; Teluk Carpentaria, Teluk Spencer, & Great Australian Bight; Selat Investigator.",
+          waterPins: [
+            { name: "S. Cooper Creek", lon: 140.5, lat: -27.5, kind: "river" },
+            { name: "D. Eyre (-15 m)", lon: 137.3, lat: -28.6, kind: "lake" },
+            { name: "Teluk Carpentaria", lon: 139.0, lat: -14.0, kind: "gulf" },
+            { name: "Teluk Spencer", lon: 136.8, lat: -34.0, kind: "gulf" },
+            { name: "Great Australian Bight", lon: 130.5, lat: -33.5, kind: "gulf" }
+          ],
+          countryPins: [
+            { name: "Australia (Teritori Utara)", lon: 133.5, lat: -19.5 },
+            { name: "Australia (Australia Selatan)", lon: 135.5, lat: -30 },
+            { name: "Darwin", lon: 131.5, lat: -13 },
+            { name: "Adelaide", lon: 138.6, lat: -34.8 }
+          ],
+          borders: [
+            [[129, -26], [141, -26]], // Batas Teritori Utara - Australia Selatan
+            [[138, -16.5], [138, -26]], // Batas Teritori Utara - Queensland
+            [[141, -26], [141, -38]] // Batas Australia Selatan - Queensland/NSW/Victoria
+          ],
+          areaMillionKm2: 1.96,
+          areaPercent: "25,5% dari luas Australia",
+          peak: "1.535 mdpl (Gunung Zeil - MacDonnell)",
+          baseTemp: 23.0,
+          baseRainJan: 55,
+          baseRainJul: 20,
+          climateSummary: "Semikering, Gurun & Tropis Utara",
+          landformShort: "Cekungan Danau Eyre, Uluru & Lembah Murray-Darling",
+          landform: "Membentang dari Teluk Carpentaria di utara hingga pesisir selatan. Terdapat titik terendah Australia (Danau Eyre, -15 m di bawah permukaan laut), formasi batu monolit raksasa Uluru (Ayers Rock), serta Cekungan Artesis Besar.",
+          climate: "Bagian utara (Darwin) beriklim tropis muson (hujan lebat saat Januari), bagian tengah kering (outback), dan bagian selatan (Lembah Murray-Darling) beriklim sedang kering.",
+          bio: "Padang rumput sabana dan stepa luas yang menjadi pusat peternakan sapi dan domba merino, burung emu, kadal berjumbai, serta lahan pertanian gandum.",
+          indoLink: "Lembah Sungai Murray-Darling di bagian tenggara dataran ini merupakan lumbung gandum, daging sapi, dan susu utama Australia yang banyak diekspor ke Indonesia.",
+          syukur: "Cekungan air tanah (artesis) di bawah dataran kering memungkinkan peternakan dan kehidupan tetap berlangsung—tanda hikmah penciptaan alam.",
+          color: "#f59e0b",
+          patternType: "diag",
+          labelPos: [137, -25],
+          polygons: [
+            [[131,-12.5],[134.5,-12],[136.8,-12.5],[136.2,-15.2],[139.5,-17.5],[141.5,-16.5],[142.2,-22],[143,-28],[142,-33],[141,-38],[138.5,-35.5],[136.5,-34.8],[135.2,-33.5],[132,-31.8],[132,-29],[132,-26],[131.5,-19]]
+          ]
+        },
+        aus_timur: {
+          id: "aus_timur",
+          name: "Dataran Tinggi Timur & Tasmania",
+          shortName: "Pantai Timur",
+          coords: "11° LS – 43° LS dan 141° BT – 153° BT",
+          countries: ["Australia (Queensland, New South Wales, Victoria, Wilayah Ibu Kota Canberra & Tasmania)"],
+          waterwaysSummary: "Sungai Murray & Sungai Darling (sistem sungai terpanjang di Australia); Danau Eucumbene & Great Lake (Tasmania); Teluk Moreton & Teluk Port Phillip; Selat Bass (pemisah daratan Australia–Tasmania) & Selat Torres (pemisah Australia–Papua).",
+          waterPins: [
+            { name: "S. Murray", lon: 144.5, lat: -35.5, kind: "river" },
+            { name: "S. Darling", lon: 144.0, lat: -31.5, kind: "river" },
+            { name: "Selat Torres", lon: 142.3, lat: -10.4, kind: "strait" },
+            { name: "Selat Bass", lon: 146.2, lat: -39.8, kind: "strait" },
+            { name: "Teluk Moreton", lon: 153.3, lat: -27.2, kind: "gulf" }
+          ],
+          countryPins: [
+            { name: "Australia (Queensland)", lon: 144.5, lat: -22 },
+            { name: "Australia (New South Wales)", lon: 146.5, lat: -32 },
+            { name: "Canberra (Ibu Kota)", lon: 149.1, lat: -35.3 },
+            { name: "Sydney", lon: 151.1, lat: -33.8 },
+            { name: "Melbourne (Victoria)", lon: 145, lat: -37.5 },
+            { name: "Tasmania", lon: 146.5, lat: -42 }
+          ],
+          borders: [
+            [[141, -29], [149, -29], [153.2, -28.2]], // Batas Queensland - New South Wales
+            [[141, -34], [145, -36], [149.8, -37.5]] // Batas New South Wales - Victoria
+          ],
+          areaMillionKm2: 1.88,
+          areaPercent: "24,4% dari luas Australia",
+          peak: "2.228 mdpl (Gunung Kosciuszko)",
+          baseTemp: 18.8,
+          baseRainJan: 115,
+          baseRainJul: 68,
+          climateSummary: "Tropis Lembap, Subtropis & Sedang",
+          landformShort: "Great Dividing Range, Great Barrier Reef & Tasmania",
+          landform: "Deretan Pegunungan Pemisah Besar (Great Dividing Range) memanjang sejajar pantai timur dengan puncak tertinggi Gunung Kosciuszko (2.228 m), Pulau Tasmania di selatan, serta gugusan terumbu karang terbesar di dunia (Great Barrier Reef).",
+          climate: "Pesisir timur menerima banyak hujan dari angin pasat tenggara Samudra Pasifik yang tertahan pegunungan (hujan orografis), sehingga beriklim tropis basah di utara, subtropis di tengah (Sydney/Brisbane), dan sedang sejuk di Melbourne serta Tasmania.",
+          bio: "Hutan eukaliptus, fauna khas berkantung (kanguru, koala, wombat, setan tasmania), platipus, serta ekosistem terumbu karang terkaya di dunia.",
+          indoLink: "Pantai Timur merupakan pusat kota besar dan pendidikan Australia (Sydney, Melbourne, Brisbane) serta memiliki kesamaan zona terumbu karang tropis dengan Raja Ampat di Indonesia.",
+          syukur: "Keindahan Great Barrier Reef dan keunikan satwa endemik Australia mengingatkan kita untuk menjaga ekosistem laut dan mencegah kepunahan satwa.",
+          color: "#10b981",
+          patternType: "stripes",
+          labelPos: [147, -29],
+          polygons: [
+            [[141.5,-16.5],[142.5,-10.8],[144.2,-14.2],[146.8,-18.5],[150.2,-22.5],[153.2,-27.8],[151.5,-33.2],[149.8,-37.5],[146.5,-39],[143.8,-38.5],[141,-38],[142,-33],[143,-28],[142.2,-22]],
+            [[144.8,-40.8],[148.2,-41.2],[147.8,-43.4],[145.6,-43.5],[144.8,-41.8]]
+          ]
+        }
+      },
+      mountains: {
+        chains: [
+          [[145, -16], [148, -23], [150, -30], [148, -36]]
+        ],
+        peakCoord: [148.2, -36.4],
+        peakLabel: "▲ Kosciuszko (2.228 m)"
+      }
+    }
+  };
+
+  // Hanya wilayah kecil non-benua utama (misalnya Selandia Baru / pulau kecil) sebagai konteks abu-abu tambahan
+  const OTHER_CONTINENTS_POLYS = [
+    [[167,-46],[174,-41],[178,-37],[174,-35],[172,-41],[168,-45]]
+  ];
+
+  const MONTH_NAMES = [
+    "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  // =========================================================================
+  // 2. STATE APLIKASI
+  // =========================================================================
+  const state = {
+    selectedContinent: "asia",
+    selectedRegion: "tenggara",
+    month: 1,
+    latitude: 0,
+    showBorders: true,
+    showWaterways: true,
+    showMonsoon: true,
+    showGrid: true,
+    showRing: true,
+    isPlaying: true,
+    animTime: 0,
+    lastFrameTime: 0,
+    cursorActive: true,
+    cursorLon: 106,
+    cursorLat: -6,
+    cam: {
+      centerLon: 98,
+      centerLat: 34,
+      lonSpan: 156,
+      targetLon: 98,
+      targetLat: 34,
+      targetSpan: 156
+    }
+  };
+
+  // =========================================================================
+  // 3. REFERENSI ELEMEN DOM
+  // =========================================================================
+  const canvas = document.getElementById("worldCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const contButtons = document.querySelectorAll(".cont-btn");
+  const regionBtnContainer = document.getElementById("regionBtnContainer");
+  const monthSlider = document.getElementById("monthSlider");
+  const latSlider = document.getElementById("latSlider");
+  const toggleBorders = document.getElementById("toggleBorders");
+  const toggleWaterways = document.getElementById("toggleWaterways");
+  const toggleMonsoon = document.getElementById("toggleMonsoon");
+  const toggleGrid = document.getElementById("toggleGrid");
+  const toggleRing = document.getElementById("toggleRing");
+  const playPauseBtn = document.getElementById("playPauseBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  let canvasWidth = 800;
+  let canvasHeight = 500;
+
+  function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
+  }
+
+  function formatLonText(lon) {
+    if (lon === 0) return "0°";
+    return lon > 0 ? `${lon}° BT` : `${Math.abs(lon)}° BB`;
+  }
+
+  function formatLatText(lat) {
+    if (lat === 0) return "0°";
+    return lat > 0 ? `${lat}° LU` : `${Math.abs(lat)}° LS`;
+  }
+
+  // =========================================================================
+  // 4. PROYEKSI KAMERA PETA (AUTO-ZOOM & PANNING BEBAS)
+  // =========================================================================
+  function getActiveBounds() {
+    const lonSpan = clamp(state.cam.lonSpan, 28, 360);
+    const aspect = canvasHeight / Math.max(1, canvasWidth);
+    const latSpan = clamp(lonSpan * aspect, 22, 168);
+
+    const minLon = clamp(state.cam.centerLon - lonSpan / 2, -180, 180 - lonSpan);
+    const maxLon = minLon + lonSpan;
+
+    const maxLat = clamp(state.cam.centerLat + latSpan / 2, -85 + latSpan, 88);
+    const minLat = maxLat - latSpan;
+
+    return { minLon, maxLon, minLat, maxLat, lonSpan, latSpan };
+  }
+
+  function lonToX(lon, bounds) {
+    return ((lon - bounds.minLon) / bounds.lonSpan) * canvasWidth;
+  }
+
+  function latToY(lat, bounds) {
+    return ((bounds.maxLat - lat) / bounds.latSpan) * canvasHeight;
+  }
+
+  function xToLon(x, bounds) {
+    const ratio = clamp(x / Math.max(1, canvasWidth), 0, 1);
+    return Math.round(bounds.minLon + ratio * bounds.lonSpan);
+  }
+
+  function yToLat(y, bounds) {
+    const ratio = clamp(y / Math.max(1, canvasHeight), 0, 1);
+    return Math.round(bounds.maxLat - ratio * bounds.latSpan);
+  }
+
+  function fitContinentView(immediate) {
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    const isPortrait = canvasWidth < 540;
+    const factor = isPortrait ? 0.94 : 1.05;
+
+    state.cam.targetLon = cMeta.viewCenterLon;
+    state.cam.targetLat = cMeta.viewCenterLat;
+    state.cam.targetSpan = clamp(cMeta.viewLonSpan * factor, 35, 360);
+
+    if (immediate) {
+      state.cam.centerLon = state.cam.targetLon;
+      state.cam.centerLat = state.cam.targetLat;
+      state.cam.lonSpan = state.cam.targetSpan;
+      renderCanvas();
+    }
+  }
+
+  function adjustZoom(factor) {
+    state.cam.targetSpan = clamp(state.cam.targetSpan / factor, 28, 360);
+    state.cam.lonSpan = state.cam.targetSpan;
+    renderCanvas();
+  }
+
+  window.adjustZoom = adjustZoom;
+  window.fitContinentView = fitContinentView;
+
+  // =========================================================================
+  // 5. PERHITUNGAN MODEL IKLIM & MUSIM REAL-TIME
+  // =========================================================================
+  function getSeasonPhase(month) {
+    const rad = ((month - 1) * Math.PI) / 6;
+    return Math.cos(rad); // +1 di Januari (Musim Dingin BBU), -1 di Juli (Musim Panas BBU)
+  }
+
+  function getSeasonLabel(continentKey, month) {
+    if (continentKey === "asia") {
+      if (month === 12 || month <= 3) return "Muson Barat (Hujan di ID)";
+      if (month >= 6 && month <= 9) return "Muson Timur (Kemarau di ID)";
+      return "Musim Peralihan / Pancaroba";
+    }
+    if (continentKey === "australia" || continentKey === "antartika") {
+      if (month === 12 || month <= 2) return "Musim Panas BBS";
+      if (month >= 3 && month <= 5) return "Musim Gugur BBS";
+      if (month >= 6 && month <= 8) return "Musim Dingin BBS";
+      return "Musim Semi BBS";
+    }
+    if (month === 12 || month <= 2) return "Musim Dingin BBU / Panas BBS";
+    if (month >= 3 && month <= 5) return "Musim Semi BBU / Gugur BBS";
+    if (month >= 6 && month <= 8) return "Musim Panas BBU / Dingin BBS";
+    return "Musim Gugur BBU / Semi BBS";
+  }
+
+  function computeMetrics(continentKey, regionKey, month, lat) {
+    const cMeta = CONTINENT_META[continentKey];
+    const reg = cMeta.regions[regionKey] || Object.values(cMeta.regions)[0];
+    const phase = getSeasonPhase(month);
+
+    // Ayunan suhu musiman: BBU (lat > 0) lebih dingin saat Januari (phase > 0), BBS (lat < 0) sebaliknya
+    const latAbs = Math.abs(lat);
+    const hemiSign = lat >= 0 ? -1 : 1;
+    const seasonalSwing = hemiSign * phase * (2.5 + (latAbs / 75) * 14);
+    const latOffset = (25 - latAbs) * 0.14;
+    const currentTemp = reg.baseTemp + seasonalSwing * 0.55 + latOffset * 0.3;
+
+    const wJan = (phase + 1) / 2;
+    const wJul = 1 - wJan;
+    const currentRain = Math.max(0, reg.baseRainJan * wJan + reg.baseRainJul * wJul);
+
+    return {
+      temp: currentTemp.toFixed(1),
+      rain: Math.round(currentRain),
+      phase: phase
+    };
+  }
+
+  // =========================================================================
+  // 6. PEMBARUAN TOMBOL REGION, READOUT, DETAIL PANEL & TABEL
+  // =========================================================================
+  function rebuildRegionButtons() {
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    const regions = Object.values(cMeta.regions);
+    regionBtnContainer.innerHTML = "";
+    regionBtnContainer.className = regions.length >= 4 ? "btn-grid" : "btn-grid btn-grid-3";
+
+    regions.forEach((reg) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ctrl-btn reg-btn" + (reg.id === state.selectedRegion ? " active" : "");
+      btn.dataset.region = reg.id;
+      btn.setAttribute("aria-pressed", reg.id === state.selectedRegion ? "true" : "false");
+      btn.textContent = "📍 " + reg.shortName;
+      btn.addEventListener("click", () => {
+        selectRegion(reg.id, true);
+      });
+      regionBtnContainer.appendChild(btn);
+    });
+  }
+
+  function selectRegion(regionId, moveCursorToCenter) {
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    const reg = cMeta.regions[regionId];
+    if (!reg) return;
+
+    state.selectedRegion = regionId;
+    state.latitude = clamp(Math.round(reg.labelPos[1]), cMeta.latMin, cMeta.latMax);
+    latSlider.value = state.latitude;
+
+    if (moveCursorToCenter) {
+      state.cursorLon = Math.round(reg.labelPos[0]);
+      state.cursorLat = Math.round(reg.labelPos[1]);
+      updateCoordBadge();
+    }
+
+    updateUI();
+    renderCanvas();
+  }
+
+  function selectContinent(continentKey, immediateZoom) {
+    const cMeta = CONTINENT_META[continentKey];
+    if (!cMeta) return;
+
+    state.selectedContinent = continentKey;
+    state.selectedRegion = cMeta.defaultRegion;
+    state.latitude = cMeta.defaultLat;
+    state.cursorLon = cMeta.defaultCursor[0];
+    state.cursorLat = cMeta.defaultCursor[1];
+
+    latSlider.min = cMeta.latMin;
+    latSlider.max = cMeta.latMax;
+    latSlider.value = state.latitude;
+
+    const tickEls = document.getElementById("latTicks").children;
+    cMeta.latTicks.forEach((txt, idx) => {
+      if (tickEls[idx]) tickEls[idx].textContent = txt;
+    });
+
+    contButtons.forEach((btn) => {
+      const isMatch = btn.dataset.continent === continentKey;
+      btn.classList.toggle("active", isMatch);
+      btn.setAttribute("aria-pressed", isMatch ? "true" : "false");
+    });
+
+    rebuildRegionButtons();
+    buildComparisonTable();
+    updateCoordBadge();
+    fitContinentView(immediateZoom);
+    updateUI();
+  }
+
+  function updateCoordBadge() {
+    document.getElementById("coordReadout").textContent =
+      `Koordinat: ${formatLatText(state.cursorLat)}, ${formatLonText(state.cursorLon)}`;
+  }
+
+  function updateUI() {
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    const reg = cMeta.regions[state.selectedRegion] || Object.values(cMeta.regions)[0];
+    const metrics = computeMetrics(state.selectedContinent, state.selectedRegion, state.month, state.latitude);
+
+    document.getElementById("vizTitle").textContent = `🗺️ Peta Kondisi Alam & Region: ${cMeta.name}`;
+    document.getElementById("continentSummaryPill").textContent = cMeta.totalAreaText;
+    document.getElementById("selectedContinentPill").textContent = cMeta.name;
+    document.getElementById("selectedRegionPill").textContent = reg.name;
+
+    const regBtns = regionBtnContainer.querySelectorAll(".reg-btn");
+    regBtns.forEach((btn) => {
+      const isMatch = btn.dataset.region === state.selectedRegion;
+      btn.classList.toggle("active", isMatch);
+      btn.setAttribute("aria-pressed", isMatch ? "true" : "false");
+    });
+
+    document.getElementById("monthLabel").textContent =
+      `${MONTH_NAMES[state.month]} (${getSeasonLabel(state.selectedContinent, state.month)})`;
+
+    const latDir = state.latitude > 0 ? `${state.latitude}° LU` :
+                   state.latitude < 0 ? `${Math.abs(state.latitude)}° LS` : "0° (Khatulistiwa)";
+    document.getElementById("latLabel").textContent = latDir;
+
+    document.getElementById("roArea").textContent = `${reg.areaMillionKm2.toFixed(2).replace(".", ",")} juta km²`;
+    document.getElementById("roTemp").textContent = `${metrics.temp.replace(".", ",")} °C`;
+    document.getElementById("roRain").textContent = `${metrics.rain} mm/bln`;
+    document.getElementById("roPeak").textContent = reg.peak.split(" ")[0] + " mdpl";
+
+    const titlePrefix = reg.id === "tenggara" ? "📍 Asia Tenggara (Termasuk Indonesia)" : `📍 ${reg.name}`;
+    document.getElementById("regTitle").textContent = titlePrefix;
+    document.getElementById("regCoords").innerHTML =
+      `<strong>Letak Astronomis:</strong> ${reg.coords} &bull; <strong>Proporsi Luas:</strong> ${reg.areaPercent} (Total ${cMeta.name}: ${cMeta.totalAreaText})`;
+
+    const cList = reg.countries || [];
+    const countLabel = (state.selectedContinent === "antartika" || state.selectedContinent === "australia")
+      ? "Status Wilayah"
+      : `${cList.length} Negara`;
+    document.getElementById("regCountryCount").textContent = countLabel;
+    document.getElementById("regCountriesList").textContent = cList.join(", ") + ".";
+    document.getElementById("regWaterwaysList").textContent = reg.waterwaysSummary || "-";
+
+    document.getElementById("regLandform").textContent = reg.landform;
+    document.getElementById("regClimate").textContent = reg.climate;
+    document.getElementById("regBio").textContent = reg.bio;
+    document.getElementById("regIndoLink").textContent = reg.indoLink;
+    document.getElementById("regSyukur").textContent = reg.syukur;
+
+    const rows = document.querySelectorAll("#regionTableBody tr");
+    rows.forEach((tr) => {
+      tr.classList.toggle("row-selected", tr.dataset.region === state.selectedRegion);
+    });
+
+    // Sorot baris benua aktif pada tabel perbandingan 6 benua
+    Object.keys(CONTINENT_META).forEach((cKey) => {
+      const compRow = document.getElementById("compRow_" + cKey);
+      if (compRow) {
+        compRow.classList.toggle("row-selected", cKey === state.selectedContinent);
+      }
+    });
+  }
+
+  function buildComparisonTable() {
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    const tbody = document.getElementById("regionTableBody");
+    tbody.innerHTML = "";
+
+    Object.values(cMeta.regions).forEach((reg) => {
+      const tr = document.createElement("tr");
+      tr.dataset.region = reg.id;
+      tr.style.cursor = "pointer";
+      tr.innerHTML = `
+        <td><strong>${reg.name}</strong></td>
+        <td>${reg.coords.split(" dan ")[0]}</td>
+        <td>${reg.areaMillionKm2.toFixed(2).replace(".", ",")}</td>
+        <td>${reg.climateSummary}</td>
+        <td>${reg.landformShort}</td>
+      `;
+      tr.addEventListener("click", () => {
+        selectRegion(reg.id, true);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  // =========================================================================
+  // 7. PENGGAMBARAN PETA DUNIA (BENUA FOKUS BERWARNA, BENUA LAIN ABU-ABU)
+  // =========================================================================
+  function getSmoothedGeoCoords(geoCoords, iterations) {
+    let pts = geoCoords;
+    for (let iter = 0; iter < iterations; iter++) {
+      if (pts.length < 3) break;
+      const next = [];
+      for (let i = 0; i < pts.length; i++) {
+        const p0 = pts[i];
+        const p1 = pts[(i + 1) % pts.length];
+        next.push([
+          0.75 * p0[0] + 0.25 * p1[0],
+          0.75 * p0[1] + 0.25 * p1[1]
+        ]);
+        next.push([
+          0.25 * p0[0] + 0.75 * p1[0],
+          0.25 * p0[1] + 0.75 * p1[1]
+        ]);
+      }
+      pts = next;
+    }
+    return pts;
+  }
+
+  function resizeCanvas() {
+    const box = canvas.parentElement;
+    if (!box || box.clientWidth === 0) return;
+    const rectWidth = Math.max(300, box.clientWidth);
+    const isPortrait = rectWidth < 540;
+    const aspect = isPortrait ? 0.85 : 0.62;
+    const rectHeight = Math.round(rectWidth * aspect);
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = rectWidth * dpr;
+    canvas.height = rectHeight * dpr;
+    canvas.style.width = rectWidth + "px";
+    canvas.style.height = rectHeight + "px";
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    canvasWidth = rectWidth;
+    canvasHeight = rectHeight;
+
+    renderCanvas();
+  }
+
+  function drawGeoPoly(geoCoords, bounds, smoothIter = 0) {
+    const pts = smoothIter > 0 ? getSmoothedGeoCoords(geoCoords, smoothIter) : geoCoords;
+    ctx.beginPath();
+    pts.forEach(([lon, lat], idx) => {
+      const x = lonToX(lon, bounds);
+      const y = latToY(lat, bounds);
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+  }
+
+  // Membangun satu path gabungan untuk seluruh daratan dalam satu benua (untuk clipping garis pantai halus)
+  function buildContinentCoastlinePath(cMeta, bounds, smoothIter) {
+    ctx.beginPath();
+    Object.values(cMeta.regions).forEach((reg) => {
+      reg.polygons.forEach((polyCoords) => {
+        const pts = smoothIter > 0 ? getSmoothedGeoCoords(polyCoords, smoothIter) : polyCoords;
+        pts.forEach(([lon, lat], idx) => {
+          const x = lonToX(lon, bounds);
+          const y = latToY(lat, bounds);
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+      });
+    });
+  }
+
+  function drawGrayBackgroundContinents(bounds) {
+    ctx.save();
+    ctx.fillStyle = "rgba(148, 163, 184, 0.34)";
+    ctx.strokeStyle = "rgba(203, 213, 225, 0.52)";
+    ctx.lineWidth = 1.1;
+    ctx.lineJoin = "round";
+
+    // Pulau konteks tambahan (misalnya Selandia Baru) dengan garis pantai halus tingkat rendah (1 iterasi)
+    OTHER_CONTINENTS_POLYS.forEach((poly) => {
+      drawGeoPoly(poly, bounds, 1);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    // Benua lainnya yang sedang TIDAK dipilih ditampilkan dalam warna abu-abu dengan garis pantai luar halus tingkat rendah (1 iterasi)
+    Object.values(CONTINENT_META).forEach((cMeta) => {
+      if (cMeta.id === state.selectedContinent) return;
+      buildContinentCoastlinePath(cMeta, bounds, 1);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+
+  function drawActiveContinentRegions(cMeta, bounds) {
+    const regions = Object.values(cMeta.regions);
+
+    // 1. Gambar bayangan luar & potong (clip) area berdasarkan siluet garis pantai benua dengan kehalusan rendah (1 iterasi)
+    //    agar genting daratan sempit (Sinai/Mesir-Timur Tengah, Panama, Kra) tetap tersambung utuh dan tidak menyusut
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.42)";
+    ctx.shadowBlur = 10;
+    buildContinentCoastlinePath(cMeta, bounds, 1);
+    ctx.fillStyle = "#1e293b";
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    buildContinentCoastlinePath(cMeta, bounds, 1);
+    ctx.clip();
+
+    // 2. Gambar masing-masing region di dalam klip dengan titik koordinat asli (0 iterasi / tanpa smoothing) agar menyatu rapat
+    regions.forEach((reg) => {
+      const isSelected = reg.id === state.selectedRegion;
+
+      reg.polygons.forEach((polyCoords) => {
+        ctx.save();
+        drawGeoPoly(polyCoords, bounds, 0);
+
+        const baseColor = isSelected ? reg.color : hexToRgba(reg.color, 0.85);
+        ctx.fillStyle = baseColor;
+        ctx.fill();
+
+        // Tutup celah sub-piksel antar-poligon region dengan stroke warna yang sama
+        ctx.lineJoin = "miter";
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = baseColor;
+        ctx.stroke();
+
+        // Pola tekstur pembeda
+        ctx.clip();
+        ctx.strokeStyle = isSelected ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.14)";
+        ctx.lineWidth = 1.1;
+
+        const xs = polyCoords.map((p) => lonToX(p[0], bounds));
+        const ys = polyCoords.map((p) => latToY(p[1], bounds));
+        const minX = Math.max(0, Math.min(...xs));
+        const maxX = Math.min(canvasWidth, Math.max(...xs));
+        const minY = Math.max(0, Math.min(...ys));
+        const maxY = Math.min(canvasHeight, Math.max(...ys));
+
+        if (reg.patternType === "stripes" || reg.patternType === "diag") {
+          for (let x = minX - 60; x < maxX + 60; x += 14) {
+            ctx.beginPath();
+            ctx.moveTo(x, minY);
+            ctx.lineTo(x + 30, maxY);
+            ctx.stroke();
+          }
+        } else if (reg.patternType === "dots") {
+          for (let x = minX; x < maxX; x += 14) {
+            for (let y = minY; y < maxY; y += 14) {
+              ctx.beginPath();
+              ctx.arc(x, y, 1.3, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+        } else if (reg.patternType === "grid" || reg.patternType === "cross") {
+          for (let y = minY; y < maxY; y += 14) {
+            ctx.beginPath();
+            ctx.moveTo(minX, y);
+            ctx.lineTo(maxX, y);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+
+        // Garis batas antar-region di daratan (lurus/tajam tanpa smoothing agar rapat sempurna)
+        ctx.save();
+        drawGeoPoly(polyCoords, bounds, 0);
+        ctx.lineJoin = "miter";
+        ctx.lineWidth = isSelected ? 2.2 : 1.1;
+        ctx.strokeStyle = isSelected ? "#fef08a" : "rgba(241, 245, 249, 0.55)";
+        ctx.stroke();
+        ctx.restore();
+      });
+    });
+
+    ctx.restore(); // Lepaskan klip benua
+
+    // 3. Gambar garis pantai luar benua dengan kehalusan rendah (1 iterasi) di tepi laut
+    ctx.save();
+    buildContinentCoastlinePath(cMeta, bounds, 1);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = "#f8fafc";
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Sorot garis luar khusus region aktif agar terlihat menonjol
+    const activeReg = cMeta.regions[state.selectedRegion];
+    if (activeReg) {
+      ctx.save();
+      buildContinentCoastlinePath(cMeta, bounds, 1);
+      ctx.clip();
+      activeReg.polygons.forEach((polyCoords) => {
+        drawGeoPoly(polyCoords, bounds, 0);
+        ctx.lineJoin = "miter";
+        ctx.lineWidth = 2.6;
+        ctx.strokeStyle = "#fef08a";
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+  }
+
+  function drawMountainChain(bounds) {
+    if (!state.showRing) return;
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    const mData = cMeta.mountains;
+    ctx.save();
+
+    ctx.strokeStyle = "#f97316";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6, 4]);
+
+    mData.chains.forEach((chain) => {
+      ctx.beginPath();
+      chain.forEach(([lon, lat], i) => {
+        const x = lonToX(lon, bounds);
+        const y = latToY(lat, bounds);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Puncak tertinggi benua terpilih
+    const ex = lonToX(mData.peakCoord[0], bounds);
+    const ey = latToY(mData.peakCoord[1], bounds);
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(ex, ey - 9);
+    ctx.lineTo(ex - 8, ey + 6);
+    ctx.lineTo(ex + 8, ey + 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#9a3412";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.fillStyle = "#ffedd5";
+    ctx.fillText(mData.peakLabel, ex - 44, ey - 12);
+    ctx.restore();
+  }
+
+  function drawGraticuleGrid(bounds) {
+    if (!state.showGrid) return;
+    ctx.save();
+
+    // Garis Bujur dinamis
+    const lonStep = bounds.lonSpan <= 95 ? 15 : 30;
+    for (let lon = -180; lon <= 180; lon += lonStep) {
+      if (lon < bounds.minLon || lon > bounds.maxLon) continue;
+      const x = lonToX(lon, bounds);
+      ctx.strokeStyle = lon === 0 ? "rgba(147, 197, 253, 0.55)" : "rgba(226, 232, 240, 0.22)";
+      ctx.lineWidth = lon === 0 ? 1.4 : 1;
+      ctx.setLineDash(lon === 0 ? [] : [3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvasHeight);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+      ctx.font = "600 10px system-ui, sans-serif";
+      ctx.fillStyle = "rgba(226, 232, 240, 0.72)";
+      ctx.fillText(formatLonText(lon), x + 3, 13);
+    }
+
+    // Garis Lintang Referensi Utama
+    const refLats = [
+      { lat: 66.5, label: "66,5° LU (Lingkar Arktik)", color: "rgba(186, 230, 253, 0.72)", dash: [4, 4] },
+      { lat: 23.5, label: "23,5° LU (Garis Balik Utara)", color: "rgba(253, 224, 71, 0.72)", dash: [5, 5] },
+      { lat: 0, label: "0° (Khatulistiwa)", color: "rgba(110, 231, 183, 0.92)", dash: [] },
+      { lat: -23.5, label: "23,5° LS (Garis Balik Selatan)", color: "rgba(253, 224, 71, 0.72)", dash: [5, 5] },
+      { lat: -66.5, label: "66,5° LS (Lingkar Antartika)", color: "rgba(186, 230, 253, 0.72)", dash: [4, 4] }
+    ];
+
+    refLats.forEach((line) => {
+      if (line.lat < bounds.minLat || line.lat > bounds.maxLat) return;
+      const y = latToY(line.lat, bounds);
+      ctx.strokeStyle = line.color;
+      ctx.lineWidth = line.lat === 0 ? 2 : 1.1;
+      ctx.setLineDash(line.dash);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvasWidth, y);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+      ctx.font = "600 10.5px system-ui, sans-serif";
+      ctx.fillStyle = line.color;
+      ctx.fillText(line.label, 8, y - 4);
+    });
+
+    // Garis Lintang Pengamatan dari Slider
+    if (state.latitude >= bounds.minLat && state.latitude <= bounds.maxLat) {
+      const userY = latToY(state.latitude, bounds);
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([7, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, userY);
+      ctx.lineTo(canvasWidth, userY);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+      const tagText = `Lintang Amat: ${formatLatText(state.latitude)}`;
+      ctx.font = "bold 10.5px system-ui, sans-serif";
+      const tagW = ctx.measureText(tagText).width + 12;
+      ctx.fillStyle = "#b45309";
+      ctx.fillRect(canvasWidth - tagW - 8, userY - 17, tagW, 17);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(tagText, canvasWidth - tagW - 2, userY - 4);
+    }
+
+    ctx.restore();
+  }
+
+  function drawWindParticles(bounds) {
+    if (!state.showMonsoon) return;
+    ctx.save();
+
+    if (state.selectedContinent === "asia") {
+      const phase = getSeasonPhase(state.month);
+      const isTransition = Math.abs(phase) < 0.25;
+
+      // Pusat Tekanan Udara di Pedalaman Asia (Gobi / Tibet)
+      const asiaHigh = phase > 0;
+      const bx = lonToX(98, bounds);
+      const by = latToY(42, bounds);
+
+      ctx.fillStyle = asiaHigh ? "rgba(37, 99, 235, 0.9)" : "rgba(220, 38, 38, 0.9)";
+      ctx.beginPath();
+      ctx.arc(bx, by, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 10.5px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(asiaHigh ? "Tinggi" : "Rendah", bx, by + 4);
+
+      if (isTransition) {
+        const tx = lonToX(96, bounds);
+        const ty = latToY(8, bounds);
+        ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+        roundRect(ctx, tx - 95, ty, 190, 24, 6);
+        ctx.fill();
+        ctx.fillStyle = "#fde047";
+        ctx.font = "bold 11px system-ui, sans-serif";
+        ctx.fillText("Angin Pancaroba (Arah Berubah)", tx, ty + 16);
+        ctx.restore();
+        return;
+      }
+
+      const geoTracks = [
+        { lon0: 118, lat0: 30, lon1: 108, lat1: -8 },
+        { lon0: 108, lat0: 24, lon1: 100, lat1: -6 },
+        { lon0: 85, lat0: 22, lon1: 76, lat1: 5 },
+        { lon0: 126, lat0: 28, lon1: 122, lat1: -6 }
+      ];
+      const progress = (state.animTime * 0.38) % 1;
+
+      geoTracks.forEach((tr, idx) => {
+        const sx = lonToX(phase > 0 ? tr.lon0 : tr.lon1, bounds);
+        const sy = latToY(phase > 0 ? tr.lat0 : tr.lat1, bounds);
+        const ex = lonToX(phase > 0 ? tr.lon1 : tr.lon0, bounds);
+        const ey = latToY(phase > 0 ? tr.lat1 : tr.lat0, bounds);
+
+        const t = (progress + idx * 0.22) % 1;
+        const px = sx + (ex - sx) * t;
+        const py = sy + (ey - sy) * t;
+        const angle = Math.atan2(ey - sy, ex - sx);
+
+        ctx.strokeStyle = phase > 0 ? "rgba(56, 189, 248, 0.55)" : "rgba(251, 191, 36, 0.65)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.fillStyle = phase > 0 ? "#38bdf8" : "#fbbf24";
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-7, -6);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-7, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+    } else if (state.selectedContinent === "afrika") {
+      const tracks = [
+        { lon0: 32, lat0: 24, lon1: 2, lat1: 20, type: "trade" },
+        { lon0: -12, lat0: 6, lon1: 12, lat1: 5, type: "west" },
+        { lon0: 45, lat0: -12, lon1: 22, lat1: -14, type: "trade" },
+        { lon0: 5, lat0: -32, lon1: 32, lat1: -32, type: "west" }
+      ];
+      const progress = (state.animTime * 0.35) % 1;
+      tracks.forEach((tr, idx) => {
+        const sx = lonToX(tr.lon0, bounds);
+        const sy = latToY(tr.lat0, bounds);
+        const ex = lonToX(tr.lon1, bounds);
+        const ey = latToY(tr.lat1, bounds);
+        const t = (progress + idx * 0.25) % 1;
+        const px = sx + (ex - sx) * t;
+        const py = sy + (ey - sy) * t;
+        const angle = Math.atan2(ey - sy, ex - sx);
+
+        ctx.strokeStyle = tr.type === "trade" ? "rgba(251, 191, 36, 0.65)" : "rgba(56, 189, 248, 0.65)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.fillStyle = tr.type === "trade" ? "#fbbf24" : "#38bdf8";
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-7, -6);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-7, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+    } else if (state.selectedContinent === "australia") {
+      const tracks = [
+        { lon0: 158, lat0: -20, lon1: 138, lat1: -18, type: "trade" },
+        { lon0: 156, lat0: -28, lon1: 136, lat1: -27, type: "trade" },
+        { lon0: 112, lat0: -37, lon1: 148, lat1: -38, type: "west" }
+      ];
+      const progress = (state.animTime * 0.35) % 1;
+      tracks.forEach((tr, idx) => {
+        const sx = lonToX(tr.lon0, bounds);
+        const sy = latToY(tr.lat0, bounds);
+        const ex = lonToX(tr.lon1, bounds);
+        const ey = latToY(tr.lat1, bounds);
+        const t = (progress + idx * 0.3) % 1;
+        const px = sx + (ex - sx) * t;
+        const py = sy + (ey - sy) * t;
+        const angle = Math.atan2(ey - sy, ex - sx);
+
+        ctx.strokeStyle = tr.type === "trade" ? "rgba(251, 191, 36, 0.65)" : "rgba(56, 189, 248, 0.65)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.fillStyle = tr.type === "trade" ? "#fbbf24" : "#38bdf8";
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-7, -6);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-7, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+    } else if (state.selectedContinent === "antartika") {
+      // Arus Sirkumpolar Antartika & Angin Barat Kutub Selatan (mengalir mengelilingi benua ke timur)
+      const tracks = [
+        { lon0: -150, lat0: -63, lon1: -60, lat1: -61 },
+        { lon0: -40, lat0: -62, lon1: 50, lat1: -62 },
+        { lon0: 60, lat0: -62, lon1: 150, lat1: -63 }
+      ];
+      const progress = (state.animTime * 0.35) % 1;
+      tracks.forEach((tr, idx) => {
+        const sx = lonToX(tr.lon0, bounds);
+        const sy = latToY(tr.lat0, bounds);
+        const ex = lonToX(tr.lon1, bounds);
+        const ey = latToY(tr.lat1, bounds);
+        const t = (progress + idx * 0.3) % 1;
+        const px = sx + (ex - sx) * t;
+        const py = sy + (ey - sy) * t;
+        const angle = Math.atan2(ey - sy, ex - sx);
+
+        ctx.strokeStyle = "rgba(125, 211, 252, 0.65)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.fillStyle = "#7dd3fc";
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-7, -6);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-7, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+    } else {
+      // Sirkulasi Angin Pasat (Tropis) & Angin Barat / Gulf Stream (Lintang Sedang) untuk Amerika & Eropa
+      const tracks = state.selectedContinent === "amerika"
+        ? [
+            { lon0: -135, lat0: 44, lon1: -115, lat1: 44, type: "west" },
+            { lon0: -45, lat0: 15, lon1: -80, lat1: 12, type: "trade" },
+            { lon0: -38, lat0: -10, lon1: -68, lat1: -10, type: "trade" },
+            { lon0: -85, lat0: -42, lon1: -62, lat1: -42, type: "west" }
+          ]
+        : [
+            { lon0: -12, lat0: 48, lon1: 22, lat1: 52, type: "west" },
+            { lon0: -8, lat0: 58, lon1: 25, lat1: 63, type: "west" },
+            { lon0: 5, lat0: 40, lon1: 28, lat1: 39, type: "west" }
+          ];
+
+      const progress = (state.animTime * 0.35) % 1;
+      tracks.forEach((tr, idx) => {
+        const sx = lonToX(tr.lon0, bounds);
+        const sy = latToY(tr.lat0, bounds);
+        const ex = lonToX(tr.lon1, bounds);
+        const ey = latToY(tr.lat1, bounds);
+
+        const t = (progress + idx * 0.25) % 1;
+        const px = sx + (ex - sx) * t;
+        const py = sy + (ey - sy) * t;
+        const angle = Math.atan2(ey - sy, ex - sx);
+
+        ctx.strokeStyle = tr.type === "trade" ? "rgba(251, 191, 36, 0.6)" : "rgba(56, 189, 248, 0.6)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.fillStyle = tr.type === "trade" ? "#fbbf24" : "#38bdf8";
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-7, -6);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-7, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    ctx.restore();
+  }
+
+  function drawRegionLabels(bounds) {
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    ctx.save();
+    ctx.textAlign = "center";
+
+    Object.values(cMeta.regions).forEach((reg) => {
+      const isSelected = reg.id === state.selectedRegion;
+      const lx = lonToX(reg.labelPos[0], bounds);
+      const ly = latToY(reg.labelPos[1], bounds);
+
+      const label = canvasWidth < 480 ? reg.shortName : reg.name;
+      ctx.font = isSelected ? "bold 12px system-ui, sans-serif" : "600 11px system-ui, sans-serif";
+      const textW = ctx.measureText(label).width;
+      const padX = 8;
+      const boxH = 20;
+
+      ctx.fillStyle = isSelected ? "#064e3b" : "rgba(15, 23, 42, 0.80)";
+      roundRect(ctx, lx - textW / 2 - padX, ly - boxH / 2, textW + padX * 2, boxH, 6);
+      ctx.fill();
+
+      ctx.strokeStyle = isSelected ? "#fef08a" : "rgba(255,255,255,0.45)";
+      ctx.lineWidth = isSelected ? 2 : 1;
+      ctx.stroke();
+
+      ctx.fillStyle = isSelected ? "#fef08a" : "#ffffff";
+      ctx.fillText(label, lx, ly + 4);
+    });
+
+    // Penanda Kepulauan Indonesia jika terlihat di viewport
+    const ix = lonToX(113, bounds);
+    const iy = latToY(-3, bounds);
+    if (ix >= 0 && ix <= canvasWidth && iy >= 0 && iy <= canvasHeight) {
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(ix, iy, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.font = "bold 11px system-ui, sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText("🇮🇩 Indonesia", ix, iy + 14);
+    }
+
+    ctx.restore();
+  }
+
+  function drawCursorCrosshair(bounds) {
+    if (!state.cursorActive) return;
+    const cx = clamp(lonToX(state.cursorLon, bounds), 0, canvasWidth);
+    const cy = clamp(latToY(state.cursorLat, bounds), 0, canvasHeight);
+
+    ctx.save();
+
+    ctx.strokeStyle = "#f43f5e";
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(canvasWidth, cy);
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, canvasHeight);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "#f43f5e";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(244, 63, 94, 0.75)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+    ctx.stroke();
+
+    const latText = formatLatText(state.cursorLat);
+    ctx.font = "bold 11px system-ui, sans-serif";
+    const latW = ctx.measureText(latText).width + 10;
+    const latBoxY = clamp(cy - 10, 4, canvasHeight - 22);
+    ctx.fillStyle = "#be123c";
+    roundRect(ctx, 6, latBoxY, latW, 19, 4);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "left";
+    ctx.fillText(latText, 11, latBoxY + 13);
+
+    const lonText = formatLonText(state.cursorLon);
+    const lonW = ctx.measureText(lonText).width + 10;
+    const lonBoxX = clamp(cx - lonW / 2, 6, canvasWidth - lonW - 6);
+    ctx.fillStyle = "#be123c";
+    roundRect(ctx, lonBoxX, 6, lonW, 19, 4);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.fillText(lonText, lonBoxX + lonW / 2, 19);
+
+    const comboText = `(${latText}, ${lonText})`;
+    const comboW = ctx.measureText(comboText).width + 12;
+    const offsetX = cx + 14 + comboW > canvasWidth ? -(comboW + 14) : 14;
+    const offsetY = cy - 26 < 28 ? 14 : -26;
+
+    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+    roundRect(ctx, cx + offsetX, cy + offsetY, comboW, 20, 5);
+    ctx.fill();
+    ctx.strokeStyle = "#fda4af";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = "#ffe4e6";
+    ctx.textAlign = "left";
+    ctx.fillText(comboText, cx + offsetX + 6, cy + offsetY + 14);
+
+    ctx.restore();
+  }
+
+  function drawLegendOverlay() {
+    ctx.save();
+    const boxW = Math.min(235, canvasWidth * 0.54);
+    const boxH = 66;
+    const x = 10;
+    const y = canvasHeight - boxH - 10;
+
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+    roundRect(ctx, x, y, boxW, boxH, 8);
+    ctx.fill();
+
+    ctx.fillStyle = "#f8fafc";
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Legenda Peta:", x + 10, y + 16);
+
+    ctx.font = "10.5px system-ui, sans-serif";
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillText("■ Abu-abu: Benua lain (Konteks)", x + 10, y + 32);
+
+    if (state.selectedContinent === "asia") {
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillText("➤ Biru: Muson Barat | Kuning: Timur", x + 10, y + 48);
+    } else if (state.selectedContinent === "antartika") {
+      ctx.fillStyle = "#7dd3fc";
+      ctx.fillText("➤ Biru Muda: Arus Sirkumpolar", x + 10, y + 48);
+    } else {
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillText("➤ Biru: Angin Barat | Kuning: Pasat", x + 10, y + 48);
+    }
+    ctx.restore();
+  }
+
+  function renderCanvas() {
+    const bounds = getActiveBounds();
+
+    const oceanGrad = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+    oceanGrad.addColorStop(0, "#0b2545");
+    oceanGrad.addColorStop(0.5, "#133c68");
+    oceanGrad.addColorStop(1, "#0a213d");
+    ctx.fillStyle = oceanGrad;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Label Samudra Utama
+    ctx.save();
+    ctx.fillStyle = "rgba(186, 230, 253, 0.42)";
+    ctx.font = "italic 600 11px system-ui, sans-serif";
+    ctx.fillText("SAMUDRA ARKTIK", lonToX(92, bounds), latToY(78, bounds));
+    ctx.fillText("SAMUDRA PASIFIK", lonToX(144, bounds), latToY(16, bounds));
+    ctx.fillText("SAMUDRA PASIFIK", lonToX(-140, bounds), latToY(10, bounds));
+    ctx.fillText("SAMUDRA ATLANTIK", lonToX(-35, bounds), latToY(25, bounds));
+    ctx.fillText("SAMUDRA HINDIA", lonToX(64, bounds), latToY(-5, bounds));
+    ctx.fillText("SAMUDRA SELATAN", lonToX(20, bounds), latToY(-62, bounds));
+    ctx.restore();
+
+    // Gambar benua non-fokus berwarna abu-abu & benua fokus berwarna per region
+    drawGrayBackgroundContinents(bounds);
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    drawActiveContinentRegions(cMeta, bounds);
+
+    drawCountryBordersAndNames(bounds);
+    drawWaterwaysLabels(bounds);
+    drawMountainChain(bounds);
+    drawGraticuleGrid(bounds);
+    drawWindParticles(bounds);
+    drawRegionLabels(bounds);
+    drawLegendOverlay();
+    drawCursorCrosshair(bounds);
+  }
+
+  function drawWaterwaysLabels(bounds) {
+    if (!state.showWaterways) return;
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    ctx.save();
+    ctx.textAlign = "center";
+
+    Object.values(cMeta.regions).forEach((reg) => {
+      const isSelected = reg.id === state.selectedRegion;
+      if (!reg.waterPins) return;
+
+      // Pada layar kecil saat zoom jauh, tampilkan perairan region aktif terlebih dahulu agar tetap rapi
+      if (!isSelected && bounds.lonSpan > 115 && canvasWidth < 600) return;
+
+      reg.waterPins.forEach((wp) => {
+        const wx = lonToX(wp.lon, bounds);
+        const wy = latToY(wp.lat, bounds);
+        if (wx < 12 || wx > canvasWidth - 12 || wy < 16 || wy > canvasHeight - 16) return;
+
+        // Penanda visual khusus per jenis perairan (sungai, danau, teluk, selat)
+        if (wp.kind === "lake") {
+          ctx.fillStyle = "#38bdf8";
+          ctx.strokeStyle = "#0c4a6e";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.ellipse(wx, wy, 4.5, 2.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else if (wp.kind === "river") {
+          ctx.strokeStyle = "#7dd3fc";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(wx - 6, wy + 2);
+          ctx.quadraticCurveTo(wx, wy - 2, wx + 6, wy + 2);
+          ctx.stroke();
+        } else {
+          // Teluk atau Selat
+          ctx.fillStyle = "#bae6fd";
+          ctx.beginPath();
+          ctx.arc(wx, wy, 2.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.font = isSelected ? "italic 600 9.5px system-ui, sans-serif" : "italic 500 8.5px system-ui, sans-serif";
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "rgba(8, 28, 52, 0.9)";
+        ctx.strokeText(wp.name, wx, wy + 11);
+
+        ctx.fillStyle = isSelected ? "#7dd3fc" : "rgba(186, 230, 253, 0.85)";
+        ctx.fillText(wp.name, wx, wy + 11);
+      });
+    });
+
+    ctx.restore();
+  }
+
+  function drawCountryBordersAndNames(bounds) {
+    if (!state.showBorders) return;
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    ctx.save();
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    // 1. Garis batas antarnegara / batas wilayah administratif
+    Object.values(cMeta.regions).forEach((reg) => {
+      const isSelected = reg.id === state.selectedRegion;
+      if (!reg.borders) return;
+
+      ctx.strokeStyle = isSelected ? "rgba(255, 255, 255, 0.85)" : "rgba(255, 255, 255, 0.45)";
+      ctx.lineWidth = isSelected ? 1.4 : 1.0;
+      ctx.setLineDash([4, 3]);
+
+      reg.borders.forEach((line) => {
+        ctx.beginPath();
+        line.forEach(([lon, lat], i) => {
+          const x = lonToX(lon, bounds);
+          const y = latToY(lat, bounds);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      });
+    });
+    ctx.setLineDash([]);
+
+    // 2. Nama negara di setiap region pada benua terpilih
+    Object.values(cMeta.regions).forEach((reg) => {
+      const isSelected = reg.id === state.selectedRegion;
+      if (!reg.countryPins) return;
+
+      // Pada layar kecil atau zoom jauh, prioritaskan label negara pada region aktif agar tidak bertumpuk
+      if (!isSelected && bounds.lonSpan > 120 && canvasWidth < 560) return;
+
+      reg.countryPins.forEach((pin) => {
+        const px = lonToX(pin.lon, bounds);
+        const py = latToY(pin.lat, bounds);
+        if (px < 10 || px > canvasWidth - 10 || py < 16 || py > canvasHeight - 16) return;
+
+        // Titik lokasi negara
+        ctx.fillStyle = isSelected ? "#fef08a" : "rgba(255, 255, 255, 0.75)";
+        ctx.beginPath();
+        ctx.arc(px, py, isSelected ? 2.5 : 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Teks nama negara dengan outline gelap agar terbaca jelas di atas warna peta
+        ctx.font = isSelected ? "600 10px system-ui, sans-serif" : "500 9px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.lineWidth = 2.6;
+        ctx.strokeStyle = "rgba(15, 23, 42, 0.85)";
+        ctx.strokeText(pin.name, px, py - 4);
+
+        ctx.fillStyle = isSelected ? "#ffffff" : "rgba(241, 245, 249, 0.85)";
+        ctx.fillText(pin.name, px, py - 4);
+      });
+    });
+
+    ctx.restore();
+  }
+
+  function roundRect(context, x, y, w, h, r) {
+    context.beginPath();
+    context.moveTo(x + r, y);
+    context.arcTo(x + w, y, x + w, y + h, r);
+    context.arcTo(x + w, y + h, x, y + h, r);
+    context.arcTo(x, y + h, x, y, r);
+    context.arcTo(x, y, x + w, y, r);
+    context.closePath();
+  }
+
+  function hexToRgba(hex, alpha) {
+    const clean = hex.replace("#", "");
+    const num = parseInt(clean, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  // =========================================================================
+  // 8. INTERAKSI GESER PETA (PAN), KLIK REGION & KURSOR LINTANG-BUJUR
+  // =========================================================================
+  function isPointInGeoPolygon(px, py, geoPoly, bounds) {
+    let inside = false;
+    for (let i = 0, j = geoPoly.length - 1; i < geoPoly.length; j = i++) {
+      const xi = lonToX(geoPoly[i][0], bounds);
+      const yi = latToY(geoPoly[i][1], bounds);
+      const xj = lonToX(geoPoly[j][0], bounds);
+      const yj = latToY(geoPoly[j][1], bounds);
+
+      const intersect = ((yi > py) !== (yj > py)) &&
+        (px < ((xj - xi) * (py - yi)) / ((yj - yi) || 0.0001) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  let dragState = {
+    isDown: false,
+    moved: false,
+    startX: 0,
+    startY: 0,
+    startCenterLon: 0,
+    startCenterLat: 0
+  };
+
+  function handleCanvasTap(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = clamp(clientX - rect.left, 0, canvasWidth);
+    const y = clamp(clientY - rect.top, 0, canvasHeight);
+    const bounds = getActiveBounds();
+
+    state.cursorActive = true;
+    state.cursorLon = xToLon(x, bounds);
+    state.cursorLat = yToLat(y, bounds);
+    updateCoordBadge();
+
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    const regions = Object.values(cMeta.regions);
+    for (let i = 0; i < regions.length; i++) {
+      const reg = regions[i];
+      for (let p = 0; p < reg.polygons.length; p++) {
+        if (isPointInGeoPolygon(x, y, reg.polygons[p], bounds)) {
+          state.selectedRegion = reg.id;
+          state.latitude = clamp(state.cursorLat, cMeta.latMin, cMeta.latMax);
+          latSlider.value = state.latitude;
+          updateUI();
+          renderCanvas();
+          return;
+        }
+      }
+    }
+    renderCanvas();
+  }
+
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    dragState.isDown = true;
+    dragState.moved = false;
+    dragState.startX = e.clientX;
+    dragState.startY = e.clientY;
+    dragState.startCenterLon = state.cam.centerLon;
+    dragState.startCenterLat = state.cam.centerLat;
+  });
+
+  canvas.addEventListener("pointermove", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const bounds = getActiveBounds();
+
+    if (dragState.isDown) {
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+      if (Math.hypot(dx, dy) > 5) {
+        dragState.moved = true;
+      }
+      if (dragState.moved) {
+        const dLon = -(dx / Math.max(1, canvasWidth)) * bounds.lonSpan;
+        const dLat = (dy / Math.max(1, canvasHeight)) * bounds.latSpan;
+
+        state.cam.centerLon = clamp(dragState.startCenterLon + dLon, -180 + bounds.lonSpan / 2, 180 - bounds.lonSpan / 2);
+        state.cam.centerLat = clamp(dragState.startCenterLat + dLat, -85 + bounds.latSpan / 2, 88 - bounds.latSpan / 2);
+        state.cam.targetLon = state.cam.centerLon;
+        state.cam.targetLat = state.cam.centerLat;
+        renderCanvas();
+        return;
+      }
+    }
+
+    // Perbarui posisi kursor lintang-bujur saat hover
+    const x = clamp(e.clientX - rect.left, 0, canvasWidth);
+    const y = clamp(e.clientY - rect.top, 0, canvasHeight);
+    state.cursorActive = true;
+    state.cursorLon = xToLon(x, bounds);
+    state.cursorLat = yToLat(y, bounds);
+    updateCoordBadge();
+    if (!state.isPlaying) renderCanvas();
+  });
+
+  canvas.addEventListener("pointerup", (e) => {
+    if (dragState.isDown && !dragState.moved) {
+      handleCanvasTap(e.clientX, e.clientY);
+    }
+    dragState.isDown = false;
+    if (canvas.hasPointerCapture(e.pointerId)) {
+      canvas.releasePointerCapture(e.pointerId);
+    }
+  });
+
+  canvas.addEventListener("pointercancel", () => {
+    dragState.isDown = false;
+  });
+
+  // =========================================================================
+  // 9. EVENT LISTENER KONTROL & RESET
+  // =========================================================================
+  contButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectContinent(btn.dataset.continent, false);
+    });
+  });
+
+  monthSlider.addEventListener("input", () => {
+    state.month = clamp(parseInt(monthSlider.value, 10) || 1, 1, 12);
+    updateUI();
+    renderCanvas();
+  });
+
+  latSlider.addEventListener("input", () => {
+    const cMeta = CONTINENT_META[state.selectedContinent];
+    state.latitude = clamp(parseInt(latSlider.value, 10) || 0, cMeta.latMin, cMeta.latMax);
+    state.cursorLat = state.latitude;
+    updateCoordBadge();
+    updateUI();
+    renderCanvas();
+  });
+
+  toggleBorders.addEventListener("change", () => {
+    state.showBorders = toggleBorders.checked;
+    renderCanvas();
+  });
+
+  toggleWaterways.addEventListener("change", () => {
+    state.showWaterways = toggleWaterways.checked;
+    renderCanvas();
+  });
+
+  toggleMonsoon.addEventListener("change", () => {
+    state.showMonsoon = toggleMonsoon.checked;
+    renderCanvas();
+  });
+
+  toggleGrid.addEventListener("change", () => {
+    state.showGrid = toggleGrid.checked;
+    renderCanvas();
+  });
+
+  toggleRing.addEventListener("change", () => {
+    state.showRing = toggleRing.checked;
+    renderCanvas();
+  });
+
+  playPauseBtn.addEventListener("click", () => {
+    state.isPlaying = !state.isPlaying;
+    playPauseBtn.textContent = state.isPlaying ? "⏸️ Jeda Angin" : "▶️ Putar Angin";
+    playPauseBtn.setAttribute("aria-pressed", state.isPlaying ? "true" : "false");
+    if (state.isPlaying) {
+      state.lastFrameTime = performance.now();
+      requestAnimationFrame(animationLoop);
+    }
+  });
+
+  resetBtn.addEventListener("click", () => {
+    state.month = 1;
+    state.showBorders = true;
+    state.showWaterways = true;
+    state.showMonsoon = true;
+    state.showGrid = true;
+    state.showRing = true;
+    state.animTime = 0;
+
+    monthSlider.value = 1;
+    toggleBorders.checked = true;
+    toggleWaterways.checked = true;
+    toggleMonsoon.checked = true;
+    toggleGrid.checked = true;
+    toggleRing.checked = true;
+
+    if (!state.isPlaying) {
+      state.isPlaying = true;
+      playPauseBtn.textContent = "⏸️ Jeda Angin";
+      playPauseBtn.setAttribute("aria-pressed", "true");
+    }
+
+    selectContinent("asia", true);
+  });
+
+  // =========================================================================
+  // 10. LOOP ANIMASI WAKTU NYATA & INISIALISASI
+  // =========================================================================
+  function animationLoop(now) {
+    if (!state.lastFrameTime) state.lastFrameTime = now;
+    const dt = Math.min((now - state.lastFrameTime) / 1000, 0.1);
+    state.lastFrameTime = now;
+
+    let needsRedraw = false;
+
+    // Transisi auto-zoom kamera yang mulus saat benua dipilih
+    const lerp = Math.min(1, dt * 8);
+    if (
+      Math.abs(state.cam.centerLon - state.cam.targetLon) > 0.05 ||
+      Math.abs(state.cam.centerLat - state.cam.targetLat) > 0.05 ||
+      Math.abs(state.cam.lonSpan - state.cam.targetSpan) > 0.05
+    ) {
+      state.cam.centerLon += (state.cam.targetLon - state.cam.centerLon) * lerp;
+      state.cam.centerLat += (state.cam.targetLat - state.cam.centerLat) * lerp;
+      state.cam.lonSpan += (state.cam.targetSpan - state.cam.lonSpan) * lerp;
+      needsRedraw = true;
+    }
+
+    if (state.isPlaying) {
+      state.animTime += dt;
+      needsRedraw = true;
+    }
+
+    if (needsRedraw) {
+      renderCanvas();
+    }
+
+    requestAnimationFrame(animationLoop);
+  }
+
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+    fitContinentView(true);
+  });
+
+  selectContinent("asia", true);
+  resizeCanvas();
+  fitContinentView(true);
+  state.lastFrameTime = performance.now();
+  requestAnimationFrame(animationLoop);
+})();
+</script>
+</body>
+</html>
