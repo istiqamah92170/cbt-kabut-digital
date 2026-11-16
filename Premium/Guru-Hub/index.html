@@ -2684,7 +2684,9 @@ function ghGambarKanvas(cv, strokes) {
 const GH_CLIENT_ID = '822278229469-7h4hq6d0vpebuu4cldtjdo9jf46nc52j.apps.googleusercontent.com';
 const GH_KEY_BANKSOAL_ID = 'guruhub_banksoal_id_v1';
 const GH_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly';
-const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar','Opsi_E'];
+const GH_KOLOM_SOAL = ['No','Tipe','Poin','Pertanyaan','URL_Gambar','Opsi_A','Opsi_B','Opsi_C','Opsi_D','Kunci','Pembahasan','URL_Gambar_Pembahasan','Izin_Gambar','Opsi_E',
+  // FITUR (2026-11): 10 kolom kontrak bank soal Media Interaktif (di UJUNG, jangan disisip).
+  'Opsi_F','Opsi_G','Opsi_H','Pengecoh','Pasangan','Kategori','Toleransi','Satuan','Perbaikan','Langkah_Bercabang'];
 // FITUR (2026-10): Opsi_E = opsi kelima OPSIONAL untuk soal PG (kosong = soal
 // 4 opsi seperti biasa). SENGAJA di UJUNG skema (kolom ke-14), BUKAN disisip
 // setelah Opsi_D -- pelajaran bencana Rekap_Akhir (2026-09): menyisip kolom
@@ -2708,6 +2710,20 @@ const GH_KOLOM_OPSIONAL_SUMBER = ['Topik', 'Bloom', 'Kesulitan'];
 // permintaan DIK) -- walaupun datanya kosong untuk soal yang belum
 // diklasifikasi, kolomnya tetap ditulis supaya siap dipakai nanti.
 const GH_KOLOM_GENERATE = GH_KOLOM_SOAL.concat(GH_KOLOM_OPSIONAL_SUMBER);
+// FITUR (2026-11): kolom data tambahan (tipe soal Media Interaktif). Dipakai untuk penanda di pratinjau.
+const GH_KOLOM_TAMBAHAN = ['Opsi_F','Opsi_G','Opsi_H','Pengecoh','Pasangan','Kategori','Toleransi','Satuan','Perbaikan','Langkah_Bercabang'];
+// Pastikan jumlah kolom grid sheet cukup (default 26; skema baru butuh lebih).
+async function ghPastikanKolom(id, judulTab, n) {
+  let r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '?fields=sheets.properties', { headers: ghHeaderAuth() });
+  if (!r.ok) return false;
+  let j = await r.json();
+  let sh = (j.sheets || []).map(x => x.properties).filter(x => x.title === judulTab)[0];
+  if (!sh) return false;
+  if (((sh.gridProperties || {}).columnCount || 0) >= n) return true;
+  let u = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + ':batchUpdate', { method: 'POST', headers: ghHeaderAuth(),
+    body: JSON.stringify({ requests: [{ updateSheetProperties: { properties: { sheetId: sh.sheetId, gridProperties: { columnCount: n } }, fields: 'gridProperties.columnCount' } }] }) });
+  return u.ok;
+}
 
 let ghAccessToken = null;   // in-memory SAJA -- token OAuth tidak pernah disimpan ke localStorage (berumur pendek, ~1 jam)
 let ghTokenClient = null;
@@ -2777,17 +2793,23 @@ async function ghMigrasiHeaderBank(id) {
   try {
     let idxE = GH_KOLOM_BANK.indexOf('Opsi_E');
     let lebar = ghKolomHuruf(GH_KOLOM_BANK.length);
+    await ghPastikanKolom(id, 'BankSoal', GH_KOLOM_BANK.length);   // FITUR (2026-11): grid harus cukup lebar untuk kolom baru
     let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/BankSoal!A1:' + lebar + '1', { headers: ghHeaderAuth() });
     if (!resp.ok) return;
     let hasil = await resp.json();
     let h = ((hasil.values || [[]])[0] || []).map(x => (x == null ? '' : x).toString().trim());
     if (h.length < idxE) return;                                   // bukan bank baku (header tidak lengkap) -- jangan disentuh
-    if (h.some(x => x.toLowerCase() === 'opsi_e')) return;         // sudah ada -> tidak menulis ulang
-    if (h[idxE]) return;                                           // sel U1 sudah terisi hal lain -> jangan timpa
-    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/BankSoal!' + lebar + '1?valueInputOption=RAW', {
-      method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [['Opsi_E']] })
+    // Tulis header yang belum ada, mulai dari kolom pertama yang kosong (Opsi_E s/d kolom tambahan).
+    // Idempoten; tidak menimpa sel yang sudah terisi hal lain; gagal senyap.
+    let mulai = -1;
+    for (let i = idxE; i < GH_KOLOM_BANK.length; i++) { if (!h[i]) { mulai = i; break; } }
+    if (mulai < 0) return;
+    for (let i = mulai; i < GH_KOLOM_BANK.length; i++) { if (h[i]) return; }   // ada sel terisi di sela -> jangan disentuh
+    if (GH_KOLOM_BANK.slice(mulai).some(k => h.some(x => x.toLowerCase() === k.toLowerCase()))) return;
+    await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/BankSoal!' + ghKolomHuruf(mulai + 1) + '1?valueInputOption=RAW', {
+      method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [GH_KOLOM_BANK.slice(mulai)] })
     });
-  } catch (e) { console.warn('Migrasi header Opsi_E dilewati:', e); }
+  } catch (e) { console.warn('Migrasi header bank dilewati:', e); }
 }
 
 async function ghSetBankSoalAktif(id, diam) {
@@ -2822,6 +2844,7 @@ async function ghBuatBankSoalBaru() {
     });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    await ghPastikanKolom(hasil.spreadsheetId, 'BankSoal', GH_KOLOM_BANK.length);
     // Tulis baris header
     await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + hasil.spreadsheetId + '/values/BankSoal!A1:' + ghKolomHuruf(GH_KOLOM_BANK.length) + '1?valueInputOption=RAW', {
       method: 'PUT', headers: ghHeaderAuth(), body: JSON.stringify({ values: [GH_KOLOM_BANK] })
@@ -2891,7 +2914,7 @@ async function ghPilihSpreadsheetSumber(id, nama) {
     // kalau memang ada di sheet sumber (sebagian soal sudah diisi lewat
     // proyek Knowledge Engine Analyzer/KEA, posisinya bisa beda-beda per
     // sekolah), dan tetap aman kalau kolom itu belum ada sama sekali.
-    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/Soal!A1:Z10000', { headers: ghHeaderAuth() });
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/Soal!A1:AZ10000', { headers: ghHeaderAuth() });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
     let semua = hasil.values || [];
@@ -2937,7 +2960,7 @@ function ghRenderPreviewImpor() {
       '<div class="gh-bs-soal-item"><input type="checkbox" id="gh-imp-c' + i + '" checked>' +
         '<div class="gh-bs-soal-txt">No.' + ghEsc(r.No) + ' — ' + ghEsc((r.Pertanyaan || '').slice(0, 90)) +
         (r.Pertanyaan && r.Pertanyaan.length > 90 ? '…' : '') +
-        '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.Tipe) + '</span>' + r.Poin + ' poin</div></div>' +
+        '<div class="gh-bs-soal-meta"><span class="gh-bs-badge">' + ghEsc(r.Tipe) + '</span>' + r.Poin + ' poin' + (GH_KOLOM_TAMBAHAN.some(k => r[k]) ? ' <span class="gh-bs-badge">+ data tipe baru</span>' : '') + '</div></div>' +
       '</div>'
     ).join('') + '</div>' +
     '<button class="gh-btn gh-btn-primary" onclick="ghImporKeBank()" style="width:100%;margin-top:10px;">📥 Impor Soal Terpilih ke Bank Soal</button>';
@@ -4389,6 +4412,7 @@ async function ghGenerateUjian() {
       return baris;
     });
     let lebarKolom = ghKolomHuruf(GH_KOLOM_GENERATE.length);
+    await ghPastikanKolom(target, 'Soal', GH_KOLOM_GENERATE.length);
     // Bersihkan dulu isi lama (kalau data baru lebih pendek dari yang lama,
     // baris sisa dari data lama harus dikosongkan, bukan cuma ditimpa sebagian)
     await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + target + '/values/Soal!A2:' + lebarKolom + '10000:clear', { method: 'POST', headers: ghHeaderAuth() });
