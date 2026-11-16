@@ -1116,6 +1116,14 @@ function ghEsc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// FITUR (2026-11): salin URL GAS / link ujian dari daftar Link Ujian (clipboard, cadangan execCommand).
+function ghSalinUrlEntri(i) {
+  let u = (ghEntri[i] || {}).url || '';
+  if (!u) { ghToast('Link kosong.'); return; }
+  let ok = () => ghToast('Link disalin.');
+  let cad = () => { try { let t = document.createElement('textarea'); t.value = u; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); let b = document.execCommand('copy'); t.remove(); b ? ok() : ghToast('Gagal menyalin. Salin manual dari daftar.'); } catch (e) { ghToast('Gagal menyalin. Salin manual dari daftar.'); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(ok, cad); else cad();
+}
 function ghToast(msg) {
   let t = document.getElementById('gh-toast');
   t.textContent = msg;
@@ -1207,6 +1215,7 @@ function ghRenderList() {
         <div class="gh-item-url">${ghEsc(x.url)}</div>
         <div style="font-size:11px;margin-top:2px;${x.tokenAdmin ? 'color:var(--blue-main);' : 'color:var(--red);'}">${x.tokenAdmin ? '🔑 Token admin diatur' : '⚠️ Token admin belum diatur (perlu untuk Sesi Ujian Aktif)'}</div>
       </div>
+      <button class="gh-btn gh-btn-ghost" onclick="ghSalinUrlEntri(${i})" title="Salin link / URL GAS ujian ini">📋</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghBukaSpreadsheetEntri(${i})" title="Buka Spreadsheet ujian ini">📗</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghEditTokenAdminEntri(${i})" title="Atur/ubah Token Admin">🔑</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
