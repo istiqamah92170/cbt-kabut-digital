@@ -836,6 +836,7 @@
       <div class="gh-status-msg" id="gh-bs-setup-status"></div>
 
       <div id="gh-bs-fitur" style="display:none;margin-top:16px;border-top:1px solid var(--gray-line);padding-top:16px;">
+        <input type="text" id="gh-bs-cari-q" placeholder="Ketik sebagian nama spreadsheet (kosongkan untuk 100 terbaru)" style="width:100%;margin-bottom:8px;" onkeydown="if(event.key==='Enter')ghCariSpreadsheet()">
         <button class="gh-btn gh-btn-outline" onclick="ghCariSpreadsheet()" style="width:100%;">🔍 Cari &amp; Impor Soal dari Spreadsheet Lain</button>
         <div id="gh-bs-cari-hasil"></div>
 
@@ -2886,8 +2887,9 @@ async function ghCariSpreadsheet() {
   statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Mencari spreadsheet Anda di Google Drive...';
   hasilEl.innerHTML = '';
   try {
-    let q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and trashed=false");
-    let resp = await fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=30', { headers: ghHeaderAuth() });
+    let kata = ((document.getElementById('gh-bs-cari-q') || {}).value || '').trim().replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    let q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and trashed=false" + (kata ? " and name contains '" + kata + "'" : ''));
+    let resp = await fetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=100', { headers: ghHeaderAuth() });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
     statusEl.textContent = '';
