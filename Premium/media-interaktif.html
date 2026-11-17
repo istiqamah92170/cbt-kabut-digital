@@ -154,6 +154,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 
 
 <section id="gl" class="card"><h3>Media Interaktif Saya</h3><div id="am" class="m">Memuat...</div>
+  <hr style="border:0;border-top:1px solid var(--b)"><h3><i class="fa-solid fa-database"></i> Database Siswa (pusat nilai semua media)</h3><div id="dbx" class="m">Memuat...</div>
   <hr style="border:0;border-top:1px solid var(--b)"><h3>Tambah media (1 Sheet = 1 kelas)</h3>
   <input id="mn" placeholder="Nama kelas, contoh: IPS 7B">
   <button class="btn" onclick="buatSheetOtomatis()">Buat Sheet otomatis (disarankan)</button>
@@ -302,7 +303,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',EDISI='premium',FIT={},$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -1153,7 +1154,30 @@ function gTerbit(){var d=D.filter(function(x){return x.no==NO})[0],on=d.status!=
  var p=(on&&!jd)?run('guruAtur',K,NO,'tanggal',t):Promise.resolve();
  p.then(function(){return run('guruAtur',K,NO,'status',on?'terbit':'draft')}).then(function(x){D=x;gDaftar();gPilih(NO);T(on?((jd&&jd>t)?'Diterbitkan, terjadwal dibuka '+jd+'.':'Diterbitkan dan terbuka untuk siswa.'):'Ditarik dari siswa.')}).catch(er)}
 if(MODE=='guru')foldInit();document.addEventListener('input',function(e){if(MODE=='guru'&&e.target.tagName=='TEXTAREA')tumbuh(e.target)});var ACC=null;
-function akunMuat(){run('akunInfo').then(function(r){ACC=r;$('al').textContent=r.layanan;$('am').innerHTML='<p>Paket: <b>'+E(r.paket)+'</b> | Media: '+r.media.length+' / '+(r.kuota>=9999?'tanpa batas':r.kuota)+'</p>'+(r.media.map(function(m){return'<div class="row"><b>'+E(m.nama)+'</b><span><span class="chip">'+(m.aktif?'Aktif':'Ditangguhkan')+'</span> <button class="btn sm" '+(m.aktif?'':'disabled ')+'onclick="bukaMedia(\''+m.t+'\')">Studio</button> <button class="btn o sm" onclick="salinTaut(\''+m.t+'\')">Salin tautan siswa</button> <button class="btn o sm" onclick="hapusMedia(\''+m.t+'\')">Hapus</button></span></div>'}).join('')||'<p class="m">Belum ada media.</p>')}).catch(er)}
+function akunMuat(){dbMuat();run('akunInfo').then(function(r){ACC=r;$('al').textContent=r.layanan;$('am').innerHTML='<p>Paket: <b>'+E(r.paket)+'</b> | Media: '+r.media.length+' / '+(r.kuota>=9999?'tanpa batas':r.kuota)+'</p>'+(r.media.map(function(m){return'<div class="row"><b>'+E(m.nama)+'</b><span><span class="chip">'+(m.aktif?'Aktif':'Ditangguhkan')+'</span> <button class="btn sm" '+(m.aktif?'':'disabled ')+'onclick="bukaMedia(\''+m.t+'\')">Studio</button> <button class="btn o sm" onclick="salinTaut(\''+m.t+'\')">Salin tautan siswa</button> <button class="btn o sm" onclick="hapusMedia(\''+m.t+'\')">Hapus</button></span></div>'}).join('')||'<p class="m">Belum ada media.</p>')}).catch(er)}
+var DBI=null;
+function dbMuat(){run('akunDbInfo').then(function(r){DBI=r;dbTampil()}).catch(function(e){$('dbx').textContent='Gagal memuat: '+(e&&e.message||e)})}
+function dbTampil(){var r=DBI,h='';
+ if(!r||!r.ada){h='<p class="m">Satu Google Sheet di Drive Anda yang menjadi pusat semua nilai: siswa per mapel dan media, nilai per pertemuan, dan ujian. Tersedia untuk akun gratis dan premium. PIN siswa tidak disalin.</p><button class="btn" onclick="dbBuat()">Buat Database Siswa otomatis</button> <details style="margin-top:6px"><summary class="m">Atau pakai Sheet yang sudah ada</summary><p class="m">Bagikan Sheet kosong sebagai <b>Editor</b> ke akun layanan (sama seperti media), lalu tempel tautannya.</p><input id="dbu" placeholder="Tautan Google Sheet"><button class="btn o" onclick="dbTaut()">Tautkan</button></details>'}
+ else{h='<p><span class="chip">Terhubung</span> <a href="'+E(r.url)+'" target="_blank" rel="noopener">Buka di Google Sheet</a></p><p class="m">'+(r.sinkron?'Terakhir sinkron: '+E(r.sinkron):'Belum pernah disinkronkan.')+'</p><button class="btn" onclick="dbSinkron()">Sinkronkan sekarang</button> <button class="btn o sm" onclick="dbLepas()">Lepas</button>';
+  var g=r.ringkas;
+  if(g){h+='<p class="m">'+g.nSiswa+' siswa, '+g.nNilai+' nilai tersimpan.'+(g.lewat&&g.lewat.length?' Media dilewati (tidak bisa dibuka): '+E(g.lewat.join(', ')):'')+'</p><div style="overflow:auto"><table class="pp"><tr><th>Media</th><th>Mapel</th><th>Siswa</th><th>Rata-rata</th></tr>'+g.media.map(function(m){return'<tr><td>'+E(m.nama)+'</td><td>'+E(m.mapel)+'</td><td>'+m.siswa+'</td><td>'+(m.rata===null?'-':m.rata)+'</td></tr>'}).join('')+'</table></div>';
+   h+='<details style="margin-top:8px"><summary class="m">Rekap per siswa ('+g.rekap.length+(g.rekap.length<g.nSiswa?' dari '+g.nSiswa+', selengkapnya di Sheet':'')+')</summary><input id="dbq" placeholder="Cari nama atau kelas" oninput="dbSaring()"><div style="overflow:auto;max-height:260px"><table class="pp" id="dbt"></table></div></details>'}}
+ $('dbx').innerHTML=h;if(r&&r.ada&&r.ringkas)dbSaring()}
+function dbSaring(){var q=(($('dbq')||{}).value||'').trim().toLowerCase(),g=DBI&&DBI.ringkas;if(!g||!$('dbt'))return;
+ $('dbt').innerHTML='<tr><th>Media</th><th>Kelas</th><th>Nama</th><th>Dikerjakan</th><th>Pertemuan</th><th>Ujian</th><th>Rata-rata</th></tr>'+g.rekap.filter(function(x){return!q||(x[3]+' '+x[2]).toLowerCase().indexOf(q)>=0}).map(function(x){return'<tr><td>'+E(x[0])+'</td><td>'+E(x[2])+'</td><td>'+E(x[3])+'</td><td>'+x[4]+'</td><td>'+(x[5]===''?'-':x[5])+'</td><td>'+(x[6]===''?'-':x[6])+'</td><td>'+(x[7]===''?'-':x[7])+'</td></tr>'}).join('')}
+function dbSinkron(){lod(1);run('akunDbSinkron').then(function(r){lod(-1);DBI=r;dbTampil();T('Database Siswa diperbarui.')}).catch(function(e){lod(-1);er(e)})}
+function dbLepas(){if(confirm('Lepas Database Siswa? Sheet di Drive Anda tidak dihapus.'))run('akunDbLepas').then(function(){dbMuat()}).catch(er)}
+function dbTaut(){run('akunDbTaut',$('dbu').value).then(function(r){DBI=r;dbTampil();T('Database Siswa dihubungkan. Tekan Sinkronkan.')}).catch(er)}
+function dbBuat(){
+ if(!ACC){T('Data akun belum dimuat.');return}
+ var tk,L='meminta izin Google';lod(1);
+ dapatToken().then(function(t){tk=t;L='membuat Sheet di Drive';return gj('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',tk,{name:'Database Siswa - Media Interaktif',mimeType:'application/vnd.google-apps.spreadsheet'})})
+ .then(function(r){if(!r.ok)throw new Error('Gagal membuat Sheet di Drive Anda (kode '+r.status+').');return r.json()})
+ .then(function(f){L='membagikan Sheet ke akun layanan';return gj('https://www.googleapis.com/drive/v3/files/'+f.id+'/permissions?sendNotificationEmail=false',tk,{type:'user',role:'writer',emailAddress:ACC.layanan}).then(function(r){if(!r.ok)throw new Error('Gagal membagikan Sheet ke akun layanan (kode '+r.status+').');return f})})
+ .then(function(f){L='mendaftarkan database di server';return run('akunDbTaut',f.webViewLink||f.id)})
+ .then(function(r){DBI=r;lod(-1);dbTampil();T('Database Siswa dibuat di Drive Anda. Tekan Sinkronkan untuk mengisinya.')})
+ .catch(function(e){lod(-1);er(e instanceof TypeError||/failed to fetch|networkerror/i.test(String(e&&e.message))?new Error('Gagal pada tahap: '+L+'. Koneksi ke Google terputus atau diblokir, lalu coba lagi.'):e)})}
 function akunTambah(){run('akunTambahMedia',$('mu').value,$('mn').value).then(function(){$('mu').value='';$('mn').value='';T('Media ditambahkan.');akunMuat()}).catch(er)}
 function hapusMedia(t){if(confirm('Hapus media ini dari daftar? Data di Sheet tidak dihapus.'))run('akunHapusMedia',t).then(akunMuat).catch(er)}
 function salinTaut(t){var m=ACC.media.filter(function(x){return x.t==t})[0],u=(ACC.urlSiswa||'')+(m&&m.alias?'?m='+m.alias:'?t='+t);salinTeks(u,function(o){T(o?'Tautan siswa disalin. Tempel di Google Sites (Sematkan > URL).':'Salin manual: '+u)})}
