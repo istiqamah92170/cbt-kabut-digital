@@ -1129,7 +1129,7 @@ async function ghHubungkanDatabaseEntri(i) {
   ghToast(t ? 'Menghubungkan database...' : 'Melepas database...');
   try {
     let resp = await fetch(x.url, { method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(t ? { action: 'setDatabaseSiswa', token_admin: x.tokenAdmin, url: t } : { action: 'lepasDatabaseSiswa', token_admin: x.tokenAdmin }) });
+      body: JSON.stringify(t ? { action: 'setDatabaseSiswa', token_admin: x.tokenAdmin, url: t, url_gas: x.url } : { action: 'lepasDatabaseSiswa', token_admin: x.tokenAdmin }) });
     let h = await resp.json();
     if (h.status === 'ok') ghToast(t ? 'Terhubung: ' + (h.jumlah || 0) + ' siswa. Siswa kini masuk dengan kelas, nama, dan PIN.' : 'Database dilepas.');
     else alert(h.msg || 'Gagal menghubungkan database.');
