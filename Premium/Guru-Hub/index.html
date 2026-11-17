@@ -1117,6 +1117,24 @@ function ghEsc(s) {
 }
 
 // FITUR (2026-11): salin URL GAS / link ujian dari daftar Link Ujian (clipboard, cadangan execCommand).
+// FITUR (2026-11): hubungkan ujian CBT ke Database Siswa (Media Interaktif) -> siswa masuk dengan kelas + nama + PIN.
+async function ghHubungkanDatabaseEntri(i) {
+  let x = ghEntri[i];
+  if (!x || !x.url) { ghToast('Ujian tidak ditemukan.'); return; }
+  if (!x.tokenAdmin) { ghToast('Atur Token Admin ujian ini dulu (tombol 🔑).'); return; }
+  let t = prompt('Tempel tautan Google Sheet "Database Siswa" (dari kartu Database Siswa di Media Interaktif).\nKosongkan lalu OK untuk MELEPAS database dari ujian ini:', '');
+  if (t === null) return;
+  t = t.trim();
+  if (!t && !confirm('Lepas database siswa? Siswa kembali mengetik nama manual.')) return;
+  ghToast(t ? 'Menghubungkan database...' : 'Melepas database...');
+  try {
+    let resp = await fetch(x.url, { method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(t ? { action: 'setDatabaseSiswa', token_admin: x.tokenAdmin, url: t } : { action: 'lepasDatabaseSiswa', token_admin: x.tokenAdmin }) });
+    let h = await resp.json();
+    if (h.status === 'ok') ghToast(t ? 'Terhubung: ' + (h.jumlah || 0) + ' siswa. Siswa kini masuk dengan kelas, nama, dan PIN.' : 'Database dilepas.');
+    else alert(h.msg || 'Gagal menghubungkan database.');
+  } catch (e) { alert('Gagal terhubung ke server ujian: ' + e.message); }
+}
 function ghSalinUrlEntri(i) {
   let u = (ghEntri[i] || {}).url || '';
   if (!u) { ghToast('Link kosong.'); return; }
@@ -1216,6 +1234,7 @@ function ghRenderList() {
         <div style="font-size:11px;margin-top:2px;${x.tokenAdmin ? 'color:var(--blue-main);' : 'color:var(--red);'}">${x.tokenAdmin ? '🔑 Token admin diatur' : '⚠️ Token admin belum diatur (perlu untuk Sesi Ujian Aktif)'}</div>
       </div>
       <button class="gh-btn gh-btn-ghost" onclick="ghSalinUrlEntri(${i})" title="Salin link / URL GAS ujian ini">📋</button>
+      <button class="gh-btn gh-btn-ghost" onclick="ghHubungkanDatabaseEntri(${i})" title="Hubungkan ke Database Siswa (login kelas, nama, PIN)">🔗</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghBukaSpreadsheetEntri(${i})" title="Buka Spreadsheet ujian ini">📗</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghEditTokenAdminEntri(${i})" title="Atur/ubah Token Admin">🔑</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
