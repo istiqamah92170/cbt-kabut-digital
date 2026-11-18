@@ -303,7 +303,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',EDISI='premium',FIT={},$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -1163,36 +1163,65 @@ function dbTampil(){var r=DBI,h='';
   h+='<details style="margin-top:8px"><summary class="m">Hubungkan soal CBT ke database (login kelas-nama-PIN dan nilai CBT)</summary><p class="m">Tempel link soal CBT (alamat /exec atau link siswa) dan Token Admin ujian. Cocok untuk akun gratis. Siswa lalu masuk CBT dengan memilih kelas, nama, dan PIN, dan nilai CBT ikut masuk Rekap saat Sinkronkan.</p><input id="dbc" placeholder="Link soal CBT"><input id="dbk" type="password" placeholder="Token Admin ujian"><input id="dbm" placeholder="Mapel ujian ini (mis. IPA) agar nilai masuk ke mapel yang tepat" maxlength="80"><button class="btn o" onclick="dbCbt(1)">Hubungkan</button> <button class="btn o sm" onclick="dbCbt(0)">Lepas</button></details>';
   var g=r.ringkas;
   if(g){h+='<p class="m">'+g.nSiswa+' siswa, '+g.nNilai+' nilai tersimpan.'+(g.cbt?' CBT: '+g.cbt.ujian+' ujian tersinkron, '+g.cbt.nilai+' nilai.'+(g.cbt.gagal&&g.cbt.gagal.length?' Gagal: '+E(g.cbt.gagal.join('; ')):''):'')+(g.lewat&&g.lewat.length?' Media dilewati (tidak bisa dibuka): '+E(g.lewat.join(', ')):'')+'</p><div style="overflow:auto"><table class="pp"><tr><th>Media</th><th>Mapel</th><th>Siswa</th><th>Rata-rata</th></tr>'+g.media.map(function(m){return'<tr><td>'+E(m.nama)+'</td><td>'+E(m.mapel)+'</td><td>'+m.siswa+'</td><td>'+(m.rata===null?'-':m.rata)+'</td></tr>'}).join('')+'</table></div>';
-   h+='<details style="margin-top:8px"><summary class="m">Rekap per siswa ('+g.rekap.length+(g.rekap.length<g.nSiswa?' dari '+g.nSiswa+', selengkapnya di Sheet':'')+')</summary><input id="dbq" placeholder="Cari nama atau kelas" oninput="dbSaring()"><div style="overflow:auto;max-height:260px"><table class="pp" id="dbt"></table></div><button class="btn" onclick="dbGambar()">Buat foto rekap (PNG)</button><div id="dbg"></div></details>'}}
+   h+='<details style="margin-top:8px"><summary class="m">Rekap per siswa ('+g.rekap.length+(g.rekap.length<g.nSiswa?' dari '+g.nSiswa+', selengkapnya di Sheet':'')+')</summary><input id="dbq" placeholder="Cari nama atau kelas" oninput="dbSaring()"><div style="overflow:auto;max-height:260px"><table class="pp" id="dbt"></table></div><button class="btn" onclick="dbGambar()">Buat foto rekap per kelas (PNG)</button><div id="dbg"></div></details><details style="margin-top:8px"><summary class="m">Nilai ganda CBT (Budi(2), Budi(3), ...)'+(g.cbt&&g.cbt.ganda?' - '+g.cbt.ganda+' menunggu keputusan':'')+'</summary><p class="m">Pengerjaan ulang di CBT diberi angka di belakang nama. Pilih nilai yang dipakai supaya rekap database bersih.</p><button class="btn o" onclick="dbGandaMuat()">Periksa nilai ganda</button><div id="dbn"></div></details>'}}
  $('dbx').innerHTML=h;if(r&&r.ada&&r.ringkas)dbSaring()}
 function dbRows(){var q=(($('dbq')||{}).value||'').trim().toLowerCase(),g=DBI&&DBI.ringkas;if(!g)return[];return g.rekap.filter(function(x){return!q||(x[3]+' '+x[2]+' '+x[0]).toLowerCase().indexOf(q)>=0})}
 function dbV(v){return v===''||v===undefined||v===null?'-':v}
 function dbSaring(){var g=DBI&&DBI.ringkas;if(!g||!$('dbt'))return;var uj=g.ujian||[];
  $('dbt').innerHTML='<tr><th>Media</th><th>Mapel</th><th>Kelas</th><th>Nama</th><th>Pertemuan</th><th>Rata</th><th>CBT</th>'+uj.map(function(j){return'<th>'+E(j)+'</th>'}).join('')+'<th>Semua</th></tr>'+dbRows().map(function(x){return'<tr><td>'+E(x[0])+'</td><td>'+E(x[1])+'</td><td>'+E(x[2])+'</td><td>'+E(x[3])+'</td><td>'+x[4]+'/'+(x[6]||0)+'</td><td>'+dbV(x[5])+'</td><td>'+dbV(x[9])+'</td>'+uj.map(function(j,i){return'<td>'+dbV(x[11+i])+'</td>'}).join('')+'<td><b>'+dbV(x[10])+'</b></td></tr>'}).join('')}
-var DGB=null;
+var DGB=[];
+function dbKelompok(R,uj){var kl={},ko=[];R.forEach(function(r){var k=String(r[2]||'-');if(!kl[k]){kl[k]={nama:k,mp:{},mo:[]};ko.push(k)}var m=kl[k],mk=String(r[1]||'');if(!m.mp[mk]){m.mp[mk]={mapel:mk,media:{},rows:[]};m.mo.push(mk)}var g=m.mp[mk];if(r[0])g.media[r[0]]=1;g.rows.push(r)});
+ ko.sort();return ko.map(function(k){var m=kl[k];return{nama:k,mapel:m.mo.map(function(mk){var g=m.mp[mk];
+  /* hanya ujian yang sudah ada nilainya di kelompok ini; ujian kosong tidak ditampilkan */
+  g.uj=[];uj.forEach(function(j,i){if(g.rows.some(function(r){return r[11+i]!==''&&r[11+i]!==undefined&&r[11+i]!==null}))g.uj.push(i)});return g})}})}
 function dbGambar(){var g=DBI&&DBI.ringkas,R=dbRows();if(!g||!R.length){T('Belum ada rekap untuk digambar. Tekan Sinkronkan dulu.');return}
- var uj=g.ujian||[],P=40,SC=2,FN='Inter,Arial,sans-serif',cw=[44,150,70,270,110,80,80].concat(uj.map(function(){return 100}),[90]),W=Math.max(1000,2*P+cw.reduce(function(a,b){return a+b},0)),xs=[P];cw.forEach(function(w,i){xs.push(xs[i]+w)});
- var hd=['No','Media','Kelas','Nama','Pertemuan','Rata','CBT'].concat(uj,['Semua']);
- var bln=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],now=new Date(),cetak=now.getDate()+' '+bln[now.getMonth()]+' '+now.getFullYear();
- var c=document.createElement('canvas'),x=c.getContext('2d');
- function cut(s,w,fo){x.font=fo;s=String(s);if(x.measureText(s).width<=w)return s;while(s.length>1&&x.measureText(s+'...').width>w)s=s.slice(0,-1);return s+'...'}
- function lay(dr){var y=P;
-  if(dr){x.font='700 30px '+FN;x.fillStyle='#1E3A8A';x.fillText('Rekap Database Siswa',P,y+30)}y+=38;
-  if(dr){x.font='400 17px '+FN;x.fillStyle='#334155';x.fillText('Disinkronkan: '+(DBI.sinkron||'-')+'   |   Dicetak: '+cetak+'   |   '+R.length+' siswa',P,y+18)}y+=34;
-  if(dr){x.fillStyle='#1E3A8A';x.fillRect(P,y,W-2*P,40);x.fillStyle='#fff';x.font='700 15px '+FN;hd.forEach(function(t,i){var kiri=(i==1||i==3);x.textAlign=kiri?'left':'center';x.fillText(cut(t,cw[i]-12,'700 15px '+FN),kiri?xs[i]+10:xs[i]+cw[i]/2,y+26)});x.textAlign='left'}
-  y+=40;
-  R.forEach(function(r,ri){var v=[String(ri+1),r[0]||'-',r[2],r[3],r[4]+'/'+(r[6]||0),dbV(r[5]),dbV(r[9])].concat(uj.map(function(j,i){return dbV(r[11+i])}),[dbV(r[10])]);
-   if(dr){if(ri%2==0){x.fillStyle='#f1f5f9';x.fillRect(P,y,W-2*P,34)}
-    v.forEach(function(t,i){var kiri=(i==1||i==3),fo=(i==v.length-1?'700 ':'400 ')+'16px '+FN;x.font=fo;x.fillStyle=(i==v.length-1)?'#047857':'#1e293b';x.textAlign=kiri?'left':'center';x.fillText(cut(t,cw[i]-14,fo),kiri?xs[i]+10:xs[i]+cw[i]/2,y+23)});x.textAlign='left';
-    x.strokeStyle='#e2e8f0';x.beginPath();x.moveTo(P,y+34);x.lineTo(W-P,y+34);x.stroke()}
-   y+=34});
-  y+=14;if(dr){x.font='400 13px '+FN;x.fillStyle='#475569';x.fillText('Pertemuan = dikerjakan/jumlah pertemuan (yang minimal satu siswa sudah mengisi). Rata = jumlah nilai dibagi jumlah pertemuan; belum mengerjakan dihitung 0.',P,y+10);x.fillText('Kolom ujian ditulis apa adanya (judul ujian) dan tidak dirata-ratakan.',P,y+30)}
-  return y+P+20}
- c.width=W;var Hh=lay(false);c.width=W*SC;c.height=Hh*SC;x.scale(SC,SC);x.fillStyle='#fff';x.fillRect(0,0,W,Hh);lay(true);
- var u=c.toDataURL('image/png'),fn='rekap-database-siswa.png';
- c.toBlob(function(b){var fl=b?new File([b],fn,{type:'image/png'}):null,sh=!!(fl&&navigator.canShare&&navigator.canShare({files:[fl]}));DGB=fl;
-  $('dbg').innerHTML='<p class="m">Pratinjau gambar. Jika tombol unduh tidak bekerja, tekan lama (HP) atau klik kanan (komputer) pada gambar lalu simpan.</p><img src="'+u+'" alt="Rekap database siswa" style="max-width:100%;border:1px solid var(--b);border-radius:8px"><br><a class="btn" style="display:inline-block;text-decoration:none" download="'+fn+'" href="'+u+'">Unduh PNG</a>'+(sh?'<button class="btn o" onclick="dbBagi()">Bagikan</button>':'');$('dbg').scrollIntoView()})}
-function dbBagi(){if(DGB&&navigator.share)navigator.share({files:[DGB],title:'Rekap Database Siswa'}).catch(function(){})}
+ var uj=g.ujian||[],KL=dbKelompok(R,uj),P=40,SC=2,FN='Inter,Arial,sans-serif',bln=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'],now=new Date(),cetak=now.getDate()+' '+bln[now.getMonth()]+' '+now.getFullYear();
+ var cp=(getComputedStyle(document.documentElement).getPropertyValue('--c')||'').trim()||'#1E3A8A',cv=document.createElement('canvas'),x=cv.getContext('2d');
+ function cut(t,w,fo){x.font=fo;t=String(t);if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+'...').width>w)t=t.slice(0,-1);return t+'...'}
+ function lebar(m){return[44,280,110,80,80].concat(m.uj.map(function(){return 120}),[90])}
+ function render(K){var W=1000;K.mapel.forEach(function(m){var t=2*P+lebar(m).reduce(function(a,b){return a+b},0);if(t>W)W=t});
+  function lay(dr){var y=P;
+   if(dr){x.textAlign='left';x.font='700 30px '+FN;x.fillStyle=cp;x.fillText('Rekap Database Siswa - Kelas '+K.nama,P,y+30)}y+=38;
+   if(dr){x.font='400 17px '+FN;x.fillStyle='#334155';x.fillText('Disinkronkan: '+(DBI.sinkron||'-')+'   |   Dicetak: '+cetak,P,y+18)}y+=34;
+   K.mapel.forEach(function(m){var cw=lebar(m),xs=[P];cw.forEach(function(w,i){xs.push(xs[i]+w)});
+    var nm=m.mapel||'(CBT)',md=Object.keys(m.media).join(', ');
+    if(dr){x.fillStyle='#e2e8f0';x.fillRect(P,y,W-2*P,34);x.fillStyle='#0f172a';x.textAlign='left';x.font='700 18px '+FN;x.fillText('Mapel: '+(m.mapel?nm:'Nilai CBT (mapel tidak cocok)'),P+12,y+23);if(md){x.font='400 15px '+FN;x.fillStyle='#475569';x.textAlign='right';x.fillText(cut(md,W/2,'400 15px '+FN),W-P-12,y+23);x.textAlign='left'}}
+    y+=34;
+    var hd=['No','Nama','Pertemuan','Rata','CBT'].concat(m.uj.map(function(i){return uj[i]}),['Semua']);
+    if(dr){x.fillStyle=cp;x.fillRect(P,y,W-2*P,36);x.fillStyle='#fff';x.font='700 15px '+FN;hd.forEach(function(t,i){var kiri=i==1;x.textAlign=kiri?'left':'center';x.fillText(cut(t,cw[i]-12,'700 15px '+FN),kiri?xs[i]+10:xs[i]+cw[i]/2,y+24)});x.textAlign='left'}
+    y+=36;
+    m.rows.forEach(function(r,ri){var v=[String(ri+1),r[3],m.mapel?r[4]+'/'+(r[6]||0):'-',m.mapel?dbV(r[5]):'-',dbV(r[9])].concat(m.uj.map(function(i){return dbV(r[11+i])}),[dbV(r[10])]);
+     if(dr){if(ri%2==0){x.fillStyle='#f1f5f9';x.fillRect(P,y,W-2*P,32)}
+      v.forEach(function(t,i){var kiri=i==1,fo=(i==v.length-1?'700 ':'400 ')+'16px '+FN;x.font=fo;x.fillStyle=i==v.length-1?'#047857':'#1e293b';x.textAlign=kiri?'left':'center';x.fillText(cut(t,cw[i]-14,fo),kiri?xs[i]+10:xs[i]+cw[i]/2,y+22)});x.textAlign='left';
+      x.strokeStyle='#e2e8f0';x.beginPath();x.moveTo(P,y+32);x.lineTo(W-P,y+32);x.stroke()}
+     y+=32});
+    y+=18});
+   if(dr){x.font='400 13px '+FN;x.fillStyle='#475569';x.textAlign='left';x.fillText('Pertemuan = dikerjakan/jumlah pertemuan (yang minimal satu siswa sudah mengisi). Rata = jumlah nilai dibagi jumlah pertemuan; belum mengerjakan dihitung 0.',P,y+10);x.fillText('Kolom ujian ditulis apa adanya dan tidak dirata-ratakan; ujian yang belum ada nilainya di mapel ini tidak ditampilkan.',P,y+30)}
+   return y+P+20}
+  cv.width=W;var Hh=lay(false);cv.width=W*SC;cv.height=Hh*SC;x.setTransform(SC,0,0,SC,0,0);x.fillStyle='#fff';x.fillRect(0,0,W,Hh);lay(true);return cv.toDataURL('image/png')}
+ var o=$('dbg'),h='<p class="m">Satu foto per kelas ('+KL.length+'). Jika tombol unduh tidak bekerja, tekan lama (HP) atau klik kanan (komputer) pada gambar lalu simpan.</p>';DGB=[];
+ KL.forEach(function(K,i){var u=render(K),fn='rekap-database-kelas-'+String(K.nama).replace(/[^A-Za-z0-9]+/g,'')+'.png';DGB.push({u:u,fn:fn});
+  h+='<div style="margin:10px 0"><b>Kelas '+E(K.nama)+'</b><br><img src="'+u+'" alt="Rekap kelas '+E(K.nama)+'" style="max-width:100%;border:1px solid var(--b);border-radius:8px"><br><a class="btn" style="display:inline-block;text-decoration:none" download="'+E(fn)+'" href="'+u+'">Unduh PNG</a><button class="btn o" id="dbb'+i+'" onclick="dbBagi('+i+')" style="display:none">Bagikan</button></div>'});
+ o.innerHTML=h;
+ DGB.forEach(function(d,i){fetch(d.u).then(function(r){return r.blob()}).then(function(b){var f=new File([b],d.fn,{type:'image/png'});d.f=f;if(navigator.canShare&&navigator.canShare({files:[f]})){var e=$('dbb'+i);if(e)e.style.display=''}}).catch(function(){})});
+ o.scrollIntoView()}
+function dbBagi(i){var d=DGB[i];if(d&&d.f&&navigator.share)navigator.share({files:[d.f],title:'Rekap Database Siswa'}).catch(function(){})}
+/* ---- Nilai ganda CBT: nama ber-angka (Budi(2)) -> guru memilih satu; sisanya diarsipkan ---- */
+var DGN=null;
+function dbGandaMuat(){lod(1);run('akunDbGanda').then(function(r){lod(-1);DGN=r;dbGandaTampil()}).catch(function(e){lod(-1);er(e)})}
+function dbGandaTampil(){var r=DGN,o=$('dbn'),h='';if(!r||!o)return;
+ if(r.gagal&&r.gagal.length)h+='<p class="m">Tidak terbaca: '+E(r.gagal.join('; '))+'</p>';
+ if(!r.ujian.length){o.innerHTML=h+'<p class="ok">Tidak ada nilai ganda. Semua nama bersih.</p>';return}
+ r.ujian.forEach(function(u,ui){h+='<div class="card" style="margin-top:8px"><b>'+E(u.ujian)+'</b><p class="m">Pilih nilai yang dipakai untuk tiap siswa. Yang tidak dipilih dipindah ke sheet Arsip_Ganda di sheet soal (bisa dikembalikan manual); yang dipilih kembali bernama tanpa angka.</p><p><button class="btn o sm" onclick="dbGandaPilih('+ui+',1)">Pilih tertinggi</button> <button class="btn o sm" onclick="dbGandaPilih('+ui+',2)">Pilih terakhir</button> <button class="btn o sm" onclick="dbGandaPilih('+ui+',3)">Pilih pertama</button></p>';
+  u.grup.forEach(function(g,gi){h+='<div style="margin:8px 0"><b>'+E(g.nama)+'</b> <span class="m">'+E(g.inst)+'</span>'+g.baris.map(function(b,bi){return'<label style="display:block"><input type="radio" name="dg_'+ui+'_'+gi+'" value="'+bi+'"> '+E(b.s)+' - nilai '+(b.nilai===null?'-':b.nilai)+(b.waktu?' - '+E(b.waktu.replace('T',' ')):'')+(b.status?' - '+E(b.status):'')+(b.pel&&b.pel!='0'?' - pelanggaran '+E(b.pel):'')+'</label>'}).join('')+'</div>'});
+  h+='<button class="btn" onclick="dbGandaTerap('+ui+')">Terapkan keputusan</button></div>'});
+ o.innerHTML=h}
+function dbGandaPilih(ui,mode){DGN.ujian[ui].grup.forEach(function(g,gi){var k=0,mx=-1;g.baris.forEach(function(b,bi){var v=b.nilai===null?-1:b.nilai;if(mode==2)k=bi;else if(mode==1&&v>=mx){mx=v;k=bi}});var e=document.querySelector('input[name="dg_'+ui+'_'+gi+'"][value="'+k+'"]');if(e)e.checked=true})}
+function dbGandaTerap(ui){var u=DGN.ujian[ui],kep=[],kosong=0;
+ u.grup.forEach(function(g,gi){var e=document.querySelector('input[name="dg_'+ui+'_'+gi+'"]:checked');if(!e){kosong++;return}kep.push({n:g.nama,i:g.inst,p:g.baris[+e.value].s})});
+ if(kosong){T('Pilih satu nilai untuk setiap siswa ('+kosong+' belum dipilih).');return}
+ if(!confirm('Terapkan keputusan untuk '+kep.length+' siswa? Baris yang tidak dipilih dipindah ke sheet Arsip_Ganda di sheet soal dan hilang dari Jawaban dan Rekap_Akhir. Baris yang dipilih kembali bernama tanpa angka.'))return;
+ lod(1);run('akunDbPutusGanda',u.i,kep).then(function(r){return run('akunDbSinkron').then(function(d){lod(-1);DBI=d;dbTampil();T('Selesai: '+r.diputuskan+' siswa diputuskan, '+(r.diarsipkan.rekap+r.diarsipkan.jawaban)+' baris diarsipkan. Database diperbarui.');dbGandaMuat()})}).catch(function(e){lod(-1);er(e)})}
 function dbSinkron(){lod(1);run('akunDbSinkron').then(function(r){lod(-1);DBI=r;dbTampil();T('Database Siswa diperbarui.')}).catch(function(e){lod(-1);er(e)})}
 function dbCbt(sambung){
  var u=($('dbc').value||'').trim(),tk=($('dbk').value||'').trim();
