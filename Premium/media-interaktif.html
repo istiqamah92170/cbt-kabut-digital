@@ -304,7 +304,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='guru',EDISI='premium',FIT={},$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
+var API='GANTI_URL_API_MEDIA',MT='',TK='';try{TK=sessionStorage.getItem('ghp_tiket_media')||''}catch(x){}
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);var ac=window.AbortController?new AbortController():null,tm=ac?setTimeout(function(){ac.abort()},60000):0,ab=false;return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow',signal:ac?ac.signal:undefined}).then(function(r){return r.json()}).then(function(o){clearTimeout(tm);if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){clearTimeout(tm);if(q)lod(-1);throw new Error(e&&e.name=='AbortError'?'Waktu habis (timeout) saat menghubungi server.':(e instanceof Error&&e.message&&!/fetch|network|Failed|json|JSON|Unexpected/i.test(e.message)?e.message:'Tidak bisa terhubung ke server.'))})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -1228,8 +1228,7 @@ function ctCetak(jenis){run('guruAmbil',K,NO).then(function(o){if(!o){T('Belum a
   var w=f.contentWindow;w.document.open();w.document.write(d);w.document.close();
   setTimeout(function(){try{w.focus();w.print()}catch(e){T('Cetak gagal: '+e.message)}setTimeout(function(){if(f.parentNode)f.parentNode.removeChild(f)},60000)},300)}
  if(jenis!='kuis')return cetak(ctMateri(o));
- if(KG(o))return ctParse(o.kuisgame.kode).then(function(S){cetak(Array.isArray(S)&&S.length?ctKuisHtml({judul:o.kuisgame.judul||o.judul},S):'')}).catch(function(e){T('Soal kuis game tidak terbaca: '+e.message)});
- cetak(ctKuis(o))}).catch(er)}
+ return run('guruAmbilKuisGame',K,NO).catch(function(){return null}).then(function(g){if(g&&g.kode)o.kuisgame=g;if(!KG(o))return cetak(ctKuis(o));return ctParse(o.kuisgame.kode).then(function(S){cetak(Array.isArray(S)&&S.length?ctKuisHtml({judul:o.kuisgame.judul||o.judul},S):'')}).catch(function(e){T('Soal kuis game tidak terbaca: '+e.message)})}).catch(function(){cetak(ctKuis(o))})}).catch(er)}
 function gTerbit(){var d=D.filter(function(x){return x.no==NO})[0],on=d.status!='terbit',t=hariIni(),jd=d.tanggal;
  var p=(on&&!jd)?run('guruAtur',K,NO,'tanggal',t):Promise.resolve();
  p.then(function(){return run('guruAtur',K,NO,'status',on?'terbit':'draft')}).then(function(x){D=x;gDaftar();gPilih(NO);T(on?((jd&&jd>t)?'Diterbitkan, terjadwal dibuka '+jd+'.':'Diterbitkan dan terbuka untuk siswa.'):'Ditarik dari siswa.')}).catch(er)}
