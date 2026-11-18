@@ -182,8 +182,8 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='siswa',EDISI='premium',FIT={},$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT=(new URLSearchParams(location.search)).get('m')||(new URLSearchParams(location.search)).get('t')||'',TK='';
-function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow'}).then(function(r){return r.json()}).then(function(o){if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){if(q)lod(-1);throw new Error('Tidak bisa terhubung ke server.')})}
+var API='GANTI_URL_API_MEDIA',MT=(new URLSearchParams(location.search)).get('m')||(new URLSearchParams(location.search)).get('t')||'',TK='';
+function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);var ac=window.AbortController?new AbortController():null,tm=ac?setTimeout(function(){ac.abort()},60000):0,ab=false;return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow',signal:ac?ac.signal:undefined}).then(function(r){return r.json()}).then(function(o){clearTimeout(tm);if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){clearTimeout(tm);if(q)lod(-1);throw new Error(e&&e.name=='AbortError'?'Waktu habis (timeout) saat menghubungi server.':(e instanceof Error&&e.message&&!/fetch|network|Failed|json|JSON|Unexpected/i.test(e.message)?e.message:'Tidak bisa terhubung ke server.'))})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
 function er(e){T(String((e&&e.message)||e).replace(/^Error:\s*/,''))}
@@ -431,7 +431,7 @@ function glos(){if(S.g){glosTampil();return}$('gl2').innerHTML='<p class="m">Mem
 function glosTampil(){var q=($('gq').value||'').toLowerCase();$('gl2').innerHTML=(S.g||[]).filter(function(x){return!q||(x.istilah+' '+x.arti).toLowerCase().indexOf(q)>=0}).map(function(x){return'<div class="card"><b>'+E(x.istilah)+'</b><br>'+E(x.arti)+'</div>'}).join('')||'<p class="m">Belum ada istilah.</p>'}
 function kembali(){cek(kembali0)}
 function kembali0(){ujStop();T('');wlOff();simFs(false);rs('siswaDaftar').then(function(d){S.d=d;tab0('vd')}).catch(function(e){er(e);keluar0()})}
-function buka(no){ujStop();S.no=no;S.s={};S.sv={};S.kirim=!!(S.d.filter(function(p){return p.no==no})[0]||{}).selesai;T('Memuat...');rs('siswaBuka',no).then(function(r){if(!r.ok){T(r.msg);return}if(r.ujianSelesai){ujSelesai(no,r);return}T('');simSet(r.data);document.body.style.overflow='';wlOn();$('isi').innerHTML=R(r.data,false);$('tbs').innerHTML=TB(r.data);tbRef();$('isi').classList.add('nc');LG[no]=r.langgar||0;isiJawab(r.jawab);if(r.data.ujian){S.uj=1;S.ujsb=r.data.ujian.sb!='0'}if(r.hasil)tampilHasil(r.hasil,1);if(r.data.ujian){ujMulai(r.data.ujian);kgMuat()}show('vi');tumbuhSemua();window.scrollTo(0,0)}).catch(function(e){er(e)})}
+function buka(no){ujStop();S.no=no;S.s={};S.sv={};S.kirim=!!(S.d.filter(function(p){return p.no==no})[0]||{}).selesai;T('Memuat...');rs('siswaBuka',no).then(function(r){if(!r.ok){T(r.msg);return}if(r.ujianSelesai){ujSelesai(no,r);return}T('');simSet(r.data);document.body.style.overflow='';wlOn();$('isi').innerHTML=R(r.data,false);$('tbs').innerHTML=TB(r.data);tbRef();$('isi').classList.add('nc');LG[no]=r.langgar||0;isiJawab(r.jawab);if(r.data.ujian){S.uj=1;S.ujsb=r.data.ujian.sb!='0'}if(r.hasil){tampilHasil(r.hasil,1);drBersih('kuis',no)}drPulih();if(r.data.ujian){ujMulai(r.data.ujian);kgMuat()}show('vi');tumbuhSemua();window.scrollTo(0,0)}).catch(function(e){er(e)})}
 /* ---- ANTREAN KIRIM: jawaban disimpan di perangkat sampai server mengonfirmasi ---- */
 var OBK='mi_ob_'+(typeof MT=='undefined'?'':MT),OBM=[];
 function obAll(){try{var v=JSON.parse(localStorage.getItem(OBK)||'null');if(v)return v}catch(x){}return OBM}
@@ -446,16 +446,37 @@ var OB_SESI='Sesi habis. Masuk lagi; jawabanmu tersimpan di perangkat ini dan ak
 function obKirim(it,n){n=n||0;
  if(!S.tk)return Promise.reject({tunda:1,msg:OB_SESI});
  if(n)T('Mengirim ulang... (percobaan '+(n+1)+')');
- return run.apply(null,[it.fn,S.tk].concat(it.a)).then(function(v){obHapus(it.id);obBanner();return v},function(e){
+ return run.apply(null,[it.fn,S.tk].concat(it.a)).then(function(v){obHapus(it.id);try{drBersih(it.key,it.no)}catch(x){}obBanner();return v},function(e){
   var m=String((e&&e.message)||e);
   if(/Sesi habis/i.test(m)){S.tk='';return Promise.reject({tunda:1,msg:OB_SESI})}
-  if(/terhubung|lock|kunci|timeout|waktu|sibuk|belum tercatat|network|fetch|^Gagal\.?$/i.test(m)){
-   if(n<3)return new Promise(function(ok){setTimeout(ok,[1500,4000,9000][n])}).then(function(){return obKirim(it,n+1)});
+  if(/terhubung|lock|kunci|timeout|waktu|sibuk|belum tercatat|network|fetch|busy|quota|too many|diminta|internal|unavailable|service|exception|server error|terjadi kesalahan|abort|failed|^Gagal\.?$/i.test(m)){
+   if(n<4)return new Promise(function(ok){setTimeout(ok,[1500,4000,9000,15000][n]+Math.floor(Math.random()*800))}).then(function(){return obKirim(it,n+1)});
    return Promise.reject({tunda:1,msg:'Koneksi bermasalah. Jawabanmu tersimpan di perangkat ini dan BELUM terkirim. Tekan "Kirim ulang" saat sinyal membaik.'})}
   obHapus(it.id);obBanner();return Promise.reject(e)})}
 function kirimAndal(it){if(S.tamu)return tamuKirimAndal(it);obTambah(it);obBanner();T('Mengirim...');return obKirim(it).then(function(v){obBanner();return v},function(e){obBanner();throw e})}
 function gagalKirim(e){T((e&&e.msg)||String((e&&e.message)||e).replace(/^Error:\s*/,''))}
-function obFlush(){var L=obAll().filter(function(x){return x.nm===S.u&&x.kls===S.kl});if(!L.length||!S.tk){obBanner();return Promise.resolve()}
+var OBS=0;
+function obFlush(){if(OBS)return Promise.resolve();OBS=1;return obFlush0().then(function(v){OBS=0;return v},function(e){OBS=0;throw e})}
+function obAuto(){if(OBS||!S.tk||!S.u)return;if(!obAll().some(function(x){return x.nm===S.u&&x.kls===S.kl}))return;obFlush().catch(function(){})}
+setInterval(obAuto,25000);
+window.addEventListener('online',function(){setTimeout(obAuto,800)});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(obAuto,800)});
+window.addEventListener('beforeunload',function(e){if(S&&S.u&&obAll().some(function(x){return x.nm===S.u&&x.kls===S.kl})){e.preventDefault();e.returnValue=''}});
+/* ---- DRAF: ketikan dan pilihan kuis disimpan di perangkat sebelum dikirim (tahan tab tertutup/HP restart) ---- */
+function drKey(no){return 'mi_dr_'+(typeof MT=='undefined'?'':MT)+'|'+S.kl+'|'+S.u+'|'+(no||S.no)}
+function drAmbil(no){try{var v=JSON.parse(localStorage.getItem(drKey(no))||'null');if(v&&v.w&&Date.now()-v.w<259200000)return v.d}catch(x){}return{}}
+function drSet(d,no){try{if(Object.keys(d).length)localStorage.setItem(drKey(no),JSON.stringify({w:Date.now(),d:d}));else localStorage.removeItem(drKey(no))}catch(x){}}
+function drCatat(el){if(!S||!S.u||!S.no||!el)return;var d;
+ if(el.tagName=='TEXTAREA'&&/^(tr|ta|as)\d+$/.test(el.id)&&!el.disabled){d=drAmbil();if(el.value.trim())d[el.id]=el.value;else delete d[el.id];drSet(d)}
+ else if(el.type=='radio'&&/^k\d+$/.test(el.name)&&!el.disabled){d=drAmbil();d[el.name]=+el.value;drSet(d)}}
+document.addEventListener('input',function(e){drCatat(e.target)});
+document.addEventListener('change',function(e){drCatat(e.target)});
+function drPulih(){var d=drAmbil(),n=0;Object.keys(d).forEach(function(k){
+ if(/^k\d+$/.test(k)){var g=document.getElementsByName(k);if(g.length&&![].some.call(g,function(x){return x.checked||x.disabled})){var r=document.querySelector('input[name='+k+'][value="'+d[k]+'"]');if(r){r.checked=true;n++}}}
+ else{var e=$(k);if(e&&e.tagName=='TEXTAREA'&&!e.disabled&&!e.value){e.value=d[k];n++}}});
+ if(n){T('Jawaban yang belum kamu kirim dipulihkan ('+n+' isian). Periksa lalu kirim.');try{tumbuhSemua()}catch(x){}}}
+function drBersih(key,no){var d=drAmbil(no),p=String(key||'').split('|'),t=p[0],ch=0;Object.keys(d).forEach(function(k){if((t=='kuis'&&/^k\d+$/.test(k))||(t=='rf'&&/^tr\d+$/.test(k))||(t=='ak'&&k=='ta'+p[2])||(t=='sk'&&k=='as'+p[2])){delete d[k];ch=1}});if(ch)drSet(d,no)}
+function obFlush0(){var L=obAll().filter(function(x){return x.nm===S.u&&x.kls===S.kl});if(!L.length||!S.tk){obBanner();return Promise.resolve()}
  var p=Promise.resolve();
  L.forEach(function(it){p=p.then(function(){return obKirim(it).then(function(v){if(it.fn=='siswaKirim'&&v&&v.ok&&S.no==it.no&&$('bk'))tampilHasil(v);if(it.fn=='siswaKuisGameKirim'&&v&&v.ok&&S.no==it.no)kgHasil(v.skor,v.sudah)},function(){})})});
  return p.then(function(){obBanner();return run('siswaDaftar',S.tk)}).then(function(d){S.d=d;try{prog();daftar();beranda();nilai()}catch(x){}ptBuka()}).catch(function(){obBanner()})}
@@ -748,7 +769,9 @@ function rkM(r){var m={pg:60,ks:25,rf:15},a=(r&&r.siswa||[]).filter(function(s){
 function rkKelas(){run('info').then(function(d){var a=Array.isArray(d.kelas)?d.kelas:Object.keys(d.kelas||{});KL=a;$('rk').innerHTML='<option value="">Pilih kelas</option>'+a.map(function(x){return'<option>'+E(x)+'</option>'}).join('')}).catch(function(){})}
 function gRekap(ib){var k=$('rk').value,n=$('rn').value;if(!k||!n){T('Pilih kelas dan pertemuan dulu.');return}RKK=k;RKN=+n;run('guruRekap',K,k,+n).then(function(r){RK=r;
  $('rh').innerHTML='<div class="sc"><table><tr><th>Nama</th><th>Kuis /'+rkM(r).pg+'</th>'+(rkM(r).ks?'<th>Kasus /'+rkM(r).ks+'</th>':'')+'<th>Refleksi /'+rkM(r).rf+'</th><th>Total</th><th>Kategori</th><th>Keluar halaman</th><th></th></tr>'+r.siswa.map(function(s,i){var c=s.sc,kos=s.skor===null&&!s.teks.length&&!s.kasus.length;return'<tr><td>'+E(s.nama)+'</td><td>'+(s.skor===null?'-':c.pg)+'</td>'+(rkM(r).ks?'<td>'+(c.ksMax&&s.kasus.length?c.ks:'-')+'</td>':'')+'<td>'+(c.rfMax&&s.teks.length?c.rf+(c.menunggu?'*':''):'-')+'</td><td><b>'+(kos?'-':c.total)+'</b></td><td>'+(kos?'-':E(c.kat))+'</td><td>'+(s.lg&&s.lg.n?'<b class="no">'+s.lg.n+'x ('+s.lg.d+' dtk)</b>':'-')+'</td><td><button class="btn o sm" onclick="gNilai('+i+')">Nilai</button></td></tr>'}).join('')+'</table></div><p class="m">* ada refleksi yang belum dinilai. Total = kuis '+rkM(r).pg+(rkM(r).ks?' + studi kasus '+rkM(r).ks:'')+' + refleksi '+rkM(r).rf+'.</p><button class="btn" onclick="gGambar()">Buat gambar nilai (PNG)</button> '+btnRefPenuh()+'<div id="rg"></div><div id="rj"></div>';
+ $('rh').innerHTML+='<p style="margin-top:10px"><button class="btn o" onclick="gBersih()">Bersihkan semua nilai pertemuan ini</button> <span class="m">Pakai bila kuis pertemuan ini sudah diganti. Semua jawaban dan nilai siswa (semua kelas) dipindah ke sheet Arsip dan dihapus otomatis setelah 30 hari.</span></p>';
  if(typeof ib=='number')gNilai(ib)}).catch(er)}
+function gBersih(){var n=+$('rn').value;if(!n){T('Pilih pertemuan dulu.');return}if(!confirm('Pindahkan SEMUA jawaban, nilai, dan catatan pelanggaran siswa pada pertemuan ini (semua kelas) ke sheet Arsip? Siswa dapat mengerjakan dari awal. Arsip dihapus otomatis setelah 30 hari.'))return;run('guruBersihkanNilai',K,n).then(function(r){T(r.n?'Selesai: '+r.n+' baris dipindah ke Arsip.':'Tidak ada nilai untuk dibersihkan.');gRekap()}).catch(er)}
 function gNilai(i){var s=RK.siswa[i],q=RK.soal,t=RK.tot,c=s.sc,h='<div class="card"><h3>'+E(s.nama)+': total '+c.total+' ('+E(c.kat)+')</h3><p class="m">Tindak lanjut: '+E(c.tl)+'</p>';
  s.kasus.forEach(function(x){h+='<p class="m">Studi kasus: '+E(q.s[x.i]||'')+'</p><p>Pilihan siswa: '+nl(x.t)+' <b class="'+(x.b?'ok':'no')+'">('+(x.b?'tepat':'kurang tepat')+')</b></p><p class="m">Alasan siswa:</p><p>'+nl(x.a||'(tidak diisi)')+'</p><label class="m">Nilai studi kasus (0-'+t.max+'; kosong = otomatis)<input type="number" min="0" max="'+t.max+'" step="0.5" id="nk'+x.i+'" value="'+x.n+'"></label>'});
  s.teks.forEach(function(x){if(x.j=='aktivitas')h+='<p class="m">Aktivitas: '+E(q.a[x.i]||'')+'</p><p>'+nl(x.t)+'</p>'});
@@ -1023,8 +1046,8 @@ function pkPisah(raw){raw=String(raw||'');var i=raw.search(/#{3}\s*KUIS/i);if(i<
  return{m:m,g:kgBlok(g),t:t}}
 function gJson(){T('Memeriksa...');var pk=pkPisah($('hs').value);if(pk.g==='' && /#{3}\s*KUIS/i.test($('hs').value)){T('');$('er').innerHTML='<p class="no"><b>Bagian kuis game tidak terbaca.</b> Pastikan ada baris ###KUIS### lalu blok const KONFIG dan const SOAL.</p>';return}
  run('guruSimpanJson',K,NO,pk.m).then(function(r){T('');if(r.ok){D=r.daftar;gDaftar();
-  if(pk.g){return run('guruSimpanKuisGame',K,NO,('Kuis '+pk.t).slice(0,80),pk.g).then(function(x){if(!x.ok){$('er').innerHTML='<p class="no"><b>Materi tersimpan, tetapi kuis game gagal:</b> '+E(x.msg||'')+'</p>';return}$('kj').value=('Kuis '+pk.t).slice(0,80);$('km').value=pk.g;tumbuh($('km'));$('kmi').textContent='Kuis game tersimpan ('+pk.g.length+' karakter).';$('er').innerHTML='<p class="ok"><b>Materi dan kuis game tersimpan</b> sebagai draft. Periksa lewat Pratinjau dan tab Kuis, lalu terbitkan.</p>'})}
-  $('er').innerHTML='<p class="ok"><b>Format benar.</b> Tersimpan sebagai draft. Periksa lewat Pratinjau, lalu terbitkan.</p>';return}
+  if(pk.g){return run('guruSimpanKuisGame',K,NO,('Kuis '+pk.t).slice(0,80),pk.g).then(function(x){if(!x.ok){$('er').innerHTML='<p class="no"><b>Materi tersimpan, tetapi kuis game gagal:</b> '+E(x.msg||'')+'</p>';return}$('kj').value=('Kuis '+pk.t).slice(0,80);$('km').value=pk.g;tumbuh($('km'));$('kmi').textContent='Kuis game tersimpan ('+pk.g.length+' karakter).';$('er').innerHTML='<p class="ok"><b>Materi dan kuis game tersimpan</b> sebagai draft. Periksa lewat Pratinjau dan tab Kuis, lalu terbitkan.</p>'+(x.arsip?'<p class="m">Nilai kuis game lama ('+x.arsip+' baris) dipindahkan ke sheet Arsip (dihapus otomatis setelah 30 hari).</p>':'')})}
+  $('er').innerHTML='<p class="ok"><b>Format benar.</b> Tersimpan sebagai draft. Periksa lewat Pratinjau, lalu terbitkan.</p>'+(r.arsip?'<p class="m"><b>Kuis diganti:</b> '+r.arsip+' baris nilai/jawaban siswa dari kuis lama dipindahkan ke sheet Arsip (dihapus otomatis setelah 30 hari) supaya tidak tercampur dengan kuis baru.</p>':'');return}
  var p='JSON sebelumnya memiliki kesalahan berikut:\n- '+r.errors.join('\n- ')+'\n\nPerbaiki dan balas HANYA JSON lengkap yang sudah benar, tanpa teks lain.';
  setTimeout(tumbuhAll,50);$('er').innerHTML='<p class="no"><b>Perlu perbaikan:</b></p><ul>'+r.errors.map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul><p class="m">Salin prompt perbaikan ini ke chat AI yang sama:</p><textarea id="pp" readonly>'+E(p)+'</textarea><button class="btn o" onclick="salinP()">Salin prompt perbaikan</button>'}).catch(er)}
 function gLihat(){run('guruAmbil',K,NO).then(function(o){if(!o){T('Belum ada isi.');return}return run('guruAmbilSimulasi',K,NO).catch(function(){return null}).then(function(sm){if(sm&&sm.kode)o.simulasi=sm;simSet(o);gLihat2(o)})}).catch(er)}
