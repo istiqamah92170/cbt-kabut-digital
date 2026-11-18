@@ -182,7 +182,7 @@ html[data-tema=gelap] .gp .ib{background:color-mix(in srgb,var(--c) 25%,#111a2b)
 var MODE='siswa',EDISI='premium',FIT={},$=function(i){return document.getElementById(i)};
 var NL=0;
 function lod(d){NL=Math.max(0,NL+d);var e=$('lo');if(e)e.classList.toggle('hide',NL<=0)}
-var API='https://script.google.com/macros/s/AKfycbx4yPx6LtdCQYqmj9Qi_ULWEjZJ4Ir2sk0D8fBdSh9VXdM7UFfmEpAJZDjbTkObCbBk3g/exec',MT=(new URLSearchParams(location.search)).get('m')||(new URLSearchParams(location.search)).get('t')||'',TK='';
+var API='GANTI_URL_API_MEDIA',MT=(new URLSearchParams(location.search)).get('m')||(new URLSearchParams(location.search)).get('t')||'',TK='';
 function run(fn){var a=[].slice.call(arguments,1),q=fn!='cariNama'&&fn!='siswaLanggar';if(q)lod(1);var ac=window.AbortController?new AbortController():null,tm=ac?setTimeout(function(){ac.abort()},60000):0,ab=false;return fetch(API,{method:'POST',body:JSON.stringify({fn:fn,args:a,t:MT,tiket:TK}),redirect:'follow',signal:ac?ac.signal:undefined}).then(function(r){return r.json()}).then(function(o){clearTimeout(tm);if(q)lod(-1);if(!o.ok)throw new Error(o.msg||'Gagal.');return o.v},function(e){clearTimeout(tm);if(q)lod(-1);throw new Error(e&&e.name=='AbortError'?'Waktu habis (timeout) saat menghubungi server.':(e instanceof Error&&e.message&&!/fetch|network|Failed|json|JSON|Unexpected/i.test(e.message)?e.message:'Tidak bisa terhubung ke server.'))})}
 function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function T(s){$('msg').textContent=s||''}
@@ -1052,6 +1052,61 @@ function gJson(){T('Memeriksa...');var pk=pkPisah($('hs').value);if(pk.g==='' &&
  setTimeout(tumbuhAll,50);$('er').innerHTML='<p class="no"><b>Perlu perbaikan:</b></p><ul>'+r.errors.map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul><p class="m">Salin prompt perbaikan ini ke chat AI yang sama:</p><textarea id="pp" readonly>'+E(p)+'</textarea><button class="btn o" onclick="salinP()">Salin prompt perbaikan</button>'}).catch(er)}
 function gLihat(){run('guruAmbil',K,NO).then(function(o){if(!o){T('Belum ada isi.');return}return run('guruAmbilSimulasi',K,NO).catch(function(){return null}).then(function(sm){if(sm&&sm.kode)o.simulasi=sm;simSet(o);gLihat2(o)})}).catch(er)}
 function gLihat2(o){var v=(o.catatan_verifikasi||[]).filter(Boolean);$('pw').innerHTML=(v.length?'<div class="card"><h3>Catatan verifikasi dari AI (periksa sebelum terbit)</h3><ul>'+v.map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul></div>':'')+R(o,true);tbRef()}
+function ctCss(k){return '@page{size:A4;margin:5mm}*{box-sizing:border-box;color:#000!important;background:#fff!important;box-shadow:none!important;text-shadow:none!important}html,body{margin:0;padding:0}body{font:10pt/1.28 Arial,Helvetica,sans-serif}h1{font-size:13pt;margin:0 0 1mm}h2{font-size:11pt;margin:0 0 1mm}h3{font-size:10pt;margin:0 0 .8mm;border-bottom:.3pt solid #000;padding-bottom:.3mm}p{margin:0 0 1mm}ul,ol{margin:0 0 1mm;padding-left:4.5mm}li{margin:0}.k{border:.4pt solid #000;border-radius:1.2mm;padding:1.4mm 2mm;margin:0 0 1.2mm;break-inside:auto;page-break-inside:auto}table{border-collapse:collapse;width:100%;margin:0 0 1mm}th,td{border:.3pt solid #000;padding:.4mm 1.2mm;text-align:left;vertical-align:top;font-size:9pt}.tl{margin:0 0 .8mm}.m{font-size:9pt}.pl{display:flex;gap:4mm;margin:0 0 1.2mm;font-size:10pt}.pl span{flex:1;border-bottom:.4pt solid #000;white-space:nowrap}.g{border-bottom:.3pt solid #000;height:5.2mm}.q{break-inside:avoid;page-break-inside:avoid;margin:0 0 1.6mm}.q p{margin:0 0 .4mm}.o{margin:0 0 .4mm 3mm}.bx{display:inline-block;width:3.2mm;height:3.2mm;border:.4pt solid #000;vertical-align:-.5mm;margin-right:1mm}.mt{width:100%}.mt td{border:0;padding:.5mm 1mm;font-size:9.5pt}.mt .gp{width:14mm}.hw{margin:1mm 0}.hb{display:inline-block;width:5.5mm;height:6.5mm;border:.4pt solid #000;margin-right:.8mm}.sp{display:inline-block;width:4mm}.hy{display:inline-block;width:3mm;text-align:center}.cz{border-bottom:.4pt solid #000;padding:0 4mm;font-weight:bold}'+(k=='kuis'?'.kc{column-count:2;column-gap:5mm;column-rule:.3pt solid #000}':'')}
+function ctBlok(b){var t=b.tipe;
+ if(t=='teks')return '<p>'+nl(b.isi)+'</p>';
+ if(t=='poin')return '<ul>'+(b.butir||[]).map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul>';
+ if(t=='linimasa')return (b.item||[]).map(function(x){return'<div class="tl"><b>'+E(x.waktu)+'</b> '+E(x.judul)+'<br>'+E(x.isi)+'</div>'}).join('');
+ if(t=='tabel')return '<table><tr>'+(b.kolom||[]).map(function(k){return'<th>'+E(k)+'</th>'}).join('')+'</tr>'+(b.baris||[]).map(function(r){return'<tr>'+r.map(function(c){return'<td>'+E(c)+'</td>'}).join('')+'</tr>'}).join('')+'</table>';
+ if(t=='skenario')return '<p>'+nl(b.kasus)+'</p>'+(b.opsi||[]).map(function(x,j){return'<div class="o">'+String.fromCharCode(65+j)+'. '+E(x.teks)+'</div>'}).join('');
+ if(t=='aktivitas')return '<p>'+nl(b.instruksi)+'</p>';
+ if(t=='media'){var K=(b.kata_kunci_pencarian||[]).filter(function(k){return String(k||'').trim()});return '<p class="m">Materi pendukung (cari): '+E(K.length?K.join('; '):(b.judul||''))+'</p>'}
+ return ''}
+function ctMateri(o){var h='<h1>'+E(o.judul)+'</h1><p>'+E(o.ringkasan)+'</p>';
+ if((o.tujuan||[]).length)h+='<div class="k"><h3>Tujuan Pembelajaran</h3><ul>'+o.tujuan.map(function(x){return'<li>'+E(x)+'</li>'}).join('')+'</ul></div>';
+ (o.blok||[]).forEach(function(b){var c=ctBlok(b);if(c)h+='<div class="k">'+(b.judul?'<h3>'+E(b.judul)+'</h3>':'')+c+'</div>'});
+ if((o.glosarium||[]).length)h+='<div class="k"><h3>Glosarium</h3>'+o.glosarium.map(function(x){return'<p><b>'+E(x.istilah)+'</b>: '+E(x.arti)+'</p>'}).join('')+'</div>';
+ if((o.refleksi||[]).length)h+='<div class="k"><h3>Lembar Refleksi</h3>'+o.refleksi.map(function(x,n){return'<p><b>'+(n+1)+'.</b> '+E(x)+'</p><div class="g"></div><div class="g"></div>'}).join('')+'</div>';
+ return h}
+function ctAcak(a,sd){var r=a.slice(),s=(sd+7)*9301+49297,i,j,t;for(i=r.length-1;i>0;i--){s=(s*9301+49297)%233280;j=Math.floor(s/233280*(i+1));t=r[i];r[i]=r[j];r[j]=t}
+ if(r.length>1&&r.every(function(x,k){return x===a[k]}))r.push(r.shift());return r}
+function ctOpsi(a,sd){var AK=/^\s*(semua (jawaban )?(di atas )?(adalah )?benar|tidak ada (jawaban )?(yang )?(di atas )?benar)/i,b=a.filter(function(x){return!AK.test(x)}),e=a.filter(function(x){return AK.test(x)});return ctAcak(b,sd).concat(e)}
+function ctDaftar(a){return a.map(function(x){return'<div class="o">'+E(x)+'</div>'}).join('')}
+function ctKotak(t){return'<div class="o"><span class="bx"></span> '+E(t)+'</div>'}
+function ctSoal(s,i){var n=i+1,t=s.tipe,h='<div class="q"><p><b>'+n+'.</b> ',L='';
+ if(t=='pg')return h+E(s.soal)+'</p><p class="m">Centang / lingkari satu jawaban.</p>'+ctDaftar(ctOpsi([s.benar].concat(s.pengecoh||[]),n))+'</div>';
+ if(t=='tf')return h+E(s.klaim)+'</p><p class="m">Lingkari: <b>BENAR</b> / <b>SALAH</b>. Lalu centang satu alasan yang tepat.</p>'+ctDaftar(ctOpsi([s.alasan].concat(s.pengecoh||[]),n))+'</div>';
+ if(t=='matching'){var P=s.pasangan||[],R=ctAcak(P.map(function(x){return x[1]}).concat(s.pengecoh||[]),n),r='<table class="mt">',m=Math.max(P.length,R.length);
+  for(var k=0;k<m;k++)r+='<tr><td>'+(P[k]?E(P[k][0])+' &#9675;':'')+'</td><td class="gp"></td><td>'+(R[k]?'&#9675; '+E(R[k]):'')+'</td></tr>';
+  return h+E(s.perintah||'Sambungkan pasangan yang sesuai.')+'</p><p class="m">Sambungkan dengan garis. Ada kartu kanan yang tidak punya pasangan.</p>'+r+'</table></div>'}
+ if(t=='word'){var kt=String(s.kata||'').toUpperCase(),b='';for(var q=0;q<kt.length;q++){var c=kt.charAt(q);b+=c==' '?'<span class="sp"></span>':c=='-'?'<span class="hy">-</span>':'<span class="hb"></span>'}
+  return h+'Tebak kata: '+E(s.petunjuk)+'</p><p class="m">Tulis hurufnya pada kotak.</p><div class="hw">'+b+'</div></div>'}
+ if(t=='order')return h+E(s.perintah||'Urutkan dengan benar.')+'</p><p class="m">Tulis nomor urutan (1, 2, 3, ...) pada kotak.</p>'+ctAcak(s.butir||[],n).map(function(x){return'<div class="o"><span class="bx"></span> '+E(x)+'</div>'}).join('')+'</div>';
+ if(t=='error')return h+E(s.perintah||'Temukan kalimat yang salah.')+'</p><p class="m">Centang kalimat yang salah, lalu tulis perbaikannya di bawah kalimat itu.</p>'+(s.kalimat||[]).map(function(x){return'<div class="o"><span class="bx"></span> '+E(x.teks)+'<div class="g"></div></div>'}).join('')+'</div>';
+ if(t=='classify'){var K=s.kategori||[];return h+E(s.perintah||'Kelompokkan kartu berikut.')+'</p><p class="m">Tulis nomor kategori pada kotak di depan tiap kartu.</p><div class="o">'+K.map(function(x,k){return'<b>'+(k+1)+'.</b> '+E(x)}).join(' &nbsp; ')+'</div>'+ctAcak(s.kartu||[],n).map(function(x){return'<div class="o"><span class="bx"></span> '+E(x.teks)+'</div>'}).join('')+'</div>'}
+ if(t=='multi')return h+E(s.soal)+'</p><p class="m">Centang semua pernyataan yang benar.</p>'+(s.pernyataan||[]).map(function(x){return ctKotak(x.teks)}).join('')+'</div>';
+ if(t=='cloze'){var tx=E(s.teks).replace(/\{(\d+)\}/g,function(a,d){return'<span class="cz">('+d+')</span>'});return h+E(s.perintah||'Lengkapi celah dengan kata yang tepat.')+'</p><p>'+tx+'</p><p class="m">Bank kata (tulis kata pada celah bernomor):</p><div class="o">'+ctAcak((s.jawaban||[]).concat(s.pengecoh||[]),n).map(function(x){return'[ '+E(x)+' ]'}).join(' &nbsp; ')+'</div></div>'}
+ if(t=='branch')return h+E(s.skenario)+'</p>'+(s.langkah||[]).map(function(l,k){return'<p class="m"><b>Keputusan '+(k+1)+':</b> '+E(l.situasi)+'</p>'+(l.pilihan||[]).map(function(x){return ctKotak(x.teks)}).join('')}).join('')+'</div>';
+ if(t=='number')return h+E(s.pertanyaan)+'</p><div class="o">Jawaban: ____________________ '+E(s.satuan||'')+'</div></div>';
+ return''}
+function ctKuisHtml(o,S){var h='<h2>Lembar Kuis: '+E(o.judul)+'</h2><div class="pl"><span>Nama:</span><span>Kelas:</span><span>No. Absen:</span><span>Tanggal:</span></div><p class="m">Kerjakan sendiri dengan pulpen sesuai petunjuk tiap soal.</p><div class="kc">';
+ S.forEach(function(s,i){h+=ctSoal(s,i)});return h+'</div>'}
+function ctKuis(o){var Q=o.kuis||[];if(!Q.length)return '';return ctKuisHtml(o,Q.map(function(q){return{tipe:'pg',soal:q.q,benar:q.opsi[0],pengecoh:q.opsi.slice(1),_u:1}}))}
+function ctParse(kode){return new Promise(function(ok,no){var f=document.createElement('iframe'),w,tm;f.setAttribute('sandbox','allow-scripts');f.style.display='none';
+ function fin(x,e){clearTimeout(tm);window.removeEventListener('message',on);if(f.parentNode)f.parentNode.removeChild(f);e?no(e):ok(x)}
+ function on(ev){if(ev.source!==f.contentWindow||!ev.data||!ev.data.ct)return;if(ev.data.err)fin(null,new Error(ev.data.err));else{try{fin(JSON.parse(ev.data.d))}catch(x){fin(null,x)}}}
+ window.addEventListener('message',on);tm=setTimeout(function(){fin(null,new Error('waktu habis'))},5000);
+ f.srcdoc='<script>try{var R=(function(){'+String(kode).replace(/<\/script/gi,'<\\/script')+'\n;return JSON.stringify(SOAL)})();parent.postMessage({ct:1,d:R},"*")}catch(e){parent.postMessage({ct:1,err:String(e)},"*")}<\/script>';
+ document.body.appendChild(f)})}
+function ctCetak(jenis){run('guruAmbil',K,NO).then(function(o){if(!o){T('Belum ada isi.');return}
+ function cetak(body){if(!body){T('Pertemuan ini belum punya soal kuis.');return}
+  var d='<!doctype html><html><head><meta charset="utf-8"><title>'+E(o.judul)+'</title><style>'+ctCss(jenis)+'</style></head><body>'+body+'</body></html>';
+  var f=document.createElement('iframe');f.style.cssText='position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:0';document.body.appendChild(f);
+  var w=f.contentWindow;w.document.open();w.document.write(d);w.document.close();
+  setTimeout(function(){try{w.focus();w.print()}catch(e){T('Cetak gagal: '+e.message)}setTimeout(function(){if(f.parentNode)f.parentNode.removeChild(f)},60000)},300)}
+ if(jenis!='kuis')return cetak(ctMateri(o));
+ if(KG(o))return ctParse(o.kuisgame.kode).then(function(S){cetak(Array.isArray(S)&&S.length?ctKuisHtml({judul:o.kuisgame.judul||o.judul},S):'')}).catch(function(e){T('Soal kuis game tidak terbaca: '+e.message)});
+ cetak(ctKuis(o))}).catch(er)}
 function gTerbit(){var d=D.filter(function(x){return x.no==NO})[0],on=d.status!='terbit',t=hariIni(),jd=d.tanggal;
  var p=(on&&!jd)?run('guruAtur',K,NO,'tanggal',t):Promise.resolve();
  p.then(function(){return run('guruAtur',K,NO,'status',on?'terbit':'draft')}).then(function(x){D=x;gDaftar();gPilih(NO);T(on?((jd&&jd>t)?'Diterbitkan, terjadwal dibuka '+jd+'.':'Diterbitkan dan terbuka untuk siswa.'):'Ditarik dari siswa.')}).catch(er)}
