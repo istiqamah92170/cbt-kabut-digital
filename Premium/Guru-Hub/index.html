@@ -1210,6 +1210,141 @@ async function ghBukaSpreadsheetEntri(idx) {
   }
 }
 
+// ===== FITUR (2026-11): cetak soal CBT hitam putih, hemat kertas, tanpa kunci/pembahasan =====
+// Format sama dengan cetak kuis Media Interaktif (fungsi cp* disalin dari ct* di Studio). Soal dibaca dari tab "Soal" lewat izin Google guru.
+function cpCss(k){return '@page{size:A4;margin:5mm}*{box-sizing:border-box;color:#000!important;background:#fff!important;box-shadow:none!important;text-shadow:none!important}html,body{margin:0;padding:0}body{font:10pt/1.28 Arial,Helvetica,sans-serif}h1{font-size:13pt;margin:0 0 1mm}h2{font-size:11pt;margin:0 0 1mm}h3{font-size:10pt;margin:0 0 .8mm;border-bottom:.3pt solid #000;padding-bottom:.3mm}p{margin:0 0 1mm}ul,ol{margin:0 0 1mm;padding-left:4.5mm}li{margin:0}.kd{border-style:dashed!important}.k{border:.4pt solid #000;border-radius:1.2mm;padding:1.4mm 2mm;margin:0 0 1.2mm;break-inside:auto;page-break-inside:auto}table{border-collapse:collapse;width:100%;margin:0 0 1mm}th,td{border:.3pt solid #000;padding:.4mm 1.2mm;text-align:left;vertical-align:top;font-size:9pt}.tl{margin:0 0 .8mm}.m{font-size:9pt}.pl{display:flex;gap:4mm;margin:0 0 1.2mm;font-size:10pt}.pl span{flex:1;border-bottom:.4pt solid #000;white-space:nowrap}.g{border-bottom:.3pt solid #000;height:5.2mm}.q{break-inside:auto;page-break-inside:auto;margin:0 0 3.4mm}.q p{margin:0 0 .4mm}.o{margin:0 0 .4mm 3mm}.bx{display:inline-block;width:3.2mm;height:3.2mm;border:.4pt solid #000;vertical-align:-.5mm;margin-right:1mm}.mt{width:100%}.mt td{border:0;padding:.5mm 1mm;font-size:9.5pt}.mt .gp{width:14mm}.hw{margin:1mm 0}.hb{display:inline-block;width:5.5mm;height:6.5mm;border:.4pt solid #000;margin-right:.8mm}.sp{display:inline-block;width:4mm}.hy{display:inline-block;width:3mm;text-align:center}.bk{display:inline-block;white-space:nowrap;margin:0 4mm 1.2mm 0}.ci{display:inline-block;width:5mm;height:5mm;border:.4pt solid #000;border-radius:50%;vertical-align:-1.4mm;margin-right:1.2mm}.cz{border-bottom:.4pt solid #000;padding:0 4mm;font-weight:bold}'+(k=='kuis'?'.m{font-style:italic}.im{display:block;max-width:100%;max-height:75mm;margin:1mm 0;filter:grayscale(1)}.oi{max-width:100%;max-height:30mm;vertical-align:middle;filter:grayscale(1)}.lt{margin:1mm 0 0 3mm}.lt span{display:inline-block;width:6.5mm;height:6.5mm;line-height:6mm;text-align:center;border:.4pt solid #000;border-radius:50%;margin-right:2.5mm;font-weight:bold;font-size:9pt}.kc{column-count:2;column-gap:5mm;column-rule:.3pt solid #000}.kc .q>.o{border-bottom:.4pt dashed #000;padding:.5mm 0 .6mm;margin-left:0;margin-right:0;break-inside:avoid}.kc .q>.o:last-child{border-bottom:0}.kc .mt td{border-bottom:.4pt dashed #000}.kc .mt tr:last-child td{border-bottom:0}.kc .mt .gp{border-bottom:0}.kc .o .g{margin-top:.6mm}':'')}
+function cpAcak(a,sd){var r=a.slice(),s=(sd+7)*9301+49297,i,j,t;for(i=r.length-1;i>0;i--){s=(s*9301+49297)%233280;j=Math.floor(s/233280*(i+1));t=r[i];r[i]=r[j];r[j]=t}
+ if(r.length>1&&r.every(function(x,k){return x===a[k]}))r.push(r.shift());return r}
+function cpOpsi(a,sd){var AK=/^\s*(semua (jawaban )?(di atas )?(adalah )?benar|tidak ada (jawaban )?(yang )?(di atas )?benar)/i,b=a.filter(function(x){return!AK.test(x)}),e=a.filter(function(x){return AK.test(x)});return cpAcak(b,sd).concat(e)}
+function cpDaftar(a,hr){return a.map(function(x,j){return'<div class="o">'+(hr?'<b>'+String.fromCharCode(65+j)+'.</b> ':'')+cpE(x)+'</div>'}).join('')}
+function cpKotak(t){return'<div class="o"><span class="bx"></span> '+cpE(t)+'</div>'}
+function cpSoal(s,i){var n=i+1,t=s.tipe,h='<div class="q"><p><b>'+n+'.</b> ',L='';
+ if(t=='pg')return h+cpE(s.soal)+'</p><p class="m">Lingkari huruf satu jawaban yang paling tepat.</p>'+cpDaftar(cpOpsi([s.benar].concat(s.pengecoh||[]),n),1)+'</div>';
+ if(t=='tf')return h+cpE(s.klaim)+'</p><p class="m">Lingkari: <b>BENAR</b> / <b>SALAH</b>. Lalu centang satu alasan yang tepat.</p>'+cpOpsi([s.alasan].concat(s.pengecoh||[]),n).map(cpKotak).join('')+'</div>';
+ if(t=='matching'){var P=s.pasangan||[],R=cpAcak(P.map(function(x){return x[1]}).filter(function(x){return x}).concat(s.pengecoh||[]),n),r='<table class="mt">',m=Math.max(P.length,R.length);
+  for(var k=0;k<m;k++)r+='<tr><td>'+(P[k]?cpE(P[k][0])+' &#9675;':'')+'</td><td class="gp"></td><td>'+(R[k]?'&#9675; '+cpE(R[k]):'')+'</td></tr>';
+  return h+cpE(s.perintah||'Sambungkan pasangan yang sesuai.')+'</p><p class="m">Sambungkan dengan garis. Ada kartu kanan yang tidak punya pasangan.</p>'+r+'</table></div>'}
+ if(t=='word'){var kt=String(s.kata||'').toUpperCase(),b='';for(var q=0;q<kt.length;q++){var c=kt.charAt(q);b+=c==' '?'<span class="sp"></span>':c=='-'?'<span class="hy">-</span>':'<span class="hb"></span>'}
+  return h+'Tebak kata: '+cpE(s.petunjuk)+'</p><p class="m">Tulis hurufnya pada kotak.</p><div class="hw">'+b+'</div></div>'}
+ if(t=='order')return h+cpE(s.perintah||'Urutkan dengan benar.')+'</p><p class="m">Tulis nomor urutan (1, 2, 3, ...) pada kotak.</p>'+cpAcak(s.butir||[],n).map(function(x){return'<div class="o"><span class="bx"></span> '+cpE(x)+'</div>'}).join('')+'</div>';
+ if(t=='error')return h+cpE(s.perintah||'Temukan kalimat yang salah.')+'</p><p class="m">Centang kalimat yang salah.</p>'+(s.kalimat||[]).map(function(x){return'<div class="o"><span class="bx"></span> '+cpE(x.teks)+'</div>'}).join('')+'</div>';
+ if(t=='classify'){var K=s.kategori||[];return h+cpE(s.perintah||'Kelompokkan kartu berikut.')+'</p><p class="m">Tulis nomor kategori pada kotak di depan tiap kartu.</p><div class="o">'+K.map(function(x,k){return'<b>'+(k+1)+'.</b> '+cpE(x)}).join(' &nbsp; ')+'</div>'+cpAcak(s.kartu||[],n).map(function(x){return'<div class="o"><span class="bx"></span> '+cpE(x.teks)+'</div>'}).join('')+'</div>'}
+ if(t=='multi')return h+cpE(s.soal)+'</p><p class="m">Centang semua pernyataan yang benar.</p>'+(s.pernyataan||[]).map(function(x){return cpKotak(x.teks)}).join('')+'</div>';
+ if(t=='cloze'){var tx=cpE(s.teks).replace(/\{(\d+)\}/g,function(a,d){return'<span class="cz">('+d+')</span>'});return h+cpE(s.perintah||'Lengkapi celah dengan kata yang tepat.')+'</p><p>'+tx+'</p><p class="m">Bank kata: tulis nomor celah pada lingkaran di depan kata.</p><div class="o">'+cpAcak((s.jawaban||[]).concat(s.pengecoh||[]),n).map(function(x){return'<span class="bk"><span class="ci"></span>'+cpE(x)+'</span>'}).join('')+'</div></div>'}
+ if(t=='branch')return h+cpE(s.skenario)+'</p>'+(s.langkah||[]).map(function(l,k){return'<p class="m"><b>Keputusan '+(k+1)+':</b> '+cpE(l.situasi)+'</p>'+(l.pilihan||[]).map(function(x){return cpKotak(x.teks)}).join('')}).join('')+'</div>';
+ if(t=='number')return h+cpE(s.pertanyaan)+'</p><div class="o">Jawaban: ____________________ '+cpE(s.satuan||'')+'</div></div>';
+ return''}
+function cpE(v) {
+  let s = String(v == null ? '' : v).trim();
+  if (/^https?:\/\//i.test(s) && (/drive\.google\.com/i.test(s) || /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(s))) return '<img class="oi" src="' + ghEsc(ghGdrivePrev(s)) + '" alt="">';
+  return ghEsc(s).replace(/\n/g, '<br>');
+}
+function cpList(v) { return String(v == null ? '' : v).split(/\s*\|\|\s*/).map(x => x.trim()).filter(x => x); }
+// Satu baris tab Soal (objek berkunci nama header huruf kecil) -> HTML soal bernomor n. TIDAK memuat kunci/pembahasan.
+function cpSoalCbt(r, n) {
+  let t = String(r.tipe || 'pg_gambar').toLowerCase().trim(), q = String(r.pertanyaan || '').trim();
+  let img = String(r.url_gambar || '').trim();
+  let op = ['a','b','c','d','e','f','g','h'].map(l => String(r['opsi_' + l] || '').trim()).filter(x => x);
+  let pas = cpList(r.pasangan), peng = cpList(r.pengecoh), kat = cpList(r.kategori), kunci = cpList(r.kunci);
+  let imgH = img ? '<img class="im" src="' + ghEsc(ghGdrivePrev(img)) + '" alt="">' : '';
+  let h;
+  if (t === 'pg_teks') {
+    h = '<div class="q"><p><b>' + n + '.</b> ' + cpE(q) + '</p>' + imgH + '<p class="m">Lingkari huruf satu jawaban yang paling tepat.</p>' + cpDaftar(op, 1) + '</div>';
+    return h;
+  }
+  if (t === 'pg_gambar') {
+    let lima = op.length > 4 || String(r.opsi_e || '').trim() !== '' || String(r.kunci || '').trim().toUpperCase() === 'E';
+    let L = lima ? ['A','B','C','D','E'] : ['A','B','C','D'];
+    return '<div class="q"><p><b>' + n + '.</b> ' + (q ? cpE(q) : '') + '</p>' + imgH + '<p class="m">Lingkari huruf satu jawaban yang paling tepat.</p><div class="lt">' + L.map(x => '<span>' + x + '</span>').join('') + '</div></div>';
+  }
+  let s = null;
+  switch (t) {
+    case 'isian_kata': s = { tipe: 'word', kata: kunci[0] || '', petunjuk: q }; break;
+    case 'isian_angka': s = { tipe: 'number', pertanyaan: q, satuan: String(r.satuan || '').trim() }; break;
+    case 'pg_kompleks': s = { tipe: 'multi', soal: q, pernyataan: op.map(x => ({ teks: x })) }; break;
+    case 'temukan_kesalahan': s = { tipe: 'error', perintah: q, kalimat: op.map(x => ({ teks: x })) }; break;
+    case 'urutkan': s = { tipe: 'order', perintah: q, butir: op }; break;
+    case 'benar_salah_alasan': s = { tipe: 'tf', klaim: q, alasan: op[0] || '', pengecoh: op.slice(1) }; break;
+    case 'pasangkan': { let P = op.map((x, i) => [x, pas[i] || '']); for (let i = op.length; i < pas.length; i++) P.push(['', pas[i]]); s = { tipe: 'matching', perintah: q, pasangan: P, pengecoh: peng }; break; }
+    case 'klasifikasi': s = { tipe: 'classify', perintah: q, kategori: kat, kartu: op.map(x => ({ teks: x })) }; break;
+    case 'isian_rumpang': s = { tipe: 'cloze', teks: q, jawaban: kunci, pengecoh: peng }; break;
+    case 'kasus_bercabang': {
+      let lg = []; try { lg = JSON.parse(String(r.langkah_bercabang || '[]')); } catch (e) { lg = []; }
+      s = { tipe: 'branch', skenario: q, langkah: (Array.isArray(lg) ? lg : []).map(l => ({ situasi: l && l.situasi, pilihan: ((l && l.pilihan) || []).map(p => ({ teks: p && p.teks })) })) };
+      break;
+    }
+  }
+  if (s) {
+    h = cpSoal(s, n - 1);
+    if (imgH) h = h.replace('</p>', '</p>' + imgH);   // gambar soal tepat di bawah kalimat soal
+    return h;
+  }
+  // esai (dan tipe tak dikenal): pertanyaan, gambar, garis jawaban
+  let g = ''; for (let i = 0; i < 8; i++) g += '<div class="g"></div>';
+  return '<div class="q"><p><b>' + n + '.</b> ' + cpE(q) + '</p>' + imgH + '<p class="m">Jawab pada garis di bawah.</p>' + g + '</div>';
+}
+function cpHtmlSoal(judul, rows) {
+  let h = '<h2>Lembar Soal: ' + ghEsc(judul) + '</h2><div class="pl"><span>Nama:</span><span>Kelas:</span><span>Tanggal:</span></div><p class="m">Kerjakan sendiri dengan pulpen sesuai petunjuk tiap soal.</p><div class="kc">';
+  rows.forEach((r, i) => { h += cpSoalCbt(r, i + 1); });
+  return h + '</div>';
+}
+function cpPastikanToken(paksa) {
+  return new Promise((ok, no) => {
+    if (ghAccessToken && !paksa) { ok(); return; }
+    if (typeof GH_CLIENT_ID === 'undefined' || String(GH_CLIENT_ID).startsWith('GANTI_DENGAN_CLIENT_ID_ASLI')) { no(new Error('Client ID Google belum diatur di kode.')); return; }
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) { no(new Error('Google Identity Services belum termuat; cek internet lalu muat ulang.')); return; }
+    let tc = google.accounts.oauth2.initTokenClient({
+      client_id: GH_CLIENT_ID, scope: GH_SCOPES, hint: (ghProfilAktif || {}).email || undefined,
+      callback: (resp) => { if (resp.error) { no(new Error('Izin Google ditolak: ' + resp.error)); return; } ghAccessToken = resp.access_token; ok(); }
+    });
+    tc.requestAccessToken({ prompt: '' });
+  });
+}
+async function ghCetakEntri(idx) {
+  let e = ghEntri[idx];
+  if (!e) return;
+  try {
+    let url = e.sheetUrl;
+    if (!url) {
+      if (!e.tokenAdmin) { ghToast('Atur dulu Token Admin untuk "' + e.label + '" (klik 🔑); dipakai juga untuk menemukan Spreadsheet soalnya.'); return; }
+      ghToast('Mengambil link Spreadsheet...');
+      let resp = await fetch(e.url + '?action=getSpreadsheetUrl&token_admin=' + encodeURIComponent(e.tokenAdmin));
+      let h = await resp.json();
+      if (h.status !== 'ok' || !h.url) { ghToast('Gagal mengambil link Spreadsheet: ' + (h.msg || 'tidak diketahui')); return; }
+      e.sheetUrl = url = h.url; ghSimpanEntri();
+    }
+    let m = String(url).match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (!m) { ghToast('Link Spreadsheet tidak dikenali.'); return; }
+    await cpPastikanToken(false);
+    ghToast('Membaca soal...');
+    let r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + m[1] + '/values/Soal!A1:AZ2000', { headers: ghHeaderAuth() });
+    if (r.status === 401) { await cpPastikanToken(true); r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + m[1] + '/values/Soal!A1:AZ2000', { headers: ghHeaderAuth() }); }
+    let d = await r.json();
+    if (!r.ok) throw new Error(d.error ? d.error.message : ('HTTP ' + r.status));
+    let v = d.values || [];
+    if (v.length < 2) { ghToast('Tab "Soal" kosong.'); return; }
+    let H = v[0].map(x => String(x || '').trim().toLowerCase());
+    let rows = v.slice(1).map(a => { let o = {}; H.forEach((k, i) => { if (k && o[k] === undefined) o[k] = a[i] == null ? '' : String(a[i]); }); return o; }).filter(o => String(o.no || '').trim() !== '' || String(o.pertanyaan || '').trim() !== '');
+    if (!rows.length) { ghToast('Tidak ada soal terbaca.'); return; }
+    cpCetakHtml(e.label, cpHtmlSoal(e.label, rows));
+  } catch (er) {
+    ghToast('Gagal mencetak: ' + (er && er.message ? er.message : er));
+  }
+}
+function cpCetakHtml(judul, body) {
+  let d = '<!doctype html><html><head><meta charset="utf-8"><title>' + ghEsc(judul) + '</title><style>' + cpCss('kuis') + '</style></head><body>' + body + '</body></html>';
+  let f = document.createElement('iframe');
+  f.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:0';
+  document.body.appendChild(f);
+  let w = f.contentWindow; w.document.open(); w.document.write(d); w.document.close();
+  let imgs = [].slice.call(w.document.images);
+  let tunggu = Promise.all(imgs.map(im => im.complete ? 0 : new Promise(res => { im.onload = im.onerror = res; })));
+  Promise.race([tunggu, new Promise(res => setTimeout(res, 12000))]).then(() => {
+    try { w.focus(); w.print(); } catch (x) { ghToast('Cetak gagal: ' + x.message); }
+    setTimeout(() => { if (f.parentNode) f.parentNode.removeChild(f); }, 60000);
+  });
+}
+
 function ghRenderList() {
   let wrap = document.getElementById('gh-list');
   if (ghEntri.length === 0) {
@@ -1237,6 +1372,7 @@ function ghRenderList() {
       </div>
       <button class="gh-btn gh-btn-ghost" onclick="ghSalinUrlEntri(${i})" title="Salin link / URL GAS ujian ini">📋</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghHubungkanDatabaseEntri(${i})" title="Hubungkan ke Database Siswa (login kelas, nama, PIN)">🔗</button>
+      <button class="gh-btn gh-btn-ghost" onclick="ghCetakEntri(${i})" title="Cetak soal (hitam putih, tanpa kunci)">🖨️</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghBukaSpreadsheetEntri(${i})" title="Buka Spreadsheet ujian ini">📗</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghEditTokenAdminEntri(${i})" title="Atur/ubah Token Admin">🔑</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghHapusEntri(${i})" title="Hapus">✕</button>
