@@ -145,6 +145,15 @@
   .gh-item .gh-item-info { flex:1; min-width:0; }
   .gh-item .gh-item-label { font-weight:700; font-size:13.5px; color:var(--heading); }
   .gh-item .gh-item-url { font-size:11.5px; color:var(--gray-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gh-item.db-off { border-color:#f0b4b4; background:#fff6f6; }
+  .gh-sw-wrap { display:flex; align-items:center; gap:8px; margin-top:5px; font-size:11.5px; font-weight:700; }
+  .gh-sw { position:relative; display:inline-block; width:38px; height:21px; flex-shrink:0; }
+  .gh-sw input { opacity:0; width:0; height:0; position:absolute; }
+  .gh-sw-t { position:absolute; inset:0; background:#c4c9d1; border-radius:21px; cursor:pointer; transition:background .15s; }
+  .gh-sw-t::before { content:''; position:absolute; width:15px; height:15px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform .15s; }
+  .gh-sw input:checked + .gh-sw-t { background:#1f9d55; }
+  .gh-sw input:checked + .gh-sw-t::before { transform:translateX(17px); }
+  .gh-sw input:disabled + .gh-sw-t { opacity:.55; cursor:not-allowed; }
   .gh-empty { text-align:center; color:var(--gray-soft); font-size:13px; padding:20px 10px; }
   .gh-out-wrap { margin-top:16px; }
   .gh-out { display:flex; gap:8px; }
@@ -1118,24 +1127,74 @@ function ghEsc(s) {
 
 // FITUR (2026-11): salin URL GAS / link ujian dari daftar Link Ujian (clipboard, cadangan execCommand).
 // FITUR (2026-11): hubungkan ujian CBT ke Database Siswa (Media Interaktif) -> siswa masuk dengan kelas + nama + PIN.
-async function ghHubungkanDatabaseEntri(i) {
+// ===== Saklar Database Siswa per ujian: hijau = terhubung, merah = belum terhubung =====
+let ghDbSt = {}, ghDbMulai = false;
+function ghDbKunci(x) { return String(x.url || '') + '|' + String(x.tokenAdmin || ''); }
+function ghDbStatus(x) {
+  if (!x.tokenAdmin) return { on: null, ket: 'notoken' };
+  let st = ghDbSt[ghDbKunci(x)];
+  if (st) return st;
+  return { on: null, ket: 'cek' };
+}
+function ghDbSaklarHtml(x, i) {
+  let st = ghDbStatus(x), on = st.on, dis = false, txt, warna;
+  if (st.ket === 'notoken') { dis = true; txt = 'Database siswa: atur Token Admin dulu'; warna = 'var(--gray-soft)'; }
+  else if (st.ket === 'cek') { dis = true; txt = 'Database siswa: memeriksa...'; warna = 'var(--gray-soft)'; }
+  else if (on === true) { txt = 'Database siswa: TERHUBUNG' + (st.mapel ? ' (' + ghEsc(st.mapel) + ')' : ''); warna = '#1f9d55'; }
+  else if (on === false) { txt = 'Database siswa: BELUM TERHUBUNG'; warna = '#d33'; }
+  else { txt = 'Database siswa: status tidak diketahui' + (st.ket === 'err' ? ' (server tidak terjangkau)' : ' (perbarui Library CBT)'); warna = 'var(--gray-mid)'; }
+  return '<div class="gh-sw-wrap" style="color:' + warna + ';"><label class="gh-sw" title="Geser untuk menghubungkan / melepas Database Siswa"><input type="checkbox" ' + (on === true ? 'checked ' : '') + (dis ? 'disabled ' : '') + 'onchange="ghSaklarDatabase(' + i + ', this.checked)"><span class="gh-sw-t"></span></label><span>' + txt + '</span></div>';
+}
+function ghDbRingkasHtml() {
+  let ada = ghEntri.filter(x => x.tokenAdmin), n = 0, blm = 0;
+  ada.forEach(x => { let st = ghDbStatus(x); if (st.on === true) n++; else if (st.on === false) blm++; });
+  if (!ada.length) return '';
+  return '<span style="color:' + (blm ? '#d33' : '#1f9d55') + ';">Database: ' + n + ' dari ' + ghEntri.length + ' terhubung' + (blm ? ' &middot; ' + blm + ' belum' : '') + '</span>';
+}
+async function ghDbCekSatu(x) {
+  try {
+    let resp = await fetch(x.url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'statusDatabaseSiswa', token_admin: x.tokenAdmin }) });
+    let h = await resp.json();
+    if (h && h.status === 'ok' && typeof h.terhubung === 'boolean') ghDbSt[ghDbKunci(x)] = { on: h.terhubung, mapel: h.mapel || '' };
+    else if (h && h.status === 'error') ghDbSt[ghDbKunci(x)] = { on: null, ket: 'err' };
+    else ghDbSt[ghDbKunci(x)] = { on: (typeof x.dbOn === 'boolean') ? x.dbOn : null, mapel: x.dbMapel || '', ket: 'lama' };
+  } catch (e) { ghDbSt[ghDbKunci(x)] = { on: null, ket: 'err' }; }
+}
+async function ghDbCekSemua(paksa) {
+  ghDbMulai = true;
+  if (paksa) ghDbSt = {};
+  let daftar = ghEntri.filter(x => x.url && x.tokenAdmin && !ghDbSt[ghDbKunci(x)]);
+  if (paksa) ghRenderList();
+  let idx = 0;
+  async function kerja() { while (idx < daftar.length) { let x = daftar[idx++]; await ghDbCekSatu(x); ghRenderList(); } }
+  await Promise.all([kerja(), kerja(), kerja()]);
+}
+async function ghSaklarDatabase(i, hidup) {
   let x = ghEntri[i];
-  if (!x || !x.url) { ghToast('Ujian tidak ditemukan.'); return; }
-  if (!x.tokenAdmin) { ghToast('Atur Token Admin ujian ini dulu (tombol 🔑).'); return; }
-  let t = prompt('Tempel tautan Google Sheet "Database Siswa" (dari kartu Database Siswa di Media Interaktif).\nKosongkan lalu OK untuk MELEPAS database dari ujian ini:', '');
-  if (t === null) return;
-  t = t.trim();
-  if (!t && !confirm('Lepas database siswa? Siswa kembali mengetik nama manual.')) return;
-  let mp = '';
-  if (t) { mp = prompt('Mata pelajaran ujian ini (mis. IPA), agar nilai CBT masuk ke mapel yang tepat di database. Boleh dikosongkan:', ''); if (mp === null) return; mp = mp.trim(); }
-  ghToast(t ? 'Menghubungkan database...' : 'Melepas database...');
+  if (!x || !x.url) { ghToast('Ujian tidak ditemukan.'); ghRenderList(); return; }
+  if (!x.tokenAdmin) { ghToast('Atur Token Admin ujian ini dulu (tombol 🔑).'); ghRenderList(); return; }
+  let t = '', mp = '';
+  if (hidup) {
+    t = prompt('Tempel tautan Google Sheet "Database Siswa" (dari kartu Database Siswa di Media Interaktif):', '');
+    if (t === null || !t.trim()) { ghRenderList(); return; }
+    t = t.trim();
+    mp = prompt('Mata pelajaran ujian ini (mis. IPA), agar nilai CBT masuk ke mapel yang tepat di database. Boleh dikosongkan:', (ghDbStatus(x).mapel || ''));
+    if (mp === null) { ghRenderList(); return; }
+    mp = mp.trim();
+  } else if (!confirm('Lepas Database Siswa dari ujian ini? Siswa kembali mengetik nama manual.')) { ghRenderList(); return; }
+  ghToast(hidup ? 'Menghubungkan database...' : 'Melepas database...');
   try {
     let resp = await fetch(x.url, { method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(t ? { action: 'setDatabaseSiswa', token_admin: x.tokenAdmin, url: t, url_gas: x.url, mapel: mp } : { action: 'lepasDatabaseSiswa', token_admin: x.tokenAdmin }) });
+      body: JSON.stringify(hidup ? { action: 'setDatabaseSiswa', token_admin: x.tokenAdmin, url: t, url_gas: x.url, mapel: mp } : { action: 'lepasDatabaseSiswa', token_admin: x.tokenAdmin }) });
     let h = await resp.json();
-    if (h.status === 'ok') ghToast(t ? 'Terhubung: ' + (h.jumlah || 0) + ' siswa. Siswa kini masuk dengan kelas, nama, dan PIN.' : 'Database dilepas.');
-    else alert(h.msg || 'Gagal menghubungkan database.');
+    if (h.status === 'ok') {
+      x.dbOn = !!hidup; x.dbMapel = hidup ? mp : ''; ghSimpanEntriLokalSaja();
+      ghDbSt[ghDbKunci(x)] = { on: !!hidup, mapel: x.dbMapel };
+      ghToast(hidup ? 'Terhubung: ' + (h.jumlah || 0) + ' siswa. Siswa kini masuk dengan kelas, nama, dan PIN.' : 'Database dilepas.');
+    } else alert(h.msg || 'Gagal mengubah koneksi database.');
   } catch (e) { alert('Gagal terhubung ke server ujian: ' + e.message); }
+  ghRenderList();
+  ghDbCekSatu(x).then(ghRenderList);
 }
 function ghSalinUrlEntri(i) {
   let u = (ghEntri[i] || {}).url || '';
@@ -1212,20 +1271,25 @@ async function ghBukaSpreadsheetEntri(idx) {
 
 // ===== FITUR (2026-11): cetak soal CBT hitam putih, hemat kertas, tanpa kunci/pembahasan =====
 // Format sama dengan cetak kuis Media Interaktif (fungsi cp* disalin dari ct* di Studio). Soal dibaca dari tab "Soal" lewat izin Google guru.
-function cpCss(k){return '@page{size:A4;margin:5mm}*{box-sizing:border-box;color:#000!important;background:#fff!important;box-shadow:none!important;text-shadow:none!important}html,body{margin:0;padding:0}body{font:10pt/1.28 Arial,Helvetica,sans-serif}h1{font-size:13pt;margin:0 0 1mm}h2{font-size:11pt;margin:0 0 1mm}h3{font-size:10pt;margin:0 0 .8mm;border-bottom:.3pt solid #000;padding-bottom:.3mm}p{margin:0 0 1mm}ul,ol{margin:0 0 1mm;padding-left:4.5mm}li{margin:0}.kd{border-style:dashed!important}.k{border:.4pt solid #000;border-radius:1.2mm;padding:1.4mm 2mm;margin:0 0 1.2mm;break-inside:auto;page-break-inside:auto}table{border-collapse:collapse;width:100%;margin:0 0 1mm}th,td{border:.3pt solid #000;padding:.4mm 1.2mm;text-align:left;vertical-align:top;font-size:9pt}.tl{margin:0 0 .8mm}.m{font-size:9pt}.pl{display:flex;gap:4mm;margin:0 0 1.2mm;font-size:10pt}.pl span{flex:1;border-bottom:.4pt solid #000;white-space:nowrap}.g{border-bottom:.3pt solid #000;height:5.2mm}.q{break-inside:auto;page-break-inside:auto;margin:0 0 3.4mm}.q p{margin:0 0 .4mm}.o{margin:0 0 .4mm 3mm}.bx{display:inline-block;width:3.2mm;height:3.2mm;border:.4pt solid #000;vertical-align:-.5mm;margin-right:1mm}.mt{width:100%}.mt td{border:0;padding:.5mm 1mm;font-size:9.5pt}.mt .gp{width:14mm}.hw{margin:1mm 0}.hb{display:inline-block;width:5.5mm;height:6.5mm;border:.4pt solid #000;margin-right:.8mm}.sp{display:inline-block;width:4mm}.hy{display:inline-block;width:3mm;text-align:center}.bk{display:inline-block;white-space:nowrap;margin:0 4mm 1.2mm 0}.ci{display:inline-block;width:5mm;height:5mm;border:.4pt solid #000;border-radius:50%;vertical-align:-1.4mm;margin-right:1.2mm}.cz{border-bottom:.4pt solid #000;padding:0 4mm;font-weight:bold}'+(k=='kuis'?'.m{font-style:italic}.im{display:block;max-width:100%;max-height:75mm;margin:1mm 0;filter:grayscale(1)}.oi{max-width:100%;max-height:30mm;vertical-align:middle;filter:grayscale(1)}.lt{margin:1mm 0 0 3mm}.lt span{display:inline-block;width:6.5mm;height:6.5mm;line-height:6mm;text-align:center;border:.4pt solid #000;border-radius:50%;margin-right:2.5mm;font-weight:bold;font-size:9pt}.kc{column-count:2;column-gap:5mm;column-rule:.3pt solid #000}.kc .q>.o{border-bottom:.4pt dashed #000;padding:.5mm 0 .6mm;margin-left:0;margin-right:0;break-inside:avoid}.kc .q>.o:last-child{border-bottom:0}.kc .mt td{border-bottom:.4pt dashed #000}.kc .mt tr:last-child td{border-bottom:0}.kc .mt .gp{border-bottom:0}.kc .o .g{margin-top:.6mm}':'')}
+function cpCss(k){return '@page{size:A4;margin:5mm}*{box-sizing:border-box;color:#000!important;background:#fff!important;box-shadow:none!important;text-shadow:none!important}html,body{margin:0;padding:0}body{font:10pt/1.28 Arial,Helvetica,sans-serif}h1{font-size:13pt;margin:0 0 1mm}h2{font-size:11pt;margin:0 0 1mm}h3{font-size:10pt;margin:0 0 .8mm;border-bottom:.3pt solid #000;padding-bottom:.3mm}p{margin:0 0 1mm}ul,ol{margin:0 0 1mm;padding-left:4.5mm}li{margin:0}.kd{border-style:dashed!important}.k{border:.4pt solid #000;border-radius:1.2mm;padding:1.4mm 2mm;margin:0 0 1.2mm;break-inside:auto;page-break-inside:auto}table{border-collapse:collapse;width:100%;margin:0 0 1mm}th,td{border:.3pt solid #000;padding:.4mm 1.2mm;text-align:left;vertical-align:top;font-size:9pt}.tl{margin:0 0 .8mm}.m{font-size:9pt}.pl{display:flex;gap:4mm;margin:0 0 1.2mm;font-size:10pt}.pl span{flex:1;border-bottom:.4pt solid #000;white-space:nowrap}.g{border-bottom:.3pt solid #000;height:5.2mm}.q{break-inside:auto;page-break-inside:auto;margin:0 0 3.4mm}.q p{margin:0 0 .4mm}.o{margin:0 0 .4mm 3mm}.bx{display:inline-block;width:3.2mm;height:3.2mm;border:.4pt solid #000;vertical-align:-.5mm;margin-right:1mm}.mt{width:100%}.mt td{border:0;padding:.5mm 1mm;font-size:9.5pt}.mt td{vertical-align:middle}.mt .gp{width:9mm}.mt .cc{width:5.5mm;text-align:center;padding:0}.cs{display:inline-block;width:3.6mm;height:3.6mm;border:.4pt solid #000;border-radius:50%;vertical-align:middle}.kc .mt td.cc,.kc .mt td.gp{border-bottom:0}.hv{text-align:center;line-height:6.2mm;font-weight:bold;font-size:10pt}.hw{margin:1mm 0}.hb{display:inline-block;vertical-align:bottom;width:5.5mm;height:6.5mm;border:.4pt solid #000;margin-right:.8mm}.sp{display:inline-block;width:4mm}.hy{display:inline-block;width:3mm;text-align:center}.bk{display:inline-block;white-space:nowrap;margin:0 4mm 1.2mm 0}.ci{display:inline-block;width:5mm;height:5mm;border:.4pt solid #000;border-radius:50%;vertical-align:-1.4mm;margin-right:1.2mm}.cz{border-bottom:.4pt solid #000;padding:0 4mm;font-weight:bold}'+(k=='kuis'?'.m{font-style:italic}.im{display:block;max-width:100%;max-height:75mm;margin:1mm 0;filter:grayscale(1)}.oi{max-width:100%;max-height:30mm;vertical-align:middle;filter:grayscale(1)}.lt{margin:1mm 0 0 3mm}.lt span{display:inline-block;width:6.5mm;height:6.5mm;line-height:6mm;text-align:center;border:.4pt solid #000;border-radius:50%;margin-right:2.5mm;font-weight:bold;font-size:9pt}.kc{column-count:2;column-gap:5mm;column-rule:.3pt solid #000}.kc .q>.o{border-bottom:.4pt dashed #000;padding:.5mm 0 .6mm;margin-left:0;margin-right:0;break-inside:avoid}.kc .q>.o:last-child{border-bottom:0}.kc .mt td{border-bottom:.4pt dashed #000}.kc .mt tr:last-child td{border-bottom:0}.kc .mt .gp{border-bottom:0}.kc .o .g{margin-top:.6mm}':'')}
 function cpAcak(a,sd){var r=a.slice(),s=(sd+7)*9301+49297,i,j,t;for(i=r.length-1;i>0;i--){s=(s*9301+49297)%233280;j=Math.floor(s/233280*(i+1));t=r[i];r[i]=r[j];r[j]=t}
  if(r.length>1&&r.every(function(x,k){return x===a[k]}))r.push(r.shift());return r}
 function cpOpsi(a,sd){var AK=/^\s*(semua (jawaban )?(di atas )?(adalah )?benar|tidak ada (jawaban )?(yang )?(di atas )?benar)/i,b=a.filter(function(x){return!AK.test(x)}),e=a.filter(function(x){return AK.test(x)});return cpAcak(b,sd).concat(e)}
+function cpBocor(kt,sd){var fr='AEINRTKUDMSLGBHPOYCJWFVZXQ',pos=[],i;for(i=0;i<kt.length;i++)if(/[A-Z0-9]/.test(kt.charAt(i)))pos.push(i);var n=pos.length;if(n<2)return{};var k=n>=8?2:1;
+ var ur=pos.slice().sort(function(a,b){var x=fr.indexOf(kt.charAt(a)),y=fr.indexOf(kt.charAt(b));x=x<0?99:x;y=y<0?99:y;return y-x||a-b});
+ var pool=cpAcak(ur.slice(0,Math.max(k,Math.ceil(n/2))),sd),pil=[],pk={};
+ pool.forEach(function(p){if(pil.length<k&&!pk[kt.charAt(p)]){pil.push(p);pk[kt.charAt(p)]=1}});pool.forEach(function(p){if(pil.length<k&&pil.indexOf(p)<0)pil.push(p)});
+ var o={};pil.forEach(function(p){o[p]=1});return o}
 function cpDaftar(a,hr){return a.map(function(x,j){return'<div class="o">'+(hr?'<b>'+String.fromCharCode(65+j)+'.</b> ':'')+cpE(x)+'</div>'}).join('')}
 function cpKotak(t){return'<div class="o"><span class="bx"></span> '+cpE(t)+'</div>'}
 function cpSoal(s,i){var n=i+1,t=s.tipe,h='<div class="q"><p><b>'+n+'.</b> ',L='';
  if(t=='pg')return h+cpE(s.soal)+'</p><p class="m">Lingkari huruf satu jawaban yang paling tepat.</p>'+cpDaftar(cpOpsi([s.benar].concat(s.pengecoh||[]),n),1)+'</div>';
  if(t=='tf')return h+cpE(s.klaim)+'</p><p class="m">Lingkari: <b>BENAR</b> / <b>SALAH</b>. Lalu centang satu alasan yang tepat.</p>'+cpOpsi([s.alasan].concat(s.pengecoh||[]),n).map(cpKotak).join('')+'</div>';
  if(t=='matching'){var P=s.pasangan||[],R=cpAcak(P.map(function(x){return x[1]}).filter(function(x){return x}).concat(s.pengecoh||[]),n),r='<table class="mt">',m=Math.max(P.length,R.length);
-  for(var k=0;k<m;k++)r+='<tr><td>'+(P[k]?cpE(P[k][0])+' &#9675;':'')+'</td><td class="gp"></td><td>'+(R[k]?'&#9675; '+cpE(R[k]):'')+'</td></tr>';
+  for(var k=0;k<m;k++)r+='<tr><td>'+(P[k]?cpE(P[k][0]):'')+'</td><td class="cc">'+(P[k]?'<span class="cs"></span>':'')+'</td><td class="gp"></td><td class="cc">'+(R[k]?'<span class="cs"></span>':'')+'</td><td>'+(R[k]?cpE(R[k]):'')+'</td></tr>';
   return h+cpE(s.perintah||'Sambungkan pasangan yang sesuai.')+'</p><p class="m">Sambungkan dengan garis. Ada kartu kanan yang tidak punya pasangan.</p>'+r+'</table></div>'}
- if(t=='word'){var kt=String(s.kata||'').toUpperCase(),b='';for(var q=0;q<kt.length;q++){var c=kt.charAt(q);b+=c==' '?'<span class="sp"></span>':c=='-'?'<span class="hy">-</span>':'<span class="hb"></span>'}
-  return h+'Tebak kata: '+cpE(s.petunjuk)+'</p><p class="m">Tulis hurufnya pada kotak.</p><div class="hw">'+b+'</div></div>'}
+ if(t=='word'){var kt=String(s.kata||'').toUpperCase(),b='',bc=cpBocor(kt,n);for(var q=0;q<kt.length;q++){var c=kt.charAt(q);b+=c==' '?'<span class="sp"></span>':c=='-'?'<span class="hy">-</span>':bc[q]?'<span class="hb hv">'+cpE(c)+'</span>':'<span class="hb"></span>'}
+  return h+'Tebak kata: '+cpE(s.petunjuk)+'</p><p class="m">Tulis hurufnya pada kotak kosong (sebagian huruf sudah diberikan).</p><div class="hw">'+b+'</div></div>'}
  if(t=='order')return h+cpE(s.perintah||'Urutkan dengan benar.')+'</p><p class="m">Tulis nomor urutan (1, 2, 3, ...) pada kotak.</p>'+cpAcak(s.butir||[],n).map(function(x){return'<div class="o"><span class="bx"></span> '+cpE(x)+'</div>'}).join('')+'</div>';
  if(t=='error')return h+cpE(s.perintah||'Temukan kalimat yang salah.')+'</p><p class="m">Centang kalimat yang salah.</p>'+(s.kalimat||[]).map(function(x){return'<div class="o"><span class="bx"></span> '+cpE(x.teks)+'</div>'}).join('')+'</div>';
  if(t=='classify'){var K=s.kategori||[];return h+cpE(s.perintah||'Kelompokkan kartu berikut.')+'</p><p class="m">Tulis nomor kategori pada kotak di depan tiap kartu.</p><div class="o">'+K.map(function(x,k){return'<b>'+(k+1)+'.</b> '+cpE(x)}).join(' &nbsp; ')+'</div>'+cpAcak(s.kartu||[],n).map(function(x){return'<div class="o"><span class="bx"></span> '+cpE(x.teks)+'</div>'}).join('')+'</div>'}
@@ -1360,18 +1424,20 @@ function ghRenderList() {
       '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--blue-main);" onclick="ghPilihSemuaEntri()">Pilih Semua</button>' +
       '<button class="gh-btn gh-btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--blue-main);" onclick="ghBalikPilihanEntri()">Balik Pilihan</button>' +
       '<span style="flex:1;"></span>' +
+      '<span style="font-size:12px;font-weight:700;" id="gh-db-ringkas">' + ghDbRingkasHtml() + '</span>' +
+      '<button class="gh-btn gh-btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="ghDbCekSemua(true)" title="Periksa ulang status database siswa tiap ujian">&#8635;</button>' +
       '<span style="font-size:12px;font-weight:700;color:var(--gray-mid);" id="gh-hitung-entri-centang"></span>' +
     '</div>' +
     ghEntri.map((x, i) => `
-    <div class="gh-item">
+    <div class="gh-item${ghDbStatus(x).on === false ? ' db-off' : ''}">
       <input type="checkbox" ${x.centang !== false ? 'checked' : ''} onchange="ghToggleEntriCentang(${i}, this.checked)" style="width:17px;height:17px;accent-color:var(--blue-main);flex-shrink:0;">
       <div class="gh-item-info">
         <div class="gh-item-label">${ghEsc(x.label)}</div>
         <div class="gh-item-url">${ghEsc(x.url)}</div>
         <div style="font-size:11px;margin-top:2px;${x.tokenAdmin ? 'color:var(--blue-main);' : 'color:var(--red);'}">${x.tokenAdmin ? '🔑 Token admin diatur' : '⚠️ Token admin belum diatur (perlu untuk Sesi Ujian Aktif)'}</div>
+        ${ghDbSaklarHtml(x, i)}
       </div>
       <button class="gh-btn gh-btn-ghost" onclick="ghSalinUrlEntri(${i})" title="Salin link / URL GAS ujian ini">📋</button>
-      <button class="gh-btn gh-btn-ghost" onclick="ghHubungkanDatabaseEntri(${i})" title="Hubungkan ke Database Siswa (login kelas, nama, PIN)">🔗</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghCetakEntri(${i})" title="Cetak soal (hitam putih, tanpa kunci)">🖨️</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghBukaSpreadsheetEntri(${i})" title="Buka Spreadsheet ujian ini">📗</button>
       <button class="gh-btn gh-btn-ghost" onclick="ghEditTokenAdminEntri(${i})" title="Atur/ubah Token Admin">🔑</button>
@@ -1379,6 +1445,7 @@ function ghRenderList() {
     </div>
   `).join('');
   ghUpdateHitungEntriCentang();
+  if (!ghDbMulai) ghDbCekSemua(false);
 }
 
 function ghToggleEntriCentang(i, checked) {
