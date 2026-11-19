@@ -3,8 +3,8 @@
   WATERMARK DIGITAL
   Pemilik  : Rapian Hasanuddin
   Kontak   : rapian0279@gmail.com
-  ID Unik  : WM-MWJOVY1Q6ASZC
-  Tanggal  : 2026-11-16
+  ID Unik  : WM-MWNZGHJG494B3
+  Tanggal  : 2026-11-19
   Hak Cipta: © 2026 Rapian Hasanuddin
   PERINGATAN: Dilarang menyalin, mendistribusikan ulang,
   atau menghapus atribusi ini tanpa izin tertulis dari pemilik.
@@ -14,8 +14,8 @@
 <html lang="id"><head>
 <meta name="author" content="Rapian Hasanuddin">
 <meta name="copyright" content="© 2026 Rapian Hasanuddin">
-<meta name="protection-id" content="WM-MWJOVY1Q6ASZC">
-<meta name="_wm" content="WM-MWJOVY1Q6ASZC"><meta name="_bh" content="64b625f0">
+<meta name="protection-id" content="WM-MWNZGHJG494B3">
+<meta name="_wm" content="WM-MWNZGHJG494B3"><meta name="_bh" content="64b625f0">
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
@@ -32,7 +32,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
-<style>/* __WM:WM-MWJOVY1Q6ASZC:0315667a */
+<style>/* __WM:WM-MWNZGHJG494B3:52f9ced3 */
 :root {
   --font-arab:20px;
   --blue-deep:#064E3B; --blue-main:#059669; --blue-mid:#10B981;
@@ -115,8 +115,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--gray-bg);color:
    ikut tidak pernah tampil sama sekali walau class 'hide' sudah dilepas --
    penyebab layar terlihat kosong/putih tanpa peringatan apa pun saat
    menyimpan/memuat nilai. Sekarang position:fixed & dipindah ke luar
-   login-screen (jadi anak langsung <body data-wm="WM-MWJOVY1Q6ASZC" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
-<!-- OWNER:WM-MWJOVY1Q6ASZC:Rapian%20Hasanuddin:2026-11-16 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MWJOVY1Q6ASZC">WM-MWJOVY1Q6ASZC</span>
+   login-screen (jadi anak langsung <body data-wm="WM-MWNZGHJG494B3" data-owner="UmFwaWFuIEhhc2FudWRkaW4=">
+<!-- OWNER:WM-MWNZGHJG494B3:Rapian%20Hasanuddin:2026-11-19 --><span style="display:none!important;position:absolute;left:-9999px" data-wm="WM-MWNZGHJG494B3">WM-MWNZGHJG494B3</span>
 ) supaya selalu bisa tampil di
    layar mana pun. */
 .load-overlay{position:fixed;inset:0;background:rgba(243,246,250,.85);z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
@@ -394,6 +394,35 @@ html[data-theme="dark"] .kg-btn{background:#262B30;border-color:#33393F;color:va
 .btn-print-analisis{width:100%;padding:12px;margin-top:0;margin-bottom:10px;background:var(--green);color:white;border:none;border-radius:var(--r-sm);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
 .btn-print-analisis:hover{opacity:.88;}
 
+
+/* FITUR (2026-11): panel navigasi soal -- disembunyikan/ditampilkan lewat panah (chevron).
+   Lanskap/desktop: panel samping; panah di pojok panel menyembunyikannya, tab panah di tepi kanan membukanya lagi.
+   Potret/HP: panel jadi lembar bawah; panah ke bawah menutup, tab panah ke atas di tepi bawah membukanya. */
+.right-panel{position:sticky;}
+.nav-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid var(--gray-line);background:var(--white);color:var(--gray-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .2s,color .2s,transform .2s;}
+.nav-x:hover{background:var(--blue-light);color:var(--blue-main);}
+.nav-x:active{transform:scale(.92);}
+.nav-x svg,.nav-tab svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;display:block;}
+.right-panel h3{padding-right:42px;}
+.nav-tab{display:none;position:fixed;z-index:8000;border:1px solid var(--gray-line);background:var(--white);color:var(--blue-main);cursor:pointer;align-items:center;justify-content:center;padding:0;box-shadow:var(--sh-md);transition:background .2s;animation:navTabMasuk .25s ease;}
+.nav-tab:hover{background:var(--blue-light);}
+/* lanskap: tab vertikal di tepi kanan, panah menunjuk ke kiri (membuka) */
+.nav-tab{right:0;top:50%;transform:translateY(-50%);width:26px;height:72px;border-right:none;border-radius:14px 0 0 14px;}
+.nav-tab svg{transform:rotate(180deg);}
+@keyframes navTabMasuk{from{opacity:0;}to{opacity:1;}}
+#exam-screen[data-nav="tutup"] .nav-tab{display:flex;}
+#exam-screen[data-nav="tutup"] .right-panel{display:none;}
+#nav-backdrop{display:none;}
+@media(max-width:768px){
+  .right-panel{position:fixed!important;left:0;right:0;bottom:0;top:auto!important;width:100%!important;max-height:64vh!important;overflow-y:auto;z-index:9000;border-radius:22px 22px 0 0!important;box-shadow:0 -12px 40px rgba(0,0,0,.28)!important;padding-bottom:calc(20px + env(safe-area-inset-bottom))!important;transform:translateY(0);transition:transform .3s cubic-bezier(.2,.8,.2,1);}
+  .nav-x svg{transform:rotate(90deg);}
+  /* potret: tab horizontal di tepi bawah, panah menunjuk ke atas (membuka) */
+  .nav-tab{top:auto;bottom:0;right:16px;transform:none;width:72px;height:26px;border:1px solid var(--gray-line);border-bottom:none;border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom);box-sizing:content-box;}
+  .nav-tab svg{transform:rotate(-90deg);}
+  #exam-screen[data-nav="tutup"] .right-panel{display:block;transform:translateY(108%);visibility:hidden;transition:transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s;}
+  #exam-screen[data-nav="buka"] #nav-backdrop{display:block;position:fixed;inset:0;z-index:8900;background:rgba(10,18,40,.45);animation:navTabMasuk .2s ease;}
+}
+@media(max-width:768px) and (orientation:landscape){ .right-panel{max-height:80vh!important;} }
 
 /* ── RESET GURU TOKEN ── */
 .reset-guru{margin-top:12px;text-align:center;}
@@ -708,7 +737,7 @@ html[data-theme="dark"] .theme-toggle-btn .ico-moon{display:block;}
    (:root) sehingga mode malam ikut otomatis. Satu-satunya token baru: palet 6
    warna pasangan (.kz) beserta varian mode malamnya.
    ═══════════════════════════════════════════════════════════ */
-.badge.kuis{background:var(--blue-pale);color:var(--title-accent);border:1px solid var(--blue-light);}
+.badge.kuis{background:var(--blue-light);color:var(--blue-main);border:1px solid #BDD4F5;}   /* seragam dengan .badge.pg_teks */
 #area-kuis{width:100%;margin-bottom:24px;}
 .kz{--kz-p1-bg:#E8F0FE;--kz-p1-bd:#3B5998;--kz-p2-bg:#E3F4EA;--kz-p2-bd:#2D7A55;--kz-p3-bg:#FDEDE4;--kz-p3-bd:#C2602F;
   --kz-p4-bg:#F3EAF8;--kz-p4-bd:#7C4D8B;--kz-p5-bg:#FCE8F1;--kz-p5-bd:#B0487A;--kz-p6-bg:#FBF3DF;--kz-p6-bd:#B08D2F;
@@ -809,7 +838,7 @@ html[data-theme="dark"] .kz{--kz-p1-bg:#1E2A44;--kz-p1-bd:#7FA0E8;--kz-p2-bg:#17
 /* pembahasan tipe baru */
 .ana-head.sebagian{background:var(--yellow-light);}
 .ana-badge.sebagian{background:var(--yellow);color:#fff;}
-.kz-tipe{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:10px;background:var(--blue-light);color:var(--title-accent);font-size:10px;font-weight:700;vertical-align:middle;}
+.kz-tipe{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:8px;background:var(--blue-light);color:var(--blue-main);border:1px solid #BDD4F5;font-size:10px;font-weight:700;vertical-align:middle;}   /* seragam dengan label PG Teks di analisis */
 .kz-rv{padding:10px 14px;border-top:1px solid var(--gray-line);background:var(--white);font-size:13px;line-height:1.55;color:var(--gray-dark);}
 .kz-rv-ttl{margin:8px 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-soft);}
 .kz-rv-row{display:flex;gap:8px;align-items:flex-start;padding:4px 0;}
@@ -849,7 +878,7 @@ html[data-theme="dark"] .kz{--kz-p1-bg:#1E2A44;--kz-p1-bd:#7FA0E8;--kz-p2-bg:#17
 .kz-ch.ok{background:var(--green-light);border-color:var(--green);color:var(--green);}
 .kz-ch.no{background:var(--red-light);border-color:var(--red);color:var(--red);}
 .kz-situasi-rv{margin-bottom:6px;font-size:13px;font-weight:600;line-height:1.5;color:var(--gray-dark);}
-/* _b:031566 */</style>
+/* _b:52f9ce */</style>
 <meta name="description" content="CBT Kabut Digital: buat ujian online untuk sekolah, kampus, atau perusahaan lewat wizard 5 langkah — tanpa server, pakai Google Sheets sendiri."><meta name="theme-color" content="#daa520"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="CBT Kabut Digital"><link rel="apple-touch-icon" href="./icons/icon-192.png"><script data-pwa-converter="v2">
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -878,7 +907,7 @@ function _pwaInstall() {
 window.addEventListener('appinstalled', () => {
   const b = document.getElementById('_pwa_banner');
   if (b) b.style.display = 'none';
-});</script><script data-wm-rt="1">(function(){var _id="WM-MWJOVY1Q6ASZC";var _bh="64b625f0";var _on="Rapian Hasanuddin";var _id8="WM-MWJOV";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
+});</script><script data-wm-rt="1">(function(){var _id="WM-MWNZGHJG494B3";var _bh="64b625f0";var _on="Rapian Hasanuddin";var _id8="WM-MWNZG";function _h(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return Math.abs(h).toString(16).padStart(8,"0");}function _warn(r){if(document.getElementById("_wm_warn"))return;var ov=document.createElement("div");ov.id="_wm_warn";ov.style.cssText="position:fixed;top:0;left:0;width:100%;background:rgba(220,38,38,.96);color:#fff;padding:13px 18px;z-index:999999;font-family:sans-serif;font-size:13px;font-weight:600;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3)";ov.textContent="⚠ Aplikasi ini telah dimodifikasi secara tidak sah — Rapian Hasanuddin";if(document.body)document.body.appendChild(ov);}function _chk(){var _m=document.querySelector("meta[name='_wm']");if(!_m||_m.getAttribute("content")!==_id){_warn("meta-wm");return;}var _bwm=document.body&&document.body.getAttribute("data-wm");if(_bwm&&_bwm!==_id){_warn("body-wm");return;}var _cv=getComputedStyle(document.documentElement).getPropertyValue("--_wm-id").trim();if(_cv&&_cv.replace(/["'"]/g,"").indexOf(_id8)===-1){_warn("css-wm");return;}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",function(){setTimeout(_chk,500);});}else{setTimeout(_chk,500);}setInterval(_chk,5000);})();</script></head>
 <body><div id="_pwa_banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#daa520;color:#fff;padding:14px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;font-family:system-ui,sans-serif;font-size:14px;align-items:center;gap:12px;max-width:calc(100vw - 32px)"><span>📲 Instal CBT Kabut Digital</span><button onclick="_pwaInstall()" style="background:#fff;color:#daa520;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">Instal</button><button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer">✕</button></div>
 
 <!-- ── TOGGLE MODE MALAM — mengambang, tampil di semua layar ── -->
@@ -1030,7 +1059,7 @@ window.addEventListener('appinstalled', () => {
         <div class="lbl">Backup &amp; Pemulihan</div>
         <div class="sub">Ekspor &amp; impor data</div>
       </div>
-      <a id="menu-wizard" class="p-menu-item wizard" href="https://cbtkabutdigital.com/index.html" target="_blank" rel="noopener">
+      <a id="menu-wizard" class="p-menu-item wizard" href="__CBTKD_WIZARD_URL__" target="_blank" rel="noopener">
         <div class="ico-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z"></path></svg></div>
         <div class="txt">
           <div class="lbl">Buat CBT Baru</div>
@@ -1271,9 +1300,19 @@ window.addEventListener('appinstalled', () => {
             <option value="" disabled="">-- Pilih Institusi --</option>
           </select>
         </div>
-        <div class="fg">
+        <div class="fg" id="fg-nama-bebas">
           <label id="lbl-peserta">Nama Lengkap Peserta</label>
           <input type="text" id="inp-nama" placeholder="Ketik nama lengkap Anda...">
+        </div>
+        <!-- FITUR (2026-11): login dari Database Siswa (tampil hanya bila guru menghubungkannya) -->
+        <div id="fg-db" style="display:none;">
+          <div class="fg"><label>Kelas</label>
+            <select id="sel-kelas-db" onchange="_dbIsiNama()"><option value="">-- Pilih Kelas --</option></select></div>
+          <div class="fg"><label>Nama</label>
+            <select id="sel-nama-db"><option value="">-- Pilih Nama --</option></select></div>
+          <div class="fg"><label>PIN</label>
+            <div style="position:relative;"><input type="password" id="inp-pin-db" inputmode="numeric" autocomplete="off" placeholder="PIN dari guru" style="padding-right:46px;">
+              <button type="button" id="btn-lihat-pin" onclick="_dbLihatPin()" aria-label="Lihat PIN" title="Lihat / sembunyikan PIN" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px 8px;line-height:1;">👁</button></div></div>
         </div>
         <div class="fg">
           <label>Token Ujian</label>
@@ -1299,6 +1338,13 @@ window.addEventListener('appinstalled', () => {
     <div class="split-lock-dot"></div>
     Menunggu layar penuh kembali...
   </div>
+</div>
+
+<div id="fs-lock" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(10,18,40,.94);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;color:#fff;">
+  <div style="font-size:44px;margin-bottom:10px;">⛶</div>
+  <h2 style="font-size:20px;font-weight:800;margin-bottom:8px;">Ujian harus dalam layar penuh</h2>
+  <p style="font-size:14px;opacity:.85;max-width:340px;line-height:1.6;margin-bottom:18px;">Anda keluar dari layar penuh. Waktu ujian tetap berjalan. Tekan tombol di bawah untuk melanjutkan mengerjakan.</p>
+  <button type="button" onclick="_fsKembali()" style="padding:13px 26px;border:none;border-radius:12px;background:linear-gradient(135deg,#1A73E8,#4F8EF7);color:#fff;font-weight:800;font-size:15px;cursor:pointer;">Kembali ke Layar Penuh</button>
 </div>
 
 <!-- EXAM -->
@@ -1371,7 +1417,10 @@ window.addEventListener('appinstalled', () => {
     </div>
   </div>
 
+  <div id="nav-backdrop" onclick="navToggle(false)"></div>
+  <button type="button" id="nav-pill" class="nav-tab" onclick="navToggle(true)" aria-label="Tampilkan panel navigasi soal" title="Tampilkan navigasi"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></button>
   <div class="right-panel">
+    <button type="button" class="nav-x" onclick="navToggle(false)" aria-label="Sembunyikan panel navigasi" title="Sembunyikan panel"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></button>
     <h3>Navigasi Soal</h3>
     <div class="legenda">
       <div class="leg-row"><div class="leg-dot" style="background:var(--green);"></div>Sudah dijawab</div>
@@ -2054,6 +2103,7 @@ function muatSoal() {
           setBar('ok', '✅ <span class="load-judul">' + _esc(JUDUL) + '</span> — ' + soalData.length + ' soal berhasil dimuat. Cek dulu judulnya sebelum lanjut, lalu login.');
           document.getElementById('btn-login').disabled = false;
           document.getElementById('load-overlay').classList.add('hide');
+          _dbMuatDaftar();   // FITUR (2026-11): login dari Database Siswa bila terhubung
           // Pre-isi nama dari profil aktif portal
           let _pAktif = pProfilAktif();
           if (_pAktif) {
@@ -2166,7 +2216,84 @@ document.addEventListener('wheel', e => { if(e.ctrlKey) e.preventDefault(); }, {
 // ═══════════════════════════════════════════════
 //  MULAI UJIAN
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  FITUR (2026-11): LOGIN DARI DATABASE SISWA
+//  Daftar kelas+nama diambil dari server (tanpa PIN); PIN dicocokkan di server.
+//  Bila guru belum menghubungkan database, tampilan lama (ketik nama) tetap dipakai.
+// ═══════════════════════════════════════════════
+let _dbRoster = null;
+function _dbReset() {
+  _dbRoster = null;
+  let a = document.getElementById('fg-db'), b = document.getElementById('fg-nama-bebas');
+  if (a) a.style.display = 'none';
+  if (b) b.style.display = '';
+}
+async function _dbMuatDaftar() {
+  _dbReset();
+  if (!_urlGasAktif) return;
+  try {
+    let resp = await fetchDenganTimeout(_urlGasAktif + '?action=daftarSiswa', { redirect: 'follow' }, TIMEOUT_MS);
+    let d = await resp.json();
+    if (!d || d.status !== 'ok' || !d.aktif || !Array.isArray(d.kelas) || !d.kelas.length) return;
+    _dbRoster = d.kelas;
+    let sk = document.getElementById('sel-kelas-db');
+    _dbOpsi(sk, '-- Pilih Kelas --', d.kelas.map(function (k) { return k.k; }));
+    document.getElementById('fg-db').style.display = '';
+    document.getElementById('fg-nama-bebas').style.display = 'none';
+    // Pilih otomatis dari profil aktif perangkat bila namanya ada di daftar
+    let pa = (typeof pProfilAktif === 'function') ? pProfilAktif() : null;
+    if (pa && pa.nama) {
+      let nl = String(pa.nama).trim().toLowerCase();
+      for (let i = 0; i < d.kelas.length; i++) {
+        if (d.kelas[i].n.some(function (x) { return x.toLowerCase() === nl; })) {
+          sk.value = d.kelas[i].k; _dbIsiNama();
+          let sn = document.getElementById('sel-nama-db');
+          for (let j = 0; j < sn.options.length; j++) if (sn.options[j].value.toLowerCase() === nl) sn.selectedIndex = j;
+          break;
+        }
+      }
+    }
+  } catch (e) { console.warn('Daftar siswa tidak dimuat, memakai input nama biasa:', e); _dbReset(); }
+}
+function _dbOpsi(sel, judul, arr) {   // opsi dibuat lewat DOM (nama bisa memuat tanda kutip)
+  sel.innerHTML = '';
+  let o0 = document.createElement('option'); o0.value = ''; o0.textContent = judul; sel.appendChild(o0);
+  arr.forEach(function (t) { let o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); });
+}
+function _dbLihatPin() {
+  let i = document.getElementById('inp-pin-db'), b = document.getElementById('btn-lihat-pin');
+  let tampil = i.type === 'password';
+  i.type = tampil ? 'text' : 'password';
+  b.style.opacity = tampil ? '.55' : '1';
+  b.setAttribute('aria-pressed', tampil ? 'true' : 'false');
+}
+function _dbIsiNama() {
+  let kls = document.getElementById('sel-kelas-db').value, sn = document.getElementById('sel-nama-db');
+  let k = (_dbRoster || []).filter(function (x) { return x.k === kls; })[0];
+  _dbOpsi(sn, '-- Pilih Nama --', k ? k.n : []);
+}
+async function _dbLoginServer(kelas, nama, pin) {
+  try {
+    let resp = await fetchDenganTimeout(_urlGasAktif, {
+      method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'loginSiswa', kelas: kelas, nama: nama, pin: pin })
+    }, TIMEOUT_MS);
+    let d = await resp.json();
+    if (d && d.status === 'ok' && d.nama) return { ok: true, nama: d.nama };
+    return { ok: false, msg: (d && d.msg) || 'Login gagal.' };
+  } catch (e) { return { ok: false, msg: 'Tidak bisa menghubungi server. Periksa internet lalu coba lagi.' }; }
+}
+
 async function mulaiUjian() {
+  if (_dbRoster) {
+    let _kls = document.getElementById('sel-kelas-db').value, _nm = document.getElementById('sel-nama-db').value, _pin = document.getElementById('inp-pin-db').value.trim();
+    if (!_kls || !_nm) { alert('Pilih kelas dan nama!'); return; }
+    let _btn0 = document.getElementById('btn-login'); if (_btn0) _btn0.disabled = true;
+    let _lg = await _dbLoginServer(_kls, _nm, _pin);
+    if (_btn0) _btn0.disabled = false;
+    if (!_lg.ok) { alert(_lg.msg); return; }
+    document.getElementById('inp-nama').value = _lg.nama;
+  }
   namaSekolah = document.getElementById('sel-madrasah').value;
   namaSiswa   = document.getElementById('inp-nama').value.trim();
   let tok     = document.getElementById('inp-token').value.trim();
@@ -2272,6 +2399,8 @@ async function mulaiUjian() {
   P_SCREENS.forEach(s => { let el=document.getElementById(s); if(el) el.style.display='none'; });
   document.getElementById('hasil-screen').style.display = 'none';
   document.getElementById('exam-screen').style.display  = 'flex';
+  _navAwal();
+  _fsPaksaAktif(true);   // FITUR (2026-11): layar penuh wajib selama ujian
   buatGrid();
   tampil();
   mulaiTimer();
@@ -2301,13 +2430,29 @@ function _tampilNoticeInline(html) {
 // ═══════════════════════════════════════════════
 //  TAMPIL SOAL
 // ═══════════════════════════════════════════════
+// FITUR (2026-11): tampil/sembunyi panel navigasi (state di data-nav; bawaan: lanskap terbuka, potret tertutup)
+function _navPotret() { return window.matchMedia('(max-width:768px)').matches; }
+function navToggle(buka) {
+  let e = document.getElementById('exam-screen'); if (!e) return;
+  e.dataset.nav = buka ? 'buka' : 'tutup';
+  try { if (!_navPotret()) localStorage.setItem('cbt_nav_lanskap', buka ? 'buka' : 'tutup'); } catch (x) {}
+}
+function _navAwal() {
+  let e = document.getElementById('exam-screen'); if (!e) return;
+  let v = 'buka';
+  if (_navPotret()) v = 'tutup';
+  else { try { v = localStorage.getItem('cbt_nav_lanskap') === 'tutup' ? 'tutup' : 'buka'; } catch (x) {} }
+  e.dataset.nav = v;
+}
+try { window.matchMedia('(max-width:768px)').addEventListener('change', _navAwal); } catch (x) {}
+document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && _navPotret()) { let e = document.getElementById('exam-screen'); if (e && e.dataset.nav === 'buka') navToggle(false); } });
 function buatGrid() {
   let g = document.getElementById('grid-nomor'); g.innerHTML = '';
   soalData.forEach((s,i) => {
     let b = document.createElement('button');
     b.className = 'btn-no' + (s.tipe === 'esai' ? ' esai-m' : '');
     b.textContent = s.no_tampil; b.id = 'nn' + i;
-    b.onclick = () => { idx = i; tampil(); };
+    b.onclick = () => { idx = i; tampil(); if (_navPotret()) navToggle(false); };
     g.appendChild(b);
   });
 }
@@ -2779,8 +2924,18 @@ KZ_RENDER.pasangkan = function (wrap, s) {
 };
 
 // klasifikasi -- jawaban: nomor kelompok per kartu menurut urutan kartu, 0 = belum ("1,3,0,2")
+// Urutan TAMPIL kartu diacak per siswa (Fisher-Yates, Math.random) dan tetap stabil selama soal yang sama
+// dirender ulang pada sesi ini. Pengkodean jawaban tetap memakai urutan asli (huruf), jadi penilaian tidak berubah.
+var _kzUrutTampil = {};
+function kzUrutAcak(kunci, daftar) {
+  const kk = String(kunci) + '|' + daftar.join('');
+  if (_kzUrutTampil[kk]) return _kzUrutTampil[kk];
+  const a = daftar.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+  return (_kzUrutTampil[kk] = a);
+}
 KZ_RENDER.klasifikasi = function (wrap, s) {
-  const huruf = kzHuruf(s), kat = s.kv.kategori || [], body = kzEl('div', 'kz'); wrap.appendChild(body);
+  const huruf = kzHuruf(s), urut = kzUrutAcak('kls' + s.no, huruf), kat = s.kv.kategori || [], body = kzEl('div', 'kz'); wrap.appendChild(body);
   const asg = {};
   String(kzJaw()).split(',').forEach(function (v, i) { const n = parseInt(v, 10); if (n > 0 && n <= kat.length && huruf[i]) asg[huruf[i]] = n - 1; });
   let pilih = null;
@@ -2801,10 +2956,10 @@ KZ_RENDER.klasifikasi = function (wrap, s) {
   }
   function gambar() {
     body.innerHTML = '';
-    const belum = huruf.filter(function (L) { return asg[L] === undefined; });
+    const belum = urut.filter(function (L) { return asg[L] === undefined; });
     body.appendChild(zona('Belum dikelompokkan (' + belum.length + ')', -1, belum, 'Semua kartu sudah ditempatkan.'));
     const bins = kzEl('div', 'kz-bins');
-    kat.forEach(function (nm, i) { bins.appendChild(zona('Kelompok: ' + nm, i, huruf.filter(function (L) { return asg[L] === i; }), 'Belum ada kartu.')); });
+    kat.forEach(function (nm, i) { bins.appendChild(zona('Kelompok: ' + nm, i, urut.filter(function (L) { return asg[L] === i; }), 'Belum ada kartu.')); });
     body.appendChild(bins);
   }
   gambar();
@@ -4234,6 +4389,7 @@ function selesaiFinal() {
 
   document.getElementById('modal-konfirmasi').classList.remove('aktif');
   document.getElementById('exam-screen').style.display = 'none';
+  _fsPaksaAktif(false);
 
   // Simpan ke localStorage agar device tidak bisa mengerjakan ulang
   simpanStatusSelesai({
@@ -4852,6 +5008,23 @@ document.addEventListener('keydown', e => {
 });
 function _kaburkanLayar(ms){ document.body.style.filter='blur(20px) brightness(0.3)'; setTimeout(()=>{document.body.style.filter='';},ms||1000); }
 (function(){ var s=document.createElement('style'); s.textContent='*{-webkit-user-select:none!important;user-select:none!important;}input,textarea,select{-webkit-user-select:text!important;user-select:text!important;}img{pointer-events:none;}@media print{body{display:none!important;}}'; document.head.appendChild(s); })();
+// FITUR (2026-11): layar penuh WAJIB selama ujian. Bila keluar dari layar penuh, tampil penghalang
+// dengan tombol "Kembali ke Layar Penuh" (requestFullscreen butuh klik pengguna). Perangkat yang tidak
+// mendukung layar penuh (mis. iPhone) tidak dikunci.
+function _fsDidukung() { return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled); }
+function _fsAktif() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+function _fsCek() {
+  let o = document.getElementById('fs-lock');
+  if (!o) return;
+  let perlu = _ujianBerjalanFs && !ujianSelesai && _fsDidukung() && !_fsAktif();
+  o.style.display = perlu ? 'flex' : 'none';
+}
+let _ujianBerjalanFs = false;
+function _fsPaksaAktif(v) { _ujianBerjalanFs = !!v; _fsCek(); }
+function _fsKembali() { fullscreen(); setTimeout(_fsCek, 300); }
+document.addEventListener('fullscreenchange', function () { setTimeout(_fsCek, 150); });
+document.addEventListener('webkitfullscreenchange', function () { setTimeout(_fsCek, 150); });
+setInterval(_fsCek, 1000);
 function fullscreen() { let el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen(); else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen(); }
 function _pesanWarning(n,sisa) {
   const D1 = PESAN_1 || `⚠️ Peringatan ${n}/${MAKS_P}: Jangan keluar halaman! Sisa: ${sisa} kali.`;
@@ -6354,19 +6527,19 @@ function _predikatKls(p) {
 
 
 
-<!-- PROTECTED:WM-MWJOVY1Q6ASZC | Rapian Hasanuddin | 2026-11-16 -->
-<script data-pid="WM-MWJOVY1Q6ASZC" data-feature="devtools-keys">
-(function(){var _a=3026,_b=1901,_c=5214,_d=4920;
+<!-- PROTECTED:WM-MWNZGHJG494B3 | Rapian Hasanuddin | 2026-11-19 -->
+<script data-pid="WM-MWNZGHJG494B3" data-feature="devtools-keys">
+(function(){var _a=3869,_b=8232,_c=2547,_d=312;
 document.addEventListener('keydown',function(e){if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C'].includes(e.key))||(e.ctrlKey&&e.key==='U')){e.preventDefault();}});
 })();
 </script>
-<script data-pid="WM-MWJOVY1Q6ASZC" data-feature="consolewarn">
-(function(){var _a=5035,_b=6853,_c=1121,_d=3800;
-console.log('%c\u26a0 HAK CIPTA\n%c\u00a9 2026 Rapian Hasanuddin | rapian0279@gmail.com\nID: WM-MWJOVY1Q6ASZC\nDilarang menyalin atau mendistribusikan tanpa izin tertulis pemilik.','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
+<script data-pid="WM-MWNZGHJG494B3" data-feature="consolewarn">
+(function(){var _a=6828,_b=8325,_c=6297,_d=8452;
+console.log('%c\u26a0 HAK CIPTA\n%c\u00a9 2026 Rapian Hasanuddin | rapian0279@gmail.com\nID: WM-MWNZGHJG494B3\nDilarang menyalin atau mendistribusikan tanpa izin tertulis pemilik.','color:#f26b6b;font-size:15px;font-weight:bold','color:#888;font-size:12px');
 })();
 </script>
-<script data-pid="WM-MWJOVY1Q6ASZC" data-feature="domainlock">
-(function(){var _a=1153,_b=7639,_c=7925,_d=9057;
+<script data-pid="WM-MWNZGHJG494B3" data-feature="domainlock">
+(function(){var _a=917,_b=4475,_c=7942,_d=2874;
 (function(){var h=window.location.hostname;var ok=['cbtkabutdigital.com','www.cbtkabutdigital.com','localhost',''];if(ok.indexOf(h)===-1){document.body.innerHTML="<div style='font:16px sans-serif;text-align:center;padding:4rem'><h2>Akses Tidak Sah</h2><p>Hubungi pemilik resmi.</p></div>";}})();
 })();
 </script>
