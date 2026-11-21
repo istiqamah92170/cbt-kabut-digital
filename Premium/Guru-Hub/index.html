@@ -850,6 +850,7 @@
         <div id="gh-bs-cari-hasil"></div>
 
         <button class="gh-btn gh-btn-outline" onclick="ghLihatBankSoal()" style="width:100%;margin-top:10px;">📚 Lihat Bank Soal &amp; Generate Ujian</button>
+        <button class="gh-btn gh-btn-outline" onclick="ghPerbaikiBankBergeser()" style="width:100%;margin-top:6px;font-size:12px;">🛠 Perbaiki baris yang terlanjur masuk kolom Y</button>
         <div id="gh-bs-bank-area"></div>
 
         <div class="gh-status-msg" id="gh-bs-status"></div>
@@ -3201,6 +3202,45 @@ function ghRenderPreviewImpor() {
     '<button class="gh-btn gh-btn-primary" onclick="ghImporKeBank()" style="width:100%;margin-top:10px;">📥 Impor Soal Terpilih ke Bank Soal</button>';
 }
 
+async function ghSheetIdTab(id, judulTab) {
+  let r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '?fields=sheets.properties', { headers: ghHeaderAuth() });
+  if (!r.ok) return null;
+  let j = await r.json();
+  let sh = (j.sheets || []).map(x => x.properties).filter(x => x.title === judulTab)[0];
+  return sh ? sh.sheetId : null;
+}
+
+// Perbaiki baris Bank Soal yang terlanjur bergeser ke kolom Y (bug lama): pindahkan ke kolom A.
+async function ghPerbaikiBankBergeser() {
+  let statusEl = document.getElementById('gh-bs-status');
+  if (!ghBankSoalId) return;
+  try {
+    statusEl.className = 'gh-status-msg'; statusEl.textContent = 'Memeriksa baris yang bergeser...';
+    let n = GH_KOLOM_BANK.length, geser = 24;
+    let akhir = ghKolomHuruf(geser + n);
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values/BankSoal!A2:' + akhir, { headers: ghHeaderAuth() });
+    let hasil = await resp.json();
+    if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
+    let rows = hasil.values || [], daftar = [];
+    rows.forEach((r, i) => {
+      let kiriKosong = !r.slice(0, geser).some(v => String(v || '').trim() !== '');
+      let kananIsi = r.slice(geser).some(v => String(v || '').trim() !== '');
+      if (kiriKosong && kananIsi) daftar.push({ baris: i + 2, nilai: r.slice(geser, geser + n) });
+    });
+    if (!daftar.length) { statusEl.textContent = '✅ Tidak ada baris yang bergeser.'; return; }
+    if (!confirm(daftar.length + ' baris terdeteksi bergeser ke kolom Y. Pindahkan ke kolom A?')) { statusEl.textContent = ''; return; }
+    let hapus = daftar.map(d => 'BankSoal!' + ghKolomHuruf(geser + 1) + d.baris + ':' + akhir + d.baris);
+    let r1 = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values:batchClear', { method: 'POST', headers: ghHeaderAuth(), body: JSON.stringify({ ranges: hapus }) });
+    if (!r1.ok) throw new Error('Gagal membersihkan kolom Y (HTTP ' + r1.status + ')');
+    let data = daftar.map(d => ({ range: 'BankSoal!A' + d.baris + ':' + ghKolomHuruf(n) + d.baris, values: [d.nilai.concat(Array(Math.max(0, n - d.nilai.length)).fill(''))] }));
+    let r2 = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values:batchUpdate', { method: 'POST', headers: ghHeaderAuth(), body: JSON.stringify({ valueInputOption: 'RAW', data: data }) });
+    if (!r2.ok) throw new Error('Gagal menulis ke kolom A (HTTP ' + r2.status + ')');
+    statusEl.textContent = '✅ ' + daftar.length + ' baris dipindahkan ke kolom A.';
+  } catch (e) {
+    statusEl.className = 'gh-status-msg err'; statusEl.textContent = '❌ Gagal memperbaiki: ' + e.message;
+  }
+}
+
 async function ghImporKeBank() {
   if (!ghSoalSumberDipilih || !ghBankSoalId) return;
   let mapel = (document.getElementById('gh-imp-mapel').value || '').trim();
@@ -3220,9 +3260,15 @@ async function ghImporKeBank() {
       GH_KOLOM_SOAL.slice(1).forEach(k => baris.push(r[k] || ''));
       return baris;
     });
-    let lebarBank = ghKolomHuruf(GH_KOLOM_BANK.length);
-    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + '/values/BankSoal!A:' + lebarBank + ':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS', {
-      method: 'POST', headers: ghHeaderAuth(), body: JSON.stringify({ values: rowsBaru })
+    // PERBAIKAN (2026-11): values:append mendeteksi "tabel" dan bisa menaruh baris
+    // mulai kolom Y (bukan A) bila ada sel terisi di kanan data. appendCells selalu
+    // menulis mulai KOLOM A tepat di bawah baris terakhir.
+    let sid = await ghSheetIdTab(ghBankSoalId, 'BankSoal');
+    if (sid === null) throw new Error('Tab BankSoal tidak ditemukan');
+    let resp = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + ghBankSoalId + ':batchUpdate', {
+      method: 'POST', headers: ghHeaderAuth(),
+      body: JSON.stringify({ requests: [{ appendCells: { sheetId: sid, fields: 'userEnteredValue',
+        rows: rowsBaru.map(b => ({ values: b.map(v => ({ userEnteredValue: { stringValue: String(v == null ? '' : v) } })) })) } }] })
     });
     let hasil = await resp.json();
     if (!resp.ok) throw new Error(hasil.error ? hasil.error.message : ('HTTP ' + resp.status));
