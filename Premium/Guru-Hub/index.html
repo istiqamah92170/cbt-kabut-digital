@@ -698,6 +698,15 @@
       <button class="gh-btn gh-btn-primary gh-btn-block gh-span" onclick="ghTambahEntri()">+ Tambah Ujian</button>
     </div>
 
+    <details style="margin:8px 0;font-size:13px"><summary style="cursor:pointer">🖨️ Kop resmi untuk cetak soal (opsional)</summary>
+      <div style="padding:8px 0">
+        <input type="text" id="gh-kop-induk" placeholder="Instansi induk (opsional)" oninput="ghKopSimpan()" style="width:100%;margin-bottom:4px">
+        <input type="text" id="gh-kop-sekolah" placeholder="Nama satuan pendidikan" oninput="ghKopSimpan()" style="width:100%;margin-bottom:4px">
+        <input type="text" id="gh-kop-alamat" placeholder="Alamat dan kontak" oninput="ghKopSimpan()" style="width:100%;margin-bottom:4px">
+        <label style="display:block;margin-bottom:4px">Logo (PNG/JPG, opsional): <input type="file" id="gh-kop-logo" accept="image/png,image/jpeg" onchange="ghKopLogo(this)"></label>
+        <label><input type="checkbox" id="gh-kop-pakai" onchange="ghKopSimpan()"> Cetak dengan kop resmi</label>
+        <div style="color:#64748b;margin-top:4px">Tersimpan di browser ini saja. Kop memakai nama satuan pendidikan; bila kosong, cetakan tanpa kop.</div>
+      </div></details>
     <div class="gh-list" id="gh-list"></div>
 
     <hr class="gh-section-sep">
@@ -1396,8 +1405,45 @@ async function ghCetakEntri(idx) {
     ghToast('Gagal mencetak: ' + (er && er.message ? er.message : er));
   }
 }
+
+// ── KOP RESMI CETAK (disimpan di browser) ──
+function ghKopBaca() { try { return JSON.parse(localStorage.getItem('gh_kop') || '{}') || {}; } catch (e) { return {}; } }
+function ghKopSimpan() {
+  let o = ghKopBaca();
+  let g = id => { let e = document.getElementById(id); return e ? e.value : ''; };
+  o.induk = g('gh-kop-induk'); o.sekolah = g('gh-kop-sekolah'); o.alamat = g('gh-kop-alamat');
+  let c = document.getElementById('gh-kop-pakai'); o.pakai = c && c.checked ? 'ya' : 'tidak';
+  try { localStorage.setItem('gh_kop', JSON.stringify(o)); } catch (e) {}
+}
+function ghKopMuat() {
+  let o = ghKopBaca(), s = (id, v) => { let e = document.getElementById(id); if (e) e.value = v || ''; };
+  s('gh-kop-induk', o.induk); s('gh-kop-sekolah', o.sekolah); s('gh-kop-alamat', o.alamat);
+  let c = document.getElementById('gh-kop-pakai'); if (c) c.checked = o.pakai !== 'tidak';
+}
+function ghKopLogo(inp) {
+  let f = inp.files && inp.files[0]; if (!f) return;
+  if (!/^image\/(png|jpeg)$/.test(f.type)) { ghToast('Pilih gambar PNG atau JPG.'); return; }
+  let r = new FileReader();
+  r.onload = () => { let im = new Image(); im.onload = () => {
+    let sc = Math.min(1, 120 / im.height), w = Math.max(1, Math.round(im.width * sc)), h = Math.max(1, Math.round(im.height * sc));
+    let c = document.createElement('canvas'); c.width = w; c.height = h; let x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(im, 0, 0, w, h);
+    let u = c.toDataURL('image/png'); if (u.length > 38000) u = c.toDataURL('image/jpeg', 0.8);
+    if (u.length > 38000) { ghToast('Logo terlalu detail. Pakai gambar yang lebih sederhana.'); return; }
+    let o = ghKopBaca(); o.logo = u; try { localStorage.setItem('gh_kop', JSON.stringify(o)); ghToast('Logo kop tersimpan.'); } catch (e) { ghToast('Logo gagal disimpan.'); }
+  }; im.onerror = () => ghToast('Gambar tidak terbaca.'); im.src = r.result; };
+  r.readAsDataURL(f);
+}
+function ghKopHtml() {
+  let o = ghKopBaca(), s = String(o.sekolah || '').trim();
+  if (o.pakai === 'tidak' || !s) return '';
+  let lg = /^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/=]+$/.test(o.logo || '');
+  return '<div class="kop' + (lg ? ' lg' : '') + '">' + (lg ? '<div class="kl"><img src="' + o.logo + '"></div>' : '') + '<div class="kt2">' +
+    (o.induk ? '<div class="k1">' + ghEsc(o.induk) + '</div>' : '') + '<div class="k2">' + ghEsc(s) + '</div>' + (o.alamat ? '<div class="k3">' + ghEsc(o.alamat) + '</div>' : '') + '</div></div>';
+}
+const GH_KOPCSS = '.kop{display:flex;align-items:center;gap:3mm;border-bottom:2.5pt double #000;padding-bottom:2mm;margin-bottom:3mm;break-inside:avoid}.kop .kl img{height:16mm;width:auto;display:block}.kop.lg .kt2{margin-right:16mm}.kop .kt2{flex:1;text-align:center}.kop .k1{font-size:10pt;font-weight:bold;text-transform:uppercase}.kop .k2{font-size:14pt;font-weight:bold;text-transform:uppercase}.kop .k3{font-size:8.5pt}';
+setTimeout(ghKopMuat, 0);
 function cpCetakHtml(judul, body) {
-  let d = '<!doctype html><html><head><meta charset="utf-8"><title>' + ghEsc(judul) + '</title><style>' + cpCss('kuis') + '</style></head><body>' + body + '</body></html>';
+  let d = '<!doctype html><html><head><meta charset="utf-8"><title>' + ghEsc(judul) + '</title><style>' + cpCss('kuis') + GH_KOPCSS + '</style></head><body>' + ghKopHtml() + body + '</body></html>';
   let f = document.createElement('iframe');
   f.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:0';
   document.body.appendChild(f);
