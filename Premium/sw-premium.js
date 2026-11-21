@@ -6,7 +6,7 @@
 // Strategi: Stale-While-Revalidate. TIDAK menyimpan Apps Script, login Google, atau API Gemini.
 // Naikkan VERSI tiap kali mengunggah versi baru aplikasi premium.
 
-const VERSI = 'v64';
+const VERSI = 'v65';
 const CACHE_NAME = 'alat-premium-cbt-kabut-digital-' + VERSI;
 const STATIC_ASSETS = [
   './topik-bloom-classifier_pro.html',
