@@ -305,6 +305,8 @@
     app: APP, terbuka: false, originInduk: '',
     saatTerbuka: function (fn) { if (terbuka) { try { fn(); } catch (e) {} } else penunggu.push(fn); },
     simpanSekarang: kirimPending,
+    // Pengguna sendiri memilih melihat paket: minta Guru Hub membuka halaman Langganan.
+    bukaLangganan: function () { kePar({ type: 'GHP_BUKA_LANGGANAN', tiket: tiket }); },
     // minta isi kunci IDB (nama fisik, tanpa awalan 'idb:') yang ditunda. Resolve true bila semua didapat/tidak ada di Drive.
     minta: function (kunciIdb) {
       return new Promise(function (res) {
