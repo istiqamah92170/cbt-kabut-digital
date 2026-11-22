@@ -525,7 +525,7 @@
       </div>
       <h1>Guru <span>Hub</span></h1>
       <p>CBT Kabut Digital · Alat bantu guru</p>
-      <span class="gh-sb-chip" style="margin-top:10px;">✦ Aplikasi Premium Berlangganan</span>
+      <span class="gh-sb-chip" style="margin-top:10px;">✦ Mulai gratis dengan Media Interaktif</span>
     </div>
     <div class="gh-login-body">
       <!-- FITUR (2026-09): login SUNGGUHAN -- guru sign-in pakai akun Google,
@@ -547,7 +547,7 @@
       <div id="gh-google-signin-btn" class="g_id_signin" style="display:flex;justify-content:center;min-height:44px;" data-type="standard" data-size="large" data-theme="outline" data-width="300"></div>
       <div class="gh-status-msg" id="gh-login-status" style="margin-top:14px;"></div>
       <button class="gh-btn gh-btn-ghost" id="gh-btn-login-coba-lagi" style="width:100%;margin-top:6px;display:none;" onclick="ghUiCobaAkunLain()">Coba akun Google lain</button>
-      <p class="gh-hint" style="text-align:center;margin-top:14px;">Belum berlangganan? <a href="https://cbtkabutdigital.com/Premium/landing.html" target="_blank" rel="noopener" style="color:var(--blue-main);font-weight:700;text-decoration:none;">Lihat fitur &amp; harga Guru Hub →</a></p>
+      <p class="gh-hint" style="text-align:center;margin-top:14px;">Baru di sini? Cukup masuk dengan Google, lalu langsung coba Media Interaktif untuk 1 kelas. <a href="https://cbtkabutdigital.com/Premium/landing.html" target="_blank" rel="noopener" style="color:var(--blue-main);font-weight:700;text-decoration:none;">Kenali Guru Hub →</a></p>
     </div>
   </div>
 </div>
@@ -597,7 +597,7 @@
       <button class="gh-theme-toggle" onclick="ghBukaPengaturan()" id="gh-btn-pengaturan">
         <span class="gh-gear">⚙️</span> <span>Pengaturan</span>
       </button>
-      <button class="gh-theme-toggle" onclick="ghUiGotoPage('langganan')" id="gh-nav-langganan">
+      <button class="gh-theme-toggle" onclick="ghUiGotoPage('langganan')" id="gh-nav-langganan" data-lanjut="1">
         <span>💳</span> <span>Langganan</span>
       </button>
       <button class="gh-btn-out" onclick="ghUiLogout()">Keluar</button>
@@ -879,6 +879,7 @@
       <button class="ghp-tile" onclick="ghpBukaApp('guruai')"><span class="ghp-ico ghp-ico-guruai"></span><b>GuruAI Builder</b><span class="ghp-sub">Susun perangkat ajar dan konten dengan bantuan AI.</span></button>
       <button class="ghp-tile" onclick="ghpBukaApp('media')"><span class="ghp-ico ghp-ico-media"></span><b>Media Interaktif</b><span class="ghp-sub">Ubah ATP jadi media belajar interaktif: kuis teracak, studi kasus, mode tamu, ekspor soal CBT. Premium: 16 tema ceria 5 warna + ornamen, tautan kustom terbaca Google, tautkan siswa dari Sheet luar, materi bersama antar guru, nilai refleksi otomatis, izin ulang massal. Gratis 1 kelas; 3, 6, atau tanpa batas sesuai paket.</span></button>
     </div>
+    <p class="gh-hint" id="gh-premium-paketlink" style="display:none;text-align:center;margin-top:18px;">Butuh fitur lengkap? <a href="#" onclick="ghUiGotoPage('langganan');return false;" style="color:var(--blue-main);font-weight:600;">Lihat paket premium</a></p>
   </div>
   </div><!-- /gh-page-premium -->
 
@@ -963,6 +964,15 @@
 <!-- FITUR (2026-09): modal Klasifikasi Topik/Bloom/Kesulitan -- menghubungkan
      ke aplikasi topik-bloom-classifier.html lewat <iframe> + postMessage
      (bisa beda domain). Lihat ghBukaKlasifikasi() dkk di script bawah. -->
+<div class="gh-modal-bg" id="gh-modal-paket" style="z-index:520;">
+  <div class="gh-card" style="max-width:420px;width:calc(100% - 32px);max-height:92vh;overflow:auto;">
+    <h3 style="margin:0 0 6px;" id="gh-paket-judul">Fitur Premium</h3>
+    <p class="gh-sub" style="margin-bottom:14px;" id="gh-paket-isi"></p>
+    <button class="gh-btn gh-btn-primary" style="width:100%;margin-bottom:8px;" onclick="ghPaketPilih(true)">Lihat paket premium</button>
+    <button class="gh-btn gh-btn-ghost" style="width:100%;" onclick="ghPaketPilih(false)">Nanti saja</button>
+  </div>
+</div>
+
 <div class="gh-modal-bg" id="gh-modal-simpan" style="z-index:500;">
   <div class="gh-card" style="max-width:440px;width:calc(100% - 32px);max-height:92vh;overflow:auto;">
     <h3 style="margin:0 0 6px;" id="ghp-tanya-judul">Hubungkan Google Drive</h3>
@@ -1843,6 +1853,7 @@ async function ghMuatStatusLangganan() {
       ghProfilAktif = profilPenuh;
       localStorage.setItem(GH_KEY_SESI_LISENSI, JSON.stringify(profilPenuh));
       document.getElementById('gh-langganan-welcome-box').style.display = 'none';
+      ghTampilkanNavLangganan(true);
       ghToast('🎉 Langganan aktif! Semua fitur Guru Hub sudah terbuka.');
     }
 
@@ -5150,10 +5161,25 @@ async function ghMuatDashboardSesi() {
   }
 }
 
+// ── Tawaran paket yang tenang: halaman harga hanya dibuka bila pengguna sendiri memilihnya ──
+function ghTawarkanPaket(judul, isi) {
+  document.getElementById('gh-paket-judul').textContent = judul;
+  document.getElementById('gh-paket-isi').textContent = isi;
+  document.getElementById('gh-modal-paket').classList.add('on');
+}
+function ghPaketPilih(lihat) {
+  document.getElementById('gh-modal-paket').classList.remove('on');
+  if (lihat) {
+    let welcome = document.getElementById('gh-langganan-welcome-box');
+    if (welcome && ghModeBelumAktif) { welcome.style.display = 'block'; welcome.innerHTML = 'Pilih paket yang sesuai kebutuhan Anda. Pekerjaan di Media Interaktif tetap tersimpan dan langsung bisa dilanjutkan.'; }
+    ghpTutupPanel(true).then(() => ghUiGotoPage('langganan'), () => ghUiGotoPage('langganan'));
+  }
+}
 function ghUiGotoPage(nama) {
   if (ghModeBelumAktif && nama !== 'langganan' && nama !== 'premium') {
-    ghToast('🔒 Aktifkan langganan dulu untuk membuka fitur ini.');
-    nama = 'langganan';
+    // Akun gratis: tidak dilempar ke halaman harga. Tawarkan dengan tenang, pengguna yang memutuskan.
+    ghTawarkanPaket('Fitur ini bagian dari paket Premium', 'Guru Hub lengkap (Link Ujian, Esai, Bank Soal) tersedia untuk pelanggan. Anda tetap bisa memakai Media Interaktif secara gratis untuk 1 kelas, dan semua pekerjaan Anda akan tetap ada bila kelak berlangganan.');
+    nama = 'premium';
   }
   ['dashboard', 'linkujian', 'esai', 'banksoal', 'premium', 'langganan'].forEach(p => {
     let el = document.getElementById('gh-page-' + p);
@@ -5181,7 +5207,12 @@ function ghUiCloseSidebar() {
   document.getElementById('gh-sidebar-backdrop').classList.remove('on');
 }
 
+function ghTampilkanNavLangganan(ya) {
+  let kl = document.getElementById('gh-nav-langganan'); if (kl) kl.style.display = ya ? '' : 'none';
+  let tl = document.getElementById('gh-premium-paketlink'); if (tl) tl.style.display = ya ? 'none' : '';
+}
 function ghUiTampilkanApp(profil) {
+  ghTampilkanNavLangganan(true);
   ghProfilAktif = profil;
   document.getElementById('gh-screen-login').style.display = 'none';
   document.getElementById('gh-screen-app').style.display = '';
@@ -5222,13 +5253,23 @@ function ghUiTampilkanBelumAktif(profil, alasan, akunBaru) {
   let navDash = document.getElementById('gh-nav-dashboard');
   if (navDash) navDash.classList.add('gh-locked');
 
-  ghUiGotoPage('langganan');
+  ghTampilkanNavLangganan(false);
 
   let welcome = document.getElementById('gh-langganan-welcome-box');
-  welcome.style.display = 'block';
-  welcome.innerHTML = akunBaru
-    ? ('👋 <b>Selamat datang di Guru Hub, ' + ghEsc(nama) + '!</b><br>Akun Anda baru saja dibuat. Pilih paket di bawah untuk mulai memakai semua fitur.')
-    : ('🔑 Halo lagi, <b>' + ghEsc(nama) + '</b>. ' + ghEsc(alasan || 'Langganan Anda belum aktif.') + ' Pilih paket di bawah untuk melanjutkan.');
+  let langsungBayar = new URLSearchParams(location.search).get('halaman') === 'langganan';
+  if (langsungBayar) {
+    // Pengguna sengaja datang dari tombol berlangganan: tampilkan halaman paket.
+    ghUiGotoPage('langganan');
+    welcome.style.display = 'block';
+    welcome.innerHTML = akunBaru
+      ? ('👋 <b>Selamat datang, ' + ghEsc(nama) + '!</b><br>Pilih paket di bawah untuk memakai semua fitur.')
+      : ('🔑 Halo lagi, <b>' + ghEsc(nama) + '</b>. ' + ghEsc(alasan || 'Langganan Anda belum aktif.') + ' Pilih paket di bawah untuk melanjutkan.');
+    return;
+  }
+  // Alur biasa: langsung ke Studio Media Interaktif (gratis), tanpa halaman harga.
+  welcome.style.display = 'none';
+  ghUiGotoPage('premium');
+  ghpBukaApp('media');
 }
 
 // ── Verifikasi ke Lisensi (Apps Script) ─────────────────────────────
@@ -5680,12 +5721,13 @@ window.addEventListener('message', function (ev) {
   else if (d.type === 'GHP_MINTA' && Array.isArray(d.kunci) && typeof d.rid === 'string') ghpTanganiMinta(jenis, d, ev);
   else if (d.type === 'GHP_PERUBAHAN' && typeof d.kunci === 'string' && typeof d.versi === 'number') ghpAntrikan(info.app, d.kunci, d.versi, d.nilai === null ? null : String(d.nilai));
   else if (d.type === 'GHP_FLUSH_OK') { /* ditangani ghpTutupPanel lewat jeda tunggu */ }
+  else if (d.type === 'GHP_BUKA_LANGGANAN') { ghPaketPilih(true); }
 });
 
 // ---- panel ----
 async function ghpBukaApp(appId) {
   let app = GH_APP_PREMIUM[appId]; if (!app) return;
-  if (ghModeBelumAktif && !app.gratis) { ghToast('🔒 Aktifkan langganan dulu untuk membuka alat premium.'); ghUiGotoPage('langganan'); return; }
+  if (ghModeBelumAktif && !app.gratis) { ghTawarkanPaket(app.nama + ' untuk pelanggan Premium', 'Alat ini tersedia di paket Premium. Media Interaktif tetap bisa dipakai gratis untuk 1 kelas.'); return; }
   if (!app.gratis) { // gerbang Google Drive: tampil di mana pun alat premium dibuka bila belum ada izin yang sah di sesi ini
     let stD = ghpDriveStatus().aktif;
     if (stD !== 'nanti' && !ghpTokenSah()) { let pilih = await ghpTanyaHubung(appId, stD === true); if (!pilih) return; }
