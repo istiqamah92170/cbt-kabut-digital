@@ -867,6 +867,11 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text3);border-t
           Kolom opsional: <code>vrl_gambar</code>, <code>opsi_a</code>, <code>opsi_b</code>,
           <code>opsi_c</code>, <code>opsi_d</code>, <code>opsi_e</code> (opsional; kosong = soal 4 opsi), <code>kunci</code><br><br>
           Nilai kolom <code>tipe</code>: <code>pg_teks</code>, <code>pg_gambar</code>, <code>esai</code>, <code>esai_gambar</code><br>
+          <strong>Format kuis/game</strong> (hanya diklasifikasi, kunci tidak diperiksa): <code>pasangkan</code>, <code>isian_kata</code>, <code>urutkan</code>,
+          <code>temukan_kesalahan</code>, <code>klasifikasi</code>, <code>pg_kompleks</code>, <code>benar_salah_alasan</code>, <code>isian_rumpang</code>,
+          <code>kasus_bercabang</code>, <code>isian_angka</code>. Kolom tambahan yang dibaca: <code>opsi_f</code>&ndash;<code>opsi_h</code>, <code>pengecoh</code>,
+          <code>pasangan</code>, <code>kategori</code>, <code>perbaikan</code>, <code>langkah_bercabang</code>, <code>toleransi</code>, <code>satuan</code>, <code>pembahasan</code>.
+          Hasil bertambah kolom <code>Kognitif</code> (L1&ndash;L3, <em>usulan</em> acuan kuis: L1 = pengetahuan/pemahaman, L2 = aplikasi, L3 = penalaran). Bloom di luar rentang wajar format diberi tanda &#9888; pada Rekomendasi_Poin.<br>
           Urutan kolom boleh berubah — sistem membaca berdasarkan nama header, bukan posisi.
         </div>
       </div>
@@ -2641,8 +2646,26 @@ function taeResolve(topikRaw, materiList) {
 
 
 const AI_COLS=['tipe','pertanyaan','vrl_gambar','opsi_a','opsi_b','opsi_c','opsi_d','opsi_e','kunci'];
-const OUT_COLS=['topik','bloom','kesulitan','confidence','kunci_ai','status_kunci','rekomendasi_poin'];
+const OUT_COLS=['topik','bloom','kesulitan','confidence','kunci_ai','status_kunci','rekomendasi_poin','kognitif'];
 const ESAI=['esai','essay','uraian','esai_gambar','essay_gambar','isian'];
+// ── FORMAT KUIS/GAME (acuan-kuis.md): 10 format selain PG & esai ─────────────────────────────
+// min/max = rentang Bloom yang wajar per format (C1..C6 -> 1..6); tip = Bloom tipikal.
+const KUIS_FORMAT={
+  matching:{nama:'Pasangkan',min:1,max:4,tip:'C2'},
+  word:{nama:'Tebak Kata / Isian Kata',min:1,max:3,tip:'C1'},
+  order:{nama:'Urutkan',min:2,max:4,tip:'C2'},
+  error:{nama:'Temukan Kesalahan',min:3,max:5,tip:'C4'},
+  classify:{nama:'Klasifikasi',min:2,max:4,tip:'C3'},
+  multi:{nama:'Pilih Semua yang Benar (PG Kompleks)',min:2,max:5,tip:'C4'},
+  tf:{nama:'Benar/Salah + Alasan',min:3,max:5,tip:'C4'},
+  cloze:{nama:'Isian Rumpang',min:1,max:3,tip:'C2'},
+  branch:{nama:'Kasus Bercabang',min:3,max:5,tip:'C4'},
+  number:{nama:'Isian Angka',min:3,max:4,tip:'C3'}
+};
+const KUIS_ALIAS={pasangkan:'matching',matching:'matching',tebak_kata:'word',isian_kata:'word',word:'word',urutkan:'order',order:'order',
+  temukan_kesalahan:'error',error:'error',klasifikasi:'classify',classify:'classify',pg_kompleks:'multi',pilih_semua:'multi',multi:'multi',
+  benar_salah_alasan:'tf',benar_salah:'tf',tf:'tf',isian_rumpang:'cloze',rumpang:'cloze',cloze:'cloze',kasus_bercabang:'branch',bercabang:'branch',
+  branch:'branch',isian_angka:'number',angka:'number',number:'number'};
 const BLOOM_SCORE={C1:1,C2:2,C3:3,C4:4,C5:5,C6:6};
 const DIFF_SCORE={'Sangat Mudah':1,'Mudah':2,'Sedang':3,'Sulit':4,'Sangat Sulit':5};
 const KD_MAP={'Sangat Mudah':'Mudah','Mudah':'Mudah','Sedang':'Sedang','Sulit':'Sulit','Sangat Sulit':'Sulit'};
@@ -2840,12 +2863,21 @@ function applyResult(row,res){
   row['confidence']=(res.confidence||0)+'%';row['kunci_ai']=res.kunci_ai||'';
   const _isEsaiRow=ESAI.includes(String(row['tipe']||'').toLowerCase().trim());
   const kA=String(row['kunci']||'').trim().toUpperCase(),kAI=String(res.kunci_ai||'').trim().toUpperCase();
-  row['status_kunci']=_isEsaiRow?'Esai_AI':(!kA?'Dibuat_AI':kA===kAI?'Cocok':'Berbeda');
+  const _isKuisRow=!!kuisKode(row['tipe']);
+  row['status_kunci']=_isKuisRow?'Tidak_Diperiksa':_isEsaiRow?'Esai_AI':(!kA?'Dibuat_AI':kA===kAI?'Cocok':'Berbeda');
+  if(_isKuisRow)row['kunci_ai']='\u2014';
   // Catatan internal (tidak masuk kolom Excel): model penjawab & alur penentuan kunci
   row['_model']=res._model||'';row['_finish']=res._finish||'';row['_thoughts']=res._thoughts||0;
   row['_kunci_alur']=res._kunci_alur||'';row['_kunci_awal']=res._kunci_awal||'';row['_model_pilih']=res._model_pilih||'';row['_gambar_gagal']=res._gambar_gagal?1:0;
   const bs=BLOOM_SCORE[res.bloom]||1,ds=DIFF_SCORE[res.kesulitan]||1,k=bs+ds;
   row['rekomendasi_poin']=k<=3?'1-2 poin':k<=5?'2-3 poin':k<=8?'3-4 poin':'4-5 poin';
+  // Acuan format kuis: peringatan Bloom di luar rentang (hasil tidak diubah, keyakinan diturunkan) + kolom kognitif L1-L3
+  row['kognitif']=kognitifL(res.bloom,KD_MAP[res.kesulitan]||res.kesulitan);
+  row['_bloom_catatan']=kuisCatatanBloom(row['tipe'],res.bloom);
+  if(row['_bloom_catatan']){
+    row['rekomendasi_poin']+=' | '+row['_bloom_catatan'];
+    row['confidence']=Math.max(0,(parseInt(row['confidence'])||0)-10)+'%';
+  }
   // Store TKB metadata for explainability
   if(res.tkb_result) row['_tkb']={
     source:        res.tkb_result.source,
@@ -2938,6 +2970,45 @@ function _tandaiModel(r,model,fin,th){
   return r;
 }
 
+/** Kode format kuis (matching/word/order/error/classify/multi/tf/cloze/branch/number) atau null bila PG/esai/lainnya. */
+function kuisKode(tipe){var t=String(tipe||'').toLowerCase().trim().replace(/[\s\-]+/g,'_');return KUIS_ALIAS[t]||null;}
+/** Format yang kalimat soalnya hanya instruksi umum ("Pasangkan…", "Urutkan…") -> TKB tidak dipakai agar tidak salah membaca kata perintah. */
+function _kuisLewatTkb(tipe){var k=kuisKode(tipe);return k==='matching'||k==='order'||k==='classify'||k==='error';}
+var _KUIS_DESKRIPSI={
+  matching:'PASANGKAN: opsi_a..opsi_h = kartu KIRI; "pasangan" = kartu KANAN (berurutan sesuai kartu kiri); "pengecoh" = kartu kanan tanpa pasangan. kunci = A=1 || B=2 ...',
+  word:'TEBAK/ISIAN KATA: pertanyaan = petunjuk; kunci = kata jawabannya.',
+  order:'URUTKAN: opsi_a..opsi_h = butir (acak); kunci = urutan benar (deret huruf). Yang diuji: memahami proses/kronologi/hierarki.',
+  error:'TEMUKAN KESALAHAN: opsi_a..opsi_h = kalimat; kunci = huruf kalimat yang SALAH; "perbaikan" = pembetulannya.',
+  classify:'KLASIFIKASI: opsi_a..opsi_h = kartu; "kategori" = daftar kelompok; kunci = nomor kelompok tiap kartu berurutan.',
+  multi:'PILIH SEMUA YANG BENAR (PG kompleks): opsi_a..opsi_h = pernyataan; kunci = semua huruf yang benar.',
+  tf:'BENAR/SALAH + ALASAN: pertanyaan = klaim; opsi_a..opsi_d = pilihan alasan; kunci = "BENAR/SALAH || huruf alasan".',
+  cloze:'ISIAN RUMPANG: pertanyaan memuat celah {1}..{n}; kunci = jawaban tiap celah; "pengecoh" = kata pengecoh.',
+  branch:'KASUS BERCABANG: "langkah_bercabang" = JSON langkah keputusan (situasi, pilihan, nilai 2/1/0); yang diuji adalah pengambilan keputusan dalam situasi.',
+  number:'ISIAN ANGKA: kunci = jawaban numerik; "toleransi" & "satuan" tersedia; yang diuji adalah menghitung/menerapkan rumus.'
+};
+/** Catatan prompt Gemini bila ada soal berformat kuis (kunci TIDAK diperiksa untuk format ini). */
+function _kuisCatatanPrompt(items){
+  var ada={};(items||[]).forEach(function(it){var k=kuisKode(it&&it.tipe);if(k)ada[k]=1;});
+  var ks=Object.keys(ada);if(!ks.length)return '';
+  return '\n\nFORMAT KUIS — soal dengan field "format_kuis" BUKAN pilihan ganda biasa. Cara membacanya:\n'+
+    ks.map(function(k){return '- '+_KUIS_DESKRIPSI[k];}).join('\n')+
+    '\nUntuk soal ber-"format_kuis": KUNCI_AI WAJIB ditulis "-" (kunci tidak diperiksa; JANGAN memilih satu huruf). TOPIK, BLOOM, KESULITAN dinilai dari seluruh isi (kartu, pasangan, langkah, kasus) dan kompetensi yang diuji, bukan dari kata perintah format ("Pasangkan", "Urutkan", "Kelompokkan"). ' +
+    'Kesulitan dipengaruhi jumlah elemen, kedekatan pengecoh, keakraban konteks, dan banyaknya konsep yang digabung.';
+}
+/** Periksa Bloom terhadap rentang format; kembalikan catatan atau ''. */
+function kuisCatatanBloom(tipe,bloom){
+  var k=kuisKode(tipe),f=k&&KUIS_FORMAT[k],lv=BLOOM_SCORE[String(bloom||'').toUpperCase()];
+  if(!f||!lv||(lv>=f.min&&lv<=f.max))return '';
+  return '⚠ Bloom '+String(bloom).toUpperCase()+' di luar rentang '+f.nama+' (C'+f.min+'–C'+f.max+') — periksa ulang';
+}
+/** Level kognitif L1–L3 (USULAN acuan-kuis.md: L1 pengetahuan/pemahaman, L2 aplikasi, L3 penalaran). */
+function kognitifL(bloom,kesulitan){
+  var lv=BLOOM_SCORE[String(bloom||'').toUpperCase()];if(!lv)return '';
+  var kd=KD_MAP[kesulitan]||kesulitan;var i=kd==='Mudah'?0:kd==='Sulit'?2:kd==='Sedang'?1:-1;if(i<0)return '';
+  var M=lv<=2?['L1','L1','L2']:lv===3?['L1','L2','L3']:['L2','L3','L3'];
+  return M[i];
+}
+
 function buildPayload(row,mapel,kelas){
   const tipe=String(row['tipe']||'').toLowerCase().trim();
   const isPgG=tipe==='pg_gambar';
@@ -2947,6 +3018,14 @@ function buildPayload(row,mapel,kelas){
   if(!kelas||kelas==='__SEMUA__')delete p.kelas;
   if(isPgG){p.pertanyaan='[Soal PG ada di gambar yang dikirim bersama prompt ini — baca gambar untuk menentukan jawaban yang benar]';if(row['vrl_gambar'])p.url_gambar=String(row['vrl_gambar']).trim();}
   else if(isEsai){p.pertanyaan=qbePrepare(row['pertanyaan']||'');if(row['vrl_gambar']&&String(row['vrl_gambar']).trim())p.url_gambar=String(row['vrl_gambar']).trim();}
+  else if(kuisKode(tipe)){
+    p.format_kuis=KUIS_FORMAT[kuisKode(tipe)].nama;
+    p.pertanyaan=qbePrepare(row['pertanyaan']||'');
+    if(row['vrl_gambar']&&String(row['vrl_gambar']).trim())p.url_gambar=String(row['vrl_gambar']).trim();
+    ['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e','opsi_f','opsi_g','opsi_h'].forEach(function(k){if(row[k]&&String(row[k]).trim())p[k]=row[k];});
+    [['pengecoh',300],['pasangan',700],['kategori',200],['perbaikan',500],['satuan',40],['toleransi',20],['pembahasan',350],['langkah_bercabang',1800]].forEach(function(a){
+      var v=row[a[0]];if(v!==undefined&&v!==null&&String(v).trim())p[a[0]]=String(v).trim().slice(0,a[1]);});
+  }
   else{
     p.pertanyaan=qbePrepare(row['pertanyaan']||'');
     if(row['vrl_gambar']&&String(row['vrl_gambar']).trim())p.url_gambar=String(row['vrl_gambar']).trim();
@@ -2970,7 +3049,7 @@ function buildPrompt(items,materiList){
     : (isSingle
         ? '{"topik":"Nama | kw1, kw2","bloom":"C2","kesulitan":"Sedang","confidence":85,"kunci_ai":"B"}'
         : '[{"no":1,"topik":"...","bloom":"C2","kesulitan":"Sedang","confidence":85,"kunci_ai":"B"},...]');
-  return 'Kamu adalah guru berpengalaman ahli kurikulum Kemenag MTs dan taksonomi Bloom.\n\nAnalisis '+items.length+' soal berikut:\n'+JSON.stringify(isSingle?items[0]:items,null,2)+(itemArr.every(function(it){return !it.mapel;})?'\n\nCATATAN: Mata pelajaran dan kelas TIDAK ditentukan. Tentukan sendiri mapel soal dari isinya, lalu pilih materi yang paling cocok dari daftar gabungan beberapa mapel di bawah. Pilih materi yang benar-benar membahas konsep soal; jangan memilih materi mapel lain hanya karena ada kata yang mirip.':'')+'\n\nDAFTAR MATERI (wajib pilih satu \u2014 dilarang membuat topik baru):\n'+materiList.map(function(m,i){return (i+1)+'. '+m;}).join('\n')+'\n\nINSTRUKSI:\n1. TOPIK \u2014 Format: "Nama Materi | keyword1, keyword2, keyword3"\n   Nama materi PERSIS dari daftar. Contoh: "Norma dan Keadilan | sanksi, adat, hukum"\n2. BLOOM \u2014 Berdasarkan PROSES BERPIKIR: Soal\u27f2Proses Berpikir\u27f2Bloom (bukan hanya KKO)\n   C1=Mengingat C2=Memahami C3=Menerapkan C4=Menganalisis C5=Mengevaluasi C6=Mencipta\n3. KESULITAN \u2014 5 level: Sangat Mudah/Mudah/Sedang/Sulit/Sangat Sulit\n4. CONFIDENCE \u2014 0-100. Dari kecocokan: proses berpikir+topik+pola soal+jawaban+gambar (jika ada). Gambar dikirim langsung ke AI — confidence rendah hanya jika gambar gagal dimuat\n'+kunciNote+'\n\nJawab HANYA dengan JSON '+(isSingle?'object':'array')+' valid:\n'+contohEsai;
+  return 'Kamu adalah guru berpengalaman ahli kurikulum Kemenag MTs dan taksonomi Bloom.\n\nAnalisis '+items.length+' soal berikut:\n'+JSON.stringify(isSingle?items[0]:items,null,2)+(itemArr.every(function(it){return !it.mapel;})?'\n\nCATATAN: Mata pelajaran dan kelas TIDAK ditentukan. Tentukan sendiri mapel soal dari isinya, lalu pilih materi yang paling cocok dari daftar gabungan beberapa mapel di bawah. Pilih materi yang benar-benar membahas konsep soal; jangan memilih materi mapel lain hanya karena ada kata yang mirip.':'')+'\n\nDAFTAR MATERI (wajib pilih satu \u2014 dilarang membuat topik baru):\n'+materiList.map(function(m,i){return (i+1)+'. '+m;}).join('\n')+'\n\nINSTRUKSI:\n1. TOPIK \u2014 Format: "Nama Materi | keyword1, keyword2, keyword3"\n   Nama materi PERSIS dari daftar. Contoh: "Norma dan Keadilan | sanksi, adat, hukum"\n2. BLOOM \u2014 Berdasarkan PROSES BERPIKIR: Soal\u27f2Proses Berpikir\u27f2Bloom (bukan hanya KKO)\n   C1=Mengingat C2=Memahami C3=Menerapkan C4=Menganalisis C5=Mengevaluasi C6=Mencipta\n3. KESULITAN \u2014 5 level: Sangat Mudah/Mudah/Sedang/Sulit/Sangat Sulit\n4. CONFIDENCE \u2014 0-100. Dari kecocokan: proses berpikir+topik+pola soal+jawaban+gambar (jika ada). Gambar dikirim langsung ke AI — confidence rendah hanya jika gambar gagal dimuat\n'+kunciNote+_kuisCatatanPrompt(itemArr)+'\n\nJawab HANYA dengan JSON '+(isSingle?'object':'array')+' valid:\n'+contohEsai;
 }
 
 function normalizeItem(p,materiList,_soalPayload){
@@ -3002,31 +3081,33 @@ function normalizeItem(p,materiList,_soalPayload){
   const tipeItem = _soalPayload ? String(_soalPayload.tipe||'').toLowerCase().trim() : '';
   const isEsaiItem = ESAI.includes(tipeItem);
   const rawKunci = String(p.kunci_ai||'').trim();
-  const kunciNormalized = isEsaiItem ? (rawKunci || '—') : (rawKunci.toUpperCase() || '?');
+  const isKuisItem = !!kuisKode(tipeItem);
+  const kunciNormalized = isKuisItem ? '—' : isEsaiItem ? (rawKunci || '—') : (rawKunci.toUpperCase() || '?');
   var rawConf = Math.min(100,Math.max(0,parseInt(p.confidence)||50));
   if(confidencePenalty) rawConf = Math.max(0, rawConf - confidencePenalty);
   var _result={topik:finalTopik,bloom:bloom,kesulitan:kd,confidence:rawConf,kunci_ai:kunciNormalized};
   // TKB validation — C1/C2 only in v1.0
-  if(_soalPayload && typeof tkbValidate==='function'){
+  if(_soalPayload && typeof tkbValidate==='function' && !_kuisLewatTkb(tipeItem)){
     _result=tkbValidate(_soalPayload,_result);
   }
   return _result;
 }
 
 function localAnalyze(row,mapel,kelas,materiList){
-  const text=[row['pertanyaan'],row['opsi_a'],row['opsi_b'],row['opsi_c'],row['opsi_d'],row['opsi_e']].join(' ').toLowerCase();
+  const text=[row['pertanyaan'],row['opsi_a'],row['opsi_b'],row['opsi_c'],row['opsi_d'],row['opsi_e'],row['opsi_f'],row['opsi_g'],row['opsi_h'],row['pasangan'],row['kategori'],row['pengecoh']].join(' ').toLowerCase();
   const stem=String(row['pertanyaan']||'').toLowerCase();
   const isEsai=ESAI.includes(String(row['tipe']||'').toLowerCase().trim());
   let best=materiList[0],bestScore=0;
   materiList.forEach(function(mat){const words=mat.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(function(w){return w.length>3;});const score=words.filter(function(w){return text.includes(w);}).length;if(score>bestScore){bestScore=score;best=mat;}});
   const bloomMap=[['C6',['buat','ciptakan','rancang','desain','merumuskan','mencipta']],['C5',['nilai','evaluasi','simpulkan','menilai','mengevaluasi','menyimpulkan']],['C4',['analisis','analisa','bedakan','menganalisis','membedakan','menguraikan']],['C3',['terapkan','hitung','selesaikan','menerapkan','menghitung','menyelesaikan']],['C2',['jelaskan','uraikan','identifikasi','menjelaskan','menentukan']],['C1',['sebutkan','hafal','definisikan','siapa','kapan','berapa']]];
-  let bloom='C2';
-  for(const[level,kws]of bloomMap){if(kws.some(function(k){return stem.includes(k)||text.includes(k);})){bloom=level;break;}}
+  let bloom='C2',_hit=false;
+  for(const[level,kws]of bloomMap){if(kws.some(function(k){return stem.includes(k)||text.includes(k);})){bloom=level;_hit=true;break;}}
+  const _kk=kuisKode(row['tipe']);if(_kk&&!_hit)bloom=KUIS_FORMAT[_kk].tip; // tanpa kata kunci: pakai Bloom tipikal format
   let score=0;const wc=stem.split(/\s+/).length;if(wc>40)score+=2;else if(wc>20)score+=1;score+=(BLOOM_SCORE[bloom]||1)-1;
   const opsi=['opsi_a','opsi_b','opsi_c','opsi_d','opsi_e'].map(function(k){return String(row[k]||'').trim();}).filter(function(o){return o;});
   if(!isEsai&&opsi.length>=4){const avg=opsi.reduce(function(a,b){return a+b.length;},0)/opsi.length;const varL=opsi.reduce(function(a,b){return a+Math.abs(b.length-avg);},0)/opsi.length;if(varL<5)score+=2;else if(varL<15)score+=1;}
   const kd5=score>=7?'Sangat Sulit':score>=5?'Sulit':score>=3?'Sedang':score>=1?'Mudah':'Sangat Mudah';
-  return{topik:best+' | (AI Lokal)',bloom:bloom,kesulitan:kd5,confidence:40,kunci_ai:isEsai?'Esai':'?'};
+  return{topik:best+' | (AI Lokal)',bloom:bloom,kesulitan:kd5,confidence:40,kunci_ai:isEsai?'Esai':(_kk?'\u2014':'?')};
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -3052,7 +3133,7 @@ function renderPreview(materiList){
       (row['_tkb']&&row['_tkb'].ambiguous?'<span style="font-size:9px;color:#fbbf24;margin-left:3px" title="Ambiguitas C1/C2">&#x26A0;</span>':'')
       ):'—';
     const kdB=kd?'<span class="badge b-'+kd.toLowerCase()+'">'+kd+'</span>':'—';
-    const stB=status==='Cocok'?'<span class="badge b-cocok">&#x2713; Cocok</span>':status==='Berbeda'?'<span class="badge b-berbeda">&#x26A0; Berbeda</span>':status==='Dibuat_AI'?'<span class="badge b-dibuat">&#x2756; Dibuat AI</span>':status==='Esai_AI'?'<span class="badge b-dibuat">&#x270F; Jawaban Esai</span>':'—';
+    const stB=status==='Cocok'?'<span class="badge b-cocok">&#x2713; Cocok</span>':status==='Berbeda'?'<span class="badge b-berbeda">&#x26A0; Berbeda</span>':status==='Dibuat_AI'?'<span class="badge b-dibuat">&#x2756; Dibuat AI</span>':status==='Esai_AI'?'<span class="badge b-dibuat">&#x270F; Jawaban Esai</span>':status==='Tidak_Diperiksa'?'<span class="badge b-dibuat">&#x2014; Tidak diperiksa</span>':'—';
     const confH=conf>0?'<span class="'+(conf<70?'conf-warn':'conf-ok')+'">'+(conf<70?'&#x26A0; ':'')+conf+'%</span>':'—';
     const tr=document.createElement('tr');
     tr.innerHTML='<td>'+esc(String(row['no']||ri+1))+'</td><td style="font-size:10px;color:var(--text2)">'+esc(row['tipe']||'')+'</td><td class="q-cell" title="'+esc(pert)+'">'+esc(pert.slice(0,55))+(pert.length>55?'&#x2026;':'')+'</td><td style="min-width:160px">'+topikCell+'</td><td>'+bloomB+'</td><td>'+kdB+'</td><td>'+confH+'</td><td style="font-weight:700;color:var(--text2)">'+esc(String(row['kunci']||'—').toUpperCase())+'</td><td style="font-weight:700;color:#4ade80">'+esc(row['kunci_ai']||'—')+'</td><td>'+stB+'</td><td style="font-size:10px;color:var(--text2)">'+esc(row['rekomendasi_poin']||'—')+'</td>';
@@ -3525,6 +3606,7 @@ async function doSingleAnalyze() {
       ? '<span class="badge b-cocok">✓ Cocok</span>'
       : status === 'Berbeda' ? '<span class="badge b-berbeda">⚠ Berbeda</span>'
       : status === 'Esai_AI' ? '<span class="badge b-dibuat">✏ Jawaban Esai</span>'
+      : status === 'Tidak_Diperiksa' ? '<span class="badge b-dibuat">— Tidak diperiksa</span>'
       : '<span class="badge b-dibuat">✦ Dibuat AI</span>';
 
     $id('rPoin').textContent = row['rekomendasi_poin'] || '—';
@@ -5174,7 +5256,7 @@ var doDownload = function() {
     // OUT_COLS berisi key lowercase — tampilkan dengan nama rapi untuk header Excel
     const OUT_DISPLAY = {
       'topik':'Topik','bloom':'Bloom','kesulitan':'Kesulitan','confidence':'Confidence',
-      'kunci_ai':'Kunci_AI','status_kunci':'Status_Kunci','rekomendasi_poin':'Rekomendasi_Poin'
+      'kunci_ai':'Kunci_AI','status_kunci':'Status_Kunci','rekomendasi_poin':'Rekomendasi_Poin','kognitif':'Kognitif'
     };
     const displayHdrs = (origHeadersRaw.length ? origHeadersRaw : origHeaders).slice();
     OUT_COLS.forEach(function(c){
@@ -8630,6 +8712,7 @@ async function periksaKunciSatuSoal(apiKey, model, row, res, mapel, kelas, mater
   if (!res || res.error) return;
   var tipe = String(row['tipe'] || '').toLowerCase().trim();
   if (ESAI.indexOf(tipe) >= 0) return; // esai: kunci_ai berupa teks jawaban, tidak diubah
+  if (kuisKode(tipe)) return; // format kuis: kunci tidak diperiksa (hanya klasifikasi)
   var adaGambar = tipe.indexOf('gambar') >= 0 || String(row['vrl_gambar'] || '').trim() !== '';
   var huruf = kunciPGHurufValid(row, adaGambar);
   var noL = row['no'] || '?';
