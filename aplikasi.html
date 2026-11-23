@@ -299,6 +299,27 @@ const CBTKD_APLIKASI_PENDUKUNG = [
     ],
     url: 'https://cbtkabutdigital.com/konverter-soal-CBT.html',
     icon: '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8h8"/><path d="M7 12h10"/><path d="M7 16h6"/>'
+  },
+  {
+    nama: 'Media Interaktif Gratis',
+    appId: 'media-interaktif',
+    langsung: true, // Guru Hub punya keamanan sendiri -- tidak lewat gateway iklan
+    deskripsi: 'Mengubah Alur Tujuan Pembelajaran (ATP) menjadi halaman belajar interaktif untuk siswa, lengkap dengan kuis 11 format, kisi-kisi, studi kasus, refleksi, simulasi, dan nilai otomatis. Akun gratis mendapat satu media dengan hingga 44 pertemuan, dan seluruh data siswa tersimpan di Google Sheet milik guru sendiri.',
+    fitur: [
+      'Menghemat waktu menyusun materi: ATP yang sudah ada berubah menjadi materi, soal, dan refleksi lewat satu prompt, menyesuaikan bahasa dan kedalaman dengan jenjang SD/MI, SMP/MTs, SMA/MA, SMK/MAK, atau perguruan tinggi dan pelatihan',
+      'Isi pembelajaran beragam: teks, poin, linimasa, tabel, studi kasus, aktivitas menulis, materi pendukung (video, infografis, artikel), lembar refleksi, glosarium, serta simulasi atau game dari HTML, Wordwall, atau PhET',
+      'Kuis 11 format dengan komposisi L1-L3: guru mengatur jumlah tiap format, atau mengisi komposisi level lalu menekan Rekomendasikan agar format yang cocok dibagi otomatis',
+      'Kisi-kisi di setiap pertemuan: disusun AI sesuai pengaturan guru, bisa ditampilkan ke siswa sebelum tab Kuis atau dicetak dalam format resmi',
+      'Dua versi kuis: versi latihan dan ujian dibuat setara tetapi tidak identik, dengan urutan opsi diacak, sehingga kisi-kisi yang dibagikan tidak membocorkan soal ujian',
+      'Nilai otomatis dan adil: kuis bernilai 60, studi kasus 25, refleksi 15, dinormalkan menjadi 0 sampai 100 dengan kategori ketercapaian; rata-rata dibagi banyaknya pertemuan yang sudah terbuka',
+      'Kejujuran kuis: kunci jawaban ada di server, posisi opsi diacak per siswa, kiriman hanya satu kali, dan keluar halaman dicatat untuk guru. Halaman web tidak bisa memblokir tangkapan layar, jadi fitur ini mempersulit dan membuat kecurangan terlihat, bukan mencegahnya sepenuhnya',
+      'Cetak dengan kop resmi: kisi-kisi, materi, dan lembar kuis dapat dicetak dengan kop sekolah dan logo, atau tanpa kop sesuai pilihan guru',
+      'Terhubung dengan CBT: kuis dapat diekspor ke bank soal CBT Kabut Digital, yang menilai semua format kuis dengan nilai parsial',
+      'Data milik guru sendiri: jawaban dan nilai tersimpan di Google Sheet di Drive guru, satu Sheet untuk satu kelas',
+      'Nyaman di HP: halaman siswa dan Studio dirancang untuk layar ponsel, dan jawaban siswa dikirim ulang otomatis bila sinyal putus'
+    ],
+    url: 'https://cbtkabutdigital.com/Premium/Guru-Hub/index.html',
+    icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'
   }
 ];
 
@@ -318,8 +339,10 @@ function _cbtkdRenderScreenshots(list) {
 
 // Aplikasi Pendukung wajib lewat gateway iklan dulu; Aplikasi Utama (CBT KD)
 // tetap link langsung -- supaya instalasi PWA-nya tidak terganggu interstitial.
+// Aplikasi dengan flag langsung:true (mis. Guru Hub, punya keamanan sendiri)
+// juga dibuka langsung tanpa gateway.
 function _cbtkdBuildLink(app, opts) {
-  if (opts.gateway) {
+  if (opts.gateway && !app.langsung) {
     return './gateway.html?app=' + encodeURIComponent(app.appId || '')
       + '&url=' + encodeURIComponent(app.url)
       + '&name=' + encodeURIComponent(app.nama)
